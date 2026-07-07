@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
@@ -39,6 +40,8 @@
   USE fft_base,      ONLY : dfftp
   USE gvecs,         ONLY : doublegrid
   USE noncollin_module, ONLY : noncolin, domag, m_loc, angle1, angle2, ux, nspin_mag
+  USE pwcom,         ONLY : ef, two_fermi_energies
+  USE ener,          ONLY : ef_up, ef_dw
   !
   IMPLICIT NONE
   !
@@ -79,8 +82,6 @@
     IF (xclib_dft_is('gradient')) THEN
       CALL compute_ux(m_loc,ux,nat)
     ENDIF
-    DEALLOCATE(m_loc, STAT = ierr)
-    IF (ierr /= 0) CALL errore('setups', 'Error deallocating m_loc', 1)
   ENDIF
   !
   ! 3) Computes the derivative of the xc potential
@@ -159,7 +160,6 @@
      ! SP: These calls set the u
      CALL find_irrep()
   ENDIF
-  CALL find_irrep_sym()
   !
   DEALLOCATE(num_rap_mode, STAT = ierr)
   IF (ierr /= 0) CALL errore('setups', 'Error deallocating num_rap_mode', 1)
@@ -172,6 +172,8 @@
   DO irr = 1, nirr
     npertx = MAX(npertx, npert(irr))
   ENDDO
+  !
+  IF (two_fermi_energies) ef = max(ef_up, ef_dw)
   !
   CALL stop_clock('setups')
   RETURN

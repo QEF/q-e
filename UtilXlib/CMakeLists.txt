@@ -133,8 +133,8 @@ if(QE_ENABLE_TEST)
                 RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
         target_link_libraries(${TGT_NAME}
             PRIVATE
-                qe_utilx
                 qe_utilx_tests
+                qe_utilx
                 qe_mpi_fortran)
         add_unit_test(${TGT_NAME} 1 1 $<TARGET_FILE:${TGT_NAME}>)
     ENDFOREACH(NAME)

@@ -44,7 +44,8 @@
 !     e_v = sum_i,ij rho_i,ij d^ion_is,ji
 !
       USE kinds,              ONLY: DP
-      USE control_flags,      ONLY: iprint, iverbosity, thdyn, tpre, trhor, ndr
+      USE control_flags,      ONLY: iprint, iverbosity
+      USE cp_control,         ONLY: trhor, thdyn, ndr, tpre
       USE ions_base,          ONLY: nat
       USE gvect,              ONLY: gstart, ig_l2g
       USE smallbox_gvec,      ONLY: ngb
@@ -863,7 +864,8 @@ SUBROUTINE rhov(rhovan,rhog,rhor)
       USE smallbox_subs,            ONLY: fft_oned2box, box2grid
       USE cell_base,                ONLY: omega
       USE small_box,                ONLY: omegab
-      USE control_flags,            ONLY: iprint, iverbosity, tpre
+      USE control_flags,            ONLY: iprint, iverbosity
+      USE cp_control,               ONLY: tpre
       USE qgb_mod,                  ONLY: qgb
       USE fft_interfaces,           ONLY: fwfft, invfft
       USE fft_base,                 ONLY: dfftb, dfftp, dfftb

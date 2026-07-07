@@ -1,4 +1,5 @@
-!
+  !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
 ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
 ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
 !
@@ -20,12 +21,13 @@ MODULE exphonon
   SUBROUTINE prepare_ex_ph_g()
   !-----------------------------------------------------------------------
     USE input,         ONLY : nqc1, nqc2, nqc3, nkc1, nkc2, nkc3, nbndv_explrn, nbndc_explrn, negnv_explrn
-    USE global_var,    ONLY : nktotf, nqtotf, nkf, eigval_ex, wf_temp, wf, A_cv_all, epf17      
+    USE global_var,    ONLY : nktotf, nqtotf, nkf, eigval_ex, wf_temp, wf, A_cv_all, epf17, nk_loc      
     USE modes,         ONLY : nmodes
-    USE pwcom,         ONLY : nks
     USE io_global,     ONLY : stdout, ionode_id, meta_ionode_id
     USE mp,            ONLY : mp_barrier, mp_sum, mp_gather, mp_bcast
     USE mp_global,     ONLY : npool, my_pool_id, world_comm
+    USE mp_world,      ONLY : mpime 
+    USE mp_images,     ONLY : inter_image_comm 
     USE ep_constants,  ONLY : czero
     !
     IMPLICIT NONE
@@ -35,32 +37,42 @@ MODULE exphonon
     !
     nktotf=nkc1*nkc2*nkc3       
     nqtotf=nqc1*nqc2*nqc3
-    nkf=nks
+    nkf=nk_loc
     !
     ! WRITE(stdout,'(/5x,a,I10)')'nktotf: ', nktotf
     ! WRITE(stdout,'(/5x,a,I10)')'nqtotf: ', nqtotf
     ! WRITE(stdout,'(/5x,a,I10)')'nkf : ', nkf 
     !
     ALLOCATE(wf(nmodes,nqc1*nqc2*nqc3), STAT=ierr)
-    IF(ierr /=0) call errore('elphon_shuffle_wrap', 'Error allocating wf', 1) 
+    IF (ierr /=0) call errore('elphon_shuffle_wrap', 'Error allocating wf', 1) 
+    wf = 0.d0
     !
     ALLOCATE(eigval_ex(negnv_explrn, nqtotf), STAT=ierr)
-    IF(ierr /=0) call errore('elphon_shuffle_wrap', 'Error allocating eigval_ex', 1) 
+    IF (ierr /=0) call errore('elphon_shuffle_wrap', 'Error allocating eigval_ex', 1) 
     eigval_ex = 0.d0
     !
-    ALLOCATE(epf17(nbndc_explrn+nbndv_explrn,nbndc_explrn+nbndv_explrn,nks,nmodes),STAT=ierr)
+    ALLOCATE(epf17(nbndc_explrn+nbndv_explrn,nbndc_explrn+nbndv_explrn,nk_loc,nmodes),STAT=ierr)
     IF(ierr /=0) call errore('elphon_shuffle_wrap', 'Error allocating epf17(nbndfst,nbndfst,nktotf,nmodes)', 1)
     epf17 = czero
     !
-    IF(my_pool_id == meta_ionode_id) THEN
-      ALLOCATE(A_cv_all(nbndv_explrn,nbndc_explrn,nktotf,negnv_explrn,nktotf),STAT=ierr)
-      A_cv_all = 0.d0
-      CALL read_Acv_all()
-    ENDIF
-    !
-    IF( my_pool_id .EQ. meta_ionode_id ) THEN
+    IF (mpime == meta_ionode_id ) THEN
       CALL system('mkdir -p G_full_epmatq') 
     ENDIF
+    !
+    IF (my_pool_id == ionode_id) THEN
+      ALLOCATE(A_cv_all(nbndv_explrn,nbndc_explrn,nktotf,negnv_explrn,nktotf),STAT=ierr)
+      A_cv_all = 0.d0
+    ENDIF
+    !
+    IF (mpime == meta_ionode_id) THEN
+      CALL read_Acv_all()
+    ENDIF
+    ! Send A_cv_all to the root proc of each image
+    IF (my_pool_id == ionode_id) THEN
+      CALL mp_bcast(A_cv_all, meta_ionode_id, inter_image_comm)
+    ENDIF
+    ! Send eigval_ex to eachc proc
+    CALL mp_bcast(eigval_ex, meta_ionode_id, world_comm)
     !
     CALL mp_barrier(world_comm)
   !-----------------------------------------------------------------------
@@ -70,35 +82,57 @@ MODULE exphonon
   SUBROUTINE release_ex_ph_g()
   !-----------------------------------------------------------------------
     USE input,         ONLY : nqc1, nqc2, nqc3, nkc1, nkc2, nkc3, nbndv_explrn, nbndc_explrn, negnv_explrn
-    USE global_var,    ONLY : nktotf, nqtotf, nkf, eigval_ex, wf_temp, wf, A_cv_all, epf17      
+    USE global_var,    ONLY : nktotf, nqtotf, nkf, eigval_ex, wf_temp, wf, A_cv_all, epf17, nk_loc      
     USE modes,         ONLY : nmodes
-    USE pwcom,         ONLY : nks
-    USE io_global,     ONLY : stdout, ionode_id
+    USE io_global,     ONLY : stdout, ionode_id, meta_ionode_id
+    USE io_var,        ONLY : iuexphg
     USE mp,            ONLY : mp_barrier, mp_sum, mp_gather, mp_bcast
     USE mp_global,     ONLY : npool, my_pool_id, world_comm
+    USE mp_images,     ONLY : inter_image_comm
+    USE mp_world,      ONLY : mpime 
     !
     IMPLICIT NONE
     !
     INTEGER :: ierr
     !! Error status
+    INTEGER                    :: iq
+    !! Index for exciton momentum
+    INTEGER                    :: ibnd
+    !! Index for electron band index
+    CHARACTER(LEN = 256)       :: filename
+    !! Filenames
     !
     ! IF(ALLOCATED(wf)) DEALLOCATE(wf, STAT=ierr)
+    ! Write phonon frequencies
+    CALL mp_sum(wf, inter_image_comm)
+    IF (mpime == meta_ionode_id) THEN
+      filename = './G_full_epmatq/phband.fmt'
+      OPEN(UNIT=iuexphg, FILE = filename, ACTION = 'write', IOSTAT = ierr)
+      DO iq=1,nktotf
+        DO ibnd=1,nmodes-1
+          WRITE(iuexphg, '(e20.10)',advance='no') wf(ibnd, iq)
+        ENDDO
+        WRITE(iuexphg, '(e20.10)') wf(ibnd, iq)
+      ENDDO
+      CLOSE(iuexphg)
+    ENDIF
+    !
     DEALLOCATE(wf, STAT=ierr)
-    IF(ierr /=0) call errore('elphon_shuffle_wrap', 'Error deallocating wf', 1) 
+    IF (ierr /=0) call errore('elphon_shuffle_wrap', 'Error deallocating wf', 1) 
     !
     ! IF(ALLOCATED(eigval_ex)) DEALLOCATE(eigval_ex,STAT=ierr)
     DEALLOCATE(eigval_ex,STAT=ierr)
-    IF(ierr /=0) call errore('elphon_shuffle_wrap', 'Error deallocating eigval_ex', 1) 
+    IF (ierr /=0) call errore('elphon_shuffle_wrap', 'Error deallocating eigval_ex', 1) 
     !
     ! IF(ALLOCATED(A_cv_all)) DEALLOCATE(A_cv_all)
-    IF(my_pool_id == ionode_id) THEN
+    IF (my_pool_id == ionode_id) THEN
       DEALLOCATE(A_cv_all)
-      IF(ierr /=0) call errore('elphon_shuffle_wrap', 'Error deallocating A_cv_all', 1) 
+      IF (ierr /=0) call errore('elphon_shuffle_wrap', 'Error deallocating A_cv_all', 1) 
     ENDIF
     !
     ! IF(ALLOCATED(epf17)) DEALLOCATE(epf17)
     DEALLOCATE(epf17)
-    IF(ierr /=0) call errore('elphon_shuffle_wrap', 'Error deallocating epf17', 1) 
+    IF (ierr /=0) call errore('elphon_shuffle_wrap', 'Error deallocating epf17', 1) 
   !-----------------------------------------------------------------------
   END SUBROUTINE release_ex_ph_g
   !-----------------------------------------------------------------------
@@ -107,8 +141,13 @@ MODULE exphonon
   !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE input,         ONLY : nbndc_explrn, nbndv_explrn, negnv_explrn, nqc1, nqc2, nqc3                 
-    USE global_var,    ONLY : A_cv_all                                               
+    USE modes,         ONLY : nmodes
+    USE io_var,        ONLY : iuexphg
+    USE global_var,    ONLY : A_cv_all, eigval_ex, wf
     USE ep_constants,  ONLY : ci                                        
+#if defined(__HDF5)
+    USE hdf5
+#endif
     !
     IMPLICIT NONE
     !
@@ -124,7 +163,13 @@ MODULE exphonon
     !! Index for ik - iq
     INTEGER                    :: dims(7)
     !! Auxiliary array for reading BGW output
+    INTEGER                    :: ierr
+    !! Error status
+    INTEGER                    :: error 
+    !! HDF5 error status
     REAL(KIND=8), ALLOCATABLE  :: Aq_temp(:,:,:,:,:,:,:)
+    !! Auxiliary array for reading BGW output
+    REAL(KIND=8), ALLOCATABLE  :: temp_eigval(:)
     !! Auxiliary array for reading BGW output
     CHARACTER(LEN = 256)       :: filename
     !! Filenames
@@ -136,6 +181,14 @@ MODULE exphonon
     !! Temporary name to convert integer to character
     !
     nktotf_f = nqc1 * nqc2 * nqc3
+    !
+    !ALLOCATE(temp_eigval(nbndv_explrn*nbndc_explrn*nktotf_f), STAT=ierr)
+    ALLOCATE(temp_eigval(negnv_explrn), STAT=ierr)
+    !
+#if defined(__HDF5)
+    CALL h5open_f(error)
+    if(error /= 0) write(*, '(a)') 'error1'
+    !
     !
     DO iq = 1, nktotf_f
       WRITE(fileexq,"(I10)") iq - 1 !ZD: 0-index. Consistent with ST convention.
@@ -149,9 +202,7 @@ MODULE exphonon
       ALLOCATE(Aq_temp(2,1,nbndv_explrn,nbndc_explrn,nktotf_f,negnv_explrn,1))
       Aq_temp=0.d0
       !
-#if defined(__HDF5)
       CALL READ_HDF5_SLAB(filename,grpname,dsetname,Aq_temp(:,:,:,:,:,:,:),7,negnv_explrn,dims)
-#endif
       ! Broadcast the A_cvq over pools.
       !!ZD: Reorder both k and vband and this step
       !
@@ -166,6 +217,34 @@ MODULE exphonon
       DEALLOCATE(Aq_temp)
       !
     ENDDO    
+    !
+    DO iq = 1,nktotf_f
+      WRITE(fileexq,"(I10)") iq - 1 !ZD: 0-index. Consistent with ST convention.
+      !
+      filename = './eigv/q_' // trim(adjustl(fileexq)) // '/eigenvectors.h5'
+      grpname="exciton_data"
+      dsetname="eigenvalues"
+      !
+      temp_eigval = 0.d0             
+      !
+      CALL READ_HDF5_ENE(filename,grpname,dsetname,temp_eigval,1,negnv_explrn)
+      !
+      eigval_ex(:, iq) = temp_eigval(1:negnv_explrn)
+      !
+    ENDDO
+    !
+    CALL h5close_f(error)
+    ! Write exciton energies
+    filename = './G_full_epmatq/exband.fmt'
+    OPEN(UNIT=iuexphg, FILE = filename, ACTION = 'write', IOSTAT = ierr)
+    DO iq=1,nktotf_f
+      DO ibnd=1,negnv_explrn-1
+        WRITE(iuexphg, '(e20.10)',advance='no') eigval_ex(ibnd, iq)
+      ENDDO
+      WRITE(iuexphg, '(e20.10)') eigval_ex(negnv_explrn, iq)
+    ENDDO
+    CLOSE(iuexphg)
+#endif
   !-----------------------------------------------------------------------
   END SUBROUTINE read_Acv_all
   !-----------------------------------------------------------------------
@@ -192,6 +271,8 @@ MODULE exphonon
                               eps6, czero, eps8
     USE mp,            ONLY : mp_barrier, mp_sum, mp_gather, mp_bcast
     USE mp_global,     ONLY : npool,my_pool_id, world_comm
+    USE mp_images,     ONLY : inter_image_comm, intra_image_comm 
+    USE mp_pools,      ONLY : inter_pool_comm
     USE cell_base,     ONLY : omega,bg,at
     USE mp_world,      ONLY : mpime
     USE bzgrid,        ONLY : kpmq_map
@@ -246,23 +327,8 @@ MODULE exphonon
     ALLOCATE(temp_eigval(nbndv_explrn*nbndc_explrn*nktotf), STAT=ierr)
     !
     DO iexq = 1,nktotf
-      WRITE(fileexq,"(I10)") iexq - 1 !ZD: 0-index. Consistent with ST convention.
-      ! CALL indexing_q(iq, iexq, nqx, 1, iexqplusq)
+      !
       CALL indexing_q2(iq, iexq, nqc1, nqc2, nqc3, 1, iexqplusq)
-      !
-      !! Read and distribute BSE eigvectors for Q
-      !
-      filename = './eigv/q_' // trim(adjustl(fileexq)) // '/eigenvectors.h5'
-      grpname="exciton_data"
-      dsetname="eigenvalues"
-      !
-      IF(my_pool_id==ionode_id .AND. iq .EQ. 1) THEN
-        temp_eigval = 0.d0             
-#if defined(__HDF5)
-        CALL READ_HDF5_ENE(filename,grpname,dsetname,temp_eigval,1)
-#endif
-        eigval_ex(:, iexq) = temp_eigval(1:negnv_explrn)
-      ENDIF
       !
       ALLOCATE(A_cvq(nbndv_explrn,nbndc_explrn,nktotf,negnv_explrn),STAT=ierr)
       A_cvq = 0.d0
@@ -275,51 +341,19 @@ MODULE exphonon
         A_cvqplusq(:,:,:,:) = A_cv_all(:,:,:,:,iexqplusq)
       ENDIF
       !
-      CALL mp_barrier(world_comm)
-      CALL mp_bcast(A_cvq, meta_ionode_id, world_comm)
-      CALL mp_bcast(A_cvqplusq, meta_ionode_id, world_comm)
-      CALL mp_barrier(world_comm)       
+      CALL mp_bcast(A_cvq, ionode_id, inter_pool_comm)
+      CALL mp_bcast(A_cvqplusq, ionode_id, inter_pool_comm)
       !
       ! ZD: Start the construction of the ex-ph matrix: G_ss'nu(Q,q) for fixed q
       ! WRITE(stdout,'(/5x,a, I10)')'Start computing exciton-phonon matrix.', iexq
       !
       CALL calculate_epmat_oneexq(iexq, iexqplusq)
       !
-      CALL mp_barrier(world_comm)
-      !
       DEALLOCATE(A_cvq)
       DEALLOCATE(A_cvqplusq)
-      CALL mp_barrier(world_comm)
+      CALL mp_barrier(intra_image_comm)
     ENDDO
     !
-    IF (iq == 1) CALL mp_bcast(eigval_ex, meta_ionode_id, world_comm)
-    !
-    ! Formatted writting. The quantities can be used to some analyses 
-    ! Write phonon frequencies
-    IF( iq_last==nktotf .AND. my_pool_id .EQ. ionode_id ) THEN 
-      filename = './G_full_epmatq/phband.fmt'
-      OPEN(UNIT=iuexphg, FILE = filename, ACTION = 'write', IOSTAT = ierr)
-      DO iexq=1,nktotf
-        DO imode=1,nmodes-1
-          WRITE(iuexphg, '(e20.10)',advance='no') wf(imode, iexq)
-        ENDDO
-        WRITE(iuexphg, '(e20.10)') wf(nmodes, iexq)
-      ENDDO
-      CLOSE(iuexphg)
-    ENDIF
-    !
-    ! Write exciton energies
-    IF( iq==1 .AND. my_pool_id .EQ. ionode_id ) THEN 
-      filename = './G_full_epmatq/exband.fmt'
-      OPEN(UNIT=iuexphg, FILE = filename, ACTION = 'write', IOSTAT = ierr)
-      DO iexq=1,nktotf
-        DO imode=1,negnv_explrn-1
-          WRITE(iuexphg, '(e20.10)',advance='no') eigval_ex(imode, iexq)
-        ENDDO
-        WRITE(iuexphg, '(e20.10)') eigval_ex(negnv_explrn, iexq)
-      ENDDO
-      CLOSE(iuexphg)
-    ENDIF
     ! Write exciton-phonon matrix elements 
     WRITE(tp,"(I10)") iq-1  
     IF(my_pool_id .EQ. ionode_id) THEN  
@@ -358,8 +392,6 @@ MODULE exphonon
     DEALLOCATE(G_full_epmatq)
     DEALLOCATE(wkf,STAT=ierr)
     !
-    CALL mp_barrier(world_comm)
-    !
     CALL CPU_TIME(finish)
     WRITE(stdout,'(5x,a, I10, a/)') 'Finish computing exciton-phonon coupling. Costing ', &
                                       CEILING(finish - start), ' seconds'
@@ -383,6 +415,9 @@ MODULE exphonon
                               index_buf_pool,H_quad,stop_qdabs,Energy,maxdim,  & 
                               G_epmatq,A_cvq, A_cvqplusq, G_full_epmatq,nbndep
     USE mp_global,     ONLY : my_pool_id,npool,ionode_id, world_comm
+    USE mp_world,      ONLY : mpime 
+    USE mp_images,     ONLY : intra_image_comm 
+    USE mp_pools,      ONLY : inter_pool_comm 
     USE mp,            ONLY : mp_barrier,mp_bcast,mp_sum
     USE ep_constants,  ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6, eps40, czero, eps8
     USE parallelism,   ONLY : fkbounds
@@ -505,11 +540,9 @@ MODULE exphonon
         ENDDO
       ENDDO
     ENDDO
-    CALL mp_barrier(world_comm)
-    CALL mp_sum(temp_G, world_comm)
+    CALL mp_sum(temp_G, inter_pool_comm)
     G_full_epmatq(:,:,iexq,:) = temp_G(:,:,:)
     DEALLOCATE(temp_G)
-    CALL mp_barrier(world_comm)       
   !-----------------------------------------------------------------------
   END SUBROUTINE calculate_epmat_oneexq
   !-----------------------------------------------------------------------
@@ -664,53 +697,77 @@ MODULE exphonon
   END SUBROUTINE READ_HDF5
   !-----------------------------------------------------------------------
   !-----------------------------------------------------------------------
-  SUBROUTINE READ_HDF5_ENE(filename,grpname,dsetname,data_out,N)
+  SUBROUTINE READ_HDF5_ENE(filename,grpname,dsetname,data_out,N, negnv_explrn)
   !-----------------------------------------------------------------------  
     USE hdf5
+    IMPLICIT NONE
     !
-    CHARACTER(LEN=100),intent(in) :: filename     
+    CHARACTER(LEN=100), INTENT(in)  :: filename     
     !! File name
-    CHARACTER(LEN=100),intent(in) :: grpname      
+    CHARACTER(LEN=100), INTENT(in)  :: grpname      
     !! Dataset name
-    CHARACTER(LEN=100),intent(in) :: dsetname     
+    CHARACTER(LEN=100), INTENT(in)  :: dsetname     
     !! Dataset name
-    REAL(kind=8),intent(inout)    :: data_out(:)
+    REAL(kind=8),ALLOCATABLE, INTENT(inout)     :: data_out(:)
     !! Output data
-    INTEGER, intent(in)           :: N
+    INTEGER, INTENT(in)            :: N
     !! Dimensions
-    INTEGER(HID_T)                :: file_id       
+    INTEGER, INTENT(in)            :: negnv_explrn 
+    !! Number of exciton states 
+    INTEGER(HID_T)                 :: file_id       
     !! File identifier
-    INTEGER(HID_T)                :: gset_id       
+    INTEGER(HID_T)                 :: gset_id       
     !! Data
-    INTEGER(HID_T)                :: dset_id       
+    INTEGER(HID_T)                 :: dset_id       
     !! Data
-    INTEGER(HSIZE_T), ALLOCATABLE :: data_dims(:)
+    INTEGER(HSIZE_T), ALLOCATABLE  :: data_dims(:)
     !! Data dimension
-    INTEGER                       :: error 
+    INTEGER                        :: error 
     !! Error status
+    INTEGER(hsize_t), dimension(1) :: offset  ! Where to start
+    INTEGER(hsize_t), dimension(1) :: count   ! How many elements to read
+    integer(hsize_t), dimension(1) :: mem_dims
+    ! Hyperslab parameters
+    integer(hid_t)                 :: file_space_id, mem_space_id
+    !
     ALLOCATE(data_dims(N))
     !
-    CALL h5open_f(error)
-    if(error /= 0) write(*, '(a)') 'error1'
-    !
     CALL h5fopen_f(filename, H5F_ACC_RDWR_F, file_id, error)
-    if(error /= 0) write(*, '(a)') 'error2'  
+    IF (error /= 0) write(*, '(a)') 'error2'  
     !
     CALL h5gopen_f(file_id, grpname, gset_id, error)
-    if(error /= 0) write(*, '(a)') 'error3'
+    IF (error /= 0) write(*, '(a)') 'error3'
     !
     CALL h5dopen_f(gset_id, dsetname, dset_id, error)
-    if(error /= 0) write(*, '(a)') 'error4'  
+    IF (error /= 0) write(*, '(a)') 'error4'  
+    !
+    ! Select subspace
+    CALL h5dget_space_f(dset_id, file_space_id, error)
+    IF (error /= 0) write(*, '(a)') 'error5'  
+    ! HDF5 uses 0-based indexing! To start at the 50th element, offset is 49.
+    offset(1) = 0 
+    count(1)  = negnv_explrn 
+    CALL h5sselect_hyperslab_f(file_space_id, H5S_SELECT_SET_F, &
+                               offset, count, error)
+    IF (error /= 0) write(*, '(a)') 'error6'  
+    ! Create a memory dataspace to match the size of the hyperslab we are reading
+    mem_dims(1) = negnv_explrn 
+    CALL h5screate_simple_f(1, mem_dims, mem_space_id, error)
+    IF (error /= 0) write(*, '(a)') 'error7'  
+    ! Create a memory dataspace to match the size of the hyperslab we are reading
     !
     data_out=0.d0
     !
-    CALL h5dread_f(dset_id, H5T_NATIVE_DOUBLE, data_out, data_dims, error)
+    CALL h5dread_f(dset_id, H5T_NATIVE_DOUBLE, data_out, mem_dims, error, &
+                 mem_space_id, file_space_id)
+    !
     !
     DEALLOCATE(data_dims)
+    CALL h5sclose_f(mem_space_id, error)
+    CALL h5sclose_f(file_space_id, error)
     CALL h5dclose_f(dset_id, error)
     CALL h5gclose_f(gset_id, error)
     CALL h5fclose_f(file_id, error)
-    CALL h5close_f(error)
   !-----------------------------------------------------------------------
   END SUBROUTINE READ_HDF5_ENE
   !-----------------------------------------------------------------------
@@ -771,9 +828,6 @@ MODULE exphonon
     block = 1
     stride = 1
     !
-    CALL h5open_f(error)
-    if(error /= 0) write(*, '(a)') 'error1'
-    !
     CALL h5fopen_f(filename, H5F_ACC_RDWR_F, file_id, error)
     if(error /= 0) write(*, '(a)') 'error2'  
     !
@@ -823,7 +877,6 @@ MODULE exphonon
     CALL h5dclose_f(dset_id, error)
     CALL h5gclose_f(gset_id, error)
     CALL h5fclose_f(file_id, error)
-    CALL h5close_f(error)
   !-----------------------------------------------------------------------    
   END SUBROUTINE READ_HDF5_SLAB
   !-----------------------------------------------------------------------

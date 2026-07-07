@@ -2,7 +2,7 @@
 
 AC_DEFUN([X_AC_QE_LAPACK], [
 
-if test "$have_mkl" -ne 0 || test "$have_armpl" -ne 0 || test "$have_aocl" -ne 0 || test "$have_essl" -ne 0
+if test "$have_mkl" -ne 0 || test "$have_armpl" -ne 0 || test "$have_aocl" -ne 0 || test "$have_essl" -ne 0 || test "$have_nvpl" -ne 0
 then
    # MKL or ARM libraries or AOCL or ESSL (obsolete?) found:
    # no need to check for lapack
@@ -81,7 +81,7 @@ fi
 # No lapack library found: use internal lapack
 
 if test "$have_lapack" -eq 0  ; then
-    lapack_libs="\$(TOPDIR)/external/lapack/liblapack.a"
+    lapack_libs="\$(BUILDDIR)/external/lapack/liblapack.a"
     echo setting LAPACK to internal library ...  $lapack_libs
     lapack_target="liblapack"
 else

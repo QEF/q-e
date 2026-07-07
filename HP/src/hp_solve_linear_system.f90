@@ -56,7 +56,11 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   USE lsda_mod,             ONLY : nspin
   USE lr_nc_mag,            ONLY : lr_apply_time_reversal, deeq_nc_save, int3_nc_save
   USE lr_symm_base,         ONLY : lr_npert, upert, upert_mq
-  USE ldaU,                 ONLY : lda_plus_u_kind, nsg, v_nsg
+  USE ldaU,                 ONLY : lda_plus_u_kind, v_nsg
+  USE dfpt_type,            ONLY : dfpt_ldos_type, allocate_dfpt_ldos, &
+                                   deallocate_dfpt_ldos
+  USE localdos_mod,         ONLY : localdos_new
+  USE ener,                 ONLY : ef
   !
   IMPLICIT NONE
   !
@@ -69,10 +73,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
               averlt, & ! average number of iterations
               dr2       ! self-consistency error
   !
-  REAL(DP) :: dos_ef
-  !! density of states at the Fermi level
-  !
-  REAL(DP), ALLOCATABLE :: becsum1(:,:,:)
+  TYPE(dfpt_ldos_type) :: ldos_data
   ! 
   COMPLEX(DP), ALLOCATABLE, TARGET :: dvscfin(:,:)
   ! change of the scf potential (input)
@@ -86,8 +87,6 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   ! change of rho / scf potential (output)
   !
   COMPLEX(DP), ALLOCATABLE :: &
-     ldos (:,:),              & ! local density of states at Ef
-     ldoss (:,:),             & ! as above, without augmentation charges
      dbecsum (:,:,:,:),       & ! the derivative of becsum
      dbecsum_nc(:,:,:,:,:,:), &
      dbecsum_aux (:,:,:,:),   &
@@ -210,11 +209,8 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   IF (no_metq0) lmetq0 = .FALSE.
   !
   IF (lmetq0) THEN
-     ALLOCATE (ldos (dfftp%nnr, nspin_mag))
-     ALLOCATE (ldoss(dffts%nnr, nspin_mag))
-     ALLOCATE (becsum1 ( (nhm * (nhm + 1))/2, nat, nspin_mag))
-     CALL localdos (ldos, ldoss, becsum1, dos_ef)
-     IF (.NOT.okpaw) DEALLOCATE (becsum1)
+     CALL allocate_dfpt_ldos(ldos_data)
+     CALL localdos_new(ldos_data, ef)
   ENDIF
   !
   ! Compute dV_bare * psi and write to buffer iubar
@@ -349,7 +345,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      !
      ! USPP: Compute the total response charge density (standard term + US term)
      !
-     IF (okvan) CALL lr_addusddens (drhoscfh, dbecsum)
+     IF (okvan) CALL lr_addusddens (1, dbecsum, drhoscfh)
      !
      call mp_sum ( drhoscf, inter_pool_comm )
      CALL mp_sum ( drhoscfh, inter_pool_comm ) 
@@ -368,9 +364,10 @@ SUBROUTINE hp_solve_linear_system (na, iq)
      IF (lmetq0) THEN
         ! 
         IF (okpaw) THEN
-           CALL ef_shift(1, dos_ef, ldos, drhoscfh, dbecsum=dbecsum, becsum1=becsum1)
+           CALL ef_shift(1, ldos_data%dos_ef, ldos_data%ldos, drhoscfh, &
+                dbecsum=dbecsum, becsum1=ldos_data%becsum_dos)
         ELSE
-           CALL ef_shift(1, dos_ef, ldos, drhoscfh)
+           CALL ef_shift(1, ldos_data%dos_ef, ldos_data%ldos, drhoscfh)
         ENDIF
         !
         ! Check that def is not too large (it is in Ry). 
@@ -381,7 +378,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
            IF (noncolin) THEN
               IF (ABS(DBLE(def(1))) > 5.0d0) THEN
                  WRITE( stdout, '(/6x,"WARNING: The Fermi energy shift too big!")')
-                 WRITE( stdout, '(6x, "   DOS(E_Fermi) = ",1x,2e12.4)') dos_ef
+                 WRITE( stdout, '(6x, "   DOS(E_Fermi) = ",1x,2e12.4)') ldos_data%dos_ef
                  WRITE( stdout, '(6x, "   Fermi_shift  = ",1x,2e12.4)') DBLE(def(1))
                  CALL hp_stop_smoothly (.FALSE.)
               ENDIF
@@ -389,7 +386,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
               WRITE( stdout, '(/6x,"WARNING: The Fermi energy shift is zero or too big!")')
               WRITE( stdout, '(6x, "This may happen in two cases:")')
               WRITE( stdout, '(6x, "1. The DOS at the Fermi level is too small:")')
-              WRITE( stdout, '(6x, "   DOS(E_Fermi) = ",1x,2e12.4)') dos_ef
+              WRITE( stdout, '(6x, "   DOS(E_Fermi) = ",1x,2e12.4)') ldos_data%dos_ef
               WRITE( stdout, '(6x, "   This means that most likely the system has a gap,")')
               WRITE( stdout, '(6x, "   and hence it should NOT be treated as a metal")')
               WRITE( stdout, '(6x, "   (otherwise numerical instabilities will appear).")')
@@ -551,9 +548,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   !
   !$acc exit data delete(dvscfins)
   IF (doublegrid)       DEALLOCATE (dvscfins)
-  IF (ALLOCATED(ldoss)) DEALLOCATE (ldoss)
-  IF (ALLOCATED(ldos))  DEALLOCATE (ldos)
-  IF (ALLOCATED(becsum1))  DEALLOCATE (becsum1)
+  IF (lmetq0) CALL deallocate_dfpt_ldos(ldos_data)
   IF (okvan) DEALLOCATE (int3)
   IF (okpaw) THEN
      DEALLOCATE (int3_paw)

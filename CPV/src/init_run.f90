@@ -13,10 +13,10 @@ SUBROUTINE init_run()
   !! appropriate routines) the memory.
   !
   USE kinds,                    ONLY : DP
-  USE control_flags,            ONLY : nbeg, nomore, lwf, iverbosity, iprint, &
-                                       ndr, ndw, tfor, tprnfor, tpre, ts_vdw, &
-                                       mbd_vdw, force_pairing, use_para_diag, &
-                                       dt_xml_old
+  USE control_flags,            ONLY : iverbosity, iprint, ts_vdw, &
+                                       mbd_vdw, use_para_diag
+  USE cp_control,               ONLY : ndw, tfor, tpre, nbeg, nomore, &
+                                       dt_xml_old, force_pairing
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
   USE ions_base,                ONLY : na, nax, nat, nsp, iforce, amass, cdms, ityp
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
@@ -67,12 +67,12 @@ SUBROUTINE init_run()
   USE io_global,                ONLY : ionode, stdout
   USE wave_types,               ONLY : wave_descriptor_info
   USE orthogonalize_base,       ONLY : mesure_diag_perf, mesure_mmul_perf
-  USE ions_base,                ONLY : ions_reference_positions, cdmi
+  USE ions_base,                ONLY : ions_reference_positions
   USE mp_bands,                 ONLY : nbgrp
   USE mp,                       ONLY : mp_barrier
   USE clib_wrappers
   USE ldaU_cp
-  USE control_flags,            ONLY : lwfpbe0nscf         ! exx_wf related 
+  USE cp_control,               ONLY : lwf, lwfpbe0nscf    ! exx_wf related 
   USE cp_wavefunctions,         ONLY : cv0                 ! exx_wf related
   USE wannier_base,             ONLY : vnbsp               ! exx_wf related
   !!!USE cp_restart,               ONLY : cp_read_wfc_Kong    ! exx_wf related
@@ -381,7 +381,7 @@ SUBROUTINE init_run()
      !
   END IF
   !
-  IF ( .NOT. tfor .AND. .NOT. tprnfor ) fion(:,:) = 0.D0
+  IF ( .NOT. tfor ) fion(:,:) = 0.D0
   !
   nomore = nomore + nfi
   !

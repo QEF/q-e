@@ -111,7 +111,7 @@ SUBROUTINE paro_gamma( h_psi_ptr, s_psi_ptr, hs_1psi_ptr, g_1psi_ptr, overlap, &
      !write (*,*) itry, notconv, conv
      !write (6,*) ' nbnd, nconv, notconv, nextra, nactive, nbase, ndiag  =', nbnd, nconv, notconv, nextra, nactive, nbase, ndiag
      
-     call s_psi_ptr  (npwx,npw,nbnd,psi2,evc) ! computes S*psi needed to ortogonalize to nbase
+     call s_psi_ptr  (npwx,npw,nbnd,psi2,evc) ! computes S*psi needed to orthogonalize to nbase
      lbnd = nbase
      DO ibnd = 1, nbnd ! pack unconverged roots
         IF (.NOT.conv(ibnd) ) THEN

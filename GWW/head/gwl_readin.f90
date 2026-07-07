@@ -34,9 +34,9 @@ SUBROUTINE phq_readin()
   USE cellmd,        ONLY : lmovecell
   USE run_info,      ONLY : title
   USE control_lr,    ONLY : maxter, alpha_mix, lgamma_gamma, reduce_io, tr2_ph, niter_ph, &
-                            nmix_ph, rec_code_read
+                            nmix_ph, rec_code_read, lnoloc
   USE control_ph,    ONLY : epsil, zue, zeu, xmldyn, newgrid, &
-                            trans, ldisp, recover, lnoloc, start_irr, &
+                            trans, ldisp, recover, start_irr, &
                             last_irr, start_q, last_q, current_iq, tmp_dir_ph, &
                             ext_recover, ext_restart, u_from_file, ldiag, &
                             search_sym, lqdir, electron_phonon, tmp_dir_phq, &
@@ -77,6 +77,7 @@ SUBROUTINE phq_readin()
       do_charge_neutral, wpot_dir
   USE wannier_gw,    ONLY : l_head, omega_gauss, n_gauss, grid_type, nsteps_lanczos,second_grid_n,second_grid_i,&
   &l_scissor,scissor, len_head_block_freq, len_head_block_wfc, l_easy
+  USE upf_utils,     ONLY : imatches
   !
   IMPLICIT NONE
   !
@@ -99,7 +100,6 @@ SUBROUTINE phq_readin()
   LOGICAL      :: q2d, q_in_band_form
   INTEGER, EXTERNAL  :: atomic_number
   REAL(DP), EXTERNAL :: atom_weight
-  LOGICAL, EXTERNAL  :: imatches
   LOGICAL, EXTERNAL  :: has_xml
   LOGICAL :: exst, parallelfs
   REAL(DP), ALLOCATABLE :: xqaux(:,:)

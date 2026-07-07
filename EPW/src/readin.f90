@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
@@ -25,7 +26,7 @@
   USE mp,            ONLY : mp_bcast
   USE wvfct,         ONLY : nbnd, et
   USE klist,         ONLY : nks, xk, nkstot
-  USE lsda_mod,      ONLY : lsda, isk
+  USE lsda_mod,      ONLY : isk
   USE fixed_occ,     ONLY : tfixed_occ
   USE qpoint,        ONLY : xq
   USE output,        ONLY : fildvscf, fildrho
@@ -63,9 +64,10 @@
                             epw_tr, epw_nosym, epw_noinv, epw_crysym, mob_maxfreq,     &
                             bfieldx, bfieldy, bfieldz, ii_eda, ii_partion,             &
                             ii_g, ii_charge, ii_n, ii_scattering, ii_only, ii_lscreen, &
-                            gb_scattering, gb_only, gb_size,                           &
+                            gb_scattering, gb_only, gb_size, gap_energy,               &
                             lwfpt, compute_dmat, ahc_nbnd, ahc_nbndskip,               &
-                            ahc_win_min, ahc_win_max, mob_nfreq, plrn, restart_plrn,   &
+                            ahc_win_min, ahc_win_max, ahc_rest_fan_broadening,        &
+                            mob_nfreq, plrn, restart_plrn,                             &
                             conv_thr_plrn, end_band_plrn, init_sigma_plrn,             &
                             cal_psir_plrn, start_band_plrn,  type_plrn, nstate_plrn,   &
                             interp_Ank_plrn, interp_Bqu_plrn, init_k0_plrn,            &
@@ -99,32 +101,38 @@
                             ef_v_tdbe, carr_dyn_tdbe, dg_tdbe, nkf1d, nkf2d, nkf3d,    &
                             nqf1d, nqf2d, nqf3d, dph_tdbe, restart_tdbe, phph_tdbe,    &
                             solver_tdbe, phwmin_tdbe, ephmat_dir, lscreen_tdbe,        &
-                            ef_c_tdbe, init_sigma_tdbe
-  USE global_var,    ONLY : elph, num_wannier_plot, wanplotlist, gtemp, qrpl
+                            ef_c_tdbe, init_sigma_tdbe, prtvkk, prteigdiff,            &
+                            plot_psir_plrn, lsign_psir_plrn, eigen_solver_plrn,        &
+                            istate_relax_plrn, eval_hplrn, eval_eplrn,                 &
+                            lsda, interpolate, prtuf
+  USE global_var,    ONLY : elph, num_wannier_plot, wanplotlist, gtemp, qrpl, nk_loc,  &
+                            nkpts, ldfptu
   USE ep_constants,  ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV, zero, eps20, ang2m,   &
-                            one, bohr2nm, ry2thz_sr
+                            one, bohr2nm, ry2thz_sr, eps6, bohr2ang, hbarJ
   USE constants,     ONLY : electron_si, AMU_RY, eps16
   USE io_files,      ONLY : tmp_dir, prefix
   USE control_flags, ONLY : iverbosity, modenum, gamma_only
   USE ions_base,     ONLY : amass
   USE mp_world,      ONLY : world_comm, nproc
   USE partial,       ONLY : atomo, nat_todo
-  USE mp_pools,      ONLY : my_pool_id, me_pool, npool
+  USE mp_pools,      ONLY : my_pool_id, me_pool, npool, kunit
   USE mp_images,     ONLY : nimage
   USE io_global,     ONLY : meta_ionode, meta_ionode_id, qestdin, stdout
   USE io_var,        ONLY : iunkf, iunqf
   USE paw_variables, ONLY : okpaw
   USE io,            ONLY : param_get_range_vector
-  USE noncollin_module,      ONLY : noncolin
+  USE noncollin_module,      ONLY : noncolin, domag
   USE open_close_input_file, ONLY : open_input_file, close_input_file
   USE check_stop,    ONLY : max_seconds
+  USE mp,            ONLY : mp_sum
+  USE ldaU,          ONLY : lda_plus_u, lda_plus_u_kind
+  USE io_ahc,        ONLY : read_ahc_info
+  USE upf_utils,     ONLY : imatches
   !
   IMPLICIT NONE
   !
   LOGICAL :: exst
   !! Find if a file exists.
-  LOGICAL, EXTERNAL :: imatches
-  !! Does the title match
   CHARACTER(LEN = 256) :: outdir
   !! Output directory
   CHARACTER(LEN = 512) :: line
@@ -157,6 +165,12 @@
   !! temp vars for saving kgrid info
   INTEGER :: ierr
   !! Error status
+  INTEGER :: kshift
+  !! k point list shift due to extra spin channels
+  INTEGER :: rest
+  !! remaining k points distributed on npool cores
+  INTEGER :: nbase
+  !! pool specific shift of k points
   REAL(kind = DP) :: b_abs
   !! Absolute magnetic field
   !
@@ -189,7 +203,7 @@
        mob_maxfreq, mob_nfreq, lrot, lwfpt, shortrange,                        &
        ii_g, ii_charge, ii_n, ii_scattering, ii_only, ii_lscreen, ii_eda,      &
        ii_partion, plrn, restart_plrn, conv_thr_plrn, end_band_plrn,           &
-       gb_scattering, gb_only, gb_size,                                        &
+       gb_scattering, gb_only, gb_size, gap_energy,                            &
        cal_psir_plrn, start_band_plrn,  type_plrn, nstate_plrn,                &
        interp_Ank_plrn, interp_Bqu_plrn, init_sigma_plrn, init_k0_plrn,        &
        full_diagon_plrn, mixing_Plrn, init_plrn, niter_plrn,                   &
@@ -209,18 +223,22 @@
        filnscf_coul, positive_matsu,                                           &
        loptabs, len_mesh, meshnum, wf_quasi, nq_init, start_mesh, DW,          &
        mode_res, QD_min, QD_bin, do_CHBB, lwfpt, compute_dmat, ahc_nbnd,       &
-       ahc_nbndskip, ahc_win_min, ahc_win_max, a_gap0, elecselfen_type,        &
+       ahc_nbndskip, ahc_win_min, ahc_win_max, ahc_rest_fan_broadening,        &
+       a_gap0, elecselfen_type,                                                &
        exciton, nbndc_explrn, nbndv_explrn, negnv_explrn, explrn,              &
        plot_explrn_e, plot_explrn_h, only_c_explrn, only_v_explrn,             &
        step_k1_explrn, step_k2_explrn, step_k3_explrn, only_pos_modes_explrn,  &
        calc_nelec_wann, lopt_w2b, epw_memdist, lfast_kmesh, dos_tetra, fd,     &
-       a2f_iso, max_seconds,  ltrans_crta, sr_crta,                            &
+       a2f_iso, max_seconds,  ltrans_crta, sr_crta, lsda, interpolate,         &
+       eval_hplrn, eval_eplrn,                                                 &
        !Added for calculating time-dependent Boltzmann transport Equation
        do_tdbe, dt_tdbe, nt_tdbe, twrite_tdbe, temp_el_tdbe, temp_ph_tdbe,     &
        init_type_tdbe, init_sigma_tdbe, ef_c_tdbe, ef_v_tdbe,                  &
        carr_dyn_tdbe, dg_tdbe, nkf1d, nkf2d, nkf3d, nqf1d,                     &
        nqf2d, nqf3d, dph_tdbe, restart_tdbe, phph_tdbe,                        &
-       solver_tdbe, phwmin_tdbe, ephmat_dir, lscreen_tdbe
+       solver_tdbe, phwmin_tdbe, ephmat_dir, lscreen_tdbe, prtvkk, prteigdiff, &
+       plot_psir_plrn, lsign_psir_plrn, eigen_solver_plrn, istate_relax_plrn,  &
+       prtuf
   ! --------------------------------------------------------------------------------
   !
   ! amass    : atomic masses
@@ -325,6 +343,7 @@
   ! max_memlt    : maximum memory that can be allocated per pool
   ! efermi_read  : if. true. read from input file
   ! fermi_energy : fermi energy read from input file (units of eV)
+  ! gap_energy   : Energy within the gap for semiconductors (units of eV). Used when both conduction and valenced are wannierized
   ! wmin_specfun : min frequency in electron spectral function due to e-p interaction (units of eV)
   ! wmax_specfun : max frequency in electron spectral function due to e-p interaction (units of eV)
   ! nw_specfun   : nr. of bins for frequency in electron spectral function due to e-p interaction
@@ -395,6 +414,9 @@
   ! shortrange      : if .TRUE. computes the short-range part of the el-ph (can
   !                   only be used with lpolar = .TRUE. )
   ! prtgkk          : Print the vertex |g| [meV]. This generates huge outputs.
+  ! prtuf           : Print the phonon eigenmodes.
+  ! prtvkk          : Print the volecity matrix elements VME in fine grid
+  ! prteigdiff      : Print the eigenvalues and their differences
   ! etf_mem         : if 0 no optimization, if 1 less memory is used for the fine grid interpolation
   !                   When etf_mem == 2, an additional loop is done on mode for the fine grid interpolation
   !                   part. This reduces the memory further by a factor "nmodes". [This is now depreciated]
@@ -419,7 +441,6 @@
   !
   ! Added by Zhe Liu
   ! calc_nelec_wann : compute number of electrons in wannierized band
-  ! epw_memdist     : distributed storage of epmatwp in MPI processes, only works with etf_mem = 0
   !
   ! Added by S. Mishra
   ! dos_tetra       : if .TRUE. compute density of states using tetrahedron method
@@ -477,6 +498,11 @@
   !     If 'nonadiabatic' then computes the non-adiabatic electron self-energy (default).
   ! lopt_w2b : if .TRUE. use optimized version of Wannier-to-Bloch Fourier transformation
   ! ZD TODO: add comments for newly added variables
+  !
+  ! Added by Alvaro Adrian Carrasco Alvarez for LSDA calculations
+  ! lsda : It can take three values 'none' for NM or noncollinear case, 'up' and 'down' for collinear LSDA case
+  ! interpolate : if .TRUE. interpolate electron phonon matrix elements on the fine mesh by default .TRUE.
+  !               important to set it correctly in the LSDA case
   !
   IF ( npool * nimage /= nproc ) THEN
     CALL errore("readin", "Number of processes must be equal to product "//&
@@ -605,6 +631,8 @@
                              ! anymore. Change the default EPW value to match the previous QE one.
   vme                    = 'wannier' ! Note: Was .FALSE. by default until EPW v5.1 and then .TRUE. until EPW v5.4
   elecselfen_type        = 'nonadiabatic'
+  eval_hplrn             = 0.0d0 ! eV
+  eval_eplrn             = 0.0d0 ! eV
   ephwrite               = .FALSE.
   band_plot              = .FALSE.
   fermi_plot             = .FALSE.
@@ -664,6 +692,7 @@
   max_memlt              = 2.85d0
   efermi_read            = .FALSE.
   fermi_energy           = 0.d0
+  gap_energy             = 1.0d20
   wmin_specfun           = 0.d0 ! eV
   wmax_specfun           = 0.3d0 ! eV
   nw_specfun             = 100
@@ -680,6 +709,9 @@
   longrange_only         = .FALSE.
   shortrange             = .FALSE.
   prtgkk                 = .FALSE.
+  prtuf                  = .FALSE.
+  prtvkk                 = .FALSE.
+  prteigdiff             = .FALSE.
   nel                    = 0.0d0
   meff                   = 1.d0
   epsiheg                = 1.d0
@@ -721,6 +753,7 @@
   gb_only                = .FALSE.
   gb_size                = 0.0d0  ! nm
   nstate_plrn            = 1
+  istate_relax_plrn      = 1
   niter_plrn             = 50
   plrn                   = .FALSE.
   restart_plrn           = .FALSE.
@@ -733,7 +766,9 @@
   conv_thr_plrn          = 1E-5
   g_power_order_plrn     = 1
   step_wf_grid_plrn      = 1
+  plot_psir_plrn         = 1
   cal_psir_plrn          = .FALSE.
+  lsign_psir_plrn        = .FALSE.
   cal_acous_plrn         = .FALSE.
   interp_Ank_plrn        = .FALSE.
   interp_Bqu_plrn        = .FALSE.
@@ -741,10 +776,11 @@
   end_band_plrn          = 0
   g_start_band_plrn      = 0
   g_end_band_plrn        = 0
-  g_start_energy_plrn    = -10.0
-  g_end_energy_plrn      = 10.0
+  g_start_energy_plrn    = -100.0  !! eV
+  g_end_energy_plrn      = 100.0 !! eV
   g_scale_plrn           = 1.0
   full_diagon_plrn       = .FALSE.
+  eigen_solver_plrn      = 'lapack'
   mixing_Plrn            = 1.0
   init_plrn              = 1
   Mmn_plrn               = .FALSE.
@@ -789,12 +825,14 @@
   QD_bin                 = 0.0
   QD_min                 = 0.005
   lwfpt                  = .FALSE.
+  ldfptu                 = .FALSE.
   compute_dmat           = .FALSE.
   calc_nelec_wann        = .FALSE.
   ahc_nbnd               = -1
   ahc_nbndskip           = 0
   ahc_win_min            = -9999.d0
   ahc_win_max            = -9999.d0
+  ahc_rest_fan_broadening = 0.1d0
   lopt_w2b               = .FALSE.
   exciton                = .FALSE.
   explrn                 = .FALSE.
@@ -839,6 +877,8 @@
   lscreen_tdbe           = .FALSE.
   a2f_iso                = .FALSE. 
   max_seconds            = 1.E+7_DP
+  lsda                   = 'none'
+  interpolate            = .TRUE.
   !
   ! Reading the namelist inputepw and check
   IF (meta_ionode) THEN
@@ -885,6 +925,8 @@
     ENDIF
   ENDIF ! meta_ionode
   CALL mp_bcast(wannier_plot, meta_ionode_id, world_comm)
+  CALL mp_bcast(lsda, meta_ionode_id, world_comm)
+  CALL mp_bcast(interpolate, meta_ionode_id, world_comm)
   IF (wannier_plot) CALL mp_bcast(num_wannier_plot, meta_ionode_id, world_comm)
   IF ((wannier_plot) .AND. (.NOT. meta_ionode)) THEN
     ALLOCATE(wanplotlist(num_wannier_plot), STAT = ierr)
@@ -910,6 +952,11 @@
   !
   ! file with rotation matrix U(k) for interpolation
   filukk = TRIM(prefix) // '.ukk'
+  !    
+  IF (TRIM(lsda) == 'down') filukk = TRIM(prefix) // '.down.ukk'
+  !
+  CALL mp_bcast(filukk, meta_ionode_id, world_comm)  
+  ! 
   IF (nsmear < 1) CALL errore('readin', 'Wrong number of nsmears', 1)
   IF (iverbosity < -1 .OR. iverbosity > 6) CALL errore('readin', 'Wrong iverbosity', 1)
   IF (epbread .AND. epbwrite) CALL errore('readin', 'epbread cannot be used with epbwrite', 1)
@@ -988,13 +1035,12 @@
         &is deprecated and switched to etf_mem = 1 automatically.'
     etf_mem = 1
   ENDIF
-  IF (etf_mem /= 0 .AND. epw_memdist) CALL errore('readin', 'Error: epw_memdist only work with etf_mem = 0.', 1)
-  IF (etf_mem == 0 .AND. .NOT. epw_memdist) &
-     WRITE(stdout, '(/,5x,a)') 'Suggestion: epw_memdist == .true. can reduce the memory usage when etf_mem == 0.'
+  IF (epw_memdist) WRITE(stdout, '(/,5x,a)') 'epw_memdist is now automatically set and no &
+         &longer needs to be specified. The input variable epw_memdist is ignored.'
   IF (etf_mem == 3) THEN
     etf_mem = 1
     lfast_kmesh = .TRUE.
-     WRITE(stdout, '(/5x, a)') 'etf_mem = 3 results in the internal parameter &
+    WRITE(stdout, '(/5x, a)') 'etf_mem = 3 results in the internal parameter &
          &lfast_kmesh switched on for efficient k mesh generation.'
   ENDIF
   !
@@ -1014,20 +1060,30 @@
   !
   IF (etf_mem > 1 .OR. etf_mem < 0) CALL errore('readin', 'etf_mem can only be 0 or 1.', 1)
   !
-  IF (lwfpt .AND. (ahc_nbnd <= 0)) CALL errore('readin', &
-      'Error: ahc_nbnd must be set if wfpt is used.', 1)
-  IF (lwfpt .AND. (ahc_win_min < -9990.d0)) CALL errore('readin', &
-      'Error: ahc_win_min must be set if WFPT is used.', 1)
-  IF (lwfpt .AND. (ahc_win_max < -9990.d0)) CALL errore('readin', &
-      'Error: ahc_win_max must be set if WFPT is used.', 1)
-  IF (lwfpt .AND. (fsthick < 1.d8)) CALL errore('readin', &
-      'Error: fsthick cannot be used with WFPT.', 1)
-  IF (lwfpt) compute_dmat = .TRUE.
+  IF (lwfpt) THEN
+    ! ahc_nbnd and ahc_nbndskip are now read from ahc_info.dat (written by ph.x AHC).
+    IF (ahc_nbnd > 0) THEN
+      WRITE(stdout, '(5x,a)') 'WARNING: The ahc_nbnd input is deprecated and will be removed in a future version.'
+      WRITE(stdout, '(5x,a)') '  ahc_nbnd is now read from ahc_info.dat written by ph.x AHC.'
+    ENDIF
+    IF (ahc_nbndskip > 0) THEN
+      WRITE(stdout, '(5x,a)') 'WARNING: The ahc_nbndskip input is deprecated and will be removed in a future version.'
+      WRITE(stdout, '(5x,a)') '  ahc_nbndskip is now read from ahc_info.dat written by ph.x AHC.'
+    ENDIF
+    IF (ahc_win_min < -9990.d0) CALL errore('readin', 'Error: ahc_win_min must be set if WFPT is used.', 1)
+    IF (ahc_win_max < -9990.d0) CALL errore('readin', 'Error: ahc_win_max must be set if WFPT is used.', 1)
+    IF (fsthick < 1.d8) CALL errore('readin', 'Error: fsthick cannot be used with WFPT.', 1)
+    IF (ABS(scissor) > eps6) CALL errore('readin', 'Error: scissor cannot be used with WFPT.', 1)
+    IF (lscreen) CALL errore('readin', 'Error: lscreen cannot be used with WFPT.', 1)
+    !
+    ! For WFPT unfolding, we need the symmetry matrix (dmat)
+    compute_dmat = .TRUE.
+  ENDIF
   ahc_win_min = ahc_win_min / ryd2ev
   ahc_win_max = ahc_win_max / ryd2ev
   !
   IF ((asr_typ /= 'simple') .AND. (asr_typ /= 'crystal') .AND. (asr_typ /= 'one-dim') .AND. &
-      (asr_typ /= 'zero-dim')) THEN
+      (asr_typ /= 'zero-dim') .AND. (asr_typ /= 'no')) THEN
     CALL errore('set_asr','invalid Acoustic Sum Rule:' // asr_typ, 1)
   ENDIF
   !
@@ -1118,8 +1174,18 @@
     WRITE(stdout, '(5x,a)') "         If you used this option intentionally, use it at your own risk."
     WRITE(stdout, '(5x,a)') "         See J. Chem. Phys. 143, 102813 (2015) for more information."
   ENDIF
-  IF (elecselfen_type /= 'adiabatic' .AND. elecselfen_type /= 'nonadiabatic') THEN
-    CALL errore('readin', "Error: elecselfen_type must be 'adiabatic' or 'nonadiabatic'", 1)
+  IF (TRIM(lsda) /= 'none') THEN
+    WRITE(stdout, '(5x,a)') "WARNING: The LSDA module has only been tested for carrier transport in metals"
+    WRITE(stdout, '(5x,a)') "         and electron phonon coupling constant through the a2F = .true. option"
+    WRITE(stdout, '(5x,a)') "         other features within EPW may not work properly or may not be physically"
+    WRITE(stdout, '(5x,a)') "         correct. Use the code at your own risk."
+    IF (eliashberg) CALL errore('readin','Error: The LSDA and Eliashberg modules are not currently compatible', 1)
+    IF (explrn)  CALL errore('readin','Error: The LSDA and exciton polaron module are not currently compatible', 1)
+    IF (plrn) CALL errore('readin','Error: The LSDA and polaron module are not currently compatible', 1)
+    IF (lindabs) CALL errore('readin','Error: The LSDA and indirect absorption module are not currently compatible', 1)
+  ENDIF
+  IF (elecselfen_type /= 'adiabatic' .AND. elecselfen_type /= 'nonadiabatic' .AND. elecselfen_type /= 'manybodyplrn') THEN
+    CALL errore('readin', "Error: elecselfen_type must be 'adiabatic', 'nonadiabatic', or 'manybodyplrn'", 1)
   ENDIF
   !
   IF (lfast_kmesh) THEN
@@ -1236,6 +1302,11 @@
   ENDIF
   IF (ii_only .AND. gb_only) CALL errore('readin', 'Error: Either ii_only or gb_only can be .TRUE.', 1)
   IF (ii_scattering .AND. gb_only) CALL errore('readin', 'Error: Either ii_scattering or gb_only can be .TRUE.', 1)
+  ! select diagonalization solver for polaron
+  IF ( ALL((/eigen_solver_plrn /= 'lapack', eigen_solver_plrn /= 'elpa' /)) ) THEN
+    CALL errore('readin', 'invalid value eigen_solver_plrn = "'//TRIM(eigen_solver_plrn)//'"', 1)
+  ENDIF
+  CALL mp_bcast(eigen_solver_plrn, meta_ionode_id, world_comm)
   !
   ! thickness and smearing width of the Fermi surface
   ! from eV to Ryd
@@ -1260,11 +1331,18 @@
     fermi_energy = fermi_energy / ryd2ev
   ENDIF
   !
+  ! gap energy in the LSDA case if provided read from the input file from eV to Ryd
+  IF (TRIM(lsda) /= 'none') THEN
+    gap_energy = gap_energy / ryd2ev
+  ENDIF
   !
-  ! bfield: input in Tesla=[V/(m^2/s)] , convert in [eV/(Ang^2/s)]
-  bfieldx = bfieldx * electron_si * ang2m**(-2)
-  bfieldy = bfieldy * electron_si * ang2m**(-2)
-  bfieldz = bfieldz * electron_si * ang2m**(-2)
+  ! Corrected by JC & TY
+  ! bfield: input in Tesla, convert to eB in [1/bohr^2] (Rydberg atomic units)
+  ! The atomic unit of B is hbar/(e*a0^2) = 2.354e5 T
+  ! So, eB [1/bohr^2] = B [T] * e * a0^2 / hbar
+  bfieldx = bfieldx * electron_si * (bohr2ang * ang2m)**2 / hbarJ
+  bfieldy = bfieldy * electron_si * (bohr2ang * ang2m)**2 / hbarJ
+  bfieldz = bfieldz * electron_si * (bohr2ang * ang2m)**2 / hbarJ
   !
   ! eptemp : temperature for the electronic Fermi occupations in the e-p calculation (units of Kelvin)
   ! 1 K in eV = 8.6173423e-5
@@ -1297,6 +1375,10 @@
   !
   CALL bcast_input()
   !
+  ! Read ahc_nbnd and ahc_nbndskip from ahc_info.dat (after bcast so lwfpt is set on all ranks)
+  !
+  IF (lwfpt) CALL read_ahc_info()
+  !
   !   Here we finished the reading of the input file.
   !   Now allocate space for pwscf variables, read and check them.
   !
@@ -1310,47 +1392,76 @@
     CALL read_file()
     !
     ! We define the global list of coarse grid k-points (cart and cryst)
-    ALLOCATE(xk_all(3, nkstot), STAT = ierr)
+    SELECT CASE(TRIM(lsda))
+    CASE ('up')
+      nkpts = nkstot / 2
+      kshift = 0
+    CASE ('down')
+      nkpts = nkstot / 2
+      kshift = nkstot / 2
+    CASE DEFAULT
+      nkpts = nkstot
+      kshift = 0
+    END SELECT
+
+    ALLOCATE(xk_all(3, nkpts), STAT = ierr)
     IF (ierr /= 0) CALL errore('readin', 'Error allocating xk_all', 1)
-    ALLOCATE(et_all(nbnd, nkstot), STAT = ierr)
+    ALLOCATE(et_all(nbnd, nkpts), STAT = ierr)
     IF (ierr /= 0) CALL errore('readin', 'Error allocating et_all', 1)
-    ALLOCATE(isk_all(nkstot), STAT = ierr)
+    ALLOCATE(isk_all(nkpts), STAT = ierr)
     IF (ierr /= 0) CALL errore('readin', 'Error allocating isk_all', 1)
-    ALLOCATE(xk_cryst(3, nkstot), STAT = ierr)
+    ALLOCATE(xk_cryst(3, nkpts), STAT = ierr)
     IF (ierr /= 0) CALL errore('readin', 'Error allocating xk_cryst', 1)
     xk_all(:, :)   = zero
     et_all(:, :)   = zero
     isk_all(:)    = 0
     xk_cryst(:, :) = zero
-    DO ik = 1, nkstot
-      xk_all(:, ik)   = xk(:, ik)
-      isk_all(ik)     = isk(ik)
-      et_all(:, ik)   = et(:, ik)
-      xk_cryst(:, ik) = xk(:, ik)
+    DO ik = 1, nkpts
+      xk_all(:, ik)   = xk(:, ik + kshift)
+      isk_all(ik)     = isk(ik + kshift)
+      et_all(:, ik)   = et(:, ik + kshift)
+      xk_cryst(:, ik) = xk(:, ik + kshift)
     ENDDO
     !  bring k-points from cartesian to crystal coordinates
-    CALL cryst_to_cart(nkstot, xk_cryst, at, -1)
+    CALL cryst_to_cart(nkpts, xk_cryst, at, -1)
     ! Only master has the correct full list of kpt. Therefore bcast to all cores
     CALL mp_bcast(xk_all, meta_ionode_id, world_comm)
     CALL mp_bcast(et_all, meta_ionode_id, world_comm)
     CALL mp_bcast(isk_all, meta_ionode_id, world_comm)
     CALL mp_bcast(xk_cryst, meta_ionode_id, world_comm)
     !
+    IF ( MOD( nkpts, kunit ) /= 0 ) &                                
+    CALL errore( 'epw_readin', 'nkpts/kunit is not an integer', 1)
+    !                                                                
+    ! Number of k points in the k grid to be dsitributed across pools
+    nk_loc    = kunit * ( nkpts / kunit / npool )                    
+    !                                                                
+    IF (nk_loc == 0) CALL infomsg('epw_readin', &                    
+          'suboptimal parallelization: some nodes have no k-points') 
+    !                                                                
+    ! It will be only non zero if npool is not a divisor of nkpts    
+    rest = ( nkpts - nk_loc * npool ) / kunit                        
+    !                                                                
+    IF ( my_pool_id < rest ) nk_loc = nk_loc + kunit                 
     ! We define the local list of kpt
-    ALLOCATE(xk_loc(3, nks), STAT = ierr)
+    ALLOCATE(xk_loc(3, nk_loc), STAT = ierr)
     IF (ierr /= 0) CALL errore('readin', 'Error allocating xk_loc', 1)
-    ALLOCATE(et_loc(nbnd, nks), STAT = ierr)
+    ALLOCATE(et_loc(nbnd, nk_loc), STAT = ierr)
     IF (ierr /= 0) CALL errore('readin', 'Error allocating et_loc', 1)
-    ALLOCATE(isk_loc(nks), STAT = ierr)
+    ALLOCATE(isk_loc(nk_loc), STAT = ierr)
     IF (ierr /= 0) CALL errore('readin', 'Error allocating isk_loc', 1)
     xk_loc(:, :) = zero
     et_loc(:, :) = zero
     isk_loc(:) = 0
-    DO ik = 1, nks
-      xk_loc(:, ik) = xk(:, ik)
-      et_loc(:, ik) = et(:, ik)
-      isk_loc(ik)   = isk(ik)
-    ENDDO
+    !                                                                                      
+    ! calculates the position in the list of the first point to be distributed on this pool
+    nbase = nk_loc * my_pool_id                                                            
+    !                                                                                      
+    IF ( my_pool_id >= rest ) nbase = nbase + rest * kunit                                 
+    !                                                                                   
+    xk_loc(:,1:nk_loc) = xk_all(:, nbase+1:nbase+nk_loc)                                   
+    et_loc(:,1:nk_loc) = et_all(:, nbase+1:nbase+nk_loc)                                   
+    isk_loc(1:nk_loc)   = isk_all(nbase+1:nbase+nk_loc)                                    
     !
     ! 04-2019 - SP
     ! isk_loc and isk_all are spin index (LSDA only) on the local or all k-points.
@@ -1391,7 +1502,12 @@
   !
   IF (tfixed_occ) CALL errore('readin', 'phonon with arbitrary occupations not tested', 1)
   !
-  IF (elph .AND. lsda) CALL errore('readin', 'El-ph and spin not implemented', 1)
+  IF (elph .AND. domag) THEN
+    IF (noncolin) CALL errore('readin', 'El-ph and non collinear magnetism not implemented', 1)
+    WRITE(stdout, '(a)') &
+       'WARNING: readin: El-ph with magnetism is still experimental and not all features have been tested'
+    WRITE(stdout, '(21x, a)') 'In this case, use the EPW results at your own risk' 
+  ENDIF
   !
   IF (noncolin .AND. okpaw) THEN
     WRITE(stdout, '(a)') &
@@ -1399,6 +1515,17 @@
     WRITE(stdout, '(21x,a)') 'In this case, use the EPW results at your own risk.'
   ENDIF
   !
+  ! S.Tiwari: This is a patch work to prevent a crash/should be fixed asap
+  IF (.NOT. epwread) THEN
+    IF (lda_plus_u) THEN
+      IF (lda_plus_u_kind /= 0) THEN !CALL errore('readin', 'Current &
+        !lda_plus_u_kind is not implemented', 1)
+        WRITE(stdout,'(/,5x,a)') 'Warning: lda_plus_u_kind not 0; check results &
+        carefully'
+      ENDIF
+      ldfptu = .TRUE.
+    ENDIF
+  ENDIF
   !   There might be other variables in the input file which describe
   !   partial computation of the dynamical matrix. Read them here
   !

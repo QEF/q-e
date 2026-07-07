@@ -36,6 +36,7 @@ PROGRAM postahc
   USE cell_base,   ONLY : at, bg
   USE ions_base,   ONLY : ntyp => nsp, nat, ityp
   USE wvfct,       ONLY : nbnd
+  USE upf_utils,   ONLY : imatches
   !
   IMPLICIT NONE
   !
@@ -204,7 +205,6 @@ PROGRAM postahc
   COMPLEX(DP), ALLOCATABLE :: selfen_diag_avg(:, :, :)
   !! Diagonal self-energy averaged over degenerate states
   !
-  LOGICAL, EXTERNAL  :: imatches
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   CHARACTER(len=6), EXTERNAL :: int_to_char
   REAL(DP), EXTERNAL :: wgauss
@@ -771,7 +771,7 @@ PROGRAM postahc
   !
 1001 CONTINUE
   !
-  CALL environment_end('POSTAHC')
+  CALL environment_end( )
   CALL mp_global_end()
   !
 CONTAINS
@@ -951,7 +951,7 @@ SUBROUTINE compute_ahc_dw_with_truncation(ahc_dw_trunc)
           DO jb = 1, ahc_nbnd
             DO idir = 1, 3
               DO imode = 1, nmodes
-                ahc_dw_trunc(ib, jb, imode, idir, ik) = ahc_dw_trunc(ib, jb, imode, idir, ik) + &
+                ahc_dw_trunc(ib, jb, imode, idir, ik) = ahc_dw_trunc(ib, jb, imode, idir, ik) &
                   + (0.d0, 1.d0) * CONJG(ahc_gkk(pb, ib, imode, ik)) * ahc_p(pb, jb, idir, ik) &
                   - (0.d0, 1.d0) * CONJG(ahc_p(pb, ib, idir, ik)) * ahc_gkk(pb, jb, imode, ik)
               ENDDO

@@ -339,7 +339,7 @@ PROGRAM ups
   !
   CALL grid_destroy()
   !
-  CALL environment_end ( 'ups' )
+  CALL environment_end( )
   !
 #if defined(__MPI)
   CALL mp_global_end()

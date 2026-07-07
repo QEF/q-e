@@ -90,6 +90,12 @@ The following features of the code are tested:
 - HSE hybrid functional, nq=2
 - HSE hybrid functional, nq=4
 
+###############
+# pw_irrbz : MoS2 monolayer #
+###############
+The following features of the code are tested:
+- Proper treatment of k points when a user-provided full k points are given (see GitLab merge request 2690)
+
 ####################
 # pw_langevin : H2 #
 ####################
@@ -502,25 +508,32 @@ in presence of phonons.
 # KCW tests
 #################################################################
 ############################
-# kcw-nc-ks : H2O molecule #
+# kcw-ks : H2O molecule #
 ############################
 The following features of the code are tested:
 - Calculation of screening coefficients for KS orbitals
 - Calculation of KI@KS eigenvalues
 
 ############################
-# kcw-nc-wann : Si FCC #
+# kcw-wann : Si FCC #
 ############################
 The following features of the code are tested:
 - Calculation of screening coefficients for MLWF
 - Calculation of KI@Wann eigenvalues
 
 ##################################
-# kcw-nc-wann-nc : Si FCC NC SOC #
+# kcw-wann-nc : Si FCC NC SOC #
 ##################################
 The following features of the code are tested:
 - Calculation of non-collinear screening coefficients for MLWF
 - Calculation of non-collinear KI@Wann eigenvalues
+
+############################
+# kcw-wann_sym : Si FCC #
+############################
+The following features of the code are tested:
+- Calculation of screening coefficients for MLWF using crystal symmetries
+- Calculation of KI@Wann eigenvalues
 
 #################################################################
 # PIOUD tests

@@ -1,5 +1,5 @@
 
-     Program POSTAHC v.7.2 starts on 12Mar2024 at 19: 9:10 
+     Program POSTAHC v.7.6-dev starts on  6Jul2026 at 10:27:45 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -10,10 +10,11 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     1 processors
+     Parallel version (MPI), running on     4 processors
 
      MPI processes distributed on     1 nodes
-     4777 MiB available memory on the printing compute node when the environment starts
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+     8187 MiB available memory on the printing compute node when the environment starts
 
      Waiting for input...
      Reading input from standard input
@@ -31,19 +32,21 @@
      Please, verify this is what you really want
 
 
-     G-vector sticks info
+     Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min          30      30     10                  222      222      45
+     Max          31      31     11                  225      225      46
      Sum         121     121     43                  893      893     181
 
      Using Slab Decomposition
 
      There are          4 q points in total.
-     Calculating        4 q points in the root core.
+     Calculating        1 q points in the root core.
      Total number of bands :        9
      Bands to calculate the self-energy :       5 to        8
 
-     Calculating electron self-energy. Loop over        4 q points
+     Calculating electron self-energy. Loop over        1 q points
 
 
 
@@ -55,26 +58,26 @@
 
      Begin postahc output
          ik  ibnd    Re[Total]     Upper_DW      Lower_DW   Upper_Fan Re[Lower_Fan]   Im[Total]
-          1     1   3.1355E-01   2.8419E-01   1.1468E-01  -3.7424E-01   2.8892E-01  -8.4127E-01
-          1     2   3.1355E-01   2.8419E-01   1.1468E-01  -3.7424E-01   2.8892E-01  -8.4127E-01
-          1     3   3.1355E-01   2.8419E-01   1.1468E-01  -3.7424E-01   2.8892E-01  -8.4127E-01
+          1     1   3.1354E-01   2.8419E-01   1.1468E-01  -3.7424E-01   2.8890E-01  -8.4127E-01
+          1     2   3.1354E-01   2.8419E-01   1.1468E-01  -3.7424E-01   2.8890E-01  -8.4127E-01
+          1     3   3.1354E-01   2.8419E-01   1.1468E-01  -3.7424E-01   2.8890E-01  -8.4127E-01
           1     4  -2.9902E+00   3.3284E-01  -5.5630E-01  -1.0810E+00  -1.6858E+00  -2.4834E-01
-          2     1  -6.7683E-01   2.3980E-01  -3.1952E-01  -7.4077E-01   1.4366E-01  -3.7359E+00
+          2     1  -6.7689E-01   2.3980E-01  -3.1952E-01  -7.4078E-01   1.4360E-01  -3.7358E+00
           2     2   2.0020E+00   3.3924E-01  -1.2951E-03  -3.6440E-01   2.0285E+00  -3.0311E+00
           2     3   2.0020E+00   3.3924E-01  -1.2951E-03  -3.6440E-01   2.0285E+00  -3.0311E+00
-          2     4  -3.2736E-01   2.9921E-01   4.8596E-02  -5.0744E-01  -1.6773E-01  -8.0815E-01
+          2     4  -3.2741E-01   2.9921E-01   4.8596E-02  -5.0745E-01  -1.6777E-01  -8.0813E-01
           3     1  -1.3438E+00   3.4428E-01  -1.6715E-02  -4.5267E-01  -1.2187E+00  -1.2154E-01
-          3     2   4.9264E-01   4.5881E-01  -5.1169E-02  -6.2973E-01   7.1473E-01  -3.9427E-01
-          3     3   7.6670E-01   4.8397E-01   4.4823E-02  -6.2440E-01   8.6231E-01  -1.0315E+00
-          3     4  -1.0748E+00   2.2068E-01  -1.4410E-01  -6.2853E-01  -5.2282E-01  -4.9342E+00
-          4     1  -8.2522E-01   2.1389E-01  -4.7552E-02  -3.7972E-01  -6.1183E-01  -2.1318E-01
+          3     2   4.9264E-01   4.5881E-01  -5.1169E-02  -6.2973E-01   7.1474E-01  -3.9427E-01
+          3     3   7.6672E-01   4.8397E-01   4.4823E-02  -6.2441E-01   8.6233E-01  -1.0315E+00
+          3     4  -1.0748E+00   2.2068E-01  -1.4410E-01  -6.2853E-01  -5.2281E-01  -4.9342E+00
+          4     1  -8.2514E-01   2.1389E-01  -4.7552E-02  -3.7973E-01  -6.1175E-01  -2.1313E-01
           4     2  -1.4053E+00   3.1936E-01  -4.1382E-02  -5.2539E-01  -1.1579E+00  -1.8940E+00
-          4     3  -1.8975E+00   4.3801E-01  -9.0572E-02  -7.2267E-01  -1.5222E+00  -1.0220E+00
-          4     4   2.2460E+00   5.4569E-01  -3.7116E-02  -7.1865E-01   2.4561E+00  -2.3569E+00
-          5     1  -9.2875E-01   2.9244E-01  -3.9059E-02  -4.1549E-01  -7.6665E-01  -2.4043E+00
-          5     2   6.1781E-01   3.6837E-01  -5.9952E-02  -5.5762E-01   8.6701E-01  -5.9500E-01
-          5     3  -7.8877E-01   3.8076E-01  -6.6503E-02  -6.5366E-01  -4.4937E-01  -1.7655E-01
-          5     4  -9.7717E-01   3.1113E-01  -1.7701E-02  -5.2785E-01  -7.4275E-01  -7.2776E-01
+          4     3  -1.8974E+00   4.3801E-01  -9.0572E-02  -7.2267E-01  -1.5222E+00  -1.0220E+00
+          4     4   2.2460E+00   5.4569E-01  -3.7116E-02  -7.1866E-01   2.4561E+00  -2.3570E+00
+          5     1  -9.2875E-01   2.9244E-01  -3.9059E-02  -4.1549E-01  -7.6664E-01  -2.4043E+00
+          5     2   6.1782E-01   3.6837E-01  -5.9952E-02  -5.5762E-01   8.6701E-01  -5.9501E-01
+          5     3  -7.8878E-01   3.8076E-01  -6.6503E-02  -6.5367E-01  -4.4937E-01  -1.7655E-01
+          5     4  -9.7715E-01   3.1113E-01  -1.7701E-02  -5.2785E-01  -7.4274E-01  -7.2776E-01
      End postahc output
 
      Full off-diagonal complex self-energy matrix is written in files
@@ -83,14 +86,14 @@
      NOT averaged in the selfen_*.dat output.
 
 
-     debye_waller :      0.00s CPU      0.00s WALL (       8 calls)
-     lower_fan    :      0.00s CPU      0.00s WALL (       4 calls)
-     upper_fan    :      0.00s CPU      0.00s WALL (       4 calls)
+     debye_waller :      0.00s CPU      0.00s WALL (       2 calls)
+     lower_fan    :      0.00s CPU      0.00s WALL (       1 calls)
+     upper_fan    :      0.00s CPU      0.00s WALL (       1 calls)
 
      POSTAHC      :      0.04s CPU      0.04s WALL
 
 
-   This run was terminated on:  19: 9:10  12Mar2024            
+   This run was terminated on:  10:27:45   6Jul2026            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

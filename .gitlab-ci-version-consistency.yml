@@ -1,0 +1,101 @@
+# Soft, non-blocking check that hardcoded version strings (CMakeLists.txt,
+# configure.ac, Doc/*.tex, Doc/release-notes, ...) haven't drifted from
+# include/qe_version.h. dev-tools/check_versions.sh runs once
+# (docs:version-consistency) and writes a small per-section status file,
+# which the three docs:version-consistency:* jobs below each read to report
+# pass/fail for their own section without re-running the checks.
+# allow_failure on the sectorial jobs keeps this from blocking merges; see
+# dev-tools/version-update-checklist.md for what to do about a failure.
+
+.version-consistency-paths: &version-consistency-paths
+  - include/qe_version.h
+  - CMakeLists.txt
+  - install/configure.ac
+  - configure
+  - Doc/release-notes
+  - PW/Doc/user_guide.tex
+  - PP/Doc/user_guide.tex
+  - PHonon/Doc/user_guide.tex
+  - NEB/Doc/user_guide.tex
+  - CPV/Doc/tp.tex
+  - Doc/user_guide.tex
+  - Doc/brillouin_zones.tex
+  - Doc/Hubbard_input.tex
+  - dev-tools/check_versions.sh
+
+.version-consistency-rules: &version-consistency-rules
+  # on-demand: manual pipeline trigger with GENERATE_DOCS=true
+  - if: '$GENERATE_DOCS == "true"'
+  # on-demand: commit message starts with [doc] or docs:
+  - if: '$CI_COMMIT_MESSAGE =~ /^(\[doc\]|docs:)/'
+  # automatic: MR touches a version-bearing file
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    changes: *version-consistency-paths
+  # automatic: same on master/develop
+  - if: '$CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"'
+    changes: *version-consistency-paths
+
+docs:version-consistency:
+  tags: [gitlab-org-docker]
+  image: ubuntu:24.04
+  rules: *version-consistency-rules
+  script:
+    # always succeeds -- the sectorial jobs below carry the pass/fail signal
+    - ./dev-tools/check_versions.sh || true
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - .version-check-status
+
+docs:version-consistency:build:
+  tags: [gitlab-org-docker]
+  image: ubuntu:24.04
+  allow_failure: true
+  needs: ["docs:version-consistency"]
+  rules: *version-consistency-rules
+  script:
+    - test -f .version-check-status || { echo "Missing status file -- see the docs:version-consistency job log"; exit 1; }
+    - . ./.version-check-status
+    - |
+      if [ "$BUILD_STATUS" = "1" ]; then
+        echo "CMakeLists.txt / configure.ac / configure disagree with include/qe_version.h."
+        echo "See the docs:version-consistency job log and dev-tools/version-update-checklist.md."
+        exit 1
+      fi
+      echo "Build-system version strings match include/qe_version.h."
+
+docs:version-consistency:docs:
+  tags: [gitlab-org-docker]
+  image: ubuntu:24.04
+  allow_failure: true
+  needs: ["docs:version-consistency"]
+  rules: *version-consistency-rules
+  script:
+    - test -f .version-check-status || { echo "Missing status file -- see the docs:version-consistency job log"; exit 1; }
+    - . ./.version-check-status
+    - |
+      if [ "$DOCS_STATUS" = "1" ]; then
+        echo "One or more Doc/*.tex \\def\\version{...} labels disagree with include/qe_version.h."
+        echo "This is expected to lag until someone reviews and bumps that document by hand --"
+        echo "see the docs:version-consistency job log and dev-tools/version-update-checklist.md."
+        exit 1
+      fi
+      echo "Documentation \\def\\version{...} labels match include/qe_version.h."
+
+docs:version-consistency:notes:
+  tags: [gitlab-org-docker]
+  image: ubuntu:24.04
+  allow_failure: true
+  needs: ["docs:version-consistency"]
+  rules: *version-consistency-rules
+  script:
+    - test -f .version-check-status || { echo "Missing status file -- see the docs:version-consistency job log"; exit 1; }
+    - . ./.version-check-status
+    - |
+      if [ "$NOTES_STATUS" = "1" ]; then
+        echo "Doc/release-notes' top section label disagrees with include/qe_version.h."
+        echo "See the docs:version-consistency job log and dev-tools/version-update-checklist.md."
+        exit 1
+      fi
+      echo "Doc/release-notes top section label matches include/qe_version.h."

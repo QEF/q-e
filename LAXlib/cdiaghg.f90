@@ -304,7 +304,7 @@ SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
   !
   !
   !
-  CALL start_clock_gpu( 'cdiaghg' )
+  CALL start_clock( 'cdiaghg' )
   !
   ! ... only the first processor diagonalizes the matrix
   !
@@ -420,7 +420,7 @@ SUBROUTINE laxlib_cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d, me_bgrp, root_bgrp
 #endif
 #endif
   !
-  CALL stop_clock_gpu( 'cdiaghg' )
+  CALL stop_clock( 'cdiaghg' )
   !
   RETURN
   !

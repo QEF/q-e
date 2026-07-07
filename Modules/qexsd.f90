@@ -52,7 +52,7 @@ MODULE qexsd_module
   ! definitions for the fmt
   !
   CHARACTER(5),  PARAMETER :: fmt_name = "QEXSD"
-  CHARACTER(8),  PARAMETER :: fmt_version = "25.05.21"
+  CHARACTER(8),  PARAMETER :: fmt_version = "26.02.26"
   !
   ! internal data to be set
   !
@@ -131,7 +131,7 @@ CONTAINS
       CALL xml_NewElement (XF=qexsd_xf, NAME = "qes:espresso")
       CALL xml_addAttribute(XF=qexsd_xf, NAME = "xsi:schemaLocation", &
                             VALUE = "http://www.quantum-espresso.org/ns/qes/qes-1.0 "//&
-                                    "http://www.quantum-espresso.org/ns/qes/qes_250521.xsd" )
+                                    "http://www.quantum-espresso.org/ns/qes/qes_260226.xsd" )
       CALL xml_addAttribute(XF=qexsd_xf, NAME="Units", VALUE="Hartree atomic units")
       CALL xml_addComment(XF = qexsd_xf, &
               COMMENT = "All quantities are in Hartree atomic units unless otherwise specified" ) 
@@ -451,20 +451,19 @@ CONTAINS
     !----------------------------------------------------------------------------------------
     SUBROUTINE qexsd_step_addstep(i_step, max_steps, ntyp, atm, ityp, nat, tau, alat, a1, a2, a3, &
                                   etot, eband, ehart, vtxc, etxc, ewald, degauss, demet, forces,  &
-                                  stress, scf_has_converged, n_scf_steps, scf_error, efieldcorr, potstat_contr,      &
-                                  fcp_force, fcp_tot_charge, gatefield_en)
+                                  tstress, stress, scf_has_converged, n_scf_steps, scf_error, efieldcorr, &
+                                  potstat_contr, fcp_force, fcp_tot_charge, gatefield_en)
     !-----------------------------------------------------------------------------------------
     !! This routing initializes le steps array containing up to max_steps elements of the step_type
     !! data structure. Each element contains structural and energetic info for m.d. trajectories and 
     !! structural minimization paths. All quantities must be provided directly in Hartree atomic units. 
     !! @Note updated on April 10th 2018 by Pietro Delugas
     USE qexsd_init, ONLY : qexsd_init_atomic_structure, qexsd_init_total_energy
-    USE control_flags, ONLY : tstress
     ! 
     INTEGER ,INTENT(IN)             :: i_step, max_steps, ntyp, nat, n_scf_steps, ityp(:)
     REAL(DP),INTENT(IN)             :: tau(3,nat), alat, a1(3), a2(3), a3(3), etot, eband, ehart, vtxc, &
                                        etxc, ewald, scf_error, forces(3,nat), stress(3,3) 
-    LOGICAL,INTENT(IN)              :: scf_has_converged 
+    LOGICAL,INTENT(IN)              :: tstress, scf_has_converged 
     REAL(DP),OPTIONAL,INTENT(IN)    :: degauss, demet, gatefield_en, efieldcorr
     REAL(DP),OPTIONAL,INTENT (IN)   :: potstat_contr, fcp_force, fcp_tot_charge       
     CHARACTER(LEN=*),INTENT(IN)     :: atm(:)

@@ -10,10 +10,20 @@
 
        Koopmans functional implementation based on DFPT; please cite this program as
 
-        N.Colonna, R. De Gannaro, E. Linscott, and N. Marzari, JCTC 18, 5435 (2022) 
+        N.Colonna, R. De Gennaro, E. Linscott, and N. Marzari, JCTC 18, 5435 (2022) 
+
+                                                                                    
+
+       If you use the non-collinear mode (with/without spin-orbit coupling) please cite
+
+        A. Marrazzo and N. Colonna, Phys. Rev. Research 6, 033085 (2024)  
      =--------------------------------------------------------------------------------=
 
-     Program KCW v.7.1 starts on 16Feb2024 at 15:24:16 
+     Program KCW v.7.5 starts on 17Sep2025 at 13:46:22 
+        Git branch: develop
+        Last git commit: 7e86c4d7f8b367fcfbff0156d653f13ca55b1b03-dirty
+        Last git commit date: Tue Sep 16 17:33:36 2025 +0000
+        Last git commit subject: Merge branch 'vhpsi' into 'develop'
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -27,8 +37,8 @@
      Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     5033 MiB available memory on the printing compute node when the environment starts
- 
+     598 MiB available memory on the printing compute node when the environment starts
+
 
      KCW INPUT SUMMARY 
      ============================================
@@ -47,6 +57,10 @@
        # check_ks            =                 T
        # l_vcut              =                 F
        # assume_isolated     =              none
+       # io_sp               =                 F
+       # io_real_space       =                 F
+       # irr_bz              =                 F
+           # use_wct         =                 F
 
       WANNIER 
        # seedname            =             Si_nc
@@ -78,14 +92,14 @@
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         295     295     91                 3287     3287     609
- 
+
      Using Slab Decomposition
- 
+
      Reading collected, re-writing distributed wavefunctions
      Message from routine kcw_readin:
      Non-collinear KCW calculation.
@@ -95,14 +109,14 @@
      READING SCREENING PARAMETERS
 
      INFO: alphas read from:./out/kcw/Si_nc.alpha.dat                                                                                                                                                                                                                                       
-     iwann =     1   alpha =      0.30559059
-     iwann =     2   alpha =      0.30559059
-     iwann =     3   alpha =      0.30559059
-     iwann =     4   alpha =      0.30559059
-     iwann =     5   alpha =      0.30559059
-     iwann =     6   alpha =      0.30559059
-     iwann =     7   alpha =      0.30559059
-     iwann =     8   alpha =      0.30559059
+     iwann =     1   alpha =      0.30559065
+     iwann =     2   alpha =      0.30559065
+     iwann =     3   alpha =      0.30559065
+     iwann =     4   alpha =      0.30559065
+     iwann =     5   alpha =      0.30559065
+     iwann =     6   alpha =      0.30559065
+     iwann =     7   alpha =      0.30559065
+     iwann =     8   alpha =      0.30559065
 
      INFO: Buffer for KS wfcs, OPENED
 
@@ -231,81 +245,6 @@
      INFO: KC SCALAR TERM CALCULATION ... START
 
      INFO: KC SCALAR TERM CALCULATION ... END
-
-     INFO: DEBUG BEYOND 2ND-ORDER ALPHA NC
-      -0.209771  0.000000 -0.272873  0.000000  0.126204  0.000000
- -0.209772  0.000000 -0.272874  0.000000  0.126205  0.000000
- -0.209771 -0.000000 -0.272874 -0.000000  0.126205 -0.000000
- -0.209771  0.000000 -0.272873  0.000000  0.126205  0.000000
- -0.209771  0.000000 -0.272873  0.000000  0.126205  0.000000
- -0.209771 -0.000000 -0.272874 -0.000000  0.126205 -0.000000
- -0.209771  0.000000 -0.272873  0.000000  0.126205  0.000000
- -0.209771 -0.000000 -0.272874 -0.000000  0.126205 -0.000000
- ------------
-        iwann=   1   ipol=   1   int rho_wann[ipol](r) [Re, Im] =    1.000000   -0.000000
-        iwann=   1   ipol=   1   int Im[rho_wann[ipol](r)]      =    0.000000
-        iwann=   1   ipol=   2   int rho_wann[ipol](r) [Re, Im] =   -0.000001    0.000000
-        iwann=   1   ipol=   2   int Im[rho_wann[ipol](r)]      =    0.000000
-        iwann=   1   ipol=   3   int rho_wann[ipol](r) [Re, Im] =   -0.000001    0.000000
-        iwann=   1   ipol=   3   int Im[rho_wann[ipol](r)]      =    0.000000
-        iwann=   1   ipol=   4   int rho_wann[ipol](r) [Re, Im] =    0.999997   -0.000000
-        iwann=   1   ipol=   4   int Im[rho_wann[ipol](r)]      =    0.000000
-        iwann=   2   ipol=   1   int rho_wann[ipol](r) [Re, Im] =    1.000000   -0.000000
-        iwann=   2   ipol=   1   int Im[rho_wann[ipol](r)]      =    0.000000
-        iwann=   2   ipol=   2   int rho_wann[ipol](r) [Re, Im] =    0.000001   -0.000000
-        iwann=   2   ipol=   2   int Im[rho_wann[ipol](r)]      =   -0.000000
-        iwann=   2   ipol=   3   int rho_wann[ipol](r) [Re, Im] =    0.000001    0.000000
-        iwann=   2   ipol=   3   int Im[rho_wann[ipol](r)]      =    0.000000
-        iwann=   2   ipol=   4   int rho_wann[ipol](r) [Re, Im] =   -0.999997    0.000000
-        iwann=   2   ipol=   4   int Im[rho_wann[ipol](r)]      =   -0.000000
-        iwann=   3   ipol=   1   int rho_wann[ipol](r) [Re, Im] =    1.000000    0.000000
-        iwann=   3   ipol=   1   int Im[rho_wann[ipol](r)]      =    0.000000
-        iwann=   3   ipol=   2   int rho_wann[ipol](r) [Re, Im] =    0.000000   -0.000000
-        iwann=   3   ipol=   2   int Im[rho_wann[ipol](r)]      =   -0.000000
-        iwann=   3   ipol=   3   int rho_wann[ipol](r) [Re, Im] =   -0.000001    0.000000
-        iwann=   3   ipol=   3   int Im[rho_wann[ipol](r)]      =    0.000000
-        iwann=   3   ipol=   4   int rho_wann[ipol](r) [Re, Im] =    0.999997    0.000000
-        iwann=   3   ipol=   4   int Im[rho_wann[ipol](r)]      =    0.000000
-        iwann=   4   ipol=   1   int rho_wann[ipol](r) [Re, Im] =    1.000000    0.000000
-        iwann=   4   ipol=   1   int Im[rho_wann[ipol](r)]      =    0.000000
-        iwann=   4   ipol=   2   int rho_wann[ipol](r) [Re, Im] =   -0.000000    0.000000
-        iwann=   4   ipol=   2   int Im[rho_wann[ipol](r)]      =    0.000000
-        iwann=   4   ipol=   3   int rho_wann[ipol](r) [Re, Im] =    0.000001    0.000000
-        iwann=   4   ipol=   3   int Im[rho_wann[ipol](r)]      =   -0.000000
-        iwann=   4   ipol=   4   int rho_wann[ipol](r) [Re, Im] =   -0.999997   -0.000000
-        iwann=   4   ipol=   4   int Im[rho_wann[ipol](r)]      =   -0.000000
-        iwann=   5   ipol=   1   int rho_wann[ipol](r) [Re, Im] =    1.000000   -0.000000
-        iwann=   5   ipol=   1   int Im[rho_wann[ipol](r)]      =    0.000000
-        iwann=   5   ipol=   2   int rho_wann[ipol](r) [Re, Im] =   -0.000000   -0.000000
-        iwann=   5   ipol=   2   int Im[rho_wann[ipol](r)]      =   -0.000000
-        iwann=   5   ipol=   3   int rho_wann[ipol](r) [Re, Im] =    0.000001    0.000000
-        iwann=   5   ipol=   3   int Im[rho_wann[ipol](r)]      =    0.000000
-        iwann=   5   ipol=   4   int rho_wann[ipol](r) [Re, Im] =    0.999997   -0.000000
-        iwann=   5   ipol=   4   int Im[rho_wann[ipol](r)]      =    0.000000
-        iwann=   6   ipol=   1   int rho_wann[ipol](r) [Re, Im] =    1.000000   -0.000000
-        iwann=   6   ipol=   1   int Im[rho_wann[ipol](r)]      =    0.000000
-        iwann=   6   ipol=   2   int rho_wann[ipol](r) [Re, Im] =    0.000000    0.000000
-        iwann=   6   ipol=   2   int Im[rho_wann[ipol](r)]      =    0.000000
-        iwann=   6   ipol=   3   int rho_wann[ipol](r) [Re, Im] =   -0.000001   -0.000000
-        iwann=   6   ipol=   3   int Im[rho_wann[ipol](r)]      =   -0.000000
-        iwann=   6   ipol=   4   int rho_wann[ipol](r) [Re, Im] =   -0.999997    0.000000
-        iwann=   6   ipol=   4   int Im[rho_wann[ipol](r)]      =   -0.000000
-        iwann=   7   ipol=   1   int rho_wann[ipol](r) [Re, Im] =    1.000000   -0.000000
-        iwann=   7   ipol=   1   int Im[rho_wann[ipol](r)]      =    0.000000
-        iwann=   7   ipol=   2   int rho_wann[ipol](r) [Re, Im] =    0.000001    0.000000
-        iwann=   7   ipol=   2   int Im[rho_wann[ipol](r)]      =   -0.000000
-        iwann=   7   ipol=   3   int rho_wann[ipol](r) [Re, Im] =    0.000000   -0.000000
-        iwann=   7   ipol=   3   int Im[rho_wann[ipol](r)]      =   -0.000000
-        iwann=   7   ipol=   4   int rho_wann[ipol](r) [Re, Im] =    0.999997   -0.000000
-        iwann=   7   ipol=   4   int Im[rho_wann[ipol](r)]      =    0.000000
-        iwann=   8   ipol=   1   int rho_wann[ipol](r) [Re, Im] =    1.000000   -0.000000
-        iwann=   8   ipol=   1   int Im[rho_wann[ipol](r)]      =    0.000000
-        iwann=   8   ipol=   2   int rho_wann[ipol](r) [Re, Im] =   -0.000001    0.000000
-        iwann=   8   ipol=   2   int Im[rho_wann[ipol](r)]      =    0.000000
-        iwann=   8   ipol=   3   int rho_wann[ipol](r) [Re, Im] =   -0.000000    0.000000
-        iwann=   8   ipol=   3   int Im[rho_wann[ipol](r)]      =    0.000000
-        iwann=   8   ipol=   4   int rho_wann[ipol](r) [Re, Im] =   -0.999997    0.000000
-        iwann=   8   ipol=   4   int Im[rho_wann[ipol](r)]      =   -0.000000
 
           k = 0.0000 0.0000 0.0000     band energies (ev):
 
@@ -460,7 +399,7 @@
 
         KC interpolated eigenvalues at k=      0.1875      0.1875      0.3750
 
-          -5.6785    -5.6785     1.8757     1.8757     3.8630     3.8630     4.7679     4.7679
+          -5.6785    -5.6785     1.8757     1.8757     3.8630     3.8630     4.7679     4.7680
 
         KC interpolated eigenvalues at k=      0.1500      0.1500      0.3000
 
@@ -468,7 +407,7 @@
 
         KC interpolated eigenvalues at k=      0.1125      0.1125      0.2250
 
-          -6.2950    -6.2950     3.9525     3.9525     4.7984     4.7984     5.2211     5.2211
+          -6.2950    -6.2950     3.9525     3.9525     4.7984     4.7985     5.2211     5.2211
 
         KC interpolated eigenvalues at k=      0.0750      0.0750      0.1500
 
@@ -605,38 +544,39 @@
      ENDING BAND STRUCTURE INTERPOLATION
 
 
-     Writing all to output data dir ./out/Si_nc_kcw.save/
- 
-     KCW          :      0.52s CPU      0.68s WALL
+     Writing all to output data dir ./out/Si_nc_kcw.save/ :
+     XML data file, pseudopotentials, collected wavefunctions
+
+     KCW          :      0.57s CPU      0.63s WALL
 
      INITIALIZATION: 
- 
-     init_vloc    :      0.00s CPU      0.00s WALL (       1 calls)
-     init_us_1    :      0.02s CPU      0.02s WALL (       1 calls)
- 
- 
- 
- 
- 
-     h_psi        :      0.04s CPU      0.04s WALL (       8 calls)
- 
-     h_psi        :      0.04s CPU      0.04s WALL (       8 calls)
+
+     init_vloc    :      0.02s CPU      0.02s WALL (       1 calls)
+     init_us_1    :      0.00s CPU      0.00s WALL (       1 calls)
+
+
+
+
+
+     h_psi        :      0.12s CPU      0.12s WALL (       8 calls)
+
+     h_psi        :      0.12s CPU      0.12s WALL (       8 calls)
      add_vuspsi   :      0.00s CPU      0.00s WALL (       8 calls)
- 
- 
- 
+
+
+
       General routines
      calbec       :      0.00s CPU      0.00s WALL (       8 calls)
-     fft          :      0.01s CPU      0.04s WALL (       7 calls)
-     ffts         :      0.10s CPU      0.10s WALL (     896 calls)
-     fftw         :      0.02s CPU      0.03s WALL (     256 calls)
-     davcio       :      0.01s CPU      0.06s WALL (      56 calls)
- 
- 
-     KCW          :      0.52s CPU      0.69s WALL
+     fft          :      0.12s CPU      0.13s WALL (       7 calls)
+     ffts         :      0.11s CPU      0.12s WALL (    1152 calls)
+     fftw         :      0.11s CPU      0.11s WALL (     256 calls)
+     davcio       :      0.02s CPU      0.04s WALL (      56 calls)
 
- 
-   This run was terminated on:  15:24:17  16Feb2024            
+
+     KCW          :      0.57s CPU      0.68s WALL
+
+
+   This run was terminated on:  13:46:23  17Sep2025            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

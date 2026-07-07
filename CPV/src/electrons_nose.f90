@@ -89,9 +89,9 @@
 
   SUBROUTINE electrons_nose_info( delt)
 
-      use constants,     only: au_terahertz, pi
-      USE io_global,     ONLY: stdout
-      USE control_flags, ONLY: tnosee
+      use constants,  ONLY: au_terahertz, pi
+      USE io_global,  ONLY: stdout
+      USE cp_control, ONLY: tnosee
 
       IMPLICIT NONE
       REAL(DP), INTENT(IN) :: delt

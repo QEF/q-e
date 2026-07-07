@@ -72,8 +72,8 @@
 
 
         SUBROUTINE set_interpolation_table_size( mmx, refg, gmax )
-          USE control_flags,   only: thdyn
-          USE kinds,           only: DP
+          USE cp_control,   ONLY: thdyn
+          USE kinds,        ONLY: DP
           IMPLICIT NONE
           INTEGER, INTENT(OUT) :: mmx
           REAL(DP), INTENT(IN) :: refg
@@ -189,8 +189,8 @@
 !  ----------------------------------------------
 
       SUBROUTINE orthogonalize_info( )
-        USE control_flags, ONLY: ortho_eps, ortho_max
-        USE io_global, ONLY: stdout
+        USE cp_control, ONLY: ortho_eps, ortho_max
+        USE io_global,  ONLY: stdout
         IMPLICIT NONE
            WRITE(stdout, 585)
            WRITE(stdout, 511) ortho_eps, ortho_max
@@ -278,8 +278,9 @@
          !! Print info about input parameter for ion dynamic
 
          USE io_global,     ONLY: ionode, stdout
-         USE control_flags, ONLY: tranp, amprp, tnosep, tolp, tfor, tsdp, &
-                                  tzerop, tv0rd, taurdr, nbeg, tcp, tcap
+         USE control_flags, ONLY: tnosep, tolp, tv0rd
+         USE cp_control,    ONLY: tranp, amprp, tsdp, tzerop, &
+                                  tcp, tcap, nbeg, tfor, taurdr
          USE ions_base,     ONLY: if_pos, nsp, na, tau, ityp, &
                                   amass, nat, fricp, greasp, rcmax
          USE ions_nose,     ONLY: tempw, ndega
@@ -434,8 +435,8 @@
         subroutine cell_print_info( )
 
           USE constants, ONLY: au_gpa
-          USE control_flags, ONLY: thdyn, tsdc, tzeroc, tbeg, nbeg, tpre
           USE control_flags, ONLY: tnoseh
+          USE cp_control,    ONLY: tpre, thdyn, tsdc, tzeroc, nbeg, tbeg
           USE io_global, ONLY: stdout
           USE cell_base, ONLY: press, frich, greash, wmass
 
@@ -707,7 +708,8 @@ subroutine formf( tfirst, eself )
   ! 
   USE kinds,           ONLY : DP
   use mp,              ONLY : mp_sum
-  use control_flags,   ONLY : iprint, tpre, iverbosity
+  use control_flags,   ONLY : iprint, iverbosity
+  use cp_control,      ONLY : tpre
   use io_global,       ONLY : stdout
   use mp_global,       ONLY : intra_bgrp_comm
   USE fft_base,        ONLY : dffts
@@ -827,7 +829,7 @@ SUBROUTINE newnlinit()
   !! \(\text{rhocb}\) and derivatives w.r.t. cell parameters \(\text{dbeta}\).
   !! See also comments in \(\texttt{nlinit}\).
   !
-  use control_flags,    ONLY : tpre
+  use cp_control,       ONLY : tpre
   use pseudopotential,  ONLY : tpstab
   use cp_interfaces,    ONLY : interpolate_beta, interpolate_qradb, compute_qradx, compute_betagx, &
                                exact_beta, check_tables, exact_qradb, build_pstab, build_cctab
@@ -1086,7 +1088,8 @@ subroutine nlinit
       !! grid by interpolation (this is done in routine \(\texttt{newnlinit}\)).
       !
       use kinds,           ONLY : dp
-      use control_flags,   ONLY : iprint, tpre
+      use control_flags,   ONLY : iprint
+      use cp_control,      ONLY : tpre
       use io_global,       ONLY : stdout, ionode
       use gvecw,           ONLY : ngw
       use core,            ONLY : rhocb, allocate_core
@@ -1207,7 +1210,8 @@ subroutine qvan2b(ngy,iv,jv,is,ylm,qg,qradb)
   !   q(g,l,k) = sum_lm (-i)^l ap(lm,l,k) yr_lm(g^) qrad(g,l,l,k)
   !
   USE kinds,         ONLY : DP
-  use control_flags, ONLY : iprint, tpre
+  USE control_flags, ONLY : iprint
+  USE cp_control,    ONLY : tpre
   use uspp,          ONLY : nlx, lpx, lpl, ap, indv, nhtolm
   use smallbox_gvec,         ONLY : ngb
   use uspp_param,    ONLY : lmaxq, nbetam
@@ -1289,7 +1293,8 @@ subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg,dqrad,qradb)
   !! of \(q(g,l,k)\) calculated in \(\texttt{qvan2b}\).
   !
   USE kinds,         ONLY : DP
-  use control_flags, ONLY : iprint, tpre
+  USE control_flags, ONLY : iprint
+  USE cp_control,    ONLY : tpre
   use uspp,          ONLY : nlx, lpx, lpl, ap, indv, nhtolm
   use smallbox_gvec,         ONLY : ngb
   use uspp_param,    ONLY : lmaxq, nbetam
@@ -1931,41 +1936,6 @@ end subroutine dylmr2_
 
       END SUBROUTINE nlfl_bgrp_x
 !
-!-----------------------------------------------------------------------
-      SUBROUTINE pbc(rin,a1,a2,a3,ainv,rout)
-      !-----------------------------------------------------------------------
-      !! Brings atoms inside the unit cell.
-      !
-      USE kinds,  ONLY: DP
-
-      IMPLICIT NONE
-! input
-      REAL(DP) rin(3), a1(3),a2(3),a3(3), ainv(3,3)
-! output
-      REAL(DP) rout(3)
-! local
-      REAL(DP) x,y,z
-!
-! bring atomic positions to crystal axis
-!
-      x = ainv(1,1)*rin(1)+ainv(1,2)*rin(2)+ainv(1,3)*rin(3)
-      y = ainv(2,1)*rin(1)+ainv(2,2)*rin(2)+ainv(2,3)*rin(3)
-      z = ainv(3,1)*rin(1)+ainv(3,2)*rin(2)+ainv(3,3)*rin(3)
-!
-! bring x,y,z in the range between -0.5 and 0.5
-!
-      x = x - NINT(x)
-      y = y - NINT(y)
-      z = z - NINT(z)
-!
-! bring atomic positions back in cartesian axis
-!
-      rout(1) = x*a1(1)+y*a2(1)+z*a3(1)
-      rout(2) = x*a1(2)+y*a2(2)+z*a3(2)
-      rout(3) = x*a1(3)+y*a2(3)+z*a3(3)
-!
-      RETURN
-      END SUBROUTINE pbc
 
 !
 !-------------------------------------------------------------------------

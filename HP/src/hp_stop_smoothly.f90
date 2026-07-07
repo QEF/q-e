@@ -14,7 +14,6 @@ SUBROUTINE hp_stop_smoothly(flag)
   !
   USE environment,    ONLY : environment_end
   USE mp_global,      ONLY : mp_global_end 
-  USE ldaU_hp,        ONLY : code
   !
   IMPLICIT NONE
   LOGICAL, INTENT(IN) :: flag
@@ -33,7 +32,7 @@ SUBROUTINE hp_stop_smoothly(flag)
      CALL hp_print_clock()
   ENDIF
   !
-  CALL environment_end(code)
+  CALL environment_end( )
   !
 #if defined (__MPI)
   CALL mp_global_end()

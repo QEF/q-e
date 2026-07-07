@@ -120,7 +120,7 @@ foreach(test_category IN LISTS qe_test_categories)
                            ${CMAKE_CURRENT_BINARY_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file}
                            SYMBOLIC COPY_ON_ERROR)
         else()
-          while (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file}.args=${TESTSUITE_ARGS} AND TESTSUITE_ARGS LESS 10)
+          while (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder_name}/benchmark.out.git.inp=${test_input_file}.args=${TESTSUITE_ARGS} AND TESTSUITE_ARGS LESS 50)
             math(EXPR TESTSUITE_ARGS "${TESTSUITE_ARGS} + 1")
           endwhile()
           if (TESTSUITE_ARGS EQUAL 10)

@@ -1,7 +1,9 @@
 # Makefile for XSpectra
 sinclude ../make.inc
 
-default: all
+# see comments in file tldeps for explanations
+TLDEPS=pwlibs
+include ../install/tldeps
 
 all:
 	( cd src ; $(MAKE) all || exit 1 )

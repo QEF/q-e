@@ -1,28 +1,30 @@
 # Makefile for PH
 sinclude ../make.inc
 
-default: all
+# see comments in file tldeps for explanations
+TLDEPS=pwlibs lrmods
+include ../install/tldeps
 
-all: phonon phgamma_only # finite_diffs
+all: ph phcg # finite_diffs
 
-phonon:
+ph: phlibs
 	( cd PH ; $(MAKE) all || exit 1 )
 
-ph-lib:
-	( cd PH ; $(MAKE) libs-ph || exit 1 )
+phlibs:
+	( cd PH ; $(MAKE) phlibs || exit 1 )
 
-phgamma_only:
+phcg:
 	( cd Gamma ; $(MAKE) all || exit 1 )
 
 finite_diffs:
 	( cd FD ; $(MAKE) all || exit 1 )
 
-clean: phonon_clean phgamma_only_clean examples_clean finite_diffs_clean
+clean: ph_clean phcg_clean examples_clean finite_diffs_clean
 
-phonon_clean:
+ph_clean:
 	( cd PH ; $(MAKE) clean )
 
-phgamma_only_clean:
+phcg_clean:
 	( cd Gamma ; $(MAKE) clean )
 
 #third_order_q_clean:
@@ -37,7 +39,7 @@ examples_clean:
 
 doc:
 	if test -d Doc ; then \
-	( cd Doc ; $(MAKE) all || exit 1 ) ; fi
+	( cd Doc ; $(MAKE) all ) ; fi
 
 doc_clean:
 	if test -d Doc ; then \

@@ -7,6 +7,52 @@
 !
 !
 !-----------------------------------------------------------------------
+SUBROUTINE new_ns_hubbard ( noncolin, rho )
+!-----------------------------------------------------------------------
+  !! Wrapper for all DFT+U+V+J+... cases
+  !
+  USE ions_base, ONLY : ntyp => nsp
+  USE ldaU,      ONLY : lda_plus_u_kind, is_hubbard_back
+  USE scf,       ONLY : scf_type
+  !
+  IMPLICIT NONE
+  TYPE(scf_type), INTENT(INOUT) :: rho
+  LOGICAL, INTENT(in) :: noncolin
+  INTEGER :: nt
+  !
+  IF (lda_plus_u_kind==0) THEN
+     !
+     IF (noncolin) THEN
+        CALL new_ns_nc(rho%ns_nc)
+     ELSE
+        CALL new_ns(rho%ns)
+     ENDIF
+     !
+     DO nt = 1, ntyp
+        IF (is_hubbard_back(nt)) CALL new_nsb( rho%nsb )
+     ENDDO
+     !
+  ELSEIF (lda_plus_u_kind==1) THEN
+     !
+     IF (noncolin) THEN
+        CALL new_ns_nc( rho%ns_nc )
+     ELSE
+        CALL new_ns( rho%ns )
+     ENDIF
+     !
+  ELSEIF (lda_plus_u_kind==2) THEN
+     !
+     IF (noncolin) THEN
+        CALL new_nsg_nc( rho%nsg )
+     ELSE
+        CALL new_nsg( rho%nsg )
+     ENDIF
+     !
+  ENDIF
+  !
+END SUBROUTINE new_ns_hubbard
+
+!-----------------------------------------------------------------------
 SUBROUTINE new_ns( ns )
   !-----------------------------------------------------------------------
   !! This routine computes the new value for ns (the occupation numbers of
@@ -564,4 +610,3 @@ loopisym:     DO isym = 1, nsym
   RETURN
   !
 END SUBROUTINE new_ns_nc
-

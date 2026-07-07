@@ -66,7 +66,7 @@ MODULE oscdft_functions_gpu
          IF (idx%nconstr == 0) RETURN
 
 
-         CALL start_clock_gpu("oscdft_hpsi")
+         CALL start_clock("oscdft_hpsi")
          ! sum_hk u_h^I u_k^I |phi_k> <phi_h|psi>
          ik = current_k
          CALL allocate_bec_type_acc(m, wfcO%n, proj)
@@ -131,7 +131,7 @@ MODULE oscdft_functions_gpu
 
          CALL deallocate_bec_type_acc(proj)
          CALL mp_barrier(intra_bgrp_comm)
-         CALL stop_clock_gpu("oscdft_hpsi")
+         CALL stop_clock("oscdft_hpsi")
       END SUBROUTINE oscdft_h_psi_gpu
 #endif
 END MODULE oscdft_functions_gpu

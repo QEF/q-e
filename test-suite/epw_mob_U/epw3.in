@@ -1,0 +1,53 @@
+--
+&inputepw
+  prefix      = 'cdo'
+  amass(1) = 112.411,
+  amass(2) = 15.9994,
+  outdir      = './'
+  dvscf_dir   = './save'
+
+  iverbosity  = 0
+
+  elph        = .true.
+  epwwrite    = .true.
+  epwread     = .false.
+  lpolar      = .true.
+  vme         = 'wannier'
+  use_ws      = .true.
+
+  wannierize  = .true.
+  nbndsub     =  8
+  bands_skipped = 'exclude_bands = 1-5'
+  num_iter    = 1000
+  proj(1)     = 'Cd:l=2'
+  proj(2)     = 'O:l=1'
+  dis_froz_max = 12.0
+  dis_win_max = 12.0
+  calc_nelec_wann = .true.
+
+  wdata(1) = 'dis_num_iter = 1000'
+  wdata(2) = 'bands_plot = true'
+  wdata(3) = 'bands_plot_format = gnuplot'
+  wdata(4) = 'begin kpoint_path'
+  wdata(5) =  ' G 0.000 0.000 0.000  X 0.500 0.000 0.500' 
+  wdata(6) = ' X 0.500 0.000 0.500  W 0.500 0.250 0.750'
+  wdata(7) = ' W 0.500 0.250 0.750  K 0.375 0.375 0.750'
+  wdata(8) = ' K 0.375 0.375 0.750  G 0.000 0.000 0.000'
+  wdata(9) = ' G 0.000 0.000 0.000  L 0.500 0.500 0.500'
+  wdata(10) = ' L 0.500 0.500 0.500  U 0.625 0.250 0.625'
+  wdata(11) = 'end kpoint_path'
+  wdata(12) = 'num_print_cycles = 10'
+  wdata(13) = 'bands_num_points = 100'
+  wdata(14) = 'guiding_centres = true'
+
+  band_plot   = .true.
+  filkf       = './LGX.dat'
+  filqf       = './LGX.dat'
+
+  nk1         = 4 
+  nk2         = 4 
+  nk3         = 4 
+  nq1         = 2
+  nq2         = 2
+  nq3         = 2
+/

@@ -84,7 +84,7 @@ program dynmat
   !
   integer, parameter :: ntypx = 10
   character(len=256):: fildyn, filout, filmol, filxsf, fileig
-  character(len=3) :: atm(ntypx)
+  character(len=6) :: atm(ntypx)
   character(len=10) :: asr
   logical :: lread, gamma, loto_2d
   complex(DP), allocatable :: z(:,:)
@@ -235,7 +235,7 @@ program dynmat
      DEALLOCATE (dyn)
   ENDIF
   !
-  CALL environment_end('DYNMAT')
+  CALL environment_end( )
   !
   CALL mp_global_end()
   !

@@ -19,11 +19,11 @@
         A. Marrazzo and N. Colonna, Phys. Rev. Research 6, 033085 (2024)  
      =--------------------------------------------------------------------------------=
 
-     Program KCW v.7.4 starts on  6Feb2025 at 16:32:19 
-        Git branch: SAWFinDEV
-        Last git commit: 9ade76a4decd37fd9abb92f7cbb03e68d8aede0d
-        Last git commit date: Thu Feb 6 13:38:09 2025 +0100
-        Last git commit subject: Merge branch 'KCW_symrho_G' of gitlab.com:ncolonna
+     Program KCW v.7.5 starts on 17Sep2025 at 13:46:30 
+        Git branch: develop
+        Last git commit: 7e86c4d7f8b367fcfbff0156d653f13ca55b1b03-dirty
+        Last git commit date: Tue Sep 16 17:33:36 2025 +0000
+        Last git commit subject: Merge branch 'vhpsi' into 'develop'
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -37,8 +37,8 @@
      Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     205950 MiB available memory on the printing compute node when the environment starts
- 
+     601 MiB available memory on the printing compute node when the environment starts
+
 
      KCW INPUT SUMMARY 
      ============================================
@@ -92,14 +92,14 @@
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         295     295     91                 3287     3287     609
- 
+
      Using Slab Decomposition
- 
+
      Reading collected, re-writing distributed wavefunctions
 
      WARNING: !!! NON-MAGNETIC setup !!!
@@ -112,10 +112,10 @@
      READING SCREENING PARAMETERS
 
      INFO: alphas read from:./out/kcw/Si.alpha.dat                                                                                                                                                                                                                                          
-     iwann =     1   alpha =      0.40151881
-     iwann =     2   alpha =      0.40151881
-     iwann =     3   alpha =      0.40151881
-     iwann =     4   alpha =      0.40151881
+     iwann =     1   alpha =      0.40151882
+     iwann =     2   alpha =      0.40151882
+     iwann =     3   alpha =      0.40151882
+     iwann =     4   alpha =      0.40151882
 
      INFO: Buffer for KS wfcs, OPENED
 
@@ -545,37 +545,37 @@
 
      Writing all to output data dir ./out/Si_kcw.save/ :
      XML data file, pseudopotentials, collected wavefunctions
- 
-     KCW          :      0.07s CPU      0.08s WALL
+
+     KCW          :      0.25s CPU      0.26s WALL
 
      INITIALIZATION: 
- 
+
      init_vloc    :      0.00s CPU      0.00s WALL (       1 calls)
      init_us_1    :      0.00s CPU      0.00s WALL (       1 calls)
- 
- 
- 
- 
- 
-     h_psi        :      0.00s CPU      0.00s WALL (       8 calls)
- 
-     h_psi        :      0.00s CPU      0.00s WALL (       8 calls)
+
+
+
+
+
+     h_psi        :      0.09s CPU      0.09s WALL (       8 calls)
+
+     h_psi        :      0.09s CPU      0.09s WALL (       8 calls)
      add_vuspsi   :      0.00s CPU      0.00s WALL (       8 calls)
- 
- 
- 
+
+
+
       General routines
      calbec       :      0.00s CPU      0.00s WALL (       8 calls)
-     fft          :      0.00s CPU      0.00s WALL (       3 calls)
+     fft          :      0.12s CPU      0.12s WALL (       3 calls)
      ffts         :      0.01s CPU      0.01s WALL (     192 calls)
-     fftw         :      0.00s CPU      0.00s WALL (      64 calls)
-     davcio       :      0.00s CPU      0.01s WALL (      56 calls)
- 
- 
-     KCW          :      0.07s CPU      0.09s WALL
+     fftw         :      0.09s CPU      0.09s WALL (      64 calls)
+     davcio       :      0.00s CPU      0.00s WALL (      56 calls)
 
- 
-   This run was terminated on:  16:32:19   6Feb2025            
+
+     KCW          :      0.25s CPU      0.31s WALL
+
+
+   This run was terminated on:  13:46:30  17Sep2025            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

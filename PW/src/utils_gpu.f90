@@ -53,7 +53,7 @@ SUBROUTINE matcalc_gpu( label, DoE, PrtMat, ninner, n, m, U, V, mat, ee )
   INTEGER :: i
   CHARACTER(len=2) :: string
 
-  CALL start_clock_gpu('matcalc')
+  CALL start_clock('matcalc')
 
   string = 'M-'
   mat = 0.0_dp
@@ -74,7 +74,7 @@ SUBROUTINE matcalc_gpu( label, DoE, PrtMat, ninner, n, m, U, V, mat, ee )
      IF ( PrtMat > 0 ) WRITE(stdout,'(A,f16.8,A)') string//label, ee, ' Ry'
   ENDIF
 
-  CALL stop_clock_gpu('matcalc')
+  CALL stop_clock('matcalc')
 
 END SUBROUTINE matcalc_gpu
 !
@@ -105,7 +105,7 @@ SUBROUTINE matcalc_k_gpu (label, DoE, PrtMat, ik, ninner, n, m, U, V, mat, ee)
   INTEGER :: i
   CHARACTER(len=2) :: string
 
-  CALL start_clock_gpu('matcalc')
+  CALL start_clock('matcalc')
 
   string = 'M-'
   mat = (0.0_dp, 0.0_dp)
@@ -125,6 +125,6 @@ SUBROUTINE matcalc_k_gpu (label, DoE, PrtMat, ik, ninner, n, m, U, V, mat, ee)
     IF ( PrtMat > 0 ) WRITE(stdout,'(A,f16.8,A)') string//label, ee, ' Ry'
   ENDIF
 
-  CALL stop_clock_gpu('matcalc')
+  CALL stop_clock('matcalc')
 
 END SUBROUTINE matcalc_k_gpu

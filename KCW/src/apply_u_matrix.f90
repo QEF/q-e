@@ -21,7 +21,7 @@ subroutine apply_u_matrix(evc_ks, evc_var, c_occ_mat, ik_eff, n_orb)
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : DP
   USE control_kcw,          ONLY : unimatrx, unimatrx_opt, &
-                                   num_wann, has_disentangle, kcw_iverbosity
+                                   num_wann, kcw_iverbosity, have_empty
   USE wvfct,                ONLY : npwx, nbnd
   USE noncollin_module,     ONLY : npol
   USE mp,                   ONLY : mp_bcast, mp_sum
@@ -63,7 +63,7 @@ subroutine apply_u_matrix(evc_ks, evc_var, c_occ_mat, ik_eff, n_orb)
   evc_opt(:,:) = CMPLX(0.D0,0.D0,kind=DP)
   !
   dim_ks = nbnd 
-  IF ( .NOT. has_disentangle) dim_ks = num_wann
+  IF ( .NOT. have_empty) dim_ks = num_wann
   !
   DO i = 1, num_wann
     !

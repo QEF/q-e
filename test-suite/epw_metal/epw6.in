@@ -6,7 +6,6 @@
 
   etf_mem     = 0
   lfast_kmesh = .true.
-  epw_memdist = .true.
   lopt_w2b    = .true.
   iverbosity  = 3
 

@@ -166,7 +166,7 @@ PROGRAM do_bands
      IF (lp) CALL write_p_avg(filp,spin_component,firstk,lastk)
   END IF
   !
-  CALL environment_end ( 'BANDS' )
+  CALL environment_end ( )
   !
   CALL stop_pp
   STOP

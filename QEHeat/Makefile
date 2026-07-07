@@ -1,7 +1,9 @@
 # Makefile for QEHeat
 sinclude ../make.inc
 
-default: all
+# see comments in file tldeps for explanations
+TLDEPS= pwlibs phlibs
+include ../install/tldeps
 
 all:
 	( cd src ; $(MAKE) all || exit 1 )

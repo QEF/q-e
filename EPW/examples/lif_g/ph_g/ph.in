@@ -1,0 +1,21 @@
+--
+&inputph
+  prefix    = 'lif'
+  outdir    = './tmp'
+  epsil     = .true.
+  zeu       = .true.
+  ldisp     = .true.
+  fildyn    = 'lif.dyn'
+  fildvscf  = 'dvscf'
+  tr2_ph    =  1.0d-14,
+  electron_phonon = 'prt'
+  ldisp     = .true.
+  qplot     = .true.
+  kx        = 0.0
+  ky        = 0.0
+  kz        = 0.0 
+/
+  2
+  0.0   0.0   0.0  1 
+  0.5   0.0   0.5  1 
+

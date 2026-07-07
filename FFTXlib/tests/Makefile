@@ -2,6 +2,8 @@
 
 include ../../make.inc
 
+VPATH = @srcdir@
+
 MODFLAGS = $(MOD_FLAG)../src $(MOD_FLAG).
 
 SRCS = test_fft_scalar_gpu.f90 \

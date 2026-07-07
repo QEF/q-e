@@ -110,7 +110,7 @@ CONTAINS
             amass(isp) = atomic_species%species(isp)%mass
        atm(isp) = TRIM ( atomic_species%species(isp)%name )
        IF ( PRESENT (psfile) ) THEN
-          psfile(isp) = TRIM ( atomic_species%species(isp)%pseudo_file) 
+          psfile(isp) = TRIM ( atomic_species%species(isp)%pseudo_file%pseudoPath ) 
        END IF
        IF ( PRESENT (starting_magnetization) ) THEN
           IF ( atomic_species%species(isp)%starting_magnetization_ispresent) THEN
@@ -337,7 +337,7 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE qexsd_copy_dft ( dft_obj, nsp, atm, &
        dft_name, nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
-       exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
+       exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, use_ace, nbndproj, &
        lda_plus_U, apply_u, lda_plus_U_kind, U_projection, Hubbard_n, Hubbard_l, Hubbard_lmax, Hubbard_occ, &
        Hubbard_n2, Hubbard_l2, Hubbard_n3, Hubbard_l3, backall, Hubbard_lmax_back, Hubbard_alpha_back, &
        Hubbard_U, Hubbard_Um, Hubbard_U2, Hubbard_J0, Hubbard_alpha, Hubbard_alpha_m, Hubbard_beta, Hubbard_J, Hubbard_V, &
@@ -360,6 +360,8 @@ CONTAINS
          ecutvcut, local_thr
     INTEGER, INTENT(inout) :: nq1, nq2, nq3
     LOGICAL, INTENT(inout) :: x_gamma_extrapolation
+    INTEGER, INTENT(inout) :: nbndproj
+    LOGICAL, INTENT(inout) :: use_ace
     !
     LOGICAL, INTENT(out) :: lda_plus_U, apply_u
     INTEGER, INTENT(inout) :: lda_plus_U_kind, Hubbard_lmax, Hubbard_lmax_back
@@ -393,6 +395,10 @@ CONTAINS
        exxdiv_treatment = dft_obj%hybrid%exxdiv_treatment
        x_gamma_extrapolation = dft_obj%hybrid%x_gamma_extrapolation
        ecutvcut = dft_obj%hybrid%ecutvcut
+       IF (dft_obj%hybrid%use_ace_ispresent) THEN
+         use_ace = dft_obj%hybrid%use_ace
+         nbndproj = dft_obj%hybrid%nbndproj
+       END IF
        IF (dft_obj%hybrid%localization_threshold_ispresent) THEN
           local_thr = dft_obj%hybrid%localization_threshold  
        ELSE 

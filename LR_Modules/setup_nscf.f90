@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
+SUBROUTINE setup_nscf ( newgrid, xq, dont_use_ibz )
   !----------------------------------------------------------------------------
   !
   ! ... This routine initializes variables for the non-scf calculations at k
@@ -47,10 +47,16 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   !
   REAL (DP), INTENT(IN) :: xq(3)
   LOGICAL, INTENT (IN) :: newgrid
-  LOGICAL, INTENT (IN) :: elph_mat  ! used to be passed through a module. 
+  LOGICAL, INTENT (IN) :: dont_use_ibz
+  !! If .FALSE., use irreducible BZ (with symmetries that preserve q).
+  !! - If newgrid is .FALSE., start with the k mesh of the previous pw.x calculation
+  !!   (read from xml), and unfold it to add k points needed because some symmetries are broken by q.
+  !! - If newgrid is .TRUE., create an IBZ of q using nk1, ... in start_k.
+  !! If .TRUE., do not use symmetry to unfold or reduce k points.
+  !! - If newgrid is .FALSE., use the k points of the previous pw.x calculation
+  !!   (read from xml). The k points may or may not have symmetry.
+  !! - If newgrid is .TRUE., create a full BZ using nk1, ... in start_k.
   !
-  INTEGER  :: t_rev_eff(48), ik
-  LOGICAL  :: magnetic_sym, sym(48)
   LOGICAL  :: skip_equivalence
   !
   IF ( .NOT. ALLOCATED( force ) ) ALLOCATE( force( 3, nat ) )
@@ -65,8 +71,11 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
      david = 4
   ELSE IF (isolve == 1) THEN
      david = 1
+   ELSE IF (isolve == 5) THEN
+     david = -1  ! direct diagonalization, nbndx not used
   ELSE
-     call errore('setup_nscf','erroneous value for diagonalization method. Should be isolve=0 (david) or 1 (cg)',1)
+     call errore('setup_nscf','erroneous value for diagonalization method. &
+                               Should be isolve=0 (david) or 1 (cg) or 5 (direct)',1)
   END IF
   nbndx = david*nbnd
   max_cg_iter=20
@@ -74,10 +83,6 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   CALL set_para_diag( nbnd, use_para_diag )
   !
   ! ... Symmetry and k-point section
-  !
-  ! ... time_reversal = use q=>-q symmetry for k-point generation
-  !
-  magnetic_sym = noncolin .AND. domag
   !
   ! ... smallg_q flags in symmetry operations of the crystal
   ! ... that are not symmetry operations of the small group of q
@@ -99,23 +104,19 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
      !
      ! In this case I generate a new set of k-points
      !
-     ! In the case of electron-phonon matrix element with wannier functions 
+     ! In the case of electron-phonon matrix element with wannier functions
      ! (and possibly in other cases as well) the k-points should not be reduced
      !
-     skip_equivalence = elph_mat
-     t_rev_eff=0 
-     ! yet unclear whether t_rev_eff is really needed
-     CALL kpoint_grid ( nrot, time_reversal, skip_equivalence, s, t_rev_eff, &
+     skip_equivalence = dont_use_ibz  ! If true, skip removal of symmetry-equivalent k ponints
+     CALL kpoint_grid ( nrot, time_reversal, skip_equivalence, s, t_rev, &
                       bg, nk1*nk2*nk3, k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk)
   endif
-
   !
   ! ... If some symmetries of the lattice are missing in the crystal,
   ! ... "irreducible_BZ" computes the missing k-points.
   !
-  if(.not.elph_mat) &
-  CALL irreducible_BZ (nrot, s, nsymq, minus_q, magnetic_sym, &
-                       at, bg, npk, nkstot, xk, wk, t_rev)
+  if (.NOT. dont_use_ibz) CALL irreducible_BZ(nrot, s, nsymq, minus_q, noncolin .AND. domag, &
+                                          at, bg, npk, nkstot, xk, wk, t_rev)
   !
   ! ... add k+q to the list of k
   !
@@ -177,7 +178,7 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   !
   IF ( nkstot > npk ) CALL errore( 'setup_nscf', 'too many k points', nkstot )
   !
-  ! ...notice: qnorm is used to determine the correct size 
+  ! ...notice: qnorm is used to determine the correct size
   ! ...of the interpolation tables (tab_beta, tab_qrad, etc.)
   !
   qnorm = sqrt(xq(1)**2 + xq(2)**2 + xq(3)**2) * tpiba

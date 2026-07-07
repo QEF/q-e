@@ -373,7 +373,7 @@ PROGRAM average
      !
   ENDIF
   !
-  CALL environment_end ( 'AVERAGE' )
+  CALL environment_end( )
   !
   CALL stop_pp
   !

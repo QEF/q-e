@@ -826,7 +826,8 @@ SUBROUTINE vasp_init_xc(vasp_parameters,vasp_atominfo,iexch,icorr,igcx,igcc,inlc
         inlc_ = 2
         inlc  = 2
      ELSE
-        CALL errore ('vasp_init_xc', 'Zab_vdW not implemented', vasp_parameters%zab_vdw)
+        print *, 'Zab_vdW = ',vasp_parameters%zab_vdw
+        CALL errore ('vasp_init_xc', 'Zab_vdW not implemented', 1) 
      END IF
   ELSE
      inlc = 0

@@ -2,6 +2,8 @@
 
 include ../../make.inc
 
+VPATH = @srcdir@
+
 IFLAGS         = -I../../include -I../src
 
 # location of needed modules and included files (if any)
@@ -27,9 +29,12 @@ QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../upflib/
          ../../FFTXlib/src/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a \
           ../..//MBD/libmbd.a
 
-TLDEPS= kcw-lib  #Dependency. To be compiled first
+# TLDEPS should contain the same list of dependencies as in the main Makefile
+TLDEPS= pwlibs lrmods kcwlib
+# Ensure that "make" run in this subdirectory builds the needed dependencies
+include ../../install/tldeps
 
-all : tldeps kcwpp_sh.x kcwpp_interp.x clean_partial merge_wann.x
+all : kcwpp_sh.x kcwpp_interp.x clean_partial merge_wann.x
 
 merge_wann.x: merge_wann.o
 	$(LD) $(LDFLAGS) -o $@ merge_wann.o 
@@ -51,14 +56,13 @@ ups.x: ups.o $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ ups.o $(PWOBJS) $(QEMODS) \
 	$(LIBS) $(QELIBS)
 
-tldeps :
-	if test -n "$(TLDEPS)" ; then \
-	( cd ../ ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
-
 clean :
 	- /bin/rm -f *.x *.o *.a *~ *.F90 *.d *.mod *.i *.L *__genmod.f90 *__genmod.mod
 
 clean_partial :
 	- /bin/rm -f *__genmod.f90 *__genmod.mod
 
+
 include make.depend
+
+

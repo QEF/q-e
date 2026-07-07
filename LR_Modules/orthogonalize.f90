@@ -238,7 +238,7 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq, dpsi_computed)
         end if
      end if
      !
-     CALL s_psi_acc (npwx, npwq, nbnd_eff, evq, dpsi)
+     CALL s_psi (npwx, npwq, nbnd_eff, evq, dpsi)
      !
   ENDIF
   !

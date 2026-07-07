@@ -29,7 +29,7 @@ subroutine phq_summary
   USE funct,         ONLY : write_dft_name
   USE run_info,      ONLY : title
   USE gamma_gamma,   ONLY : with_symmetry, nasr
-  USE control_ph,    ONLY : lnoloc, zue, epsil, ldisp, zeu, search_sym
+  USE control_ph,    ONLY : zue, epsil, ldisp, zeu, search_sym
   USE freq_ph,       ONLY : fpol, nfs, fiu
   USE partial,       ONLY : atomo, nat_todo, all_comp, done_irr, comp_irr
   USE modes,         ONLY : u, npert, nirr, name_rap_mode
@@ -186,7 +186,7 @@ subroutine phq_summary
            ft1 = at(1,1)*ft(1,isym) + at(1,2)*ft(2,isym) + at(1,3)*ft(3,isym) 
            ft2 = at(2,1)*ft(1,isym) + at(2,2)*ft(2,isym) + at(2,3)*ft(3,isym) 
            ft3 = at(3,1)*ft(1,isym) + at(3,2)*ft(2,isym) + at(3,3)*ft(3,isym)
-           WRITE(stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x) &
+           WRITE(stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x), &
                 &                    " )    f =( ",f10.7," )")') isymq,  & 
                 & (s(1,ipol,isym), ipol = 1, 3), ft(1,isym)
            WRITE(stdout, '(17x," (",3(i6,5x), &

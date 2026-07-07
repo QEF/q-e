@@ -18,6 +18,7 @@ MODULE path_read_cards_module
    USE io_global, ONLY : meta_ionode, meta_ionode_id
    USE mp,        ONLY : mp_bcast
    USE mp_world,  ONLY : world_comm
+   USE upf_utils, ONLY : matches, capital
    !
    USE path_input_parameters_module
    !
@@ -51,7 +52,6 @@ CONTAINS
       !
       CHARACTER(len=256)         :: input_line
       CHARACTER(len=80)          :: climbing_images
-      CHARACTER(len=1), EXTERNAL :: capital
       INTEGER                    :: i
       !
       climbing_images = ' '
@@ -64,9 +64,7 @@ CONTAINS
             !
             IF( input_line == ' ' .or. input_line(1:1) == '#' ) CYCLE
             !
-            DO i = 1, len_trim( input_line )
-               input_line( i : i ) = capital( input_line( i : i ) )
-            ENDDO
+            input_line = capital( TRIM(input_line) )
             !
             IF( trim(adjustl(input_line)) == 'CLIMBING_IMAGES' ) THEN
                !
@@ -125,7 +123,6 @@ CONTAINS
       !
       CHARACTER(len=80)  :: climbing_images
       LOGICAL, SAVE      :: tread = .false.
-      LOGICAL, EXTERNAL  :: matches
       !
       INTEGER          :: i
       CHARACTER(len=5) :: i_char

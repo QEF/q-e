@@ -1,4 +1,6 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
@@ -10,8 +12,8 @@
   !-----------------------------------------------------------------------
   PROGRAM epw
   !-----------------------------------------------------------------------
-  !! author: Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
-  !! version: v6.0
+  !! author: The EPW Collaboration
+  !! version: v6.1
   !! license: GNU
   !! summary: EPW main driver
   !!
@@ -21,14 +23,14 @@
   !! Initial release inside Quantum ESPRESSO made on the 1st of March 2016.
   !!
   USE kinds,            ONLY : DP
-  USE io_global,        ONLY : stdout, ionode
+  USE io_global,        ONLY : stdout, meta_ionode
   USE mp_world,         ONLY : mpime
   USE mp_global,        ONLY : mp_startup, ionode_id, nimage
   USE control_flags,    ONLY : gamma_only, use_gpu, iverbosity
   USE input,            ONLY : wannierize, nqc1, nqc2, nqc3
   USE global_version,   ONLY : version_number
   USE input,            ONLY : filukk, eliashberg, ep_coupling, epwread, epbread, &
-                               lcumulant, nbndsub, do_tdbe
+                               lcumulant, nbndsub, do_tdbe, interpolate
   USE environment,      ONLY : environment_start
   USE global_var,       ONLY : elph
   USE close,            ONLY : close_final, deallocate_epw, remove_out_files
@@ -46,8 +48,6 @@
   !
   CHARACTER(LEN = 12) :: code = 'EPW'
   !! Name of the code
-  LOGICAL,EXTERNAL    :: check_gpu_support
-  !! Name of the program
   INTEGER :: nqc
   !! Number of qpoints on the uniform grid
   INTEGER :: ierr
@@ -85,20 +85,23 @@
   REAL(KIND = DP), ALLOCATABLE :: xqc(:, :)
   !! The qpoints in the uniform coarse q-point grid.
   !
-  version_number = '6.0'
+  version_number = '6.1'
   !
   CALL init_clocks(.TRUE.)
   !
   CALL start_clock('EPW')
   !
   gamma_only = .FALSE.
-  use_gpu = check_gpu_support()
-  IF(use_gpu) Call errore('EPW', 'EPW with GPU NYI', 1)
+#if defined(__CUDA) || defined(__ONEMKL)
+  use_gpu = .TRUE.
+#else
+  use_gpu = .FALSE.
+#endif
   !
   CALL mp_startup(start_images = .TRUE.)
   !
   ! Display the logo
-  IF (mpime == ionode_id) THEN
+  IF (meta_ionode) THEN
     WRITE(stdout, '(a)') "                                                                                      "
     WRITE(stdout, '(a)') "                                       ``:oss/                                        "
     WRITE(stdout, '(a)') "                           `.+s+.     .+ys--yh+     `./ss+.                           "
@@ -226,12 +229,14 @@
       IF (ierr /= 0) CALL errore('epw', 'Error deallocating w_centers', 1)
       !
       ! Interpolate quantities from real-space Wannier to fine Bloch k/q grids and add long-range.
-      CALL use_wannier(dims, dims2, nrr_k, irvec_k, ndegen_k, wslen_k, nrr_q, irvec_q, ndegen_q, &
-                       wslen_q, nrr_g, irvec_g, ndegen_g, wslen_g)
-      !
-      CALL ephr_deallocate(irvec_k, irvec_q, irvec_g, ndegen_k, ndegen_q, ndegen_g, &
-                           wslen_k, wslen_q, wslen_g)
-      !
+      IF (interpolate) THEN
+        CALL use_wannier(dims, dims2, nrr_k, irvec_k, ndegen_k, wslen_k, nrr_q, irvec_q, ndegen_q, &
+                         wslen_q, nrr_g, irvec_g, ndegen_g, wslen_g)
+        !
+        CALL ephr_deallocate(irvec_k, irvec_q, irvec_g, ndegen_k, ndegen_q, ndegen_g, &
+                             wslen_k, wslen_q, wslen_g)
+        !
+      ENDIF
     ENDIF
     !
     ! Cleanup of the variables
@@ -243,7 +248,7 @@
     !
   ENDIF
   !
-  IF (lcumulant .AND. ionode) THEN
+  IF (lcumulant .AND. meta_ionode) THEN
     CALL spectral_cumulant()
   ENDIF
   !

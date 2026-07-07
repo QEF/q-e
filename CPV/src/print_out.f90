@@ -33,9 +33,8 @@
       USE pres_ai_mod,      ONLY : P_ext, Surf_t, volclu, surfclu, abivol, &
                                    abisur, pvar, n_ele
       USE cp_main_variables, ONLY : nprint_nfi, iprint_stdout
-      USE control_flags,     ONLY : ndw
       USE io_global,         ONLY : ionode, ionode_id, stdout
-      USE control_flags,     ONLY : lwf, lwfpbe0nscf  ! exx_wf related
+      USE cp_control,        ONLY : ndw, lwf, lwfpbe0nscf  ! exx_wf related
       USE energies,          ONLY : exx  ! exx_wf related 
       USE control_flags,     ONLY : ts_vdw
       USE tsvdw_module,      ONLY : EtsvdW, VefftsvdW

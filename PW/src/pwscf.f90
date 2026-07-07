@@ -41,6 +41,7 @@ PROGRAM pwscf
   USE mp_global,            ONLY : mp_startup
   USE read_input,           ONLY : read_input_file
   USE command_line_options, ONLY : input_file_, command_line, nimage_
+  USE upf_utils,            ONLY : matches
   !
   IMPLICIT NONE
   !
@@ -52,8 +53,6 @@ PROGRAM pwscf
   !! Status at exit
   LOGICAL :: use_images
   !! true if running "manypw.x"
-  LOGICAL, EXTERNAL :: matches
-  !! checks if first string is contained in the second
   !
   CALL mp_startup( start_images=.TRUE., images_only=.TRUE. )
   !

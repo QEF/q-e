@@ -50,6 +50,7 @@ target_link_libraries(qe_qeheat_exe
 )
 
 qe_install_targets(
+    qe_qeheat
     qe_qeheat_exe
 )
 

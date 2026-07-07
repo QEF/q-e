@@ -91,7 +91,7 @@ SUBROUTINE ef_shift (npert, dos_ef, ldos, drhoscf, dbecsum, becsum1)
   !
   ! symmetrizes the Fermi energy shift
   !
-  CALL sym_def(def)
+  CALL sym_def(npert, def)
   !
   WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift (Ry) =",2es15.4)')&
        (ipert, def (ipert) , ipert = 1, npert )
@@ -216,6 +216,188 @@ SUBROUTINE ef_shift_wfc(npert, ldoss, drhoscf)
   CALL stop_clock ('ef_shift_wfc')
   !
 END SUBROUTINE ef_shift_wfc
+!-------------------------------------------------------------------------
+!-----------------------------------------------------------------------
+SUBROUTINE ef_shift_new(ldos_data, dfpt_data)
+  !-----------------------------------------------------------------------
+  !! This routine takes care of the effects of a shift of Ef, due to the
+  !! perturbation, that can take place in a metal at q=0
+  !! Optionally, update dbecsum using becsum_dos from ldos_data.
+  !
+  USE kinds,                ONLY : DP
+  USE mp_bands,             ONLY : intra_bgrp_comm
+  USE mp,                   ONLY : mp_sum
+  USE io_global,            ONLY : stdout
+  USE cell_base,            ONLY : omega
+  USE fft_base,             ONLY : dffts, dfftp
+  USE fft_interfaces,       ONLY : fwfft, invfft
+  USE gvect,                ONLY : gg
+  USE noncollin_module,     ONLY : nspin_mag, nspin_lsda
+  USE dfpt_type,            ONLY : dfpt_data_type, dfpt_ldos_type
+  !
+  IMPLICIT NONE
+  !
+  ! input/output variables
+  !
+  TYPE(dfpt_ldos_type), INTENT(IN) :: ldos_data
+  !! Local density of states at Ef
+  !! Contains: dos_ef, ldos, ldoss, becsum_dos
+  TYPE(dfpt_data_type), INTENT(INOUT) :: dfpt_data
+  !! Data that describes linear response quantities
+  !! input/output: dfpt_data%drhop += def * ldos_data%ldos
+  !! input:  dfpt_data%dbecsum = 2 <psi|beta> <beta|dpsi>
+  !! output: dfpt_data%dbecsum = 2 <psi|beta> <beta|dpsi> + def * ldos_data%becsum_dos
+  !
+  INTEGER :: is
+  !! counter on spin polarizations
+  INTEGER :: ipert
+  !! counter on perturbations
+  COMPLEX(DP) :: delta_n
+  !! the change in electron number
+  !! This may be complex since perturbation may be complex
+  !
+  call start_clock ('ef_shift')
+  !
+  ! determines Fermi energy shift (such that each pertubation is neutral)
+  !
+  WRITE( stdout, * )
+  do ipert = 1, dfpt_data%npert
+     delta_n = (0.d0, 0.d0)
+     do is = 1, nspin_lsda
+        CALL fwfft ('Rho', dfpt_data%drhop(:,is,ipert), dfftp)
+        if (gg(1) < 1.0d-8) delta_n = delta_n + omega*dfpt_data%drhop(dfftp%nl(1),is,ipert)
+        CALL invfft ('Rho', dfpt_data%drhop(:,is,ipert), dfftp)
+     enddo
+     call mp_sum ( delta_n, intra_bgrp_comm )
+     !
+     ! Add first term of Eq.(79) of Baroni et al, RMP 73, 515 (2001)
+     delta_n = delta_n + dfpt_data%dn0(ipert)
+     !
+     IF ( ABS(ldos_data%dos_ef) > 1.d-18 ) THEN
+        dfpt_data%def (ipert) = - delta_n / ldos_data%dos_ef
+     ELSE
+        dfpt_data%def (ipert) = 0.0_dp
+     ENDIF
+  enddo
+  !
+  ! symmetrizes the Fermi energy shift
+  !
+  CALL sym_def(dfpt_data%npert, dfpt_data%def)
+  !
+  WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift (Ry) =",2es15.4)')&
+       (ipert, dfpt_data%def(ipert) , ipert = 1, dfpt_data%npert )
+  !
+  ! corrects the density response accordingly...
+  !
+  DO ipert = 1, dfpt_data%npert
+     CALL zaxpy(dffts%nnr*nspin_mag, dfpt_data%def(ipert), ldos_data%ldoss, 1, dfpt_data%drhos(1,1,ipert), 1)
+     CALL zaxpy(dfftp%nnr*nspin_mag, dfpt_data%def(ipert), ldos_data%ldos,  1, dfpt_data%drhop(1,1,ipert), 1)
+  ENDDO
+  !
+  ! In the PAW case there is also a metallic term
+  !
+  IF (ALLOCATED(dfpt_data%dbecsum) .AND. ALLOCATED(ldos_data%becsum_dos)) THEN
+     DO ipert = 1, dfpt_data%npert
+        dfpt_data%dbecsum(:,:,:,ipert) = dfpt_data%dbecsum(:,:,:,ipert) &
+           + dfpt_data%def(ipert) * CMPLX(ldos_data%becsum_dos(:,:,:), 0.0_DP, KIND=DP)
+     ENDDO
+  ENDIF
+  !
+  ! TODO: To be removed
+  ! To reuse old code, update module variable def
+  def(1:dfpt_data%npert) = dfpt_data%def(1:dfpt_data%npert)
+  !
+  CALL stop_clock ('ef_shift')
+  !
+END SUBROUTINE ef_shift_new
+!-------------------------------------------------------------------------
+!
+!-------------------------------------------------------------------------
+SUBROUTINE ef_shift_wfc_new(dfpt_data)
+  !-----------------------------------------------------------------------
+  !! This routine takes care of the effects of a shift of Ef, due to the
+  !! perturbation, that can take place in a metal at q=0, on the wavefunction
+  !
+  USE kinds,                ONLY : DP
+  USE mp,                   ONLY : mp_sum
+  USE wavefunctions,        ONLY : evc
+  USE buffers,              ONLY : get_buffer, save_buffer
+  USE wvfct,                ONLY : npwx, et
+  USE klist,                ONLY : degauss, ngauss, ngk, ltetra
+  USE ener,                 ONLY : ef
+  USE noncollin_module,     ONLY : noncolin, npol
+  USE qpoint,               ONLY : nksq
+  USE control_lr,           ONLY : nbnd_occ
+  USE units_lr,             ONLY : iuwfc, lrwfc, lrdwf, iudwf
+  USE eqv,                  ONLY : dpsi
+  USE dfpt_tetra_mod,       ONLY : dfpt_tetra_delta
+  USE dfpt_type,            ONLY : dfpt_data_type
+  !
+  IMPLICIT NONE
+  !
+  ! input/output variables
+  !
+  TYPE(dfpt_data_type), INTENT(INOUT) :: dfpt_data
+  !! Data that describes linear response quantities
+  !! input/output: dfpt_data%drhos += def * ldoss
+  !
+  ! local variables
+  !
+  INTEGER :: npw, ibnd, ik, ipert, nrec, ikrec
+  ! counter on occupied bands
+  ! counter on k-point
+  ! counter on perturbations
+  ! record number
+  ! record position of wfc at k
+  ! auxiliary for spin
+  COMPLEX(DP) :: wfshift
+  !! the shift coefficient for the wavefunction
+  !! This may be complex since perturbation may be complex
+  !
+  REAL(DP), external :: w0gauss
+  ! the smeared delta function
+  !
+  call start_clock ('ef_shift_wfc')
+  !
+  ! Update the perturbed wavefunctions according to the Fermi energy shift
+  !
+  do ik = 1, nksq
+     npw = ngk (ik)
+     !
+     ! reads unperturbed wavefuctions psi_k in G_space, for all bands
+     !
+     ikrec = ik
+     if (nksq > 1) call get_buffer (evc, lrwfc, iuwfc, ikrec)
+     !
+     ! reads delta_psi from iunit iudwf, k=kpoint
+     !
+     do ipert = 1, dfpt_data%npert
+        nrec = (ipert - 1) * nksq + ik
+        IF (nksq > 1 .OR. dfpt_data%npert > 1) CALL get_buffer(dpsi, lrdwf, iudwf, nrec)
+        do ibnd = 1, nbnd_occ (ik)
+           !
+           if(ltetra) then
+              wfshift = 0.5d0 * dfpt_data%def(ipert) * dfpt_tetra_delta(ibnd,ik)
+           else
+              wfshift = 0.5d0 * dfpt_data%def(ipert) * w0gauss( (ef-et(ibnd,ik))/degauss, ngauss) / degauss
+           end if
+           !
+           IF (noncolin) THEN
+              call zaxpy (npwx*npol,wfshift,evc(1,ibnd),1,dpsi(1,ibnd),1)
+           ELSE
+              call zaxpy (npw, wfshift, evc(1,ibnd), 1, dpsi(1,ibnd), 1)
+           ENDIF
+        enddo
+        !
+        ! writes corrected delta_psi to iunit iudwf, k=kpoint,
+        !
+        IF (nksq > 1 .OR. dfpt_data%npert > 1) CALL save_buffer(dpsi, lrdwf, iudwf, nrec)
+     enddo
+  enddo
+  !
+  CALL stop_clock ('ef_shift_wfc')
+  !
+END SUBROUTINE ef_shift_wfc_new
 !-------------------------------------------------------------------------
 !
 END MODULE efermi_shift

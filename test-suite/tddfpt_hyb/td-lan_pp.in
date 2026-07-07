@@ -1,0 +1,11 @@
+&lr_input
+  outdir='./out',
+  itermax0 = 200
+  itermax  = 10000
+  extrapolation="osc"
+  epsil=0.01
+  start=0.0d0
+  end=3.50d0
+  increment=0.001d0
+  ipol=1
+/

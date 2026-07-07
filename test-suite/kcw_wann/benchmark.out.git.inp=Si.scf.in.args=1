@@ -1,5 +1,9 @@
 
-     Program PWSCF v.7.0 starts on 29Jan2022 at 11:36: 4 
+     Program PWSCF v.7.5 starts on 17Sep2025 at 13:44:53 
+        Git branch: develop
+        Last git commit: 7e86c4d7f8b367fcfbff0156d653f13ca55b1b03-dirty
+        Last git commit date: Tue Sep 16 17:33:36 2025 +0000
+        Last git commit subject: Merge branch 'vhpsi' into 'develop'
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -13,8 +17,8 @@
      Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     418 MiB available memory on the printing compute node when the environment starts
- 
+     750 MiB available memory on the printing compute node when the environment starts
+
      Waiting for input...
      Reading input from standard input
      Message from routine read_cards :
@@ -26,18 +30,18 @@
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  4
- 
+
      Subspace diagonalization in iterative solution of the eigenvalue problem:
      a serial algorithm will be used
 
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         295     295     91                 3287     3287     609
- 
+
      Using Slab Decomposition
- 
+
 
 
      bravais-lattice index     =            2
@@ -79,7 +83,7 @@
                 l(2) =   1
 
      atomic species   valence    mass     pseudopotential
-        Si             4.00    28.08500     Si( 1.00)
+     Si                4.00    28.08500     Si( 1.00)
 
      48 Sym. Ops., with inversion, found (24 have fractional translation)
 
@@ -88,8 +92,8 @@
    Cartesian axes
 
      site n.     atom                  positions (alat units)
-         1           Si  tau(   1) = (   0.0000000   0.0000000   0.0000000  )
-         2           Si  tau(   2) = (   0.2500000   0.2500000   0.2500000  )
+         1        Si     tau(   1) = (   0.0000000   0.0000000   0.0000000  )
+         2        Si     tau(   2) = (   0.2500000   0.2500000   0.2500000  )
 
      number of k points=     8
                        cart. coord. in units 2pi/alat
@@ -111,7 +115,9 @@
      starting charge       7.9990, renormalised to       8.0000
      Starting wfcs are    8 randomized atomic wfcs
 
-     total cpu time spent up to now is        0.0 secs
+     total cpu time spent up to now is        0.2 secs
+
+     per-process dynamical memory:     7.8 Mb
 
      Self-consistent Calculation
 
@@ -119,7 +125,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-02,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.1 secs
+     total cpu time spent up to now is        0.2 secs
 
      total energy              =     -15.65232668 Ry
      estimated scf accuracy    <       0.10238584 Ry
@@ -128,7 +134,7 @@
      Davidson diagonalization with overlap
      ethr =  1.28E-03,  avg # of iterations =  1.4
 
-     total cpu time spent up to now is        0.1 secs
+     total cpu time spent up to now is        0.3 secs
 
      total energy              =     -15.65712440 Ry
      estimated scf accuracy    <       0.00494751 Ry
@@ -137,7 +143,7 @@
      Davidson diagonalization with overlap
      ethr =  6.18E-05,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.1 secs
+     total cpu time spent up to now is        0.3 secs
 
      total energy              =     -15.65761973 Ry
      estimated scf accuracy    <       0.00008322 Ry
@@ -146,7 +152,7 @@
      Davidson diagonalization with overlap
      ethr =  1.04E-06,  avg # of iterations =  2.6
 
-     total cpu time spent up to now is        0.1 secs
+     total cpu time spent up to now is        0.3 secs
 
      total energy              =     -15.65764502 Ry
      estimated scf accuracy    <       0.00000111 Ry
@@ -155,7 +161,7 @@
      Davidson diagonalization with overlap
      ethr =  1.38E-08,  avg # of iterations =  5.1
 
-     total cpu time spent up to now is        0.1 secs
+     total cpu time spent up to now is        0.3 secs
 
      total energy              =     -15.65764634 Ry
      estimated scf accuracy    <       0.00000006 Ry
@@ -164,7 +170,7 @@
      Davidson diagonalization with overlap
      ethr =  7.01E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is        0.2 secs
+     total cpu time spent up to now is        0.3 secs
 
      total energy              =     -15.65764636 Ry
      estimated scf accuracy    <          2.1E-10 Ry
@@ -173,7 +179,7 @@
      Davidson diagonalization with overlap
      ethr =  2.65E-12,  avg # of iterations =  5.6
 
-     total cpu time spent up to now is        0.2 secs
+     total cpu time spent up to now is        0.3 secs
 
      End of self-consistent calculation
 
@@ -222,49 +228,50 @@
 
      convergence has been achieved in   7 iterations
 
-     Writing all to output data dir ./out/Si.save/
- 
-     init_run     :      0.02s CPU      0.02s WALL (       1 calls)
-     electrons    :      0.16s CPU      0.17s WALL (       1 calls)
+     Writing all to output data dir ./out/Si.save/ :
+     XML data file, charge density, pseudopotentials, collected wavefunctions
+
+     init_run     :      0.22s CPU      0.22s WALL (       1 calls)
+     electrons    :      0.10s CPU      0.10s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :      0.01s CPU      0.01s WALL (       1 calls)
+     wfcinit      :      0.09s CPU      0.09s WALL (       1 calls)
      potinit      :      0.00s CPU      0.00s WALL (       1 calls)
-     hinit0       :      0.01s CPU      0.01s WALL (       1 calls)
+     hinit0       :      0.13s CPU      0.13s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.13s CPU      0.13s WALL (       7 calls)
-     sum_band     :      0.03s CPU      0.03s WALL (       7 calls)
+     c_bands      :      0.08s CPU      0.08s WALL (       7 calls)
+     sum_band     :      0.01s CPU      0.01s WALL (       7 calls)
      v_of_rho     :      0.00s CPU      0.00s WALL (       8 calls)
      mix_rho      :      0.00s CPU      0.00s WALL (       7 calls)
 
      Called by c_bands:
      init_us_2    :      0.00s CPU      0.00s WALL (     120 calls)
-     init_us_2:cp :      0.00s CPU      0.00s WALL (     120 calls)
-     cegterg      :      0.12s CPU      0.13s WALL (      56 calls)
+     cegterg      :      0.08s CPU      0.08s WALL (      56 calls)
 
      Called by *egterg:
-     cdiaghg      :      0.01s CPU      0.01s WALL (     230 calls)
-     h_psi        :      0.12s CPU      0.12s WALL (     238 calls)
+     cdiaghg      :      0.00s CPU      0.00s WALL (     230 calls)
+     h_psi        :      0.16s CPU      0.16s WALL (     238 calls)
      g_psi        :      0.00s CPU      0.00s WALL (     174 calls)
 
      Called by h_psi:
      h_psi:calbec :      0.00s CPU      0.00s WALL (     238 calls)
-     vloc_psi     :      0.11s CPU      0.12s WALL (     238 calls)
+     vloc_psi     :      0.15s CPU      0.15s WALL (     238 calls)
+                                        0.00s GPU  (     238 calls)
      add_vuspsi   :      0.00s CPU      0.00s WALL (     238 calls)
 
      General routines
      calbec       :      0.00s CPU      0.00s WALL (     238 calls)
-     fft          :      0.00s CPU      0.00s WALL (      23 calls)
+     fft          :      0.12s CPU      0.12s WALL (      23 calls)
      ffts         :      0.00s CPU      0.00s WALL (       7 calls)
-     fftw         :      0.11s CPU      0.12s WALL (    1802 calls)
- 
-     Parallel routines
- 
-     PWSCF        :      0.20s CPU      0.22s WALL
+     fftw         :      0.15s CPU      0.15s WALL (    1802 calls)
 
- 
-   This run was terminated on:  11:36: 4  29Jan2022            
+     Parallel routines
+
+     PWSCF        :      0.33s CPU      0.33s WALL
+
+
+   This run was terminated on:  13:44:53  17Sep2025            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

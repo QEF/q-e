@@ -50,6 +50,7 @@ subroutine solve_e_fpol( iw )
                                     niter_ph, flmixdpot, rec_code
   USE dv_of_drho_lr
   USE uspp_init,        ONLY : init_us_2
+  USE incdrhoscf_mod,   ONLY : incdrhoscf
 
   implicit none
   
@@ -291,7 +292,7 @@ subroutine solve_e_fpol( iw )
            !
            ! calculates dvscf, sum over k => dvscf_q_ipert
            !
-           call incdrhoscf (dvscfout(1,current_spin,ipol), wk(ik), &
+           call incdrhoscf (dvscfout(:,current_spin,ipol), wk(ik), &
                             ik, dbecsum(1,1,current_spin,ipol), dpsi)
         enddo   ! on polarizations
      enddo      ! on k points
@@ -310,13 +311,13 @@ subroutine solve_e_fpol( iw )
         enddo
      endif
 
-     call addusddense (dvscfout, dbecsum)
+     call lr_addusddens (3, dbecsum, dvscfout)
      !
      !   dvscfout contains the (unsymmetrized) linear charge response
      !   for the three polarizations - symmetrize it
      !
      call mp_sum ( dvscfout, inter_pool_comm )
-     call psymdvscf(dvscfout)
+     call psymdvscf(dvscfout, dfftp)
      !
      !   save the symmetrized linear charge response to file
      !   calculate the corresponding linear potential response

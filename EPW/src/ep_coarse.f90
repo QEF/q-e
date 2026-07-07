@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
@@ -19,11 +20,16 @@
   CONTAINS
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE dvscf_read(imode0, iq_irr, nqc_irr, npe, xq0, dvscfin, timerev)
+    SUBROUTINE dvscf_read(imode0, iq_irr, nqc_irr, npe, xq0, dvscfins, timerev)
     !-----------------------------------------------------------------------
     !!
     !! Electron-phonon calculation from data saved in fildvscf
     !! Shuffle2 mode (shuffle on electrons + load all phonon q's)
+    !!
+    !! When double_grid == .TRUE. (ecutrho > ecutwfc * 4), the dvscf file
+    !! contains data on the dense grid (dfftp). Here we read the data and use it. 
+    !! But we return only the smooth part (dffts) by applying fft_interpolate, 
+    !! because only the smooth part is needed afterwards in ep_coarse_compute.
     !!
     !! RM - Nov/Dec 2014
     !! Imported the noncolinear case implemented by xlzhang
@@ -32,10 +38,13 @@
     !! HL - Mar 2020: PAW added based on QE v6.5
     !! SP - This routine cannot be placed in io/ due to cyclic dependence.
     !!
+    !! Wooil Yang - Nov 2025: Added reading of dnsscf when using DFT+U.
+    !!
     !-----------------------------------------------------------------------
     !
     USE kinds,            ONLY : DP
     USE mp,               ONLY : mp_barrier, mp_bcast
+    USE mp_global,        ONLY : ionode_id
     USE mp_pools,         ONLY : my_pool_id, inter_pool_comm, root_pool
     USE ions_base,        ONLY : nat
     USE gvecs,            ONLY : doublegrid
@@ -44,7 +53,11 @@
     USE paw_variables,    ONLY : okpaw
     USE lsda_mod,         ONLY : nspin
     USE fft_base,         ONLY : dfftp, dffts
-    USE io,               ONLY : readdvscf, readint3paw
+    USE modes,            ONLY : nmodes
+    USE io,               ONLY : readdvscf, readint3paw, readdnsscf
+    USE ldaU_lr,          ONLY : dnsscf
+    USE ldaU_ph,          ONLY : dnsscf_all_modes
+    USE ldaU,             ONLY : lda_plus_u, Hubbard_lmax
     USE uspp_param,       ONLY : nhm
     USE ep_constants,     ONLY : czero, cone
     USE fft_interfaces,   ONLY : fft_interpolate
@@ -63,8 +76,8 @@
     !! Number of perturbations for this irr representation
     REAL(KIND = DP), INTENT(in) :: xq0(3)
     !! The first q-point in the star (cartesian coords.)
-    COMPLEX(KIND = DP), INTENT(inout) :: dvscfin(dfftp%nnr, nspin_mag, npe)
-    !! Change of the scf potential
+    COMPLEX(KIND = DP), INTENT(inout) :: dvscfins(dffts%nnr, nspin_mag, npe)
+    !! Change of the scf potential on the smooth FFT grid
     LOGICAL, INTENT(in) :: timerev
     !!  true if we are using time reversal
     !
@@ -75,8 +88,8 @@
     !! Counter on spin
     INTEGER :: ierr
     !! Error status
-    COMPLEX(KIND = DP), ALLOCATABLE :: dvscfin_tmp(:, :, :)
-    !! Change of the scf potential
+    COMPLEX(KIND = DP), ALLOCATABLE :: dvscfin(:, :, :)
+    !! Change of the scf potential on the dense FFT grid
     !
     CALL start_clock('dvscf_read')
     !
@@ -93,45 +106,68 @@
       ENDIF
     ENDIF
     !
+    IF (lda_plus_u) THEN
+      ALLOCATE(dnsscf_all_modes(2 * Hubbard_lmax + 1, 2 * Hubbard_lmax + 1, nspin_mag, nat, nmodes), STAT = ierr)
+      IF (ierr /= 0) CALL errore('dvscf_read', 'Error allocating dnsscf_all_modes', 1)
+      ALLOCATE(dnsscf(2 * Hubbard_lmax + 1, 2 * Hubbard_lmax + 1, nspin_mag, nat, npe), STAT = ierr)
+      IF (ierr /= 0) CALL errore('dvscf_read', 'Error allocating dnsscf', 1)
+    ENDIF
+    !
     ! read the <prefix>.dvscf_q[iq] files
+    !
+    ALLOCATE(dvscfin(dfftp%nnr, nspin_mag, npe), STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvscf_read', 'Error allocating dvscfin', 1)
     !
     dvscfin = czero
     IF (okpaw) int3_paw = czero
+    IF (lda_plus_u) THEN
+      dnsscf_all_modes = czero
+      dnsscf = czero
+    ENDIF
     !
     !! 2020.03 HL
     !! The part below should be changed accordingly when parallelization over G vectors is implemented.
     !
-    IF (my_pool_id == 0) THEN
+    IF (my_pool_id == ionode_id) THEN
       DO ipert = 1, npe
         CALL readdvscf(dvscfin(:, :, ipert), imode0 + ipert, iq_irr, nqc_irr)
         IF (okpaw) CALL readint3paw(int3_paw(:, :, :, :, ipert), imode0 + ipert, iq_irr, nqc_irr)
       ENDDO
+      IF (lda_plus_u) THEN
+        !! The dnsscf file contains the data for all perturbations, and data for 
+        !! a single perturbation cannot be read individually.
+        !! Therefore, we read the whole file and only keep the relevant slices,
+        !! even though we only need the part corresponding to the npe perturbations 
+        !! in the irrep. 
+        CALL readdnsscf(dnsscf_all_modes(:, :, :, :, :), nmodes, iq_irr, nqc_irr, Hubbard_lmax)
+        DO ipert = 1, npe
+          dnsscf(:, :, :, :, ipert) = dnsscf_all_modes(:, :, :, :, imode0 + ipert)
+        ENDDO
+      ENDIF
     ENDIF
     !
     !! 2020.03 HL
     !! Below root_pool should be interpreted as the index of root pool group.
     !! Currently, there is no root_pool_id like root_bgrp_id in bands groups.
     !
-    CALL mp_bcast(dvscfin, root_pool, inter_pool_comm)
-    IF (okpaw) CALL mp_bcast(int3_paw, root_pool, inter_pool_comm)
-    !
-    IF (doublegrid) THEN
-      ALLOCATE(dvscfin_tmp(dffts%nnr, nspin_mag, npe) , STAT = ierr)
-      IF (ierr /= 0) CALL errore('dvscf_read', 'Error allocating dvscfin_tmp', 1)
-      DO is = 1, nspin_mag
-        DO ipert = 1, npe
-          CALL fft_interpolate(dfftp, dvscfin(:, is, ipert), dffts, dvscfin_tmp(:, is, ipert))
-        ENDDO
-      ENDDO
-      dvscfin(:, :, :) = dvscfin_tmp(:, :, :)
-    ENDIF
+    CALL mp_bcast(dvscfin, ionode_id, inter_pool_comm)
+    IF (okpaw) CALL mp_bcast(int3_paw, ionode_id, inter_pool_comm)
+    IF (lda_plus_u) CALL mp_bcast(dnsscf, ionode_id, inter_pool_comm)
     !
     CALL newdq2(dvscfin, npe, xq0, timerev)
     !
     IF (doublegrid) THEN
-      DEALLOCATE(dvscfin_tmp, STAT = ierr)
-      IF (ierr /= 0) CALL errore('dvscf_read', 'Error deallocating dvscfin_tmp', 1)
+      DO is = 1, nspin_mag
+        DO ipert = 1, npe
+          CALL fft_interpolate(dfftp, dvscfin(:, is, ipert), dffts, dvscfins(:, is, ipert))
+        ENDDO
+      ENDDO
+    ELSE
+      dvscfins(:, :, :) = dvscfin(:, :, :)
     ENDIF
+    !
+    DEALLOCATE(dvscfin, STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvscf_read', 'Error deallocating dvscfin', 1)
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE dvscf_read
@@ -197,9 +233,9 @@
     USE wavefunctions,    ONLY : evc
     USE io_files,         ONLY : diropn
     USE wvfct,            ONLY : npwx
-    USE pwcom,            ONLY : current_spin, lsda, nbnd, nks
+    USE pwcom,            ONLY : current_spin, nbnd
     USE cell_base,        ONLY : at, bg
-    USE input,            ONLY : xk_loc, xk_all, isk_loc, et_all
+    USE input,            ONLY : xk_loc, xk_all, isk_loc, et_all, isk_all, lsda
     USE cell_base,        ONLY : tpiba
     USE gvect,            ONLY : g
     USE uspp,             ONLY : vkb
@@ -215,9 +251,10 @@
     USE becmod,           ONLY : calbec
     USE global_var,       ONLY : igk_k_all, xkq, etq, ngk_all, lower_band,  &
                                  upper_band, ibndkept, nbndep, ngxx, ngxxf, &
-                                 ng0vec, shift, gmap, g0vec_all_r
+                                 ng0vec, shift, gmap, g0vec_all_r, nk_loc,  &
+                                 nkpts
     USE fft_base,         ONLY : dffts
-    USE ep_constants,     ONLY : czero, cone, ci, zero, eps8
+    USE ep_constants,     ONLY : czero, cone, ci, zero, eps8, eps4
     USE klist,            ONLY : nkstot
     USE parallelism,      ONLY : kpointdivision, fkbounds, fkbounds_bnd
     USE kfold,            ONLY : ktokpmq
@@ -226,10 +263,18 @@
     USE noncollin_module, ONLY : noncolin, npol, nspin_mag
     USE dvqpsi,           ONLY : dvqpsi_us3, adddvscf2
     USE uspp_init,        ONLY : init_us_2
-    USE input,            ONLY : nqc1, nqc2, nqc3
+    USE input,            ONLY : nqc1, nqc2, nqc3, ngk_loc, igk_k_loc
     USE lrus,             ONLY : int3, int3_nc, int3_paw
     USE uspp,             ONLY : okvan
     USE paw_variables,    ONLY : okpaw
+    USE io_global,        ONLY : stdout
+    USE dvqhub,           ONLY : dvqhub_barepsi_us3, adddvhubscf2, lr_orthoUwfc2
+    USE ldaU,             ONLY : lda_plus_u, nwfcU
+    USE ldaU_lr,          ONLY : dnsscf
+    USE ldaU_ph,          ONLY : dnsscf_all_modes
+#if defined (__ONEMKL)
+    USE epw_onemkl
+#endif
     !
     IMPLICIT NONE
     !
@@ -251,9 +296,9 @@
     !! Delta scf potential
     COMPLEX(KIND = DP), INTENT(in) :: eigv(ngxxf)
     !! $e^{iGv}$ for 1...nsym (v the fractional translation)
-    COMPLEX(KIND = DP), INTENT(inout) :: el_ph_mat(nbndep, nbndep, nks, 3 * nat)
+    COMPLEX(KIND = DP), INTENT(inout) :: el_ph_mat(nbndep, nbndep, nk_loc, 3 * nat)
     !! ep matrix element for this q-point
-    COMPLEX(KIND = DP), INTENT(inout) :: epmatq(nbndep, nbndep, nks, nmodes, nqc1 * nqc2 * nqc3)
+    COMPLEX(KIND = DP), INTENT(inout) :: epmatq(nbndep, nbndep, nk_loc, nmodes, nqc1 * nqc2 * nqc3)
     !! ep-mat on full BZ
     LOGICAL, INTENT(in) :: timerev
     !!  true if we are using time reversal
@@ -326,8 +371,14 @@
     !! Rotated psi_nk WF by SU(2)
     COMPLEX(KIND = DP), ALLOCATABLE :: elphmat(:, :, :)
     !! arrays for e-ph matrix elements
-    COMPLEX(KIND = DP), EXTERNAL :: zdotc
-    !! Important for NAG compiler
+    COMPLEX(KIND = DP), ALLOCATABLE :: wfcatomk_(:, :)
+    !! projector for atomic wavefunctions at k-point
+    COMPLEX(KIND = DP), ALLOCATABLE :: wfcatomkpq_(:, :)
+    !! projector for atomic wavefunctions at k+q-point
+    COMPLEX(KIND = DP), ALLOCATABLE :: swfcatomk_(:, :)
+    !! projector for S*atomic wavefunctions at k-point
+    COMPLEX(KIND = DP), ALLOCATABLE :: swfcatomkpq_(:, :)
+    !! projector for S*atomic wavefunctions at k+q-point
     !
     ALLOCATE(elphmat(nbndep, nbndep, npe), STAT = ierr)
     IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error allocating elphmat', 1)
@@ -343,10 +394,13 @@
     ENDIF
     !
     ! find the bounds of k-dependent arrays in the parallel case in each pool
-    CALL fkbounds(nkstot, lower_bnd, upper_bnd)
+    CALL fkbounds(nkpts, lower_bnd, upper_bnd)
     !
+    ! S.Tiwari: Commented since v6.1 
     ! SP: Bound for band parallelism
-    CALL fkbounds_bnd(nbndep, lower_band, upper_band)
+    !CALL fkbounds_bnd(nbndep, lower_band, upper_band)
+    upper_band = nbndep
+    lower_band = 1
     nbnd_loc = upper_band - lower_band + 1
     !
     ALLOCATE(aux2(npwx * npol, nbndep), STAT = ierr)
@@ -363,7 +417,7 @@
     !
     CALL kpointdivision(ik0)
     !
-    CALL readkmap(nkstot)
+    CALL readkmap(nkpts)
     !
     ! close all sequential files in order to re-open them as direct access
     ! close all .wfc files in order to prepare shuffled read
@@ -372,13 +426,30 @@
     ! never remove this barrier
     CALL mp_barrier(inter_pool_comm)
     !
-    ALLOCATE(etq(nbnd, nks), STAT = ierr)
+    ALLOCATE(etq(nbnd, nk_loc), STAT = ierr)
     IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error allocating etq', 1)
-    DO ik = 1, nks
+    IF (lda_plus_u) THEN
+      ALLOCATE(wfcatomk_(npwx * npol, nwfcU), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error allocating wfcatomk', 1)
+      ALLOCATE(wfcatomkpq_(npwx * npol, nwfcU), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error allocating wfcatomkpq', 1)
+      ALLOCATE(swfcatomk_(npwx * npol, nwfcU), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error allocating swfcatomk', 1)
+      ALLOCATE(swfcatomkpq_(npwx * npol, nwfcU), STAT = ierr)
+      IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error allocating swfcatomkpq', 1)
+      !
+      wfcatomk_(:, :) = czero
+      wfcatomkpq_(:, :) = czero
+      swfcatomk_(:, :) = czero
+      swfcatomkpq_(:, :) = czero
+    ENDIF
+    !
+    DO ik = 1, nk_loc
       !
       etq(:, :) = zero
       elphmat(:, :, :) = czero
-      IF (lsda) THEN
+      current_spin = 1
+      IF (TRIM(lsda) /= 'none') THEN
         current_spin = isk_loc(ik)
       ENDIF
       !DBSP
@@ -392,22 +463,25 @@
       ! we also redefine the ikq points and the corresponding energies
       ! (we need to make sure that xk(:,ikq) is really k+q for the KB projectors
       ! below and also that the eigenvalues are taken correctly in ephwann)
+      ! read unperturbed wavefunctions psi(k) and psi(k+q)
+      !
+      CALL ktokpmq(xk_loc(:, ik), zero_vect, +1, ipool, nkq, nkq_abs)
+      !
+      ipooltmp = ipool
+      !
+      CALL readwfc(ipooltmp, nkq, evc)
+      !
       !
       CALL ktokpmq(xk_loc(:, ik), xq, +1, ipool, nkq, nkq_abs)
       !
       !   we define xkq(:,ik) and etq(:,ik) for the current xq
       !
-      xkq(:, ik) = xk_all(:, nkq_abs)
-      etq(:, ik) = et_all(:, nkq_abs)
-      !
-      ipooltmp = my_pool_id + 1
+      xkq(:, ik) = xk_all(:, nkq_abs - (current_spin - 1) * nkpts)
+      etq(:, ik) = et_all(:, nkq_abs - (current_spin - 1) * nkpts)
       !
       ! in serial execution ipool is not used in the called subroutines,
       ! in parallel ipooltmp is for k and ipool is for k+q
       !
-      ! read unperturbed wavefunctions psi(k) and psi(k+q)
-      !
-      CALL readwfc(ipooltmp, ik, evc)
       CALL readwfc(ipool, nkq, evq)
       !
       ! --------------------------------------------------
@@ -424,21 +498,20 @@
       !
       ! Now we define the igk and igkq from the global igk_k_all
       !
-      npw  = ngk_all(ik + lower_bnd - 1)
-      npwq = ngk_all(nkq_abs)
+      npw  = ngk_loc(ik)
+      npwq = ngk_all(nkq_abs - (current_spin - 1) * nkpts)
       !
       ALLOCATE(igk(npw), STAT = ierr)
       IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error allocating igk', 1)
       ALLOCATE(igkq(npwq), STAT = ierr)
       IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error allocating igkq', 1)
       !
-      igk = igk_k_all(1:npw, ik + lower_bnd - 1)
-      igkq = igk_k_all(1:npwq, nkq_abs)
+      igk = igk_k_loc(1:npw, ik)
+      igkq = igk_k_all(1:npwq, nkq_abs - (current_spin - 1) * nkpts )
       !
-      IF (nks > 1 .AND. MAXVAL(igkq(1:npwq)) > ngxx) THEN
+      IF (nk_loc > 1 .AND. MAXVAL(igkq(1:npwq)) > ngxx) THEN
         CALL errore('ep_coarse_compute', 'ngxx too small', 1)
       ENDIF
-      !
       !
       !------------------------------------------------------------
       ! Rotate evc --> axu5 and evq --> aux4 by SU2^{dagger}
@@ -494,7 +567,6 @@
         ENDDO
         igkq = igkq_tmp
       ENDIF
-      !
       !  find k+q from k+q+G_0
       !  (this is needed in the calculation of the KB terms
       !  for nonlocal pseudos)
@@ -569,6 +641,13 @@
       xkqtmp = sxk + xq0
       CALL init_us_2(npwq, igkq, xkqtmp, vkb)
       !
+      !! Defining \phi at S^-1(k) and S^-1(k)+q_0
+      !! In a similar way to the KB part
+      IF (lda_plus_u) THEN
+         CALL lr_orthoUwfc2(sxk, xkqtmp, igk, igkq, npw, npwq, wfcatomk_, &
+                            wfcatomkpq_, swfcatomk_, swfcatomkpq_, .FALSE.)      
+      ENDIF
+      !
       ! --------------------------------------------------
       !   Calculation of the matrix element
       ! --------------------------------------------------
@@ -590,27 +669,43 @@
         IF (timerev) THEN
           CALL dvqpsi_us3(ik, CONJG(u(:, mode)), .FALSE., xkqtmp, xq0, igk, igkq, npw, npwq, &
                           aux5, CONJG(dvscfins(:, :, ipert)))
+          ! DFPT+U: calculate the bare derivative of the Hubbard potential in el-ph
+          IF (lda_plus_u) CALL dvqhub_barepsi_us3(ik, CONJG(u(:, mode)), xkqtmp, sxk, igk, &
+              igkq, npw, npwq, aux5, wfcatomk_, wfcatomkpq_, swfcatomk_, swfcatomkpq_, nwfcU) 
         ELSE
           CALL dvqpsi_us3(ik, u(:, mode), .FALSE., xkqtmp, xq0, igk, igkq, npw, npwq, &
                           aux5, dvscfins(:, :, ipert))
+          ! DFPT+U: calculate the bare derivative of the Hubbard potential in el-ph
+          IF (lda_plus_u) CALL dvqhub_barepsi_us3(ik, u(:, mode), xkqtmp, sxk, igk, igkq, &
+                npw, npwq, aux5, wfcatomk_, wfcatomkpq_, swfcatomk_, swfcatomkpq_, nwfcU) 
         ENDIF
         !DBSP
         ! b = b+SUM((REAL(REAL(dvpsi(:, :))))**2)+SUM((REAL(AIMAG(dvpsi(:, :))))**2)
         !
         CALL adddvscf2(ipert, ik)
+        ! DFPT+U: add to dvpsi the scf part of the response
+        ! Hubbard potential dV_hub
+        !
+        IF (lda_plus_u) CALL adddvhubscf2(ipert, ik, npw, npwq, aux5, swfcatomk_, swfcatomkpq_, nwfcU)
         ! DBPS
         ! c = b+SUM((REAL(REAL(dvpsi(:, :))))**2)+SUM((REAL(AIMAG(dvpsi(:, :))))**2)
         !
         ! calculate elphmat(j,i)=<psi_{k+q,j}|dvscf_q*psi_{k,i}> for this pertur
         !
+#if defined (__ONEMKL)
+        !$omp target data map(aux4,dvpsi(1:npwx*npol,lower_band:upper_band),elphmat)
+        !$omp dispatch
+#endif
         CALL ZGEMM('C', 'N', nbndep, nbnd_loc, npwx * npol, &
                   (1.d0, 0.d0), aux4(1, 1), npwx * npol, dvpsi(1, lower_band), npwx * npol, &
                   (0.d0, 0.d0), elphmat(1, 1, ipert), nbndep)
+#if defined (__ONEMKL)
+        !$omp end target data
+#endif
         !
       ENDDO
       !
       CALL mp_sum(elphmat, intra_pool_comm)
-      CALL mp_sum(elphmat, inter_image_comm)
       !
       !DBSP
       !IF (ik==2) THEN
@@ -663,7 +758,7 @@
       !
       DO ibnd = 1, nbndep
         DO jbnd = 1, nbndep
-          DO ik = 1, nks
+          DO ik = 1, nk_loc
             !
             ! Here is where we calculate epmatq, it appears to be
             ! epmatq = cone * conjug(u) * el_ph_mat + czero
@@ -685,7 +780,7 @@
     !
     CALL diropn(iuwfc, 'wfc', lrwfc, exst)
     ! never remove this barrier - > insures that wfcs are restored to each pool before moving on
-    CALL mp_barrier(world_comm)
+    CALL mp_barrier(inter_pool_comm)
     !
     IF (okvan) THEN
       DEALLOCATE(int3, STAT = ierr)
@@ -714,6 +809,20 @@
     IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error deallocating dvpsi', 1)
     DEALLOCATE(etq, STAT = ierr)
     IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error deallocating etq', 1)
+    IF (lda_plus_u) THEN
+      DEALLOCATE(wfcatomk_, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error deallocating wfcatomk', 1)
+      DEALLOCATE(wfcatomkpq_, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error deallocating wfcatomkpq', 1)
+      DEALLOCATE(swfcatomk_, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error deallocating swfcatomk', 1)
+      DEALLOCATE(swfcatomkpq_, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error deallocating swfcatomkpq', 1)
+      DEALLOCATE(dnsscf_all_modes, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error deallocating dnsscf_all_modes', 1)
+      DEALLOCATE(dnsscf, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ep_coarse_compute', 'Error deallocating dnsscf', 1)
+    ENDIF
     !
     !------------------------------------------------------------
     END SUBROUTINE ep_coarse_compute

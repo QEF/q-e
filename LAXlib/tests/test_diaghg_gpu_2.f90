@@ -7,6 +7,7 @@ program test_diaghg_gpu_2
                               root, nproc, world_comm
     USE mp_bands_util, ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
     USE tester
+    USE test_helpers,  ONLY : hermitian, solve_with_zhegvd
     IMPLICIT NONE
     include 'laxlib_kinds.fh'
     !
@@ -115,36 +116,6 @@ program test_diaghg_gpu_2
     END DO
     !
   END SUBROUTINE complex_1
-  !
-  SUBROUTINE hermitian(mSize, M)
-    IMPLICIT NONE
-    integer, intent(in) :: msize
-    complex(dp), intent(out) :: M(:,:)
-    !       
-    real(dp), allocatable :: rnd(:)
-    complex(dp), allocatable :: tmp(:,:)
-
-    INTEGER :: h, k, j
-    !
-    ALLOCATE(rnd(mSize*(mSize+1)))
-    CALL RANDOM_NUMBER(rnd)
-    rnd = 1.d0*rnd - 5.d-1
-    !
-    M = (0.d0, 0.d0)
-    j = 1
-    DO k=1,mSize
-      DO h=1,mSize
-        IF(h>k) THEN
-          M(h,k) = CMPLX(rnd(j), rnd(j+1))
-          M(k,h) = CONJG(M(h,k))
-          j=j+2;
-        ELSE IF(k == h) THEN
-          M(k,h) = CMPLX(mSize, 0.d0, kind=DP)
-        END IF
-      END DO
-    END DO
-    !
-  END SUBROUTINE hermitian
   !
 end program test_diaghg_gpu_2
 #else

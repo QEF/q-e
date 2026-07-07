@@ -384,7 +384,7 @@ MODULE   convergence_gw
     USE mp_pools,  ONLY : intra_pool_comm
     USE mp_wave, ONLY : splitwf
     USE lsda_mod, ONLY : nspin
-    USE scf,       ONLY : rho,rho_core,rhog_core,scf_type,create_scf_type,destroy_scf_type
+    USE scf,       ONLY : rho, rho_core, rhog_core
 
     IMPLICIT NONE
     TYPE(convergence_tests) :: ct!object for convergence tests
@@ -417,7 +417,7 @@ MODULE   convergence_gw
     INTEGER, ALLOCATABLE :: k2g_ig_l2g(:)
     REAL(kind=DP), ALLOCATABLE  :: freqs_head(:)
     COMPLEX(kind=DP), ALLOCATABLE :: wing(:)
-    TYPE(scf_type) :: aile
+    COMPLEX(kind=DP), ALLOCATABLE :: aile(:,:)
     REAL(kind=DP) :: alpha
 
    
@@ -425,7 +425,7 @@ MODULE   convergence_gw
     REAL(kind=DP) :: broadening
     COMPLEX(kind=DP), ALLOCATABLE :: phi_save(:)
 
-    call create_scf_type ( aile , .true. )        
+    ALLOCATE ( aile(ngm,nspin) )
     
     l_wing=.true.
     write(stdout,*) 'Routine calculate_convergence'
@@ -565,9 +565,9 @@ MODULE   convergence_gw
        endif
      
        if(.not.l_truncated_coulomb .and. l_wing) then
-          call read_wing ( aile, 1, .true.,1,ct%nf-iw+1 ) 
+          call read_wing ( aile, ngm, 1, .true.,1,ct%nf-iw+1 ) 
           wing(1:npw)=(1.d0/3.d0)*(e_head(1:npw,ct%nf-iw+1,1)+e_head(1:npw,ct%nf-iw+1,2)+e_head(1:npw,ct%nf-iw+1,3))
-          wing(1:npw)=aile%of_g(1:npw,1)!DEBUG
+          wing(1:npw)=aile(1:npw,1)!DEBUG
        endif
 
        if(aimag(ct%freq(iw))==0.d0) then
@@ -601,8 +601,8 @@ MODULE   convergence_gw
       
     endif
     deallocate(wing)
+    deallocate (aile )
     !                
-    call  destroy_scf_type (aile )
     return
   END SUBROUTINE start_convergence
 
@@ -2473,7 +2473,7 @@ END MODULE convergence_gw
 
 
 
- SUBROUTINE read_wing ( rho, nspin, gamma_only,ipol,iw )
+ SUBROUTINE read_wing ( aile, ngm, nspin, gamma_only,ipol,iw )
       !
       USE scf,              ONLY : scf_type
       USE noncollin_module, ONLY : noncolin, domag
@@ -2489,11 +2489,12 @@ END MODULE convergence_gw
       USE io_base,     ONLY : write_rhog, read_rhog
   !
       IMPLICIT NONE
-      TYPE(scf_type),   INTENT(INOUT)        :: rho
+      INTEGER,          INTENT(IN)           :: ngm
       INTEGER,          INTENT(IN)           :: nspin
       LOGICAL,          INTENT(IN)           :: gamma_only
       INTEGER,          INTENT(IN)           :: ipol!direction
       INTEGER,          INTENT(IN)           :: iw !frequency
+      COMPLEX(dp),      INTENT(INOUT)        :: aile(ngm,nspin)
       !
       CHARACTER(LEN=256) :: dirname
       LOGICAL :: lexist
@@ -2516,8 +2517,8 @@ END MODULE convergence_gw
       ! read charge density
       CALL read_rhog(TRIM(dirname) // "wing_" // npol // "_" //nfile , &
            root_bgrp, intra_bgrp_comm, &
-           ig_l2g, nspin_, rho%of_g, gamma_only )
-      IF ( nspin > nspin_) rho%of_r(:,nspin_+1:nspin) = (0.0_dp, 0.0_dp)
+           ig_l2g, nspin_, aile, gamma_only )
+      IF ( nspin > nspin_) aile(:,nspin_+1:nspin) = (0.0_dp, 0.0_dp)
      
       !
       RETURN

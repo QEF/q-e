@@ -113,7 +113,7 @@ PROGRAM pw2gw
     CALL write_gmaps ( kunittmp )
   ENDIF
   !
-  CALL environment_end ( 'PW2GW' )
+  CALL environment_end( )
   !
   CALL stop_pp
 

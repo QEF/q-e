@@ -16,12 +16,13 @@ subroutine bcast_ph_input ( )
 
   use mp, only: mp_bcast
   use mp_world, only: world_comm
-  USE control_lr, ONLY : lgamma, lrpa, nmix_ph, niter_ph, alpha_mix, tr2_ph, reduce_io, lmultipole
+  USE control_lr, ONLY : lgamma, lrpa, nmix_ph, niter_ph, alpha_mix, tr2_ph, &
+                         reduce_io, lnoloc
   USE control_ph, ONLY : start_irr, last_irr, start_q, last_q, &
-                         lnoloc, recover, ldisp, zue, zeu, epsil, trans, &
+                         recover, ldisp, zue, zeu, epsil, trans, &
                          ldiag, lqdir, search_sym,  electron_phonon, &
                          qplot, only_init, only_wfc, low_directory_check,&
-                         nk1, nk2, nk3, k1, k2, k3
+                         nk1, nk2, nk3, k1, k2, k3, lmultipole
   USE gamma_gamma, ONLY : asr
   USE disp, ONLY : nq1, nq2, nq3
   USE partial, ONLY : nat_todo

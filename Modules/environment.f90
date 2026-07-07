@@ -1,13 +1,10 @@
 !
-! Copyright (C) 2002-2023 Quantum ESPRESSO Foundation
+! Copyright (C) 2002-2025 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! Uncomment next line to print compilation info. BEWARE: may occasionally
-! give compilation errors due to lines too long if paths are very long
-!#define __HAVE_CONFIG_INFO
 #if defined(HAVE_GITREV)
 #include "git-rev.h"
 #endif
@@ -34,8 +31,8 @@ MODULE environment
 
   IMPLICIT NONE
 
-  ! ...  title of the simulation
-  CHARACTER(LEN=75) :: title
+  ! ... code name
+  CHARACTER(LEN=20) :: code = 'notset'
 
   SAVE
 
@@ -44,7 +41,6 @@ MODULE environment
   PUBLIC :: environment_start
   PUBLIC :: environment_end
   PUBLIC :: opening_message
-  PUBLIC :: compilation_info
   PUBLIC :: parallel_info
   PUBLIC :: print_cuda_info
 
@@ -52,9 +48,9 @@ MODULE environment
 CONTAINS
   !==-----------------------------------------------------------------------==!
 
-  SUBROUTINE environment_start( code )
+  SUBROUTINE environment_start( code_in )
 
-    CHARACTER(LEN=*), INTENT(IN) :: code
+    CHARACTER(LEN=*), INTENT(IN) :: code_in
 
     LOGICAL           :: exst, debug = .false.
     CHARACTER(LEN=80) :: code_version, uname
@@ -72,6 +68,7 @@ CONTAINS
     ! ... use ".FALSE." to disable all clocks except the total cpu time clock
     ! ... use ".TRUE."  to enable clocks
     CALL init_clocks(.TRUE.) 
+    code = code_in
     CALL start_clock( TRIM(code) )
 
     code_version = TRIM (code) // " v." // TRIM (version_number)
@@ -120,9 +117,8 @@ CONTAINS
     END IF
     !
     CALL opening_message( code_version )
-    CALL compilation_info ( )
 #if defined(__MPI)
-    CALL parallel_info ( code )
+    CALL parallel_info ( )
 #else
     CALL serial_info()
 #endif
@@ -139,17 +135,23 @@ CONTAINS
 
   !==-----------------------------------------------------------------------==!
 
-  SUBROUTINE environment_end( code )
-
-    CHARACTER(LEN=*), INTENT(IN) :: code
+  SUBROUTINE environment_end( code_in )
+    ! next line for back-compatibility
+    CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: code_in
 #if defined(_HDF5)
     CALL finalize_hdf5()
 #endif
     IF ( meta_ionode ) WRITE( stdout, * )
 
-    CALL stop_clock(  TRIM(code) )
-    CALL print_clock( TRIM(code) )
-
+    IF ( PRESENT(code_in) ) THEN
+       code = code_in
+    END IF
+    IF ( code == 'notset' ) THEN
+       WRITE( stdout,'(5X,"WARNING: environment_end needs a call to environment_start at the beginning of the run")')
+    ELSE
+       CALL stop_clock(  TRIM(code) )
+       CALL print_clock( TRIM(code) )
+    END IF
     CALL closing_message( )
 
     IF( meta_ionode ) THEN
@@ -223,9 +225,8 @@ CONTAINS
   END SUBROUTINE closing_message
 
   !==-----------------------------------------------------------------------==!
-  SUBROUTINE parallel_info ( code )
+  SUBROUTINE parallel_info ( )
     !
-    CHARACTER(LEN=*), INTENT(IN) :: code
 #if defined(_OPENMP)
     INTEGER, EXTERNAL :: omp_get_max_threads
     !
@@ -277,44 +278,6 @@ CONTAINS
 #endif
     !
   END SUBROUTINE serial_info
-
-  !==-----------------------------------------------------------------------==!
-  SUBROUTINE compilation_info ( )
-  !
-  ! code borrowed by WanT - prints architecture / compilation details
-  !
-#if defined(__HAVE_CONFIG_INFO)
-#include "configure.h"
-! #include "build_date.h"
-!
-     !WRITE( stdout, "(2x,'        BUILT :',4x,a)" ) TRIM( ADJUSTL( &
-     !__CONF_BUILD_DATE  ))
-     WRITE( stdout, * )
-     ! note: if any preprocessed variables __CONF_* exceeds 128 characters,
-     ! the compilation may give error because the line exceeds 132 characters
-     WRITE( stdout, "(2x,'         ARCH :',4x,a)" ) TRIM( ADJUSTL( &
-__CONF_ARCH))
-     WRITE( stdout, "(2x,'           CC :',4x,a)" ) TRIM( ADJUSTL( &
-__CONF_CC))
-     WRITE( stdout, "(2x,'          CPP :',4x,a)" ) TRIM( ADJUSTL( &
-__CONF_CPP))
-     WRITE( stdout, "(2x,'          F90 :',4x,a)" ) TRIM( ADJUSTL( &
-__CONF_MPIF90))
-     WRITE( stdout, "(2x,'          F77 :',4x,a)" ) TRIM( ADJUSTL( &
-__CONF_F77))
-     WRITE( stdout, "(2x,'       DFLAGS :',4x,a)" ) TRIM( ADJUSTL( &
-__CONF_DFLAGS))
-     WRITE( stdout, "(2x,'    BLAS LIBS :',4x,a)" ) TRIM( ADJUSTL( &
-__CONF_BLAS_LIBS))
-     WRITE( stdout, "(2x,'  LAPACK LIBS :',4x,a)" ) TRIM( ADJUSTL( &
-__CONF_LAPACK_LIBS))
-     WRITE( stdout, "(2x,'     FFT LIBS :',4x,a)" ) TRIM( ADJUSTL( &
-__CONF_FFT_LIBS))
-     WRITE( stdout, "(2x,'    MASS LIBS :',4x,a)" ) TRIM( ADJUSTL( &
-__CONF_MASS_LIBS))
-     !
-#endif
-   END SUBROUTINE compilation_info
 !
 !-----------------------------------------------------------------------
 SUBROUTINE print_cuda_info(check_use_gpu) 
@@ -371,14 +334,19 @@ SUBROUTINE print_cuda_info(check_use_gpu)
      ierr = cudaGetDeviceProperties(prop, idev)
      WRITE(stdout,"(5X,'   Device Number: ',i0)") idev
      WRITE(stdout,"(5X,'   Device name: ',a)") trim(prop%name)
-     WRITE(stdout,"(5X,'   Compute capability : ',i0, i0)") prop%major, prop%minor
-     WRITE(stdout,"(5X,'   Ratio of single to double precision performance  : ',i0)") prop%singleToDoublePrecisionPerfRatio
+     WRITE(stdout,"(5X,'   Compute capability: ',i0, i0)") prop%major, prop%minor
+     WRITE(stdout,"(5X,'   Ratio of single to double precision performance: ',i0)") prop%singleToDoublePrecisionPerfRatio
      WRITE(stdout,"(5X,'   Memory Clock Rate (KHz): ', i0)") &
        prop%memoryClockRate
      WRITE(stdout,"(5X,'   Memory Bus Width (bits): ', i0)") &
        prop%memoryBusWidth
-     WRITE(stdout,"(5X,'   Peak Memory Bandwidth (GB/s): ', f6.2)") &
-       2.0*prop%memoryClockRate*(prop%memoryBusWidth/8)/10.0**6
+     WRITE(stdout,"(5X,'   Peak Memory Bandwidth (GB/s): ', f8.2)") &
+       2.0d0*prop%memoryClockRate*(prop%memoryBusWidth/8.0d0)/10.0**6
+     WRITE(stdout,"(5X,'   Total Global Memory (MiB): ',i0)") prop%totalGlobalMem/2**20
+     ! Memory reported in MiB, not in MB to match what "nvidia-smi" reports.
+     ! 1 MiB = 2^20 bytes = 1048576 bytes
+     ! 1 MB  = 10^6 bytes = 1000000 bytes
+     WRITE(stdout,'()')
   END IF
   !
 #endif

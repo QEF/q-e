@@ -37,6 +37,12 @@ module dftd3_core
   use dftd3_pars
   implicit none
 
+  !! number of processors within an image
+  INTEGER :: nproc_dftd3 = 1
+  !! index of the processor within an image
+  INTEGER :: me_dftd3 = 0
+  ! intra image communicator
+  INTEGER :: comm_dftd3 = 0
 
   ! atomic <r^2>/<r^4> values
   real(wp) r2r4(max_elem)
@@ -234,7 +240,7 @@ contains
            s18 =0.906564
            rs18=3.593680
       case DEFAULT
-            call stoprun( 'functional name unknown' )
+           call errore('dft-d3', 'functional name unknown', 1)
     end select
     endif
 
@@ -277,7 +283,7 @@ contains
            s18 =1.280619
            rs18=0.003160
       case DEFAULT
-            call stoprun( 'functional name unknown' )
+           call errore('dft-d3', 'functional name unknown', 1)
     end select
     endif
 
@@ -528,7 +534,7 @@ contains
         rs18=5.7308
 
       case DEFAULT
-        call stoprun( 'functional name unknown' )
+        call errore('dft-d3', 'functional name unknown', 1)
       end select
     end if
 
@@ -695,7 +701,7 @@ contains
           rs6=1.221
           s18=1.206
         case DEFAULT
-          call stoprun( 'functional name unknown' )
+          call errore('dft-d3', 'functional name unknown', 1)
         end select
       else
         ! special TZVPP parameter
@@ -735,7 +741,7 @@ contains
           s18=1.109
           s6=0.5
         case DEFAULT
-          call stoprun( 'functional name unknown (TZ case)' )
+          call errore('dft-d3', 'functional name unknown (TZ case)', 1)
         end select
       end if
     end if
@@ -773,7 +779,7 @@ contains
         s6=0.41
         alp=60.0d0
       case DEFAULT
-        call stoprun( 'functional name unknown' )
+        call errore('dft-d3', 'functional name unknown', 1)
       end select
 
     end if
@@ -1705,17 +1711,6 @@ contains
 
 
   !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-
-  subroutine stoprun(s)
-    character*(*) s
-    write(*,*)'program stopped due to: ',s
-    open(99, file='dscf_problem', action='write', status='replace')
-    close(99)
-    !call system('touch dscf_problem')
-    stop 'must stop!'
-  end subroutine stoprun
-
-  !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
   ! Returns the number of a given element string (h-pu, 1-94)
   !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 
@@ -1883,7 +1878,6 @@ contains
       & rcov,rs6,rs8,rs10,alp6,alp8,alp10,version,noabc,&
       & e6,e8,e10,e12,e63,lat,rthr,rep_vdw,cn_thr,rep_cn)
 
-    USE mp_images,    ONLY : me_image , nproc_image, intra_image_comm
     USE mp,           ONLY : mp_sum
     integer :: mykey, na_s, na_e
 
@@ -1926,7 +1920,7 @@ contains
     a2=rs8
 
 
-    CALL block_distribute( n, me_image, nproc_image, na_s, na_e, mykey )
+    CALL block_distribute( n, me_dftd3, nproc_dftd3, na_s, na_e, mykey )
     IF ( mykey == 0 ) THEN
 
 
@@ -2203,13 +2197,13 @@ contains
 
 
     ENDIF
-    CALL mp_sum ( e6 , intra_image_comm )
-    CALL mp_sum ( e8 , intra_image_comm )
+    CALL mp_sum ( e6 , comm_dftd3 )
+    CALL mp_sum ( e8 , comm_dftd3 )
 
     if (.not.noabc) then 
 
     ! compute non-additive third-order energy using averaged C6
-    CALL mp_sum ( cc6ab , intra_image_comm )
+    CALL mp_sum ( cc6ab , comm_dftd3 )
     call pbcthreebody(max_elem,xyz,lat,n,iz,rep_cn,crit_cn,&
         & cc6ab,r0ab,e63)
 
@@ -2221,7 +2215,6 @@ contains
   subroutine pbcthreebody(max_elem,xyz,lat,n,iz,repv,cnthr,cc6ab,&
       & r0ab,eabc)
 
-    USE mp_images,    ONLY : me_image , nproc_image, intra_image_comm
     USE mp,           ONLY : mp_sum
     integer :: mykey, na_s, na_smax, na_e
 
@@ -2268,7 +2261,7 @@ contains
     repv2 = repv(2)
     repv3 = repv(3)
 
-    CALL block_distribute( n, me_image, nproc_image, na_s, na_e, mykey )
+    CALL block_distribute( n, me_dftd3, nproc_dftd3, na_s, na_e, mykey )
     IF ( mykey == 0 ) THEN
     na_smax = max(3,na_s)
 
@@ -2585,7 +2578,7 @@ contains
     end do
 
    ENDIF
-   CALL mp_sum ( eabc , intra_image_comm )
+   CALL mp_sum ( eabc , comm_dftd3 )
 
   end subroutine pbcthreebody
 
@@ -2600,7 +2593,6 @@ contains
       & crit_vdw,echo,crit_cn)
 
 
-    USE mp_images,    ONLY : me_image , nproc_image, intra_image_comm
     USE mp,           ONLY : mp_sum
     integer :: mykey, na_s, na_smax, na_e
 
@@ -2855,7 +2847,7 @@ contains
       goto 999
     end if
 
-    CALL block_distribute( n, me_image, nproc_image, na_s, na_e, mykey )
+    CALL block_distribute( n, me_dftd3, nproc_dftd3, na_s, na_e, mykey )
 
     if ((version.eq.3).or.(version.eq.5)) then
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -3270,8 +3262,8 @@ contains
       rep_v2 = rep_v(2)
       rep_v3 = rep_v(3)
 
-      CALL mp_sum ( c6save , intra_image_comm )
-      CALL mp_sum ( dc6ij  , intra_image_comm )
+      CALL mp_sum ( c6save , comm_dftd3 )
+      CALL mp_sum ( dc6ij  , comm_dftd3 )
       IF ( mykey == 0 ) THEN
       na_smax = max(3,na_s)
 
@@ -3845,7 +3837,7 @@ contains
       end do
 
       END IF
-      CALL mp_sum ( eabc , intra_image_comm )
+      CALL mp_sum ( eabc , comm_dftd3 )
 
       call cpu_time(time2)
 
@@ -3855,8 +3847,8 @@ contains
       ! write(*,*)'gdisp:',disp
     end if
 
-    CALL mp_sum ( drij , intra_image_comm )
-    CALL mp_sum ( dc6i , intra_image_comm )
+    CALL mp_sum ( drij , comm_dftd3 )
+    CALL mp_sum ( dc6i , comm_dftd3 )
 
     sigma_abc=0.0d0
     sigma=0.0d0
@@ -3989,7 +3981,6 @@ contains
       & version,g,disp,gnorm,lat,rep_v,rep_cn,&
       & crit_vdw,echo,crit_cn, hstep, ia, ix, is, g_supercell_)
     !
-    USE mp_images,    ONLY : me_image , nproc_image, intra_image_comm
     USE mp,           ONLY : mp_sum
     !
     ! input/output variables
@@ -4045,7 +4036,7 @@ contains
     if (echo)write(*,*)
     if (echo) write(*,*) 'doing analytical gradient for version...', version
 
-    CALL block_distribute( n, me_image, nproc_image, na_s, na_e, mykey )
+    CALL block_distribute( n, me_dftd3, nproc_dftd3, na_s, na_e, mykey )
 
     if ((version.eq.3).or.(version.eq.5).or.(version.eq.4).or.(version.eq.6)) then
 
@@ -4201,10 +4192,10 @@ contains
 
       END IF ! mykey == 0
 
-      CALL mp_sum ( drij , intra_image_comm )
-      CALL mp_sum ( dc6i , intra_image_comm )
-      CALL mp_sum ( drij_hstep , intra_image_comm )
-      CALL mp_sum ( dc6i_hstep , intra_image_comm )
+      CALL mp_sum ( drij , comm_dftd3 )
+      CALL mp_sum ( dc6i , comm_dftd3 )
+      CALL mp_sum ( drij_hstep , comm_dftd3 )
+      CALL mp_sum ( dc6i_hstep , comm_dftd3 )
 
     end if ! version
 

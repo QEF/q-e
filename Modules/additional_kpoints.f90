@@ -34,6 +34,7 @@ MODULE additional_kpoints
      USE input_parameters, ONLY : nqx1, nqx2, nqx3
      USE cell_base,        ONLY : bg
      USE io_global,        ONLY : stdout
+     USE upf_utils,        ONLY : matches
      IMPLICIT NONE
      INTEGER,INTENT(inout)  :: nkstot
      REAL(DP),INTENT(inout) :: xk(3,npk), wk(npk)
@@ -45,7 +46,6 @@ MODULE additional_kpoints
      INTEGER :: nqtot, i,j,k, iq, jq
      REAL(DP) :: xq(3), rq(3)
      REAL(DP) :: almost_zero = 1.d-8
-     LOGICAL, EXTERNAL  :: matches
      !
 !     IF(.not.allocated(xk) .or. .not.allocated(wk))&
 !       CALL errore("add_kpoints", "K-points not ready yet",1)

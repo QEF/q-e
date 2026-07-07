@@ -4,12 +4,12 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pp.x 
 
     intro {
         @b {Purpose of pp.x:} data analysis and plotting.
-        
+
         The code performs two steps:
-	
+
         (1) reads the output produced by @b pw.x, extracts and calculates
 	    the desired quantity/quantities (rho, V, ...)
-	
+
         (2) writes the desired quantity to file in a suitable format for
             various types of plotting and various plotting programs
 
@@ -29,7 +29,7 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pp.x 
         Intermediate results from step 1 can be saved to disk (see
         variable @ref filplot in @b &INPUTPP) and later read in step 2.
         Since the file with intermediate results is formatted, it
-        can be safely transferred to a different machine. This 
+        can be safely transferred to a different machine. This
         also allows plotting of a linear combination (for instance,
         charge differences) by saving two intermediate files and
         combining them (see variables @ref weight and @ref filepp in @b &PLOT)
@@ -44,109 +44,162 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pp.x 
     namelist INPUTPP {
 
         var title -type CHARACTER {
-            default {' '}
+            default { ' ' }
             info {
                 reprinted on output, CUB files and other places
             }
         }
 
         var prefix -type CHARACTER {
-            info { 
-                prefix of files saved by program pw.x 
+            default { 'pwscf' }
+            info {
+                prefix of files saved by program pw.x
             }
         }
-        
+
         var outdir -type CHARACTER {
             info {
                 directory containing the input data, i.e. the same as in pw.x
             }
-            default {
-                value of the @tt ESPRESSO_TMPDIR environment variable if set;
-                current directory ('./') otherwise
+            default -kind conditional {
+                case -test {ESPRESSO_TMPDIR is set} { from_environment }
+                case { './' }
             }
         }
-        
+
         var filplot -type CHARACTER {
             default { 'tmp.pp' }
-            info { 
+            info {
                 file "filplot" contains the quantity selected by plot_num.
                 Typically this is a temporary file and may be ignored,
                 unless you want to save it for further processing
             }
         }
-        
+
         var plot_num -type INTEGER {
             default { -1 }
-            info { 
-                Selects what to save in filplot:
+            options {
+                info {
+                    Selects what to save in filplot:
+                }
 
-                  -1  = do not do anything, skip step (1) (see header) 
+                opt -val -1 {
+                    do not do anything, skip step (1) (see header)
+                }
 
-                   0  = electron (pseudo-)charge density
-		   
-                   1  = total potential V_bare + V_H + V_xc
-		   
-                   2  = local ionic potential V_bare
-		   
-                   3  = local density of states at specific energy or grid of energies
-                        (number of states per volume, in bohr^3, per energy unit, in Ry) 
-		   
-                   4  = local density of electronic entropy
-		   
-                   5  = STM images
-                        Tersoff and Hamann, PRB 31, 805 (1985)
-		   
-                   6  = spin polarization (rho(up)-rho(down))
-		   
-                   7  = contribution of selected wavefunction(s) to the
-                        (pseudo-)charge density. For norm-conserving PPs,
-                        |psi|^2 (psi=selected wavefunction). Noncollinear case:
-                        contribution of the given state to the charge or
-                        to the magnetization along the direction indicated
-                        by spin_component (0 = charge, 1 = x, 2 = y, 3 = z )
-		   
-                   8  = electron localization function (ELF)
-		   
-                   9  = charge density minus superposition of atomic densities
-		   
-                   10 = integrated local density of states (ILDOS)
-                        from @ref emin to @ref emax (emin, emax in eV)
-                        if @ref emax is not specified, @ref emax=E_fermi
-		   
-                   11 = the V_bare + V_H potential
-		   
-                   12 = the sawtooth electric field potential (if present)
-		   
-                   13 = the noncollinear magnetization.
-		   
-                   17 = all-electron valence charge density
-                        can be performed for PAW calculations only 
-                        requires a very dense real-space grid!
-		   
-                   18 = The exchange and correlation magnetic field in the noncollinear case
-		   
-                   19 = Reduced density gradient 
-                        ( J. Chem. Theory Comput. 7, 625 (2011), doi:10.1021/ct100641a )
-                        Set the isosurface between 0.3 and 0.6 to plot the 
-                        non-covalent interactions (see also plot_num = 20)
-		   
-                   20 = Product of the electron density (charge) and the second 
-                        eigenvalue of the electron-density Hessian matrix;
-                        used to colorize the RDG plot (plot_num = 19)
-		   
-                   21 = all-electron charge density (valence+core).
-                        For PAW calculations only; requires a very dense real-space grid. 
+                opt -val 0 {
+                    electron (pseudo-)charge density
+                }
 
-                   22 = kinetic energy density
+                opt -val 1 {
+                    total potential V_bare + V_H + V_xc
+                }
 
-                   23 = the charge density of states between emin & emax
+                opt -val 2 {
+                    local ionic potential V_bare
+                }
 
-                  123 = DORI: density overlap regions indicator
-		        (doi: 10.1021/ct500490b) Implemented by D. Yang & Q.Liu
+                opt -val 3 {
+                    local density of states at specific energy or grid of energies
+                    (number of states per volume, in bohr^3, per energy unit, in Ry)
+                }
 
-                   24 = Reconstructed all-electron charge
+                opt -val 4 {
+                    local density of electronic entropy
+                }
 
-                   25 = Squared modulus of the Hubbard projector function of DFT+U 
+                opt -val 5 {
+                    STM images
+                    Tersoff and Hamann, PRB 31, 805 (1985)
+                }
+
+                opt -val 6 {
+                    spin polarization (rho(up)-rho(down))
+                }
+
+                opt -val 7 {
+                    contribution of selected wavefunction(s) to the
+                    (pseudo-)charge density. For norm-conserving PPs,
+                    |psi|^2 (psi=selected wavefunction). Noncollinear case:
+                    contribution of the given state to the charge or
+                    to the magnetization along the direction indicated
+                    by @ref spin_component (0 = charge, 1 = x, 2 = y, 3 = z )
+                }
+
+                opt -val 8 {
+                    electron localization function (ELF)
+                }
+
+                opt -val 9 {
+                    charge density minus superposition of atomic densities
+                }
+
+                opt -val 10 {
+                    integrated local density of states (ILDOS)
+                    from @ref emin to @ref emax (emin, emax in eV)
+                    if @ref emax is not specified, @ref emax=E_fermi
+                }
+
+                opt -val 11 {
+                    the V_bare + V_H potential
+                }
+
+                opt -val 12 {
+                    the sawtooth electric field potential (if present)
+                }
+
+                opt -val 13 {
+                    the noncollinear magnetization.
+                }
+
+                opt -val 17 {
+                    all-electron valence charge density
+                    can be performed for PAW calculations only
+                    requires a very dense real-space grid!
+                }
+
+                opt -val 18 {
+                    The exchange and correlation magnetic field in the noncollinear case
+                }
+
+                opt -val 19 {
+                    Reduced density gradient
+                    ( J. Chem. Theory Comput. 7, 625 (2011), doi:10.1021/ct100641a )
+                    Set the isosurface between 0.3 and 0.6 to plot the
+                    non-covalent interactions (see also @ref plot_num = 20)
+                }
+
+                opt -val 20 {
+                    Product of the electron density (charge) and the second
+                    eigenvalue of the electron-density Hessian matrix;
+                    used to colorize the RDG plot (@ref plot_num = 19)
+                }
+
+                opt -val 21 {
+                    all-electron charge density (valence+core).
+                    For PAW calculations only; requires a very dense real-space grid.
+                }
+
+                opt -val 22 {
+                    kinetic energy density
+                }
+
+                opt -val 23 {
+                    the charge density of states between @ref emin and @ref emax
+                }
+
+                opt -val 24 {
+                    Reconstructed all-electron charge
+                }
+
+                opt -val 25 {
+                    Squared modulus of the Hubbard projector function of DFT+U
+                }
+
+                opt -val 123 {
+                    DORI: density overlap regions indicator
+                    (doi: 10.1021/ct500490b) Implemented by D. Yang & Q.Liu
+                }
             }
         }
 
@@ -154,71 +207,89 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pp.x 
             when -test "plot_num = 0 or 9" {
                 label {
                     Options for total charge (plot_num=0)
-                    or for total minus atomic charge (plot_num=9): 
+                    or for total minus atomic charge (plot_num=9):
                 }
-                
+
                 var spin_component -type INTEGER {
-                    default 0 
-                    info {
-                        0 = total charge (default value),
-                        1 = spin up charge,
-                        2 = spin down charge.
+                    default { 0 }
+                    options {
+                        opt -val 0 { total charge }
+                        opt -val 1 { spin up charge }
+                        opt -val 2 { spin down charge }
                     }
                 }
             }
-            
+
             elsewhen -test "plot_num=1" {
                 label {
-                    Options for total potential (plot_num=1): 
+                    Options for total potential (plot_num=1):
                 }
-                
+
                 var spin_component -type INTEGER {
-                    default 0 
-                    info {
-                        0 = spin averaged potential (default value),
-                        1 = spin up potential,
-                        2 = spin down potential.
+                    default { 0 }
+                    options {
+                        opt -val 0 { spin averaged potential }
+                        opt -val 1 { spin up potential }
+                        opt -val 2 { spin down potential }
                     }
                 }
             }
 
             elsewhen -test "plot_num=3" {
-                label { 
-                    Options for LDOS (plot_num=3): 
+                label {
+                    Options for LDOS (plot_num=3):
                     LDOS is plotted on grid [emin, emax] with spacing delta_e.
                 }
-                
+
                 var emin -type REAL {
-                    default e_fermi
+                    default -kind conditional {
+                        case -test {@ref emin == -999.0 (sentinel) and @ref plot_num == 3} { @ref E_fermi }
+                        case { -999.0 }
+                    }
+                    dimensionality { energy }
+                    units { eV }
                     info {
-                        lower boundary of energy grid (in eV).
+                        lower boundary of energy grid.
 
                         Defaults to Fermi energy.
                     }
                 }
-                
+
                 var emax -type REAL {
-                    status OPTIONAL 
+                    status OPTIONAL
+                    default -kind conditional {
+                        case -test {@ref emax == +999.0 (sentinel) and @ref plot_num == 3} { @ref E_fermi }
+                        case { 999.0 }
+                    }
+                    dimensionality { energy }
+                    units { eV }
                     info {
-                        upper boundary of energy grid (in eV).
+                        upper boundary of energy grid.
 
                         Defaults to Fermi energy.
                     }
                 }
 
                 var delta_e -type REAL {
-                    default 0.1
-                    status OPTIONAL 
+                    default { 0.1 }
+                    status OPTIONAL
+                    dimensionality { energy }
+                    units { eV }
                     info {
-                        spacing of energy grid (in eV).
+                        spacing of energy grid.
                     }
                 }
 
                 var degauss_ldos -type REAL {
-                    default {degauss (converted to eV)}
-                    status OPTIONAL 
+                    default -kind conditional {
+                        case -test {@ref degauss_ldos == -999.0 (sentinel) and @ref plot_num == 3} { degauss * rytoev }
+                        case { -999.0 }
+                    }
+                    status OPTIONAL
+                    dimensionality { energy }
+                    units { eV }
                     info {
-                        broadening of energy levels for LDOS (in eV).
+                        broadening of energy levels for LDOS.
 
                         Defaults to broadening degauss specified for electronic smearing
                         in pw.x calculation.
@@ -226,7 +297,7 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pp.x 
                 }
 
                 var use_gauss_ldos -type LOGICAL {
-                    default {.false.}
+                    default { .false. }
                     status OPTIONAL
                     info {
                         If .true., gaussian broadening (ngauss=0) is used for LDOS calculation.
@@ -237,64 +308,79 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pp.x 
                 }
 
             }
-            
+
             elsewhen -test "plot_num=5" {
                 label {
-                    Options for STM images (plot_num=5): 
+                    Options for STM images (plot_num=5):
                 }
-                
+
                 var sample_bias -type REAL {
+                    default { 0.01 }
+                    dimensionality { energy }
+                    units { Ry }
                     info {
-                        the bias of the sample (Ry) in stm images
+                        the bias of the sample in stm images
                     }
                 }
-                
+
             }
-            
+
             elsewhen -test "plot_num=7" {
-                label { 
-                    Options for |psi|^2 (plot_num=7): 
+                label {
+                    Options for |psi|^2 (plot_num=7):
                 }
 
                 dimension kpoint -start 1 -end 2 -type INTEGER {
+                    default -kind conditional {
+                        case -test {@ref kpoint(2) == 0} { kpoint(2) = kpoint(1) }
+                        case { kpoint(2) initialized to 0; kpoint(1) has no default }
+                    }
                     info {
                         Unpolarized and noncollinear case:
                                 k-point(s) to be plotted
                         LSDA:
                                 k-point(s) and spin polarization to be plotted
                                 (spin-up and spin-down correspond to different k-points!)
-                        
+
                         To plot a single kpoint ikpt, specify kpoint=ikpt or kpoint(1)=ikpt
                         To plot a range of kpoints [imin, imax], specify kpoint(1)=imin and kpoint(2)=imax
                     }
                 }
-                
+
                 dimension kband -start 1 -end 2 -type INTEGER {
-                    info { 
+                    default -kind conditional {
+                        case -test {@ref kband(2) == 0} { kband(2) = kband(1) }
+                        case { kband(2) initialized to 0; kband(1) has no default }
+                    }
+                    info {
                         Band(s) to be plotted.
-			
+
                         To plot a single band ibnd, specify kband=ibnd or kband(1)=ibnd
                         To plot a range of bands [imin, imax], specify kband(1)=imin and kband(2)=imax
                     }
                 }
-                
+
                 var lsign -type LOGICAL {
+                    default { .false. }
                     info {
                         if true and k point is Gamma, plot |psi|^2 sign(psi)
                     }
                 }
-                
+
                 dimension spin_component -start 1 -end 2 -type INTEGER {
-                    default 0
+                    default -kind conditional {
+                        case -test {@ref spin_component(2) == 0} { spin_component(2) = spin_component(1) }
+                        case { 0 }
+                    }
                     status OPTIONAL
                     info {
                         @b {Noncollinear case only:}
-                        plot the contribution of the given state(s) to the charge 
-                        or to the magnetization along the direction(s) indicated 
+                        plot the contribution of the given state(s) to the charge
+                        or to the magnetization along the direction(s) indicated
                         by spin_component:
-                                0 = charge (default), 
-                                1 = x, 
-                                2 = y, 
+                                0 = charge,
+                                1 = x,
+                                2 = y,
                                 3 = z.
 
                         Ignored in unpolarized or LSDA case
@@ -304,63 +390,74 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pp.x 
                     }
                 }
             }
-            
+
             elsewhen -test "plot_num=10" {
-                label { 
-                    Options for ILDOS (plot_num=10): 
+                label {
+                    Options for ILDOS (plot_num=10):
                 }
-                
+
                 var emin -type REAL {
+                    default { -999.0 }
+                    dimensionality { energy }
+                    units { eV }
                     info {
-                        lower energy boundary (in eV)
+                        lower energy boundary
                     }
                 }
-                
+
                 var emax -type REAL {
+                    default -kind conditional {
+                        case -test {@ref emax == +999.0 (sentinel) and @ref plot_num == 10} { ef * rytoev (E_fermi) }
+                        case { 999.0 }
+                    }
+                    dimensionality { energy }
+                    units { eV }
                     info {
-                        upper energy boundary (in eV),
+                        upper energy boundary,
                         i.e. compute ILDOS from @ref emin to @ref emax
                     }
                 }
-                
+
                 var spin_component -type INTEGER {
-                    default 0
-                    info {
-                        for LSDA case only: plot the contribution to ILDOS of
-                        0 = spin-up + spin-down (default)
-                        1 = spin-up   only
-                        2 = spin-down only
+                    default { 0 }
+                    options {
+                        info {
+                            For LSDA case only: plot the contribution to ILDOS of:
+                        }
+                        opt -val 0 { spin-up + spin-down (default) }
+                        opt -val 1 { spin-up only }
+                        opt -val 2 { spin-down only }
                     }
-                }           
+                }
             }
-            
+
             elsewhen -test "plot_num=13" {
-                label { 
-                    Options for noncollinear magnetization (plot_num=13): 
-                } 
-                
+                label {
+                    Options for noncollinear magnetization (plot_num=13):
+                }
+
                 var spin_component -type INTEGER {
-                    default 0 
-                    info {
-                        0 = absolute value (default value)
-                        1 = x component of the magnetization
-                        2 = y component of the magnetization
-                        3 = z component of the magnetization
+                    default { 0 }
+                    options {
+                        opt -val 0 { absolute value }
+                        opt -val 1 { x component of the magnetization }
+                        opt -val 2 { y component of the magnetization }
+                        opt -val 3 { z component of the magnetization }
                     }
                 }
             }
 
             elsewhen -test "plot_num=17" {
-                label { 
-                    Options for reconstructed charge density (plot_num=17): 
-                } 
-                
+                label {
+                    Options for reconstructed charge density (plot_num=17):
+                }
+
                 var spin_component -type INTEGER {
-                    default 0
-                    info {
-                        0 = total charge (default value),
-                        1 = spin up charge,
-                        2 = spin down charge.
+                    default { 0 }
+                    options {
+                        opt -val 0 { total charge }
+                        opt -val 1 { spin up charge }
+                        opt -val 2 { spin down charge }
                     }
                 }
             }
@@ -372,11 +469,11 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pp.x 
                 }
 
                 var spin_component -type INTEGER {
-                    default 0
-                    info {
-                        0 = total density (default value),
-                        1 = spin up density,
-                        2 = spin down density.
+                    default { 0 }
+                    options {
+                        opt -val 0 { total density }
+                        opt -val 1 { spin up density }
+                        opt -val 2 { spin down density }
                     }
                 }
             }
@@ -388,30 +485,30 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pp.x 
                 }
 
                 var nc -type INTEGER {
-                    default 1
+                    default { 1 }
                     info {
-                        nc(1), nc(2), and nc(3) indicate the size of the 
+                        nc(1), nc(2), and nc(3) indicate the size of the
                         supercell for the visualization of the squared modulus of
-                        the Hubbard projector functions. 
+                        the Hubbard projector functions.
                         Note, this supercell must match the k-points grid size
                         otherwise the resulting WFs are wrong.
                     }
                 }
 
                 var n0 -type INTEGER {
-                    default 0
+                    default { 0 }
                     info {
                         n0(1), n0(2), and n0(3) indicate the shift
-                        of the coordinate frame in units of the 
-                        lattice vectors for a better visualization 
+                        of the coordinate frame in units of the
+                        lattice vectors for a better visualization
                         of the Hubbard projector functions
                     }
                 }
             }
 
-            #message { 
+            #message {
             #   Unfinished and untested option:
-            #   
+            #
             #   plot_num = 14, 15, 16  polarisation along x, y, z respectively.
             #   epsilon  = macroscopic dielectric constant
             #}
@@ -423,81 +520,106 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pp.x 
     # namelist PLOT
 
     namelist PLOT {
-        
+
         var nfile -type INTEGER {
-            default 1 
-            status OPTIONAL 
+            default { 1 }
+            status OPTIONAL
             info {
                 the number of data files to read
             }
         }
-        
+
         group {
-            
+
             dimension filepp -start 1 -end nfile -type CHARACTER {
-                default { filepp(1)='tmp.pp' } 
+                default { ['tmp.pp'] }
                 info {
                     nfile = 1 : file containing the quantity to be plotted
 		                (should be the same as @ref filplot)
                     nfile > 1 : see @ref weight
                 }
             }
-            
+
             dimension weight -start 1 -end nfile -type REAL {
-                default { weight(1)=1.0 } 
+                default { [1.0] }
+                dimensionality { dimensionless }
                 info {
                     weighing factors: assuming that rho(i) is the quantity
                     read from filepp(i), the quantity that will be plotted is:
-                    
+
                     weight(1)*rho(1) + weight(2)*rho(2) + weight(3)*rho(3) + ...
                 }
-            }   
-            
+            }
+
             message {
                 @b BEWARE: atomic coordinates are read from the first file;
                         if their number is different for different files,
                         the first file must have the largest number of atoms
-            }     
-        }
-        
-        var iflag -type INTEGER {
-            info {
-                0 = 1D plot of the spherical average
-                1 = 1D plot
-                2 = 2D plot
-                3 = 3D plot
-                4 = 2D polar plot on a sphere
             }
         }
-        
+
+        var iflag -type INTEGER {
+            default { 0 }
+            options {
+                info {
+                    Type of plot to produce:
+                }
+                opt -val 0 {
+                    1D plot of the spherical average
+                }
+                opt -val 1 {
+                    1D plot
+                }
+                opt -val 2 {
+                    2D plot
+                }
+                opt -val 3 {
+                    3D plot
+                }
+                opt -val 4 {
+                    2D polar plot on a sphere
+                }
+            }
+        }
+
         var output_format -type INTEGER {
-            info {
-                (ignored on 1D plot)
-                
-                0  = format suitable for gnuplot   (1D)
-                
-                1  = obsolete format no longer supported
-                
-                2  = format suitable for plotrho   (2D)
-                
-                3  = format suitable for XCRYSDEN  (2D or user-supplied 3D region)
-                
-                4  = obsolete format no longer supported
-                
-                5  = format suitable for XCRYSDEN  (3D, using entire FFT grid)
-
-                6  = format as gaussian cube file  (3D)
-                     (can be read by many programs)
-
-                7  = format suitable for gnuplot   (2D) x, y, f(x,y)
+            default { -1 }
+            options {
+                info {
+                    Format of the output plot file (ignored on 1D plot).
+                    Values 1 and 4 are obsolete and no longer supported.
+                }
+                opt -val -1 {
+                    do not do anything, skip step (2) (see header)
+                }
+                opt -val 0 {
+                    format suitable for gnuplot   (1D)
+                }
+                opt -val 2 {
+                    format suitable for plotrho   (2D)
+                }
+                opt -val 3 {
+                    format suitable for XCRYSDEN  (2D or user-supplied 3D region)
+                }
+                opt -val 5 {
+                    format suitable for XCRYSDEN  (3D, using entire FFT grid)
+                }
+                opt -val 6 {
+                    format as gaussian cube file  (3D)
+                    (can be read by many programs)
+                }
+                opt -val 7 {
+                    format suitable for gnuplot   (2D) x, y, f(x,y)
+                }
             }
         }
 
         var fileout -type CHARACTER {
-            default { standard output } 
+            default -kind computed { internal }
             info {
-                name of the file to which the plot is written
-            }   
+                Name of the file to which the plot is written.
+                If unset, the plot is written to standard output.
+            }
         }
 
         var interpolation -type CHARACTER {
@@ -511,137 +633,150 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pp.x 
             }
         }
 
-        choose {            
+        choose {
             when -test "iflag = 0 or 1" {
-                label { the following variables are REQUIRED: } 
-                
+                label { the following variables are REQUIRED: }
+
                 dimension e1 -start 1 -end 3 -type REAL {
+                    dimensionality { length }
+                    units { alat }
                     info {
-                        3D vector which determines the plotting line (in alat units)
+                        3D vector which determines the plotting line
                     }
                 }
-                
+
                 dimension x0 -start 1 -end 3  -type REAL {
+                    dimensionality { length }
+                    units { alat }
                     info {
-                        3D vector, origin of the line (in alat units)
+                        3D vector, origin of the line
                     }
                 }
-                
+
                 var nx -type INTEGER {
                     info {
                         number of points in the line:
-                        
+
                         rho(i) = rho( x0 + e1 * (i-1)/(nx-1) ), i=1, nx
                     }
                 }
-            }       
+            }
 
             elsewhen -test "iflag = 2" {
-                label { the following variables are REQUIRED: } 
-                
+                label { the following variables are REQUIRED: }
+
                 dimensiongroup  -start 1 -end 3 -type REAL {
                     dimension e1
                     dimension e2
+                    dimensionality { length }
+                    units { alat }
                     info {
-                        3D vectors which determine the plotting plane (in alat units)
+                        3D vectors which determine the plotting plane
 
                         BEWARE: @b e1 and @b e2 must be orthogonal
                     }
                 }
-                
+
                 dimension x0 -start 1 -end 3 -type REAL {
+                    dimensionality { length }
+                    units { alat }
                     info {
-                        3D vector, origin of the plane (in alat units)
+                        3D vector, origin of the plane
                     }
                 }
-                
+
                 vargroup -type INTEGER {
                     var nx
                     var ny
                     info {
                         Number of points in the plane:
-                        
+
                         rho(i,j) = rho( x0 + e1 * (i-1)/(nx-1)
                                         + e2 * (j-1)/(ny-1) ), i=1,nx ; j=1,ny
                     }
-                }           
-            }       
-            
+                }
+            }
+
             elsewhen -test "iflag = 3" {
-                label { the following variables are OPTIONAL: } 
-                
+                label { the following variables are OPTIONAL: }
+
                 dimensiongroup -start 1 -end 3 -type REAL {
                     dimension e1
                     dimension e2
                     dimension e3
+                    default { 0.0 }
+                    dimensionality { length }
+                    units { alat }
                     info {
                         3D vectors which determine the plotting parallelepiped
                         (if present, must be orthogonal)
-
-                        @ref e1, @ref e2, and @ref e3 are in alat units !
                     }
                 }
-                
+
                 dimension x0 -start 1 -end 3 -type REAL {
+                    default { 0.0 }
+                    dimensionality { length }
+                    units { alat }
                     info {
                         3D vector, origin of the parallelepiped
-
-                        @ref x0 is in alat units !
                     }
                 }
-                
+
                 vargroup -type INTEGER {
                     var nx
                     var ny
-                    var nz 
+                    var nz
+                    default { 0 }
                     info {
                         Number of points in the parallelepiped:
-                        
+
                         rho(i,j,k) = rho( x0 + e1 * (i-1)/nx
                                           + e2 * (j-1)/ny
                                           + e3 * (k-1)/nz ),
                                      i = 1, nx ; j = 1, ny ; k = 1, nz
 
                         - If @ref output_format = 3 (XCRYSDEN), the above variables
-                          are used to determine the grid to plot. 
-                        
+                          are used to determine the grid to plot.
+
                         - If @ref output_format = 5 (XCRYSDEN), the above variables
                           are ignored, the entire FFT grid is written in the
                           XCRYSDEN format - works for any crystal axis (VERY FAST)
-                        
-                        - If @ref e1, @ref e2, @ref e3, @ref x0 are present, 
-                          and @ref e1, @ref e2, @ref e3 are parallel to xyz 
-                          and parallel to crystal axis, a subset of the FFT 
+
+                        - If @ref e1, @ref e2, @ref e3, @ref x0 are present,
+                          and @ref e1, @ref e2, @ref e3 are parallel to xyz
+                          and parallel to crystal axis, a subset of the FFT
                           grid that approximately covers the parallelepiped
-                          defined by @ref e1, @ref e2, @ref e3, @ref x0, is 
+                          defined by @ref e1, @ref e2, @ref e3, @ref x0, is
                           written - untested, might be obsolete
 
                         - Otherwise, the required 3D grid is generated from the
                           Fourier components (may be VERY slow)
                     }
-                }               
-            }       
+                }
+            }
 
             elsewhen -test "iflag = 4" {
                 label { the following variables are REQUIRED: }
-                
+
                 var radius -type REAL {
+                    dimensionality { length }
+                    units { alat }
                     info {
-                        Radius of the sphere (alat units), centered at (0,0,0)
+                        Radius of the sphere, centered at (0,0,0)
                     }
                 }
-                
+
                 vargroup -type INTEGER {
                     var nx
-                    var ny 
+                    var ny
                     info {
                         Number of points in the polar plane:
 
                         phi(i)   = 2 pi * (i - 1)/(nx-1), i=1, nx
                         theta(j) =   pi * (j - 1)/(ny-1), j=1, ny
                     }
-                }                               
-            }   
+                }
+            }
         }
     }
     # END of namelist PLOT

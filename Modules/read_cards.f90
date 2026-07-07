@@ -16,6 +16,7 @@ MODULE read_cards_module
    USE wy_pos,    ONLY : wypos
    USE parser,    ONLY : field_count, read_line, get_field, parse_unit
    USE io_global, ONLY : ionode, ionode_id
+   USE upf_utils, ONLY : capital, matches, imatches, spdf_to_l
    !
    USE input_parameters
    !
@@ -113,7 +114,6 @@ CONTAINS
       !----------------------------------------------------------------------
       !
       USE autopilot, ONLY : card_autopilot
-      USE upf_utils, ONLY : capital
       !
       IMPLICIT NONE
       !
@@ -141,9 +141,7 @@ CONTAINS
       IF( input_line == ' ' .OR. input_line(1:1) == '#' .OR. &
           input_line == '/' .OR. input_line(1:1) == '!' ) GOTO 100
       !
-      DO i = 1, len_trim( input_line )
-         input_line( i : i ) = capital( input_line( i : i ) )
-      ENDDO
+      input_line = capital( TRIM(input_line) )
       !
       READ (input_line, *, iostat=ios) card
       IF(ios/=0) card=''
@@ -376,7 +374,6 @@ CONTAINS
       CHARACTER(len=2)   :: prog
       CHARACTER(len=6)   :: lb_pos
       INTEGER            :: ia, k, is, nfield, idx, rep_i
-      LOGICAL, EXTERNAL  :: matches
       LOGICAL            :: tend
       REAL(DP)           :: inp(3)
       INTEGER            :: fieldused
@@ -704,7 +701,6 @@ CONTAINS
       INTEGER, ALLOCATABLE :: label_list(:)
       REAL(DP) :: delta, wk0
       REAL(DP) :: dkx(3), dky(3)
-      LOGICAL, EXTERNAL  :: matches
       LOGICAL            :: tend,terr
       LOGICAL            :: kband = .false.
       LOGICAL            :: kband_plane = .false.
@@ -913,7 +909,6 @@ CONTAINS
      REAL(DP),ALLOCATABLE :: xk_old(:,:), wk_old(:)
      INTEGER :: nk1_old, nk2_old, nk3_old, nkstot_old
      INTEGER :: k1_old,  k2_old,  k3_old
-     LOGICAL, EXTERNAL  :: matches
      CHARACTER(len=80) :: k_points_old
      !
      IF(.not.allocated(xk) .or. .not.allocated(wk))&
@@ -1106,7 +1101,6 @@ CONTAINS
       !
       CHARACTER(len=256) :: input_line
       INTEGER            :: i, j
-      LOGICAL, EXTERNAL  :: matches
       !
       !
       IF ( tcell ) THEN
@@ -1181,7 +1175,6 @@ CONTAINS
       !
       CHARACTER(len=256) :: input_line
       INTEGER            :: i, j
-      LOGICAL, EXTERNAL  :: matches
       !
       !
       IF ( ref_cell ) THEN
@@ -1717,7 +1710,6 @@ CONTAINS
       IMPLICIT NONE
       !
       CHARACTER(len=256) :: input_line
-      LOGICAL, EXTERNAL  :: matches
       !
       INTEGER                    :: i, ib
       CHARACTER(len=6)           :: i_char
@@ -2037,7 +2029,6 @@ CONTAINS
       IMPLICIT NONE
       !
       CHARACTER(len=256) :: input_line
-      LOGICAL, EXTERNAL  :: matches
       INTEGER            :: iv, ip, ierr
       CHARACTER(len=10)  :: lb_mol
       CHARACTER(len=256) :: molfile
@@ -2125,7 +2116,6 @@ CONTAINS
       IMPLICIT NONE
       !
       CHARACTER(len=256) :: input_line
-      LOGICAL, EXTERNAL  :: matches
       INTEGER            :: iv, ip, ierr
       CHARACTER(len=10)  :: lb_mol
       CHARACTER(len=256) :: molfile
@@ -2190,14 +2180,12 @@ CONTAINS
       !
       USE parameters,  ONLY : natx, sc_size
       USE constants,   ONLY : eps16
-      USE upf_utils,   ONLY : spdf_to_l
       !
       IMPLICIT NONE
       !
       CHARACTER(LEN=256), INTENT(INOUT) :: input_line
       !
       CHARACTER(len=256) :: aux
-      LOGICAL, EXTERNAL  :: imatches
       LOGICAL            :: tend, terr
       !
       ! Internal variables

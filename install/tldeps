@@ -1,0 +1,16 @@
+# This file, to be included in Makefiles of subdirectories, ensures that the 
+# "make" command issued in the current subdirectory first compiles dependencies,
+# then target "all" in the current subdirectory.
+# This file should follow the TLDEPS=... line and precede all other targets.
+# TLDEPS contains the list of dependencies from other subdirectories
+# (should be the same list as in the top-level Makefile).
+
+all_tldeps: tldeps
+	$(MAKE) all
+tldeps :
+	if test -n "$(TLDEPS)" ; then \
+	( cd $(BUILDDIR) ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
+
+# Note that the top-level Makefile takes care of all dependencies and executes
+# Makefiles in subdirectories as "make all" so the lines above have no effect
+# if "make" is run from the top level.

@@ -1,0 +1,55 @@
+&inputepw
+prefix = 'fe',
+amass(1) = 55.8457
+dvscf_dir = 'save'
+etf_mem = 1
+
+elph = .true.
+epwwrite = .true.
+epwread = .false.
+
+
+lsda = 'up'
+interpolate = .false.
+
+wannierize = .true.
+bands_skipped = 'exclude_bands = 1-4'
+nbndsub = 9
+num_iter = 500
+dis_win_max = 60
+dis_froz_max= 30
+proj(1) = 'Fe:sp3d2'
+proj(2) = 'Fe:dxz,dyz,dxy'
+wannier_plot= .true.
+use_ws = .false.
+wdata(1) = 'bands_plot = .true.'
+wdata(2) = 'begin kpoint_path'
+wdata(3) = 'G 0.000  0.000  0.000 H 0.500 -0.500 -0.500'
+wdata(4) = 'H 0.500 -0.500 -0.500 P 0.750  0.250 -0.250'
+wdata(5) = 'P 0.750  0.250 -0.250 G 0.000  0.000  0.000'
+wdata(6) = 'G 0.000  0.000  0.000 N 0.000  0.000 -0.500'
+wdata(7) = 'end kpoint_path'
+wdata(9) = 'bands_num_points = 50'
+wdata(10) = 'dis_num_iter = 800'
+wdata(11) = 'num_print_cycles = 10'
+wdata(12) = 'conv_tol = 1E-12'
+wdata(13) = 'conv_window = 4'
+wdata(14) = 'bands_plot_format = gnuplot'
+
+
+nkf1 = 1
+nkf2 = 1
+nkf3 = 1
+ 
+nqf1 = 1
+nqf2 = 1
+nqf3 = 1
+
+nq1 = 3
+nq2 = 3
+nq3 = 3
+
+nk1 = 3
+nk2 = 3
+nk3 = 3
+/

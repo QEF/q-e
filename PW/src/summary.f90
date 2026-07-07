@@ -18,7 +18,7 @@ SUBROUTINE summary()
   USE kinds,           ONLY : DP
   USE run_info,        ONLY : title
   USE constants,       ONLY : amu_ry, rytoev
-  USE cell_base,       ONLY : alat, ibrav, omega, at, bg, celldm, wmass
+  USE cell_base,       ONLY : alat, ibrav, omega, at, bg, celldm, wmass, pbc
   USE ions_base,       ONLY : nat, atm, zv, tau, ntyp => nsp, ityp
   USE cellmd,          ONLY : calc, lmovecell
   USE ions_base,       ONLY : amass, if_pos
@@ -281,8 +281,15 @@ CALL cell_nose_info(dt)
   ENDIF
   !
   IF ( llondon ) CALL print_london ( )
-  IF ( ldftd3 )  CALL dftd3_printout(dftd3, dftd3_in, stdout, ntyp, atm, &
-       nat, ityp, tau, at, alat )
+  IF ( ldftd3 )  THEN
+     ALLOCATE (xau(3,nat))
+     DO na = 1, nat
+        xau(:,na) = pbc ( tau(:,na)*alat ) 
+     END DO
+     CALL dftd3_printout(dftd3, dftd3_in, stdout, ntyp, atm, &
+       nat, ityp, xau, at*alat )
+     DEALLOCATE (xau)
+  END IF
   !
   !  output of starting magnetization
   !

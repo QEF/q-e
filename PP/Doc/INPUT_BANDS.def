@@ -14,7 +14,7 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program bands
 	   (b) The expectation value of p
 
         The input data can be read from standard input or from file using
-	command-line options "bands.x -i file-name" (same syntax as for pw.x)	
+	command-line options "bands.x -i file-name" (same syntax as for pw.x)
 
 	Output files:
 	- file @ref filband containing the band structure, in a format
@@ -23,7 +23,7 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program bands
 	  to be read by plotting code "plotband.x"
 	- if (@ref lsigma(i)): file "filband".i, i=1,2,3, with expectation values
 	  of the spin operator in the noncolinear case
-	- file "filband".gnu with bands in eV, directly plottable using gnuplot	
+	- file "filband".gnu with bands in eV, directly plottable using gnuplot
 	- file @ref filp with matrix elements of p (including the nonlocal potential
 	  contribution i*m*[V_nl,x])
 
@@ -37,7 +37,7 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program bands
 
     namelist BANDS {
 
-	var prefix -type CHARACTER {   
+	var prefix -type CHARACTER {
             default {'pwscf'}
 	    info {
 		prefix of files saved by program pw.x
@@ -48,33 +48,47 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program bands
             info {
 		directory containing the input data, i.e. the same as in pw.x
 	    }
-            default {
-                      value of the ESPRESSO_TMPDIR environment variable if set;
-                      current directory ('./') otherwise }
+            default -kind conditional {
+                case -test {ESPRESSO_TMPDIR environment variable is set and non-blank} {
+                    value of the ESPRESSO_TMPDIR environment variable
+                }
+                case {
+                    current directory ('./')
+                }
+            }
         }
 
-	var filband -type CHARACTER {     
+	var filband -type CHARACTER {
             default {'bands.out'}
 	    info {
 		file name for band output (to be read by "plotband.x")
 	    }
 	}
 
-	var spin_component -type INTEGER { 
-	    info {
-		In the lsda case select:
-		
-		   1 = spin-up
-		   2 = spin-down
+	var spin_component -type INTEGER {
+	    default { 1 }
+	    options {
+		info {
+		    In the lsda case select spin channel.
+		}
+
+		opt -val 1 {
+		    spin-up.
+		}
+
+		opt -val 2 {
+		    spin-down.
+		}
 	    }
 	}
 
-	dimension lsigma  -start 1 -end 3 -type LOGICAL { 
+	dimension lsigma  -start 1 -end 3 -type LOGICAL {
 	    info {
 		If true computes expectation values of the spin operator
 		on the spinor wave-functions (only in the noncollinear case),
 		writes them to a file "filband".i, i=1,2,3
 	    }
+	    default { .false. }
 	}
 
         var lp -type LOGICAL {
@@ -89,14 +103,14 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program bands
 		the true momentum operator.
             }
 
-        }      
+        }
         var filp -type CHARACTER {
             default { 'p_avg.dat' }
             info {
                 If @ref lp is set to .true., file name for matrix elements of p
 	    }
 
-        }      
+        }
 	var lsym -type LOGICAL {
 	    default { .true. }
 	    info {
@@ -106,10 +120,10 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program bands
 		is written, for usage by "plotband.x"
 	    }
 	}
-	 
-	var no_overlap -type LOGICAL { 
+
+	var no_overlap -type LOGICAL {
 	    default { .true. }
-	    info {		
+	    info {
 		If .false., and if @ref lsym is .false., writes the eigenvalues
 		in the order that maximises overlap with the neighbor k-points
 
@@ -120,8 +134,8 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program bands
             default { .false. }
             info {
                 If .true. writes the eigenvalues in the output file
-                in a 2D format readable by gnuplot. Band ordering is not 
-                changed. Each band is written in a different file called 
+                in a 2D format readable by gnuplot. Band ordering is not
+                changed. Each band is written in a different file called
                 filband.# with the format:
 		@i {
                    xk, yk, energy
@@ -131,13 +145,16 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program bands
 		energies are written in eV and xk in units 2\pi/a.
         }
 
-      }           
+      }
 	vargroup -type INTEGER {
 	    var firstk
-	    var lastk 
-	    info {		
+	    var lastk
+	    info {
 		if @ref lsym=.true. makes the symmetry analysis only for k
-		points between firstk to lastk		
+		points between firstk to lastk
+	    }
+	    default -kind ref {
+		firstk = 0; lastk = @ref npk (max number of k-points)
 	    }
 	}
     }

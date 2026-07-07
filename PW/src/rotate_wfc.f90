@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2025 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,9 +9,8 @@
 !------------------------------------------------------------------------------------
 SUBROUTINE rotate_wfc( npwx, npw, nstart, gstart, nbnd, psi, npol, overlap, evc, e )
   !--------------------------------------------------------------------------------
-  !! Driver routine (maybe it should be an interface) for Hamiltonian 
-  !! diagonalization in the subspace spanned by nstart states 
-  !! psi (atomic or random wavefunctions). 
+  !! Driver routine for Hamiltonian diagonalization in the subspace 
+  !! spanned by nstart states psi (atomic or random wavefunctions). 
   !! Produces on output nbnd eigenvectors ( nbnd <= nstart ) in evc.
   !! Calls \(\texttt{h_psi, s_psi}\) to calculate \(H|psi\rangle\) and
   !! \(S|psi\rangle\). 

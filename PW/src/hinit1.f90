@@ -32,7 +32,8 @@ SUBROUTINE hinit1()
   USE paw_onecenter,       ONLY : paw_potential
   USE paw_symmetry,        ONLY : paw_symmetrize_ddd
   USE dfunct,              ONLY : newd
-  USE exx_base,            ONLY : coulomb_fac, coulomb_done
+  USE exx_base,            ONLY : exx_bgrp_type, EXX_BGRP_PAIRS
+  USE exx_bp,              ONLY : coulomb_fac, coulomb_done
   !
   USE ener,                ONLY : esol, vsol
   USE rism_module,         ONLY : lrism, rism_update_pos, rism_calc3d
@@ -140,7 +141,9 @@ SUBROUTINE hinit1()
   ! ... It is actually needed only in case of variable-cell calculations
   ! FIXME: array coulomb_fac may take a large amount of memory: worth it? 
   !
-  IF ( ALLOCATED(coulomb_fac) ) DEALLOCATE (coulomb_fac, coulomb_done)
+  IF (exx_bgrp_type .eq. EXX_BGRP_PAIRS ) THEN
+     IF ( ALLOCATED(coulomb_fac) ) DEALLOCATE (coulomb_fac, coulomb_done)
+  END IF
   !
   RETURN
   !

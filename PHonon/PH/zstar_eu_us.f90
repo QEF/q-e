@@ -43,6 +43,7 @@ subroutine zstar_eu_us
   USE ldaU,             ONLY : lda_plus_u
   USE dv_of_drho_lr
   USE uspp_init,        ONLY : init_us_2
+  USE incdrhoscf_mod,   ONLY : incdrhoscf, incdrhoscf_nc
   !
   implicit none
   !
@@ -102,10 +103,10 @@ subroutine zstar_eu_us
         nrec = (jpol - 1) * nksq + ik
         call get_buffer(dpsi, lrdwf, iudwf, nrec)
         if (noncolin) then
-           call incdrhoscf_nc (dvscf(1,1,jpol),weight,ik, &
+           call incdrhoscf_nc (dvscf(:,:,jpol),weight,ik, &
                               dbecsum_nc(1,1,1,1,jpol), dpsi, 1.0d0)
         else
-           call incdrhoscf (dvscf(1,current_spin,jpol),weight,ik, &
+           call incdrhoscf (dvscf(:,current_spin,jpol),weight,ik, &
                             dbecsum(1,1,current_spin,jpol), dpsi)
         endif
      end do
@@ -131,7 +132,7 @@ subroutine zstar_eu_us
 
   IF (noncolin.and.okvan) CALL set_dbecsum_nc(dbecsum_nc, dbecsum, 3)
 
-  call addusddense (dvscf, dbecsum)
+  call lr_addusddens (3, dbecsum, dvscf)
 
   call mp_sum ( dvscf, inter_pool_comm )
 
@@ -152,7 +153,7 @@ subroutine zstar_eu_us
      !
      call dv_of_drho (dvscf (:, :, ipol))
   enddo
-  call psymdvscf(dvscf)
+  call psymdvscf(dvscf, dfftp)
 
 #ifdef TIMINIG_ZSTAR_US
   call stop_clock('zstar_us_3')
@@ -160,7 +161,7 @@ subroutine zstar_eu_us
 #endif
 !
 ! Calculate the parts with the perturbed Hartree and exchange and correlation
-! potenial
+! potential
 !
   imode0 = 0
   allocate(drhoscfh(dfftp%nnr,nspin_mag))

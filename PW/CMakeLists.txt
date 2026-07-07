@@ -42,10 +42,10 @@ set(src_pw
    src/compute_qdipol.f90 
    src/compute_qdipol_so.f90 
    src/compute_ux.f90 
-   src/coset.f90 
    src/Coul_cut_2D.f90 
    src/d_matrix.f90 
-   src/data_structure.f90 
+   src/data_structure.f90
+   src/diag_direct.f90
    src/divide_class.f90 
    src/divide_class_so.f90 
    src/divide_et_impera.f90 
@@ -68,7 +68,9 @@ set(src_pw
    src/ewald_dipole.f90 
    src/extfield.f90 
    src/exx_base.f90 
-   src/exx_band.f90 
+   src/exx_bp_utils.f90 
+   src/exx_bp.f90 
+   src/exx_std.f90 
    src/exx.f90 
    src/fcp_capacitance.f90 
    src/fcp_dyn_calcavg.f90 
@@ -102,8 +104,8 @@ set(src_pw
    src/hs_1psi.f90 
    src/h_epsi_her_apply.f90 
    src/h_epsi_her_set.f90 
-   src/h_psi.f90 
-   src/h_psi_meta.f90 
+   src/h_psi.f90
+   src/h_psi_meta.f90
    src/hinit0.f90 
    src/hinit1.f90 
    src/hubbard.f90 
@@ -114,11 +116,10 @@ set(src_pw
    src/init_vloc.f90 
    src/input.f90 
    src/io_rho_xml.f90 
-   src/irrek.f90 
+   src/irreducible_BZ.f90
    src/iweights.f90 
    src/intersite_V.f90 
    src/init_nsg.f90 
-   src/nsg_adj.f90 
    src/start_k.f90 
    src/kpoint_grid.f90 
    src/lchk_tauxk.f90 
@@ -165,7 +166,8 @@ set(src_pw
    src/plus_u_full.f90 
    src/potinit.f90 
    src/print_clock_pw.f90 
-   src/print_ks_energies.f90 
+   src/print_ks_energies.f90
+   src/printpot.f90
    src/punch.f90 
    src/pw_restart_new.f90 
    src/add_qexsd_step.f90 
@@ -187,7 +189,6 @@ set(src_pw
    src/run_pwscf.f90 
    src/s_1psi.f90 
    src/s_psi.f90 
-   src/s_psi_acc.f90 
    src/save_in_cbands.f90 
    src/save_in_electrons.f90 
    src/scale_h.f90 
@@ -233,10 +234,12 @@ set(src_pw
    src/update_pot.f90 
    src/us_exx.f90 
    src/usnldiag.f90 
+   src/v_hubbard.f90
    src/v_of_rho.f90 
    src/vcsmd.f90 
    src/vcsubs.f90 
    src/vhpsi.f90 
+   src/vhpsi_U.f90
    src/vloc_psi_tg.f90 
    src/vloc_psi_acc.f90 
    src/utils.f90 
@@ -252,13 +255,7 @@ set(src_pw
    src/wannier_occ.f90
    src/d3hess_mod.f90
    # CUDA Fortran
-   src/rotate_wfc_gpu.f90
-   src/hs_1psi_gpu.f90
-   src/s_1psi_gpu.f90
-   src/h_psi_gpu.f90
-   src/utils_gpu.f90
-   src/vhpsi_gpu.f90
-   src/hs_psi_gpu.f90)
+   src/utils_gpu.f90)
 # OSCDFT
 if (QE_ENABLE_OSCDFT)
     list(APPEND src_pw
@@ -283,7 +280,8 @@ qe_enable_cuda_fortran("${src_pw}")
 qe_add_library(qe_pw ${src_pw})
 target_link_libraries(qe_pw
     PRIVATE
-        qe_device_lapack  
+        qe_device_lapack
+        qe_lapack
         qe_hdf5_fortran
         qe_elpa
         qe_scalapack
@@ -293,6 +291,7 @@ target_link_libraries(qe_pw
         qe_kssolver_paro
         qe_kssolver_rmmdiis
         qe_kssolver_dense
+        qe_kssolver_direct
         qe_upflib # TODO turn to vendorized library from MaX gitrepo ? 
         qe_modules
         qe_fftx

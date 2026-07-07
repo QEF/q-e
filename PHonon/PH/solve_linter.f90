@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE solve_linter (irr, imode0, npe, drhos, drhop)
+SUBROUTINE solve_linter (irr, imode0, dfpt_data)
   !-----------------------------------------------------------------------
   !! Driver routine for the solution of the linear system that
   !! defines the change of the wavefunction due to a lattice distorsion.
@@ -38,23 +38,22 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhos, drhop)
   USE wavefunctions,        ONLY : evc
   USE cell_base,            ONLY : at
   USE ions_base,            ONLY : nat
-  USE uspp_param,           ONLY : nhm
   USE klist,                ONLY : xk, ngk, igk_k
-  USE gvecs,                ONLY : doublegrid
   USE fft_base,             ONLY : dfftp, dffts
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE scf,                  ONLY : rho
   USE uspp,                 ONLY : okvan, vkb, deeq_nc
+  USE uspp_param,           ONLY : nhm
   USE noncollin_module,     ONLY : noncolin, domag, nspin_mag
   USE paw_variables,        ONLY : okpaw
   USE paw_onecenter,        ONLY : paw_dpotential
   USE buffers,              ONLY : save_buffer, get_buffer
   USE ldaU,                 ONLY : lda_plus_u
-  USE control_ph,           ONLY : ext_recover
+  USE control_ph,           ONLY : ext_recover, lmultipole
   USE el_phon,              ONLY : elph
   USE uspp,                 ONLY : nlcc_any
-  USE units_ph,             ONLY : iudrho, lrdrho, iubar, lrbar, &
-                                   iudvscf, iuint3paw, lint3paw
+  USE units_ph,             ONLY : iudrho, lrdrho, iubar, lrbar, iudvscf, iuint3paw, &
+                                   lint3paw, iudrhous, lrdrhous
   USE units_lr,             ONLY : iuwfc, lrwfc
   USE output,               ONLY : fildrho, fildvscf
   USE phus,                 ONLY : alphap, int1_nc
@@ -66,37 +65,29 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhos, drhop)
   USE eqv,                  ONLY : dvpsi
   USE qpoint,               ONLY : xq, nksq, ikks, ikqs
   USE qpoint_aux,           ONLY : ikmks, becpt, alphapt
-  USE control_lr,           ONLY : convt, rec_code, rec_code_read, where_rec, lmultipole
+  USE control_lr,           ONLY : convt, rec_code, rec_code_read, where_rec
   USE uspp_init,            ONLY : init_us_2
   USE lr_nc_mag,            ONLY : int1_nc_save, deeq_nc_save
+  USE dfpt_type,            ONLY : dfpt_data_type
   USE dfpt_kernels,         ONLY : dfpt_kernel
+  USE phus,                 ONLY : becsumort
+  USE recover_mod,          ONLY : write_rec
   !
   IMPLICIT NONE
   !
+  EXTERNAL :: stop_smoothly_ph
+  !
   integer :: irr
   !! input: the irreducible representation
-  integer :: npe
-  !! input: the number of perturbation
   integer :: imode0
   !! input: the position of the modes
-  complex(DP) :: drhos(dffts%nnr,nspin_mag,npe)
-  !! output: the change of the scf charge
-  complex(DP) :: drhop(dfftp%nnr,nspin_mag,npe)
-  !! output: the change of the scf charge, including augmentation
+  TYPE(dfpt_data_type), INTENT(INOUT) :: dfpt_data
+  !! Output: Data that describes linear response quantities
   !
   ! ... local variables
   !
   real(DP) :: dr2
   ! dr2   : self-consistency error
-  !
-  complex(DP), allocatable, target :: dvscfp(:,:,:)
-  ! change of the scf potential
-  complex(DP), pointer :: dvscfs (:,:,:)
-  ! change of the scf potential (smooth part only)
-  complex(DP), allocatable :: dbecsum (:,:,:,:)
-  ! the derivative of becsum
-  COMPLEX(DP), allocatable :: drhoc(:, :)
-  !! Change in the core charge due to the perturbation.
 
   logical :: exst
   !! used to open the recover file
@@ -110,7 +101,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhos, drhop)
              isolv,      & ! counter on linear systems
              nsolv,      & ! number of linear systems
              ikmk          ! index of mk
-
+  integer  :: npe
   integer  :: npw, npwq
   integer  :: iq_dummy
   character(len=256) :: filename
@@ -125,32 +116,17 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhos, drhop)
 !
   nsolv=1
   IF (noncolin.AND.domag) nsolv=2
-
-  allocate (dvscfp ( dfftp%nnr , nspin_mag , npe))
-  nnr = dfftp%nnr
-  dvscfp=(0.0_DP,0.0_DP)
-  if (doublegrid) then
-     allocate (dvscfs (dffts%nnr , nspin_mag , npe))
-     dvscfs = (0.d0, 0.d0)
-     nnr = dffts%nnr
-  else
-     dvscfs => dvscfp
-  endif
-  allocate (drhoc (dfftp%nnr, npe))
-  allocate (dbecsum((nhm * (nhm + 1))/2, nat, nspin_mag , npe))
-  dbecsum = (0.0_DP, 0.0_DP)
   !
-  !$acc enter data create(dvscfs(1:nnr, 1:nspin_mag, 1:npe))
+  npe = dfpt_data%npert
+  !
+  nnr = dffts%nnr
+  !$acc enter data create(dfpt_data, dfpt_data%dvscfs(1:nnr, 1:nspin_mag, 1:npe))
   !
   if (rec_code_read == 10.AND.ext_recover) then
      ! restart from Phonon calculation
-     IF (okpaw) THEN
-        CALL read_rec(dr2, iter0, npe, dvscfp, dvscfs, drhop, dbecsum)
-        IF (convt) THEN
-           CALL PAW_dpotential(dbecsum,rho%bec,int3_paw,npe)
-        ENDIF
-     ELSE
-        CALL read_rec(dr2, iter0, npe, dvscfp, dvscfs, drhop)
+     CALL read_rec(dr2, iter0, dfpt_data)
+     IF (okpaw .AND. convt) THEN
+        CALL PAW_dpotential(dfpt_data%dbecsum,rho%bec,int3_paw,npe)
      ENDIF
      rec_code=0
   else
@@ -168,7 +144,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhos, drhop)
       where_rec='no_recover'
     ELSE
       convt=.TRUE.
-      CALL init_rho(npe,drhos,drhop,iq_dummy)
+      CALL init_rho(npe, dfpt_data%drhos, dfpt_data%drhop, iq_dummy)
     ENDIF
     !
   ENDIF
@@ -242,9 +218,33 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhos, drhop)
   ! Compute the change of core charge due to atomic displacement
   ! drhoc is computed only once, stored in drhoc, passed to dfpt_kernel.
   !
-  DO ipert = 1, npe
-    CALL addcore(u(1, imode0+ipert), drhoc(1, ipert))
-  ENDDO
+  ! If lmultipole is .TRUE., one is actually considering a exp(iqr) perturbation, not
+  ! a phonon perturbation. So we do not compute the core charge perturbation.
+  !
+  IF (.NOT. lmultipole) THEN
+     ALLOCATE(dfpt_data%drhoc(dfftp%nnr, npe))
+     DO ipert = 1, npe
+        CALL addcore(u(1, imode0+ipert), dfpt_data%drhoc(1, ipert))
+     ENDDO
+     !
+     ! Set Pulay correction terms
+     !
+     IF (okvan) THEN
+        ! Pulay correction to density due to augmentation charge
+        ALLOCATE(dfpt_data%drhop_pulay(dfftp%nnr, nspin_mag, npe))
+        DO ipert = 1, npe
+           CALL get_buffer(dfpt_data%drhop_pulay(1, 1, ipert), lrdrhous, iudrhous, imode0 + ipert)
+        ENDDO
+     ENDIF
+     !
+     IF (okpaw) THEN
+        ! Pulay correction to dbecsum due to augmentation charge
+        ALLOCATE(dfpt_data%dbecsum_pulay((nhm * (nhm + 1))/2, nat, nspin_mag, npe))
+        DO ipert = 1, npe
+           dfpt_data%dbecsum_pulay(:,:,:,ipert) = becsumort(:,:,:,imode0+ipert)
+        ENDDO
+     ENDIF
+  ENDIF
   !
   ! Set records for restart
   !
@@ -253,8 +253,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhos, drhop)
   !
   !    Solve DFPT fixed-point equation
   !
-  CALL dfpt_kernel('PHONON', npe, iter0, lrbar, iubar, dr2, drhos, drhop, dvscfs, &
-                   dvscfp, dbecsum, irr, imode0, 'phonon', drhoc = drhoc)
+  CALL dfpt_kernel('PHONON', npe, iter0, lrbar, iubar, dr2, dfpt_data, irr, imode0, &
+                   write_rec_callback = write_rec, stop_callback = stop_smoothly_ph)
   !
 155 CONTINUE
   !
@@ -265,10 +265,10 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhos, drhop)
   !
   IF (convt) THEN
      !
-     IF (lmultipole) CALL write_epsilon(npe, drhop)
+     IF (lmultipole) CALL write_epsilon(npe, dfpt_data%drhop)
      !
-     CALL drhodvus (irr, imode0, dvscfp, npe)
-     IF (nlcc_any) CALL dynmat_nlcc (imode0, drhop, npe)
+     CALL drhodvus (irr, imode0, dfpt_data%dvscfp, npe)
+     IF (nlcc_any) CALL dynmat_nlcc (imode0, dfpt_data%drhop, npe)
      !
      ! Write charge density to file
      !
@@ -281,7 +281,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhos, drhop)
         ENDIF ! ionode
         !
         DO ipert = 1, npe
-           CALL davcio_drho(drhop(1,1,ipert), lrdrho, iudrho, imode0+ipert, +1)
+           CALL davcio_drho(dfpt_data%drhop(1,1,ipert), lrdrho, iudrho, imode0+ipert, +1)
         ENDDO
         CLOSE (UNIT = iudrho, STATUS='keep')
         !
@@ -289,22 +289,18 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhos, drhop)
      !
      if (fildvscf.ne.' ') then
         do ipert = 1, npe
-           call davcio_drho ( dvscfp(1,1,ipert),  lrdrho, iudvscf, imode0 + ipert, +1 )
+           call davcio_drho ( dfpt_data%dvscfp(1,1,ipert),  lrdrho, iudvscf, imode0 + ipert, +1 )
            IF (okpaw.AND.ionode) CALL davcio( int3_paw(:,:,:,:,ipert), lint3paw, &
                                               iuint3paw, imode0+ipert, + 1 )
         end do
-        if (elph) call elphel (irr, npe, imode0, dvscfs)
+        if (elph) call elphel (irr, npe, imode0, dfpt_data%dvscfs)
      ENDIF ! fildvscf
      !
      IF (lda_plus_u) CALL dnsq_store(npe, imode0)
      !
   ENDIF ! convt
   !
-  !$acc exit data delete(dvscfs)
-  if (doublegrid) deallocate (dvscfs)
-  deallocate (dvscfp)
-  deallocate (drhoc)
-  DEALLOCATE(dbecsum)
+  !$acc exit data delete(dfpt_data, dfpt_data%dvscfs)
 
   call stop_clock ('solve_linter')
 

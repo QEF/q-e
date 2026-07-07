@@ -143,11 +143,7 @@ MODULE oscdft_wfcO
             npw = ngk(ik)
             CALL init_us_2(npw, igk_k(1,ik), xk(1,ik), vkb)
             CALL calbec(offload_type, npw, vkb, wfcatom, becp)
-            IF (use_gpu) THEN
-               CALL s_psi_acc(npwx, npw, natomwfc, wfcatom, swfcatom)
-            ELSE
-               CALL s_psi(npwx, npw, natomwfc, wfcatom, swfcatom)
-            END IF
+            CALL s_psi(npwx, npw, natomwfc, wfcatom, swfcatom)
 
             IF (inp%orthogonalize_swfc) THEN
                CALL oscdft_ortho_swfc(npwx, npw, natomwfc, wfcatom, swfcatom, .false.)

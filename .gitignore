@@ -19,12 +19,14 @@ build/
 *_tmp.f90
 *.TMP
 *.out
+config.status
+configure.msg
+.gitignore
+compile.sh
 
 bin/*
 FoX
 MBD
-include/configure.h
-include/qe_cdefs.h
 install/config.log
 install/config.status
 install/configure.msg
@@ -49,3 +51,8 @@ EPW/src/tmp
 LAXlib/*.fh
 **/CRASH
 **/pwscf.xml
+
+# Rendered input documentation: generated from INPUT_*.def by dev-tools/helpdoc
+**/Doc/INPUT_*.txt
+**/Doc/INPUT_*.html
+**/Doc/INPUT_*.xml

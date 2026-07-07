@@ -26,21 +26,21 @@ input_description -distribution {Quantum ESPRESSO} -package {PWscf} -program  {o
 
         var initial_prefix -type CHARACTER {
             status { REQUIRED }
-            info { 
+            info {
                 prefix of the initial pw.x calculation.
             }
         }
 
         var final_prefix -type CHARACTER {
             status { REQUIRED }
-            info { 
+            info {
                 prefix of the final pw.x calculation.
             }
         }
 
         var initial_dir -type CHARACTER {
             status { REQUIRED }
-            info { 
+            info {
                 The directory containing the input data of the initial pw.x calculation,
                 i.e. the same as in pw.x.
             }
@@ -48,7 +48,7 @@ input_description -distribution {Quantum ESPRESSO} -package {PWscf} -program  {o
 
         var final_dir -type CHARACTER {
             status { REQUIRED }
-            info { 
+            info {
                 The directory containing the input data of the final pw.x calculation,
                 i.e. the same as in pw.x.
             }

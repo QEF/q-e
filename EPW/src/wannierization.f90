@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
@@ -30,12 +31,12 @@
     USE io_global,      ONLY : stdout, ionode_id
     USE wvfct,          ONLY : nbnd
     USE input,          ONLY : nkc1, nkc2, nkc3
-    USE pwcom,          ONLY : nkstot
     USE input,          ONLY : xk_cryst
     USE wann_common,    ONLY : mp_grid, n_wannier, kpt_latt
     USE mp,             ONLY : mp_bcast
     USE mp_world,       ONLY : world_comm
     USE pw2wan,         ONLY : pw2wan90epw
+    USE global_var,     ONLY : nkpts
     !
     IMPLICIT NONE
     !
@@ -52,7 +53,7 @@
     mp_grid(3) = nkc3
     num_kpts = mp_grid(1) * mp_grid(2) * mp_grid(3)
     !
-    IF (num_kpts /= nkstot) CALL errore('wannierize', 'inconsistent nscf and elph k-grids', 1)
+    IF (num_kpts /= nkpts) CALL errore('wannierize', 'inconsistent nscf and elph k-grids', 1)
     IF (nbnd < n_wannier)  CALL errore('wannierize', 'Must have as many or more bands than Wannier functions', 1)
     !
     ALLOCATE(kpt_latt(3, num_kpts), STAT = ierr)
@@ -95,16 +96,14 @@
     !!  windows used for the disentanglement, and the initial projections.
     !!  JN - 10/2008  projections now in elph.in file
     !
-    USE kinds,       ONLY : DP
-    USE io_files,    ONLY : prefix
-    USE io_var,      ONLY : iuwinfil
-    USE io_global,   ONLY : meta_ionode
-    USE pwcom,       ONLY : et, nbnd, nkstot, nks
-    USE input,       ONLY : nbndsub, nwanxx, proj, iprint, dis_win_min, &
-                            dis_win_max, dis_froz_min, dis_froz_max, num_iter, &
-                            bands_skipped, wdata, auto_projections
-    USE ep_constants,  ONLY : ryd2ev
-    USE parallelism,   ONLY : poolgather
+    USE kinds,         ONLY : DP
+    USE io_files,      ONLY : prefix
+    USE io_var,        ONLY : iuwinfil
+    USE io_global,     ONLY : meta_ionode
+    USE input,         ONLY : nbndsub, nwanxx, proj, iprint, dis_win_min, &
+                              dis_win_max, dis_froz_min, dis_froz_max, num_iter, &
+                              bands_skipped, wdata, auto_projections, lsda
+    USE global_var,    ONLY : nkpts, nk_loc
     !
     IMPLICIT NONE
     !
@@ -113,6 +112,8 @@
     !! Copy of field read for parsing
     CHARACTER(LEN = 255) :: lvalue
     !! Parsed logical value
+    CHARACTER(LEN = 255) :: fnm
+    !! win file name
     LOGICAL :: random
     !! Random
     LOGICAL :: notfound
@@ -125,17 +126,15 @@
     !! Position in strings
     INTEGER :: pos2
     !! Position in strings
-    REAL(KIND = DP) :: et_tmp(nbnd, nkstot)
-    !! eigenvalues on full coarse k-mesh
     !
-    CALL poolgather(nbnd, nkstot, nks, et(1:nbnd, 1:nks), et_tmp)
-    et_tmp = et_tmp * ryd2ev
+    fnm = TRIM(prefix) // ".win"
+    IF (TRIM(lsda) == 'down') fnm = TRIM(prefix) // ".down.win"
     !
     IF (meta_ionode) THEN
       !
       IF (nbndsub > nwanxx) CALL errore('write_winfil', 'Too many wannier bands', nbndsub)
       !
-      OPEN(UNIT = iuwinfil, FILE = TRIM(prefix) // ".win", FORM = 'formatted')
+      OPEN(UNIT = iuwinfil, FILE = TRIM(fnm), FORM = 'formatted')
       !
       !  more input and options for interfacing with w90 can/will be added later
       IF (auto_projections) THEN

@@ -21,6 +21,7 @@ subroutine el_config &
   !
   use kinds, only: dp
   use ld1_parameters
+  use upf_utils, only : spdf_to_l, capital
   implicit none
   ! input: electronic configuration
   character(len=*), intent(in):: config
@@ -34,7 +35,6 @@ subroutine el_config &
   logical :: toomany
   integer ::  i, n, l, len, n0, first, start(nwfx), finish(nwfx)
   character ::  occup*10, core*2, prev*1, curr*1
-  character(len=1), external :: capital
   ! core states
   character(len=2) :: elc(15)
   integer :: nwfc, nnc(15), llc(15)
@@ -129,17 +129,13 @@ do n=nwfc+1,nwf
    if (nn(n) <= 0 .or. nn(n) > 7) &
   &    call errore('el_config','wrong main quantum number',n)
 
-   curr = capital(config(start(n)+1:start(n)+1))
-   ll(n)=-1
-   if (curr == 'S') ll(n)=0
-   if (curr == 'P') ll(n)=1
-   if (curr == 'D') ll(n)=2
-   if (curr == 'F') ll(n)=3
+   curr = config(start(n)+1:start(n)+1)
+   ll(n) = spdf_to_l(curr)
    if (ll(n) == -1) call errore('el_config','l not found:'//curr,n)
    if (ll(n).ge.nn(n)) call errore('el_config', &
        &              'main/angular quantum number mismatch',n)
 
-   el(n)=prev//curr
+   el(n)=prev//capital(curr)
 
    if (start(n)+2 > finish(n))  &
    &   call errore('el_config','no occupancy field?',n)
@@ -227,6 +223,7 @@ subroutine read_config(rel, lsd, nwf, el, nn, ll, oc, isw, jj)
   use kinds, only: dp
   use ld1_parameters, only: nwfx
   use io_global, only : qestdin
+  use upf_utils, only : spdf_to_l
   implicit none
   ! input
   integer :: rel, lsd
@@ -237,7 +234,6 @@ subroutine read_config(rel, lsd, nwf, el, nn, ll, oc, isw, jj)
   ! local variables
   integer :: ios, n, ncheck
   character (len=2) :: label
-  character (len=1), external :: capital
   !
   !
   read(qestdin,*,err=200,iostat=ios) nwf
@@ -288,12 +284,8 @@ subroutine read_config(rel, lsd, nwf, el, nn, ll, oc, isw, jj)
      !
      write(label,'(a2)') el(n)
      read (label,'(i1)') ncheck
-     if (ncheck /= nn(n)  .or. &
-         capital(label(2:2)) == 'S' .and. ll(n) /= 0 .or. &
-         capital(label(2:2)) == 'P' .and. ll(n) /= 1 .or. &
-         capital(label(2:2)) == 'D' .and. ll(n) /= 2 .or. &
-         capital(label(2:2)) == 'F' .and. ll(n) /= 3 .or. &
-         oc(n) > 2.0_dp*(2*ll(n)+1) .or. nn(n) < ll(n)+1  ) &
+     if ( ncheck /= nn(n) .or. ll(n) /= spdf_to_l(label(2:2))  &
+         .or. oc(n) > 2.0_dp*(2*ll(n)+1) .or. nn(n) < ll(n)+1  ) &
          call errore('read_config',label//' wrong?',n)
   enddo
   !
@@ -310,6 +302,7 @@ subroutine read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
   use kinds, only: dp
   use ld1_parameters, only: nwfsx
   use io_global, only : qestdin
+  use upf_utils, only : spdf_to_l
   implicit none
   ! input
   integer :: rel, lsd
@@ -321,7 +314,6 @@ subroutine read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
   ! local variables
   integer :: ios, n
   character (len=2) :: label
-  character (len=1), external :: capital
 
   read(qestdin,*,err=600,iostat=ios) nwfs
 600 call errore('read_psconfig','reading number of pseudo wavefunctions (nwfs)',abs(ios))
@@ -360,12 +352,8 @@ subroutine read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
              call errore('read_psconfig','occupations (j) wrong',n)
      endif
      write(label,'(a2)') els(n)
-     if ( capital(label(2:2)) == 'S'.and.lls(n) /= 0.or.   &
-          capital(label(2:2)) == 'P'.and.lls(n) /= 1.or.   &
-          capital(label(2:2)) == 'D'.and.lls(n) /= 2.or.   &
-          capital(label(2:2)) == 'F'.and.lls(n) /= 3.or.   &
-          ocs(n) > 2*(2*lls(n)+1).or.                 &
-          nns(n) < lls(n)+1 )                         &
+     if ( lls(n) /= spdf_to_l(label(2:2)) .or. &
+          ocs(n) > 2*(2*lls(n)+1) .or. nns(n) < lls(n)+1 ) &
           call errore('read_psconfig','ps-label'//' wrong?',n)
      if (rcut(n) > rcutus(n)) &
           call errore('read_psconfig','rcut or rcutus is wrong',1)

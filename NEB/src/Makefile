@@ -2,6 +2,8 @@
 
 include ../../make.inc
 
+VPATH = @srcdir@
+
 # location of needed modules and included files (if any)
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src \
@@ -40,9 +42,12 @@ stop_run_path.o
 
 PWOBJS= ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a
 QEMODS = $(BASEMODS)
-TLDEPS=pwlibs
 
-all : tldeps neb.x path_interpolation.x
+# see comments in file tldeps for explanations
+TLDEPS=pwlibs
+include ../../install/tldeps
+
+all : neb.x path_interpolation.x
 
 neb.x : $(NEBOBJS) libneb.a $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
@@ -58,13 +63,12 @@ libneb.a : $(NEBLIBS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
-tldeps :
-	if test -n "$(TLDEPS)" ; then \
-	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
-
 clean :
 	- /bin/rm -f *.x *.o *.a *~ *_tmp.f90 *.d *.mod *.i *.L
 	- /bin/rm -f ../../bin/neb.x
 	- /bin/rm -f ../../bin/path_interpolation.x
 
+
 include make.depend
+
+

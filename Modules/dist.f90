@@ -25,7 +25,7 @@ SUBROUTINE run_dist ( exit_status )
   REAL(dp), PARAMETER:: dmin=0.01_dp, dmax=3.0_dp
   INTEGER :: ndist, nsp1, nsp2, na, nb, n, nd, nn1, nn2, nn3, i, nbad
   INTEGER,  ALLOCATABLE :: atom1(:), atom2(:), idx(:)
-  CHARACTER(len=3 ) :: atm1, atm2
+  CHARACTER(len=6 ) :: atm1, atm2
   CHARACTER(len=80) :: filename, line
   CHARACTER(len=1)  :: other_cell(ndistx)
   REAL(dp), ALLOCATABLE :: d(:)

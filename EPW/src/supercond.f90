@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Roxana Margine
@@ -1210,6 +1211,7 @@
     !! =====================================================================
     !! SH: A note about definition of Matsubara indices/frequencies in epw
     !! RM: updated (Jan 2022)
+    !! SM: corrected weight factor for sparse sampling (Mar 2026)
     !!
     !! In epw, the nsiw(itemp) is the cutoff for Matsubara indicies; i.e.,
     !!   the largest positive Matsubara index "n" is nsiw(itemp)-1.
@@ -1248,8 +1250,8 @@
     USE input,         ONLY : lpade, lacon, laniso, gridsamp, griddens, tc_linear, &
                               positive_matsu
     USE global_var,    ONLY : gtemp
-    USE supercond_common,     ONLY : nsw, nsiw, ws, wsi, dwsph, wsn
-    USE ep_constants,  ONLY : zero
+    USE supercond_common,     ONLY : nsw, nsiw, ws, wsi, dwsi, dwsph, wsn
+    USE ep_constants,  ONLY : zero, one
     USE ep_constants,  ONLY : pi
     USE low_lvl,       ONLY : mem_size_eliashberg
     USE io_var,        ONLY : iufilmat
@@ -1278,6 +1280,8 @@
     !! INT(0.5d0 * (wscut / pi / gtemp(itemp) - 1.d0)) + 1
     INTEGER(8) :: imelt
     !! Required allocation of memory
+    INTEGER :: nsiw_uni
+    !! Original uniform grid size before sparse sampling
     INTEGER :: ierr
     !! Error status
     !
@@ -1304,6 +1308,9 @@
     !
     ALLOCATE(wsn(nsiw(itemp)), STAT = ierr)
     IF (ierr /= 0) CALL errore('gen_freqgrid_iaxis', 'Error allocating wsn', 1)
+    !
+    ALLOCATE(dwsi(nsiw(itemp)), STAT = ierr)
+    IF (ierr /= 0) CALL errore('gen_freqgrid_iaxis', 'Error allocating dwsi', 1)
     !
     IF (ionode) THEN
       !
@@ -1350,9 +1357,10 @@
       END IF
       ! sparse sampling
       IF ((gridsamp == 1) .AND. positive_matsu) THEN
+        nsiw_uni = nsiw(itemp)  ! save original uniform grid size for dwsi weights
         n  = 0
         iw = 0
-        DO WHILE (n < nsiw(itemp))
+        DO WHILE (n < nsiw_uni)
           iw      = iw + 1
           wsn(iw) = n
           wsi(iw) = DBLE(2 * n + 1) * pi * gtemp(itemp)
@@ -1375,6 +1383,40 @@
         ENDDO
       ENDIF
       !
+      ! SM: Compute frequency weights for sparse sampling (gridsamp == 1)
+      ! For uniform grids, weights are unity; for sparse sampling, weights account
+      ! for non-uniform frequency spacing using trapezoid/Voronoi rule
+      IF (gridsamp == 1 .AND. positive_matsu) THEN
+        ! Sparse sampling: compute Voronoi/trapezoid weights based on Matsubara index spacing.
+        ! dwsi(iw) counts how many uniform indices n=0,...,nsiw_uni-1 each sparse point represents.
+        ! The Voronoi cell boundaries are:
+        !   left boundary of first cell:  -0.5 (half-cell below n=0)
+        !   interior boundaries:          midpoints (wsn(iw-1)+wsn(iw))/2
+        !   right boundary of last cell:  nsiw_uni - 1 + 0.5 (half-cell above last uniform index)
+        ! SUM(dwsi) = nsiw_uni (the total weight of the uniform grid being approximated)
+        IF (nsiw(itemp) == 1) THEN
+          ! Edge case: only one frequency point — it represents the entire grid
+          dwsi(1) = DBLE(nsiw_uni)
+        ELSE
+          DO iw = 1, nsiw(itemp)
+            IF (iw == 1) THEN
+              ! First point: from left boundary (-0.5) to midpoint with next point
+              dwsi(iw) = DBLE(wsn(2) - wsn(1)) / 2.d0 + 0.5d0
+            ELSEIF (iw == nsiw(itemp)) THEN
+              ! Last point: from midpoint with previous point to right boundary (nsiw_uni-1+0.5)
+              dwsi(iw) = DBLE(nsiw_uni - 1) + 0.5d0 &
+                       - DBLE(wsn(nsiw(itemp) - 1) + wsn(nsiw(itemp))) / 2.d0
+            ELSE
+              ! Interior points: Voronoi cell from midpoint with left neighbor to midpoint with right
+              dwsi(iw) = DBLE(wsn(iw + 1) - wsn(iw - 1)) / 2.d0
+            ENDIF
+          ENDDO
+        ENDIF
+      ELSE
+        ! Uniform sampling or sparse-ir: weights are unity
+        dwsi(:) = one
+      ENDIF
+      !
       ! output the indices to "matsu-freq*.out" file, if iverbosity = 2
       IF (iverbosity == 2) CALL write_matsubara_freq(itemp)
       !
@@ -1388,11 +1430,13 @@
     CALL mp_bcast(nsiw(itemp), ionode_id, inter_pool_comm)
     CALL mp_bcast(wsi, ionode_id, inter_pool_comm)
     CALL mp_bcast(wsn, ionode_id, inter_pool_comm)
+    CALL mp_bcast(dwsi, ionode_id, inter_pool_comm)
     CALL mp_barrier(inter_pool_comm)
     ! SM: For ditibuting freq. among images, we need to broadcast among images
     CALL mp_bcast(nsiw(itemp), ionode_id, inter_image_comm)
     CALL mp_bcast(wsi, ionode_id, inter_image_comm)
     CALL mp_bcast(wsn, ionode_id, inter_image_comm)
+    CALL mp_bcast(dwsi, ionode_id, inter_image_comm)
     CALL mp_barrier(inter_image_comm)
     !
     !

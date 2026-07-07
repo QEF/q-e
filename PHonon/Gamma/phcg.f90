@@ -257,6 +257,7 @@ SUBROUTINE cg_dchi(dchi_dtau)
      ENDDO
      CLOSE (unit=iudyn)
   ENDIF
+  CALL stop_clock('cg_dchi')
   !
   RETURN
 END SUBROUTINE cg_dchi
@@ -817,6 +818,8 @@ SUBROUTINE raman_cs2(w2,dynout)
   !
   DEALLOCATE (infrared)
   DEALLOCATE (raman_activity)
+  CALL stop_clock('raman_cs2')
+  !
   RETURN
 END SUBROUTINE raman_cs2
 

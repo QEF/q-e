@@ -23,7 +23,6 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   USE lsda_mod,             ONLY : current_spin
   USE wvfct,                ONLY : nbnd, npwx, et, current_k
   USE uspp,                 ONLY : vkb
-  USE io_files,             ONLY : iunwfc, nwordwfc
   USE wavefunctions, ONLY : evc, psic, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
   USE uspp,                 ONLY : okvan
@@ -32,6 +31,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   USE qpoint,               ONLY : ikks, ikqs, nksq
   USE eqv,                  ONLY : evq, dpsi, dvpsi
   USE control_lr,           ONLY : nbnd_occ
+  USE units_lr,             ONLY : iuwfc, lrwfc
   USE dv_of_drho_lr
   USE fft_helper_subroutines
   USE fft_interfaces,       ONLY : fft_interpolate
@@ -149,9 +149,9 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
      ! and evq (wfct at k+q)
      !
      IF (nksq > 1) THEN 
-        CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
+        CALL get_buffer (evc, lrwfc, iuwfc, ikk)
         !$acc update device(evc)
-        CALL get_buffer (evq, nwordwfc, iunwfc, ikq)
+        CALL get_buffer (evq, lrwfc, iuwfc, ikq)
         !$acc update device(evq)
      ENDIF
      !

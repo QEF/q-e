@@ -1,11 +1,11 @@
-input_description -distribution {Quantum ESPRESSO} -package PWscf -program pwcond.x {  
+input_description -distribution {Quantum ESPRESSO} -package PWscf -program pwcond.x {
 
     toc {}
 
     intro {
 	This program computes the transmittance of a system and/or its
-	complex band structure. 
-	It is controlled through the following variables 
+	complex band structure.
+	It is controlled through the following variables
 	in the namelist inputcond.
 
 	Structure of the input data:
@@ -22,6 +22,7 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pwcon
 	    info {
 		temporary directory (as in PWscf)
 	    }
+	    default -kind computed { from_environment }
 	}
 
 	var prefixt  -type CHARACTER {
@@ -29,52 +30,60 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pwcon
 		prefix for the file (as in PWscf) containing all the
 		regions (left lead + scatt. reg. + right lead)
 	    }
+	    default { ' ' }
 	}
 
 	var prefixl  -type CHARACTER {
 	    info {
 		prefix for the file containing only the	left lead
 	    }
+	    default { ' ' }
 	}
 
 	var prefixs  -type CHARACTER {
 	    info {
 		prefix for the file containing the scattering region
 	    }
+	    default { ' ' }
 	}
 
 	var prefixr  -type CHARACTER {
 	    info {
 		prefix for the file containing only the right lead
 	    }
+	    default { ' ' }
 	}
 
 	var tran_prefix  -type CHARACTER {
-	    default { none }
+	    default { ' ' }
             see { recover }
 	    info {
 		if tran_prefix is specified the program will save partial results
-		of a transmission calculation (ikind .GE. 1) in a specific 
+		of a transmission calculation (ikind .GE. 1) in a specific
 		directory (outdir/tran_prefix.cond_save)
 	    }
 	}
 
-	var max_seconds -type REAL { 
-	    default { 1.D+7, or 150 days, i.e. no time limit }
+	var max_seconds -type REAL {
+	    dimensionality { time }
+	    units { s }
+	    default { 1.D+7 }
             see { tran_prefix }
 	    info {
-		jobs stops after max_seconds elapsed time (wallclock time). 
+		jobs stops after max_seconds elapsed time (wallclock time).
 		It can be enabled only if tran_prefix is specified.
-	    }	    
+		The default value of 1.D+7 s corresponds to about 150 days,
+		i.e. effectively no time limit.
+	    }
 	}
 
 	var recover   -type LOGICAL {
 	    default { .FALSE. }
 	    see { tran_prefix }
 	    info {
-		restarts a previously interrupted transmission calculation (only if 
-		tran_prefix was specified). It can also be used to gather partial 
-		results from a calculation that was split by using start_e,last_e 
+		restarts a previously interrupted transmission calculation (only if
+		tran_prefix was specified). It can also be used to gather partial
+		results from a calculation that was split by using start_e,last_e
 		and/or start_k,last_k (see corresponding keywords).
 	    }
 	}
@@ -83,12 +92,14 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pwcon
 	    info {
 		file on which the complex bands are saved
 	    }
+	    default { ' ' }
 	}
 
 	var tran_file  -type CHARACTER  {
 	    info {
 		file where the transmission is written
 	    }
+	    default { ' ' }
 	}
 
 	var save_file  -type CHARACTER  {
@@ -96,55 +107,69 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pwcon
 		file where the data necessary for PWCOND are written
 		so that no prefix files of PW are longer needed
 	    }
+	    default { ' ' }
 	}
 	var fil_loc  -type  CHARACTER {
 	    info {
 		file on/from which the 2D eigenvalue problem data are
 		saved/read
 	    }
+	    default { ' ' }
 	}
 
 	var lwrite_cond  -type LOGICAL {
 	    info {
 		if .t. save the data necessary for PWCOND in save_file
 	    }
+	    default { .FALSE. }
 	}
 
         var loop_ek  -type LOGICAL {
             info {
-                if .t. the energy loop is outside the k-point loop 
+                if .t. the energy loop is outside the k-point loop
             }
+            default { .FALSE. }
         }
 
 	var lread_cond  -type LOGICAL {
 	    info {
 		if .t. read the data necessary for PWCOND from save_file
 	    }
+	    default { .FALSE. }
 	}
 
 	var lwrite_loc  -type LOGICAL {
 	    info {
 		if .t. save 2D eigenvalue problem result in fil_loc
 	    }
+	    default { .FALSE. }
 	}
 
 	var lread_loc  -type LOGICAL {
 	    info {
 		if .t. read 2D eigenvalue problem result from fil_loc
 	    }
+	    default { .FALSE. }
 	}
 
 	var ikind  -type INTEGER {
-	    info {
-   	       The kind of conductance calculation:
-   
-                  ikind=0  - just complex band structure (CBS) calculation
-   
-                  ikind=1  - conductance calculation with identical 
-                             left and right leads
-   
-                  ikind=2  - conductance calculation with different
-		             left and right leads       
+	    default { 0 }
+	    options {
+		info {
+		    The kind of conductance calculation.
+		}
+
+		opt -val 0 {
+		    Just complex band structure (CBS) calculation.
+		}
+
+		opt -val 1 {
+		    Conductance calculation with identical left and right leads.
+		}
+
+		opt -val 2 {
+		    Conductance calculation with different left and right leads.
+		}
 	    }
 	}
 
@@ -152,64 +177,77 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pwcon
 	    info {
 		spin index for which the calculations are performed
 	    }
+	    default { 1 }
 	}
 
         var tk_plot  -type INTEGER {
             info {
-               if > 0, plot T(kx,ky) at each energy in the region [tk_plot x full BZ] 
+               if > 0, plot T(kx,ky) at each energy in the region [tk_plot x full BZ]
             }
+            default { 0 }
         }
 
 	var llocal  -type  LOGICAL {
 	    info {
-		if .t. calculations are done with only local part of PP 
+		if .t. calculations are done with only local part of PP
 	    }
+	    default { .FALSE. }
 	}
 
 	var bdl  -type REAL {
 	    info {
-		right boundary of the left lead (left one is supposed to be at 0) 
-                (in units of lattice parameter "alat" defined in the scf run)
+		right boundary of the left lead (left one is supposed to be at 0)
 	    }
+	    dimensionality { length }
+	    units { alat }
 	}
 
 	var bds  -type REAL {
 	    info {
 		right boundary of the scatt. reg. (left one is at 0 if prefixs
-                is used and = bdl if prefixt is used) 
-                (in units of lattice parameter "alat" defined in the scf run)
+                is used and = bdl if prefixt is used)
 	    }
+	    dimensionality { length }
+	    units { alat }
 	}
 
 	var bdr  -type REAL {
 	    info {
 		right boundary of the right lead (left one is at 0 if prefixr
-		is used and = bds if prefixt is used) 
-                (in units of lattice parameter "alat" defined in the scf run)
+		is used and = bds if prefixt is used)
 	    }
+	    dimensionality { length }
+	    units { alat }
 	}
 
 	var nz1  -type INTEGER {
 	    info {
 		the number of subslabs in the slab (to calculate integrals)
 	    }
+	    default { 11 }
 	}
 
 	var energy0  -type REAL {
 	    info {
-		initial energy 
+		initial energy
 	    }
+	    dimensionality { energy }
+	    units { eV }
+	    default { 0.0 }
 	}
 
 	var denergy  -type REAL {
 	    info {
 		energy step (if denergy=0.0 the energy is read from the list)
 	    }
+	    dimensionality { energy }
+	    units { eV }
+	    default { 0.0 }
 	}
 
 	var nenergy  -type INTEGER {
 	    info {
-		number of energies 
+		number of energies
 
 		WARNING: the energy in input file is given in eV taken from Ef,
 		         and denergy should be negative
@@ -217,10 +255,10 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pwcon
 	}
 
 	var start_e  -type INTEGER {
-	    default { 1 }            
-	    see { last_e }            
+	    default { 1 }
+	    see { last_e }
 	    info {
-		if start_e > 1, the scattering problem is solved only for those 
+		if start_e > 1, the scattering problem is solved only for those
                 energies with index between start_e and last_e in the energy list.
 
 		NOTE: start_e <= last_e and start_e <= nenergy must be satisfied
@@ -228,40 +266,40 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pwcon
 	}
 
 	var last_e  -type INTEGER {
-	    default { nenergy }            
-	    see { start_e }            
+	    default -kind ref { nenergy }
+	    see { start_e }
 	    info {
-		index of the last energy to be computed. If last_e > nenergy, 
+		index of the last energy to be computed. If last_e > nenergy,
 		then last_e will be automatically set to nenergy.
 	    }
 	}
 
 	var start_k  -type INTEGER {
-	    default { 1 }            
-	    see { last_k }            
+	    default { 1 }
+	    see { last_k }
 	    info {
-		if start_k > 1, the scattering problem is solved only for those 
+		if start_k > 1, the scattering problem is solved only for those
                 k-points with index between start_k and last_k in the k-point list.
-		In order to recover the full transmission (i.e. integrated over the 
+		In order to recover the full transmission (i.e. integrated over the
 		full Brillouin Zone) at the end, perform the partial runs specifying
-		a value for tran_prefix (the restart directory), then put all the 
-		partial transmission files 'transmission_k#_e#' inside a unique 
-		restart directory and run pwcond.x with recover=.TRUE. (without 
+		a value for tran_prefix (the restart directory), then put all the
+		partial transmission files 'transmission_k#_e#' inside a unique
+		restart directory and run pwcond.x with recover=.TRUE. (without
 		specifying any value for start_k and last_k).
 
 		NOTE: start_k <= last_k must be satisfied and start_k must also
 		   not be greater than the actual number of k-point in the list
-		   (if you compute the grid automatically by specifying the grid 
+		   (if you compute the grid automatically by specifying the grid
 		   size and shifts, you can use kpoints.x to check that number).
 	    }
 	}
 
 	var last_k  -type INTEGER {
-	    default { nenergy } 
-	    see { start_k }            
+	    default -kind ref { nkpts }
+	    see { start_k }
 	    info {
 		index of the last k-point to be computed. If last_k is bigger than the
-		actual number of points in the list, then it will be set to that number. 
+		actual number of points in the list, then it will be set to that number.
 	    }
 	}
 
@@ -269,29 +307,41 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pwcon
 	    info {
 		2-D cutoff
 	    }
+	    dimensionality { energy }
+	    units { Ry }
+	    default -kind computed { internal }
 	}
-	var ewind  -type REAL { 
-	    info {      
+	var ewind  -type REAL {
+	    info {
 		the energy window for reduction of 2D plane wave basis set (in XY)
 	    }
+	    dimensionality { energy }
+	    units { Ry }
+	    default { 1.0 }
 	}
 
 	var epsproj  -type REAL {
 	    info {
 		accuracy of 2D basis set reduction
 	    }
+	    dimensionality { dimensionless }
+	    default { 1.D-3 }
 	}
 
 	var orbj_in  -type REAL {
 	    info {
-		the initial orbital for projecting the transmission 
+		the initial orbital for projecting the transmission
 	    }
+	    dimensionality { dimensionless }
+	    default { 0 }
 	}
 
 	var orbj_fin  -type REAL {
 	    info {
-		the final orbital for projecting the transmission 
+		the final orbital for projecting the transmission
 	    }
+	    dimensionality { dimensionless }
+	    default { 0 }
 	}
     }
 
@@ -307,9 +357,17 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pwcon
 	    table k_points {
 		rows -start 1 -end nkpts {
 		    colgroup -type REAL {
-			col kx
-			col ky
-			col weight
+			col kx {
+			    dimensionality { length^-1 }
+			    units { tpiba }
+			}
+			col ky {
+			    dimensionality { length^-1 }
+			    units { tpiba }
+			}
+			col weight {
+			    dimensionality { dimensionless }
+			}
 			info {
 			    k-point coordinates and weights
 			}

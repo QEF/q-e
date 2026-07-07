@@ -245,7 +245,7 @@ PROGRAM do_dos
 
   IF (ionode) CLOSE (unit = 4)
   !
-  CALL environment_end ( 'DOS' )
+  CALL environment_end( )
   !
   CALL stop_pp
   !

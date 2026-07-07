@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2016 Quantum ESPRESSO group
+! Copyright (C) 2002-2025 Quantum ESPRESSO Fpundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,121 +18,21 @@ MODULE control_flags
   !
   SAVE
   !
-  PRIVATE
-  !
-  TYPE convergence_criteria
-     !
-     LOGICAL  :: active
-     INTEGER  :: nstep
-     REAL(DP) :: ekin
-     REAL(DP) :: derho
-     REAL(DP) :: force
-     !
-  END TYPE convergence_criteria
-  !
-  PUBLIC :: tbeg, nomore, nbeg, isave, iprint, tv0rd, tzeroc, tzerop,        &
-            tfor, tpre, tzeroe, tsde, tsdp, tsdc, taurdr,                    &
-            ndr, ndw, tortho, ortho_eps, ortho_max, tstress, tprnfor,        &
-            timing, memchk, trane, dt_old, ampre, tranp, amprp,              &
-            tnosee, tnosep, tnoseh, tcp, tcap,                               &
-            tconvthrs, tolp, convergence_criteria, tionstep, nstepe,         &
-            tscreen, gamma_only, force_pairing, lecrpa, tddfpt, smallmem,    &
-            tfirst, tlast, tprint, trescalee, max_xml_steps, dfpt_hub,       &
-            dt_xml_old, symm_by_label, use_spinflip
-  !
-  PUBLIC :: fix_dependencies, check_flags
-  PUBLIC :: tksw, trhor, thdyn, trhow
-  !
   ! ...   declare execution control variables
   !
-  LOGICAL :: trhor     = .FALSE. ! read rho from unit 47 (only cp, seldom used)
-  LOGICAL :: trhow     = .FALSE. ! CP code, write rho to restart dir
-  LOGICAL :: tksw      = .FALSE. ! CP: write Kohn-Sham states to restart dir
-  LOGICAL :: tfirst    = .TRUE.  ! CP: true if first iteration after restart
-  LOGICAL :: tlast     = .FALSE. ! CP: true if last iteration before ending
-  LOGICAL :: tprint    = .FALSE. ! CP: set to true when calculation of time
-                                 !     derivatives of wave functions must be 
-                                 !     computed via projection on occupied
-                                 !     manifold 
-  !
-  LOGICAL :: tsde          = .FALSE. ! electronic steepest descent
-  LOGICAL :: tzeroe        = .FALSE. ! set to zero the electronic velocities
-  LOGICAL :: trescalee     = .FALSE. ! rescale the electronics velocities
-  LOGICAL :: tfor          = .FALSE. ! move the ions ( calculate forces )
-  LOGICAL :: tsdp          = .FALSE. ! ionic steepest descent
-  LOGICAL :: tzerop        = .FALSE. ! set to zero the ionic velocities
-  LOGICAL :: tprnfor       = .FALSE. ! print forces to standard output
-  LOGICAL :: taurdr        = .FALSE. ! read ionic position from standard input
+  LOGICAL :: lforce        = .FALSE. ! compute forces
   LOGICAL :: tv0rd         = .FALSE. ! read ionic velocities from standard input
-  LOGICAL :: tpre          = .FALSE. ! calculate stress, and (in fpmd) variable cell dynamic
-  LOGICAL :: thdyn         = .FALSE. ! variable-cell dynamics (only cp)
-  LOGICAL :: tsdc          = .FALSE. ! cell geometry steepest descent
-  LOGICAL :: tzeroc        = .FALSE. ! set to zero the cell geometry velocities
-  LOGICAL :: tstress       = .FALSE. ! print stress to standard output
-  LOGICAL :: tortho        = .FALSE. ! use iterative orthogonalization
-  LOGICAL :: timing        = .FALSE. ! print out timing information
-  LOGICAL :: memchk        = .FALSE. ! check for memory leakage
-  LOGICAL :: tscreen       = .FALSE. ! Use screened coulomb potentials for cluster calculations
-  LOGICAL :: force_pairing = .FALSE. ! Force pairing
+  LOGICAL :: tstress       = .FALSE. ! compute stress
   LOGICAL :: lecrpa        = .FALSE. ! RPA correlation energy request
-  LOGICAL :: dfpt_hub      = .FALSE. ! If .true. perform the SCF calculation of U (and V)
-                                     ! and let PW rotuines to know about this
   LOGICAL :: tddfpt        = .FALSE. ! use TDDFPT specific tweaks when using the Environ plugin
-  LOGICAL :: smallmem      = .FALSE. ! the memory per task is small
-  LOGICAL :: symm_by_label = .FALSE. ! use atomic labels to detect symmetry 
-  LOGICAL :: use_spinflip = .FALSE.      ! in collinear case add allow rotations + spinflip 
+  LOGICAL :: smallmem      = .FALSE. ! reduce memory by avoiding global sort
   !
-  TYPE (convergence_criteria) :: tconvthrs
-                              !  thresholds used to check GS convergence
-  !
-  ! ... Ionic vs Electronic step frequency
-  ! ... When "ion_nstep > 1" and "electron_dynamics = 'md' | 'sd' ", ions are
-  ! ... propagated every "ion_nstep" electronic step only if the electronic
-  ! ... "ekin" is lower than "ekin_conv_thr"
-  !
-  LOGICAL :: tionstep = .FALSE.
-  INTEGER :: nstepe   = 1
-                            !  parameters to control how many electronic steps
-                            !  between ions move
-
-  INTEGER :: nbeg   = 0 ! internal code for initialization ( -1, 0, 1, 2, .. )
-  INTEGER :: ndw    = 0 !
-  INTEGER :: ndr    = 0 !
-  INTEGER :: nomore = 0 !
   INTEGER :: iprint =10 ! print output every iprint step
-  INTEGER  :: max_xml_steps =0 ! max number of dynamics included in xml file if 0 all steps are included. 
-  INTEGER :: isave  = 0 ! write restart to ndr unit every isave step
+  INTEGER :: max_xml_steps =0 ! max number of dynamics included in xml file if all steps are included. 
   !
   ! ... .TRUE. if only gamma point is used
   !
   LOGICAL :: gamma_only = .TRUE.
-  !
-  ! This variable is used whenever a timestep change is requested
-  !
-  REAL(DP) :: dt_old = -1.0_DP
-  !
-  ! This is necessary to mantain compatibility with the old way of changing the molecular dynamics integration timestep.
-  ! The code needs to check, in case the old method is used, that the input old timestep and the xml old timestep are the same
-  !
-  REAL(DP) :: dt_xml_old = -1.0_DP 
-  !
-  ! ... Wave function randomization
-  !
-  LOGICAL  :: trane = .FALSE.
-  REAL(DP) :: ampre = 0.0_DP
-  !
-  ! ... Ionic position randomization
-  !
-  LOGICAL  :: tranp(nsx) = .FALSE.
-  REAL(DP) :: amprp(nsx) = 0.0_DP
-  !
-  ! ... Read the cell from standard input
-  !
-  LOGICAL :: tbeg = .FALSE.
-  !
-  ! ... Flag controlling the Nose thermostat for electrons
-  !
-  LOGICAL :: tnosee = .FALSE.
   !
   ! ... Flag controlling the Nose thermostat for the cell
   !
@@ -141,15 +41,13 @@ MODULE control_flags
   ! ... Flag controlling the Nose thermostat for ions
   !
   LOGICAL  :: tnosep = .FALSE.
-  LOGICAL  :: tcap   = .FALSE.
-  LOGICAL  :: tcp    = .FALSE.
   REAL(DP) :: tolp   = 0.0_DP   !  tolerance for temperature variation
   !
-  REAL(DP), PUBLIC :: &
+  REAL(DP) :: &
        ekin_conv_thr = 0.0_DP, &!  conv. threshold for fictitious e. kinetic energy
        etot_conv_thr = 0.0_DP, &!  conv. threshold for DFT energy
        forc_conv_thr = 0.0_DP   !  conv. threshold for atomic forces
-  INTEGER, PUBLIC :: &
+  INTEGER :: &
        ekin_maxiter = 100,   &!  max number of iter. for ekin convergence
        etot_maxiter = 100,   &!  max number of iter. for etot convergence
        forc_maxiter = 100     !  max number of iter. for atomic forces conv.
@@ -158,16 +56,10 @@ MODULE control_flags
   !
   ! ... logical flags controlling the execution
   !
-  LOGICAL, PUBLIC :: &
+  LOGICAL :: &
     lscf    =.FALSE., &! if .TRUE. the calc. is selfconsistent
     lbfgs   =.FALSE., &! if .TRUE. the calc. is a relaxation based on BFGS
     lmd     =.FALSE., &! if .TRUE. the calc. is a dynamics
-    lwf     =.FALSE., &! if .TRUE. the calc. is with wannier functions
-    !=================================================================
-    !exx_wf related 
-    lwfnscf =.FALSE., &
-    lwfpbe0nscf=.FALSE.,&
-    !=================================================================
     lbands  =.FALSE., &! if .TRUE. the calc. is band structure
     lconstrain=.FALSE.,&! if .TRUE. the calc. is constraint
     llondon =.FALSE., & ! if .TRUE. compute Grimme D2 dispersion corrections
@@ -180,42 +72,42 @@ MODULE control_flags
   !
   ! ... pw self-consistency
   !
-  INTEGER, PUBLIC :: &
+  INTEGER :: &
     ngm0,             &! used in mix_rho
     nexxiter,         &! the maximum number of outer iteration (exx)
     niter,            &! the maximum number of iteration
     nmix,             &! the number of iteration kept in the history
     imix               ! the type of mixing (0=plain,1=TF,2=local-TF)
-  INTEGER,  PUBLIC :: &
+  INTEGER :: &
     n_scf_steps        ! number of scf iterations to reach convergence
-  REAL(DP), PUBLIC :: &
+  REAL(DP) :: &
     mixing_beta,      &! the mixing parameter
     tr2,              &! the convergence threshold for potential
     scf_error=0.0      ! actual convergence reached
 
-  LOGICAL, PUBLIC :: &
+  LOGICAL :: &
     conv_elec          ! if .TRUE. electron convergence has been reached
   ! next 3 variables used for EXX calculations
-  LOGICAL, PUBLIC :: &
+  LOGICAL :: &
     adapt_thr       ! if .TRUE. an adaptive convergence threshold is used
                        ! for the scf cycle in an EXX calculation.
-  REAL(DP), PUBLIC  :: &
+  REAL(DP)  :: &
     tr2_init,         &! initial value of tr2 for adaptive thresholds
     tr2_multi          ! the dexx multiplier for adaptive thresholds
                        ! tr2 = tr2_multi * dexx after each V_exx update 
-  LOGICAL, PUBLIC :: scf_must_converge
+  LOGICAL :: scf_must_converge
   !
   ! ... pw diagonalization
   !
-  REAL(DP), PUBLIC  :: &
+  REAL(DP)  :: &
     ethr               ! the convergence threshold for eigenvalues
-  INTEGER, PUBLIC :: &
+  INTEGER :: &
     isolve,           &! index selecting Davidson,  CG, ParO or RMM diagonalization
     david,            &! max dimension of subspace in Davidson diagonalization
     max_cg_iter,      &! maximum number of iterations in a CG call
     rmm_ndim,         &! max dimension of subspace in RMM-DIIS diagonalization
     gs_nblock          ! blocking size in Gram-Schmidt orthogonalization
-  LOGICAL, PUBLIC :: &
+  LOGICAL :: &
     rmm_conv,                     &! if true,  RMM-DIIS is performed up to converge
     rmm_with_davidson  = .TRUE.,  &! if true RMM-DIIS  in alternance with davidson 
     diago_full_acc     = .FALSE.      ! if true,  empty eigenvalues have the same
@@ -223,64 +115,64 @@ MODULE control_flags
   !
   ! ... ionic dynamics
   !
-  INTEGER, PUBLIC :: &
+  INTEGER :: &
     nstep = 1,       &! number of ionic steps
     istep = 0          ! current ionic step
-  LOGICAL, PUBLIC :: &
+  LOGICAL :: &
     conv_ions          ! if .TRUE. ionic convergence has been reached
-  REAL(DP), PUBLIC  :: &
+  REAL(DP)  :: &
     upscale            ! maximum reduction of convergence threshold
   !
   ! ... system's symmetries
   !
-  LOGICAL, PUBLIC :: &
+  LOGICAL :: &
     noinv = .FALSE.    ! if .TRUE. q=>-q symmetry not used in k-point generation
+  LOGICAL :: symm_by_label = .FALSE. ! use atomic labels to detect symmetry 
+  LOGICAL :: use_spinflip = .FALSE.      ! in collinear case add allow rotations + spinflip 
   !
   ! ... phonon calculation
   !
-  INTEGER, PUBLIC :: &
+  INTEGER :: &
     modenum            ! for single mode phonon calculation
   !
   ! ... printout control
   !
-  INTEGER, PUBLIC :: &
+  INTEGER :: &
     io_level = 1       ! variable controlling the amount of I/O to file
-  INTEGER, PUBLIC :: & ! variable controlling the amount of I/O to output
+  INTEGER :: & ! variable controlling the amount of I/O to output
     iverbosity = 0     ! -1 minimal, 0 low, 1 medium, 2 high, 3 debug
   !
   ! ... self-interaction correction and scissor operator
   !
-  LOGICAL, PUBLIC :: sic = .FALSE.
-  LOGICAL, PUBLIC :: scissor = .FALSE.
+  LOGICAL :: sic = .FALSE.
+  LOGICAL :: scissor = .FALSE.
   !
   ! ... miscellany
   !
-  LOGICAL, PUBLIC :: &
+  LOGICAL :: &
     use_para_diag = .FALSE.  ! if .TRUE. a fully distributed memory iteration 
                              ! algorithm and parallel Householder algorithm are used
   !
-  LOGICAL, PUBLIC :: &
+  LOGICAL :: &
     remove_rigid_rot = .FALSE. ! if .TRUE. the total torque acting on the atoms 
                                ! is removed
-  LOGICAL, PUBLIC :: &
+  LOGICAL :: &
     do_makov_payne = .FALSE.   ! if .TRUE. makov-payne correction for isolated
                                ! system is used
-  LOGICAL, PUBLIC :: &
+  LOGICAL :: &
     use_gpu = .FALSE.          ! if .TRUE. selects the accelerated version of the subroutines
-                               ! when available
+                               ! when available (obsolescent, should be removed)
   !
-  TYPE(offload_kind_acc), PUBLIC :: offload_acc  ! flag to select CUF/OpenACC offload type
-  TYPE(offload_kind_omp), PUBLIC :: offload_omp  ! flag to select OpenMP5 offload type
-  TYPE(offload_kind_cpu), PUBLIC :: offload_cpu  ! flag to select no offload type (CPU execution)
-#if defined(__CUDA)
-  TYPE(offload_kind_acc), PUBLIC :: offload_type ! flag to point the actual currently used offload type 
-#elif defined(__OPENMP_GPU)
-  TYPE(offload_kind_omp), PUBLIC :: offload_type
+  TYPE(offload_kind_acc) :: offload_acc  ! flag to select CUF/OpenACC offload type
+  TYPE(offload_kind_omp) :: offload_omp  ! flag to select OpenMP5 offload type
+  TYPE(offload_kind_cpu) :: offload_cpu  ! flag to select no offload type (CPU execution)
+#if defined(_OPENACC)
+  TYPE(offload_kind_acc) :: offload_type ! flag to point the actual currently used offload type 
 #else
-  TYPE(offload_kind_cpu), PUBLIC :: offload_type
+  TYPE(offload_kind_cpu) :: offload_type
 #endif
   !
-  INTEGER, PUBLIC :: &
+  INTEGER :: &
 #if defined(__CUDA)
     many_fft = 16              ! the size of FFT batches in vloc_psi and
                                ! sumband. Only use in accelerated subroutines.
@@ -288,105 +180,20 @@ MODULE control_flags
     many_fft = 1
 #endif
   !
-  INTEGER  :: ortho_max = 0      ! maximum number of iterations in routine ortho
-  REAL(DP) :: ortho_eps = 0.0_DP ! threshold for convergence in routine ortho
-  !
-  ! ... Number of neighbouring cell to consider in ewald sum
-  !
-  INTEGER, PUBLIC :: iesr = 1
-  !
   ! ... Real-space algorithms
   !
-  LOGICAL,          PUBLIC :: tqr=.FALSE. ! if true the Q are in real space
+  LOGICAL :: tqr=.FALSE. ! if true the Q are in real space
   !
   ! ... Augmentation charge and beta smoothing
   !
-  LOGICAL,          PUBLIC :: tq_smoothing=.FALSE. ! if true the Q are smoothed 
-  LOGICAL,          PUBLIC :: tbeta_smoothing=.FALSE. ! if true the betas are smoothed 
+  LOGICAL :: tq_smoothing=.FALSE. ! if true the Q are smoothed 
+  LOGICAL :: tbeta_smoothing=.FALSE. ! if true the betas are smoothed 
   !
   ! ... External Forces on Ions
   !
-  LOGICAL,          PUBLIC :: textfor = .FALSE.
-
-
-  LOGICAL,          PUBLIC :: treinit_gvecs = .FALSE.
-
+  LOGICAL :: textfor = .FALSE.
   !
-  ! ...  end of module-scope declarations
+  LOGICAL :: treinit_gvecs = .FALSE.
   !
-  !=--------------------------------------------------------------------------=!
-  CONTAINS
-  !=--------------------------------------------------------------------------=!
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE fix_dependencies()
-      !------------------------------------------------------------------------
-      !
-      IMPLICIT NONE
-      !
-      ! ... if thdyn = .FALSE. set TSDC and TZEROC to .FALSE. too.
-      !
-      IF ( .NOT. thdyn ) THEN
-         !
-         tsdc   = .FALSE.
-         tzeroc = .FALSE.
-         !
-      END IF
-      !
-      IF ( .NOT. tfor ) THEN
-         !
-         tzerop = .FALSE.
-         tv0rd  = .FALSE.
-         tsdp   = .FALSE.
-         tcp    = .FALSE.
-         tcap   = .FALSE.
-         tnosep = .FALSE.
-         !
-      ELSE
-         !
-         IF ( tsdp ) THEN
-            !
-            tcp    = .FALSE.
-            tcap   = .FALSE.
-            tnosep = .FALSE.
-            tv0rd  = .FALSE.
-            !
-         END IF
-         !
-         IF ( tv0rd ) tzerop = .TRUE.
-         !
-      END IF
-      !
-      IF ( tsde ) tnosee = .FALSE.
-      !
-      CALL check_flags()
-      !
-      RETURN
-      !
-    END SUBROUTINE fix_dependencies
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE check_flags()
-      !------------------------------------------------------------------------
-      !
-      ! ...  do some checks for consistency
-      !
-      IF ( tnosep .AND. tcp ) &
-         CALL errore( ' control_flags ', ' TCP AND TNOSEP BOTH TRUE', 0 )
-      !
-      IF ( tnosep .AND. tcap ) &
-         CALL errore( ' control_flags ', ' TCAP AND TNOSEP BOTH TRUE', 0 )
-      !
-      IF ( tcp .AND. tcap ) &
-         CALL errore( ' control_flags ', ' TCP AND TCAP BOTH TRUE', 0 )
-      !
-      IF ( tv0rd .AND. tsdp ) &
-         CALL errore( ' control_flags ', &
-                    & ' READING IONS VELOCITY WITH STEEPEST D.', 0 )
-      !
-      RETURN
-      !
-    END SUBROUTINE check_flags
-    !
 END MODULE control_flags
 

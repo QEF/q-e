@@ -30,6 +30,104 @@ MODULE loc_scdm_k
   !
  CONTAINS
   !
+  !------------------------------------------------------------------------------------
+  SUBROUTINE compute_density_k( DoPrint, Shift, CenterPBC, SpreadPBC, Overlap, PsiI, &
+                                PsiJ, NQR, ibnd, jbnd )
+    !----------------------------------------------------------------------------------
+    !! Manipulate density: get pair density, center, spread, absolute overlap.  
+    !! Shift:  
+    !! .FALSE. refer the centers to the cell -L/2 ... +L/2   
+    !! .TRUE.  shift the centers to the cell 0 ... L (presumably the 
+    !!         one given in input )
+    !
+    USE constants,        ONLY : pi, bohr_radius_angs 
+    USE cell_base,        ONLY : alat, omega
+    USE mp,               ONLY : mp_sum
+    USE mp_bands,         ONLY : intra_bgrp_comm
+    USE fft_types,        ONLY : fft_index_to_3d
+    !
+    IMPLICIT NONE
+    !
+    LOGICAL, INTENT(IN) :: DoPrint
+    !! whether to print or not the quantities 
+    LOGICAL, INTENT(IN) :: Shift
+    !! .FALSE. Centers with respect to the minimum image cell convention
+    !! .TRUE.  Centers shifted to the input cell
+    REAL(DP), INTENT(OUT) :: CenterPBC(3)
+    !! Coordinates of the center
+    REAL(DP), INTENT(OUT) :: SpreadPBC(3)
+    REAL(DP), INTENT(OUT) :: Overlap
+    INTEGER,  INTENT(IN) :: NQR
+    COMPLEX(DP), INTENT(IN) :: PsiI(NQR)
+    COMPLEX(DP), INTENT(IN) :: PsiJ(NQR) 
+    INTEGER,  INTENT(IN) :: ibnd
+    INTEGER,  INTENT(IN) :: jbnd
+    !
+    ! ... local variables
+    !
+    REAL(DP) :: vol, TotSpread, rbuff
+    INTEGER :: ir, i, j, k
+    LOGICAL :: offrange
+    COMPLEX(DP) :: cbuff(3)
+    REAL(DP), PARAMETER :: Zero=0._DP, One=1._DP, Two=2._DP
+    !
+    vol = omega / DBLE(dfftt%nr1 * dfftt%nr2 * dfftt%nr3)
+    !
+    CenterPBC = Zero 
+    SpreadPBC = Zero 
+    Overlap = Zero
+    cbuff = (Zero, Zero) 
+    rbuff = Zero
+    !
+    DO ir = 1, dfftt%nr1x*dfftt%my_nr2p*dfftt%my_nr3p
+       !
+       ! ... three dimensional indexes
+       !
+       CALL fft_index_to_3d (ir, dfftt, i,j,k, offrange)
+       IF ( offrange ) CYCLE
+       !
+       rbuff = ABS(PsiI(ir) * CONJG(PsiJ(ir)) / omega )
+       Overlap = Overlap + rbuff*vol
+       cbuff(1) = cbuff(1) + rbuff*EXP((Zero,One)*Two*pi*DBLE(i)/DBLE(dfftt%nr1))*vol 
+       cbuff(2) = cbuff(2) + rbuff*EXP((Zero,One)*Two*pi*DBLE(j)/DBLE(dfftt%nr2))*vol
+       cbuff(3) = cbuff(3) + rbuff*EXP((Zero,One)*Two*pi*DBLE(k)/DBLE(dfftt%nr3))*vol
+    ENDDO
+    !
+    CALL mp_sum( cbuff, intra_bgrp_comm )
+    CALL mp_sum( Overlap, intra_bgrp_comm )
+    !
+    CenterPBC(1) =  alat/Two/pi*AIMAG(LOG(cbuff(1)))
+    CenterPBC(2) =  alat/Two/pi*AIMAG(LOG(cbuff(2)))
+    CenterPBC(3) =  alat/Two/pi*AIMAG(LOG(cbuff(3)))
+    !
+    IF (Shift) THEN
+      IF (CenterPBC(1) < Zero) CenterPBC(1) = CenterPBC(1) + alat
+      IF (CenterPBC(2) < Zero) CenterPBC(2) = CenterPBC(2) + alat
+      IF (CenterPBC(3) < Zero) CenterPBC(3) = CenterPBC(3) + alat
+    ENDIF
+    !
+    rbuff = DBLE(cbuff(1))**2 + AIMAG(cbuff(1))**2 
+    SpreadPBC(1) = -(alat/Two/pi)**2 * LOG(rbuff) 
+    rbuff = DBLE(cbuff(2))**2 + AIMAG(cbuff(2))**2 
+    SpreadPBC(2) = -(alat/Two/pi)**2 * LOG(rbuff) 
+    rbuff = DBLE(cbuff(3))**2 + AIMAG(cbuff(3))**2 
+    SpreadPBC(3) = -(alat/Two/pi)**2 * LOG(rbuff) 
+    TotSpread = (SpreadPBC(1) + SpreadPBC(2) + SpreadPBC(3))*bohr_radius_angs**2  
+    !
+    IF (DoPrint) THEN
+      WRITE(stdout,'(A,2I4)')     'MOs:                  ', ibnd, jbnd
+      WRITE(stdout,'(A,10f12.6)') 'Absolute Overlap:     ', Overlap 
+      WRITE(stdout,'(A,10f12.6)') 'Center(PBC)[A]:       ', CenterPBC(1)*bohr_radius_angs, &
+              CenterPBC(2)*bohr_radius_angs, CenterPBC(3)*bohr_radius_angs
+      WRITE(stdout,'(A,10f12.6)') 'Spread [A**2]:        ', SpreadPBC(1)*bohr_radius_angs**2, &
+              SpreadPBC(2)*bohr_radius_angs**2, SpreadPBC(3)*bohr_radius_angs**2
+      WRITE(stdout,'(A,10f12.6)') 'Total Spread [A**2]:  ', TotSpread
+    ENDIF 
+    !
+    IF (TotSpread < Zero) CALL errore( 'compute_density_k', 'Negative spread found', 1 )
+    !
+  END SUBROUTINE compute_density_k
+  !
 !------------------------------------------------------------------------
 SUBROUTINE localize_orbitals_k( )
   !----------------------------------------------------------------------
@@ -160,7 +258,6 @@ SUBROUTINE measure_localization_k( NBands, IK, TotSpread, AveSpread )
   !
   USE noncollin_module,    ONLY : npol
   USE cell_base,           ONLY : alat, omega, at, bg
-  USE exx,                 ONLY : compute_density_k
   USE constants,           ONLY : bohr_radius_angs 
   !
   IMPLICIT NONE
@@ -214,8 +311,7 @@ SUBROUTINE AbsOvG_k( NBands, IKQ, JK, loc_diag, loc_off )
   USE noncollin_module,    ONLY : npol
   USE fft_interfaces,      ONLY : fwfft
   USE wvfct,               ONLY : npwx
-  USE exx_band,            ONLY : igk_exx
-  USE klist,               ONLY : nks, ngk
+  USE klist,               ONLY : nks, ngk, igk_k
   !
   IMPLICIT NONE
   !
@@ -260,7 +356,7 @@ SUBROUTINE AbsOvG_k( NBands, IKQ, JK, loc_diag, loc_off )
      CALL fwfft( 'Wave' , buffer, dfftt )
      !
      DO ig = 1, npw
-       GorbtJ(ig,jbnd) = buffer(dfftt%nl(igk_exx(ig,kk))) 
+       GorbtJ(ig,jbnd) = buffer(dfftt%nl(igk_k(ig,kk))) 
      ENDDO
      !
      buffer(:) = ABS(exxbuff(:,jbnd,IKQ)) 
@@ -269,7 +365,7 @@ SUBROUTINE AbsOvG_k( NBands, IKQ, JK, loc_diag, loc_off )
      CALL fwfft( 'Wave' , buffer, dfftt )
      !
      DO ig = 1, npw
-       GorbtI(ig,jbnd) = buffer(dfftt%nl(igk_exx(ig,kk)))  
+       GorbtI(ig,jbnd) = buffer(dfftt%nl(igk_k(ig,kk)))  
      ENDDO
      !
   ENDDO

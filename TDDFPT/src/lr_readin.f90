@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2023 Quantum ESPRESSO group
+! Copyright (C) 2001-2026 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -22,6 +22,7 @@ SUBROUTINE lr_readin
                                   & do_makov_payne, noinv
   USE scf,                 ONLY : vltot, v, vrs, vnew, &
                                   & destroy_scf_type, rho
+  USE exx,                 ONLY : nbndproj, use_ace
   USE fft_base,            ONLY : dfftp, dffts
   USE gvect,               ONLY : gcutm
   USE gvecs,               ONLY : doublegrid
@@ -86,9 +87,9 @@ SUBROUTINE lr_readin
                         & scissor, pseudo_hermitian, d0psi_rs, lshift_d0psi, &
                         & q1, q2, q3, approximation, calculator, alpha_mix, start, &
                         & end, increment, epsil, units, ethr_nscf, force_real_gamma, &
-                        & force_real_alpha, force_zero_alpha, lan_precondition 
+                        & force_real_alpha, force_zero_alpha, lan_precondition, ace 
   NAMELIST / lr_post /    omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int,sum_rule
-  namelist / lr_dav /     num_eign, num_init, num_basis_max, residue_conv_thr, precondition,         &
+  namelist / lr_dav /     num_eign, num_init, num_basis_max, residue_conv_thr, precondition, ace,    &
                         & reference,single_pole, sort_contr, diag_of_h, close_pre,        &
                         & broadening,print_spectrum,start,finish,step, if_random_init, &
                         & p_nbnd_occ,p_nbnd_virt,poor_of_ram,poor_of_ram2,max_iter,     &
@@ -137,6 +138,7 @@ SUBROUTINE lr_readin
      max_seconds = 1.0E+7_DP
      scissor = 0.d0
      ethr_nscf = 1.D-11
+     ace=.false.
      !
      ! For EELS
      !
@@ -536,6 +538,28 @@ CONTAINS
 
     IMPLICIT NONE
     !
+    ! Check ACE in ground state calculation and ensure consistency in TDDFPT calculations
+    ! (enabled only for optical davidson and lanczos)
+    !
+    IF( xclib_dft_is('hybrid') .and..not. (eels.or.magnons) ) THEN
+      !
+      use_ace_td = ace
+      !
+      IF ( use_ace_td ) THEN
+        IF ( use_ace ) THEN
+          WRITE(stdout, '(5x,"ACE found in ground-state calculation, potential projected onto ", I5, " bands." )') nbndproj
+          WRITE(stdout, '(5x,"Using the ACE potential in TDDFPT calculation. " )') 
+        ELSE
+          WRITE(stdout, '(5x,"ACE not found in ground-state calculation." )') 
+          CALL errore ('lr_readin', 'Enable ACE in ground state or remove it from TDDFPT.', 1 )
+        END IF 
+      ELSE
+        use_ace = .false.
+        WRITE(stdout, '(5x,"Not using ACE in TDDFPT calculation. " )') 
+      END IF
+      !
+    END IF
+    !
     !  Charge response mode 1 is the "do Lanczos chains twice, conserve memory" scheme.
     !
     IF (.NOT.eels .AND. .NOT. magnons) THEN
@@ -657,7 +681,7 @@ CONTAINS
        !
     ENDIF
     !
-    ! MAgnons restrictions
+    ! Magnons restrictions
     !
     IF (magnons) THEN
        IF (okvan.OR.okpaw) &     
@@ -674,6 +698,20 @@ CONTAINS
           CALL errore ('lr_readin', ' Magnons linear response calculation ' // &
                       & 'non-magnetic system', 1 )
     ENDIF
+    !
+    ! Restart functionality in TDDFPT requires a modification in FFTXlib.
+    ! Specifically, all occurrences of FFTW_MEASURE must be replaced with
+    ! FFTW_ESTIMATE in FFTXlib/src/fft_scalar.FFTW3.f90.
+    ! See q-e/TDDFPT/README for detailed instructions.
+    !
+#if defined(__FFTW3)
+    IF (restart) THEN
+       WRITE(stdout,*) 'ERROR: Restart requested, but required FFTXlib modification not implemented.'
+       WRITE(stdout,*) 'Please follow the instructions in q-e/TDDFPT/README to enable restart support.'
+       WRITE(stdout,*) 'After the fix, please comment out these lines and recompile the code.'
+       CALL errore('lr_readin', 'restart not available without FFTXlib modification', 1)
+    ENDIF
+#endif
     !
     RETURN
     !

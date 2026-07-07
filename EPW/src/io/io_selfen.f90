@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
   !
@@ -27,7 +28,7 @@
     USE kinds,         ONLY : DP
     USE global_var,    ONLY : gtemp, nqtotf, lambda_all, wf, gamma_all
     USE ep_constants,  ONLY : ryd2ev, kelvin2eV, ryd2mev
-    USE input,         ONLY : nstemp
+    USE input,         ONLY : nstemp, lsda
     USE mp_world,      ONLY : mpime
     USE io_global,     ONLY : ionode_id
     USE io_var,        ONLY : lambda_phself, linewidth_phself
@@ -44,6 +45,8 @@
     !! Variable used for formatting output
     CHARACTER(LEN = 256) :: filephlinewid
     !! file name of phonon linewidth
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer file name
 
     INTEGER :: itempphen
     !! Temperature counter for writing phonon selfen
@@ -52,11 +55,13 @@
     INTEGER :: imode
     !! Counter on mode
     !
+    fnm = ''
+    IF (TRIM(lsda) == 'down') fnm = '.down'
     IF (mpime == ionode_id) THEN
       !
       DO itempphen = 1, nstemp
         WRITE(tp, "(f8.3)") gtemp(itempphen) * ryd2ev / kelvin2eV
-        filephselfen = 'lambda.phself.' // trim(adjustl(tp)) // 'K'
+        filephselfen = 'lambda.phself.' // trim(adjustl(tp)) // 'K' // TRIM(fnm)
         OPEN(UNIT = lambda_phself, FILE = filephselfen)
         WRITE(lambda_phself, '(/2x,a/)') '#Lambda phonon self-energy'
         WRITE(lambda_phself, *) '#Modes     ',(imode, imode = 1, nmodes)
@@ -75,7 +80,7 @@
         ! Im \Pi^R = pi*k-point weight*[f(E_k+q) - f(E_k)]*delta[E_k+q - E_k - w_q]
         ! Since gamma_all = pi*k-point weight*[f(E_k) - f(E_k+q)]*delta[E_k+q - E_k - w_q] we have
         ! \Gamma = 2 * gamma_all
-        filephlinewid = 'linewidth.phself.' // trim(adjustl(tp)) // 'K'
+        filephlinewid = 'linewidth.phself.' // trim(adjustl(tp)) // 'K'// TRIM(fnm)
         OPEN(UNIT = linewidth_phself, FILE = filephlinewid)
         WRITE(linewidth_phself, '(a)') '# Phonon frequency and phonon lifetime in meV '
         WRITE(linewidth_phself, '(a)') '# Q-point  Mode   Phonon freq (meV)   Phonon linewidth (meV)'
@@ -107,7 +112,7 @@
     USE mp,            ONLY : mp_barrier
     USE mp_world,      ONLY : mpime
     USE io_global,     ONLY : meta_ionode, meta_ionode_id
-    USE input,         ONLY : nstemp
+    USE input,         ONLY : nstemp, lsda
     !
     IMPLICIT NONE
     !
@@ -139,9 +144,13 @@
     !! Counter on temperatures
     REAL(KIND = DP) :: aux(3 * nbndfst * nktotf * nstemp + 2)
     !! Vector to store the array
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer file name
     !
     IF (meta_ionode) THEN
       !
+      fnm = 'sigma_restart'
+      IF (TRIM(lsda) == 'down') fnm = 'down.sigma_restart'
       lsigma_all = 3 * nbndfst * nktotf * nstemp + 2
       ! First element is the current q-point
       aux(1) = REAL(iqq - 1, KIND = DP) ! we need to start at the next q
@@ -173,7 +182,7 @@
           ENDDO
         ENDDO
       ENDDO
-      CALL diropn(iufilsigma_all, 'sigma_restart', lsigma_all, exst)
+      CALL diropn(iufilsigma_all, TRIM(fnm), lsigma_all, exst)
       CALL davcio(aux, lsigma_all, iufilsigma_all, 1, +1)
       CLOSE(iufilsigma_all)
     ENDIF
@@ -209,7 +218,7 @@
     USE mp,            ONLY : mp_barrier, mp_bcast
     USE mp_world,      ONLY : mpime, world_comm
     USE io_global,     ONLY : meta_ionode, meta_ionode_id
-    USE input,         ONLY : nstemp
+    USE input,         ONLY : nstemp, lsda
     !
     IMPLICIT NONE
     !
@@ -245,21 +254,28 @@
     !! Vector to store the array
     !
     CHARACTER(LEN = 256) :: name1
+    !! File name
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer variables for file name
     !
     IF (meta_ionode) THEN
       !
       ! First inquire if the file exists
+      fnm = TRIM(prefix)
+      IF (TRIM(lsda) == 'down') fnm = TRIM(prefix) // '.down'
 #if defined(__MPI)
-      name1 = TRIM(tmp_dir) // TRIM(prefix) // '.sigma_restart1'
+      name1 = TRIM(tmp_dir) // TRIM(fnm) // '.sigma_restart1'
 #else
-      name1 = TRIM(tmp_dir) // TRIM(prefix) // '.sigma_restart'
+      name1 = TRIM(tmp_dir) // TRIM(fnm) // '.sigma_restart'
 #endif
       INQUIRE(FILE = name1, EXIST = exst)
       !
       IF (exst) THEN ! read the file
         !
+        fnm = 'sigma_restart'
+        IF (TRIM(lsda) == 'down') fnm = 'down.sigma_restart'
         lsigma_all = 3 * nbndfst * nktotf * nstemp + 2
-        CALL diropn(iufilsigma_all, 'sigma_restart', lsigma_all, exst)
+        CALL diropn(iufilsigma_all, TRIM(fnm), lsigma_all, exst)
         CALL davcio(aux, lsigma_all, iufilsigma_all, 1, -1)
         !
         ! First element is the iteration number
@@ -340,7 +356,7 @@
     USE mp,            ONLY : mp_barrier
     USE mp_world,      ONLY : mpime
     USE io_global,     ONLY : ionode_id
-    USE input,         ONLY : nstemp
+    USE input,         ONLY : nstemp, lsda
     !
     IMPLICIT NONE
     !
@@ -374,6 +390,8 @@
     !! Counter on temperatures
     REAL(KIND = DP) :: aux(3 * nbndfst * nktotf * nstemp + 2)
     !! Vector to store the array
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer file name
     !
     IF (mpime == ionode_id) THEN
       !
@@ -416,7 +434,9 @@
           ENDDO
         ENDDO
       ENDDO
-      CALL diropn(iufilsigma_all, 'sigma_restart', lsigma_all, exst)
+      fnm = 'sigma_restart'
+      IF (TRIM(lsda) == 'down')  fnm = 'down.sigma_restart'
+      CALL diropn(iufilsigma_all, TRIM(fnm), lsigma_all, exst)
       CALL davcio(aux, lsigma_all, iufilsigma_all, 1, +1)
       CLOSE(iufilsigma_all)
     ENDIF
@@ -455,7 +475,7 @@
     USE mp,            ONLY : mp_barrier, mp_bcast
     USE mp_world,      ONLY : mpime, world_comm
     USE io_global,     ONLY : ionode_id
-    USE input,         ONLY : nstemp
+    USE input,         ONLY : nstemp, lsda
     !
     IMPLICIT NONE
     !
@@ -493,21 +513,28 @@
     !! Vector to store the array
     !
     CHARACTER(LEN = 256) :: name1
+    !! File name
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer file name
     !
     IF (mpime == ionode_id) THEN
       !
       ! First inquire if the file exists
+      fnm = TRIM(prefix)
+      IF (TRIM(lsda) == 'down') fnm = TRIM(prefix) // '.down'
 #if defined(__MPI)
-      name1 = TRIM(tmp_dir) // TRIM(prefix) // '.sigma_restart1'
+      name1 = TRIM(tmp_dir) // TRIM(fnm) // '.sigma_restart1'
 #else
-      name1 = TRIM(tmp_dir) // TRIM(prefix) // '.sigma_restart'
+      name1 = TRIM(tmp_dir) // TRIM(fnm) // '.sigma_restart'
 #endif
       INQUIRE(FILE = name1, EXIST = exst)
       !
       IF (exst) THEN ! read the file
         !
         lsigma_all = 3 * nbndfst * nktotf * nstemp + 2
-        CALL diropn(iufilsigma_all, 'sigma_restart', lsigma_all, exst)
+        fnm = 'sigma_restart'
+        IF (TRIM(lsda) == 'down') fnm = 'down.sigma_restart'
+        CALL diropn(iufilsigma_all, TRIM(fnm), lsigma_all, exst)
         CALL davcio(aux, lsigma_all, iufilsigma_all, 1, -1)
         !
         ! First element is the iteration number
@@ -592,7 +619,7 @@
     !!
     USE kinds,     ONLY : DP
     USE global_var,ONLY : lower_bnd, upper_bnd, nbndfst
-    USE input,     ONLY : nstemp, wmin_specfun, wmax_specfun, nw_specfun
+    USE input,     ONLY : nstemp, wmin_specfun, wmax_specfun, nw_specfun, lsda
     USE io_var,    ONLY : iufilesigma_all
     USE io_files,  ONLY : diropn
     USE ep_constants,      ONLY : zero
@@ -635,6 +662,8 @@
     !! Current frequency
     REAL(KIND = DP) :: aux(2 * nbndfst * nktotf * nw_specfun * nstemp + 2)
     !! Vector to store the array
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer file name
     !
     IF (my_pool_id == ionode_id) THEN
       !
@@ -672,7 +701,9 @@
           ENDDO
         ENDDO
       ENDDO
-      CALL diropn(iufilesigma_all, 'esigma_restart', lesigma_all, exst)
+      fnm = 'esigma_restart'
+      IF (TRIM(lsda) == 'down') fnm = 'down.esigma_restart'
+      CALL diropn(iufilesigma_all, TRIM(fnm), lesigma_all, exst)
       CALL davcio(aux, lesigma_all, iufilesigma_all, 1, +1)
       CLOSE(iufilesigma_all)
     ENDIF
@@ -700,7 +731,7 @@
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout
     USE global_var,    ONLY : lower_bnd, upper_bnd, nbndfst
-    USE input,         ONLY : nstemp, nw_specfun
+    USE input,         ONLY : nstemp, nw_specfun, lsda
     USE io_var,        ONLY : iufilesigma_all
     USE io_files,      ONLY : prefix, tmp_dir, diropn
     USE ep_constants,  ONLY : zero
@@ -743,22 +774,28 @@
     !! Vector to store the array
     !
     CHARACTER(LEN = 256) :: name1
-    !
+    !! File name
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer file name
     !
     IF (my_pool_id == ionode_id) THEN
       !
       ! First inquire if the file exists
+      fnm = TRIM(prefix)
+      IF (TRIM(lsda) == 'down') fnm = TRIM(prefix) // '.down'
 #if defined(__MPI)
-      name1 = TRIM(tmp_dir) // TRIM(prefix) // '.esigma_restart1'
+      name1 = TRIM(tmp_dir) // TRIM(fnm) // '.esigma_restart1'
 #else
-      name1 = TRIM(tmp_dir) // TRIM(prefix) // '.esigma_restart'
+      name1 = TRIM(tmp_dir) // TRIM(fnm) // '.esigma_restart'
 #endif
       INQUIRE(FILE = name1, EXIST = exst)
       !
       IF (exst) THEN ! read the file
         !
         lesigma_all = 2 * nbndfst * nktotf * nw_specfun * nstemp + 2
-        CALL diropn(iufilesigma_all, 'esigma_restart', lesigma_all, exst)
+        fnm = 'esigma_restart'
+        IF (TRIM(lsda) == 'down') fnm = 'down.esigma_restart'
+        CALL diropn(iufilesigma_all, TRIM(fnm), lesigma_all, exst)
         CALL davcio(aux, lesigma_all, iufilesigma_all, 1, -1)
         !
         ! First element is the iteration number

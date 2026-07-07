@@ -1,0 +1,30 @@
+&CONTROL
+ outdir='./'
+ calculation='scf',
+ restart_mode='from_scratch',
+ prefix='fe',
+ pseudo_dir      = '../../pseudo/'
+/
+
+&SYSTEM
+ ibrav=3,
+ celldm(1)=5.201879033248,
+ nat=1, 
+ ntyp=1, 
+ nspin = 2,
+ starting_magnetization(1)=2,
+ ecutwfc=60.0,
+ occupations='smearing',
+ smearing='mv',
+ degauss=0.025,
+/
+&ELECTRONS
+mixing_beta=0.7,
+conv_thr=1d-8,
+/
+ATOMIC_SPECIES
+Fe 55.8457 Fe.pz.upf
+ATOMIC_POSITIONS (alat)
+Fe 0 0 0 
+K_POINTS automatic
+4 4 4 0 0 0

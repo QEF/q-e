@@ -10,7 +10,7 @@
 SUBROUTINE dpsi_orth (ik, wgg, dpsi_orth_cart) 
   !-----------------------------------------------------------------------
   !! DFPT+U: This routine calculates for USPP, for each k point, due to
-  !! the othogonality contraints, the vector at k+q:
+  !! the orthogonality constraints, the vector at k+q:
   !! \begin{equation}\notag
   !! \begin{split}
   !!    |\text{dpsi_orth_cart}(\text{na},\text{icart},\text{ibnd},\text{ispin},

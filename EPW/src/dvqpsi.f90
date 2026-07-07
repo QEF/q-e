@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
   !
@@ -101,10 +102,13 @@
     !
     ALLOCATE(dvloc(dffts%nnr), STAT = ierr)
     IF (ierr /= 0) CALL errore('dvqpsi_us3', 'Error allocating dvloc', 1)
+    !$acc enter data create(dvloc)
     ALLOCATE(evc_r(dffts%nnr, npol), STAT = ierr)
     IF (ierr /= 0) CALL errore('dvqpsi_us3', 'Error allocating evc_r', 1)
+    !$acc enter data create(evc_r)
     ALLOCATE(dvpsi_r(dffts%nnr, npol), STAT = ierr)
     IF (ierr /= 0) CALL errore('dvqpsi_us3', 'Error allocating evc_r', 1)
+    !$acc enter data create(dvpsi_r)
     !
     ! For LSDA, current_spin must be set to compute the correct spin component of dvloc.
     !
@@ -122,12 +126,22 @@
     !
     dvpsi(:, :) = (0.d0, 0.d0)
     !
+    !$acc enter data copyin(dvpsi,igk,igkq,evc,dvscf)
     DO ibnd = lower_band, upper_band
       CALL invfft_wave(npwx, npw, igk, evc(:, ibnd), evc_r)
       !
-      dvpsi_r(:, :) = evc_r(:, :)
-      CALL apply_dpot(dffts%nnr, dvpsi_r, dvscf, current_spin)
+      !$acc parallel loop collapse(2) private(ipol,ir)
+      DO ipol = 1, npol
+        DO ir = 1, dffts%nnr
+          dvpsi_r(ir, ipol) = evc_r(ir, ipol)
+        ENDDO
+      ENDDO
       !
+      !$acc data present(dvpsi_r,dvscf)
+      CALL apply_dpot(dffts%nnr, dvpsi_r, dvscf, current_spin)
+      !$acc end data
+      !
+      !$acc parallel loop collapse(2) private(ipol,ir)
       DO ipol = 1, npol
         DO ir = 1, dffts%nnr
           dvpsi_r(ir, ipol) = dvpsi_r(ir, ipol) + evc_r(ir, ipol) * dvloc(ir)
@@ -136,11 +150,15 @@
       !
       CALL fwfft_wave(npwx, npwq, igkq, dvpsi(:, ibnd), dvpsi_r)
     ENDDO
+    !$acc exit data copyout(dvpsi) delete(igk,igkq,evc,dvscf)
     !
+    !$acc exit data delete(dvloc)
     DEALLOCATE(dvloc, STAT = ierr)
     IF (ierr /= 0) CALL errore('dvqpsi_us3', 'Error deallocating dvloc', 1)
+    !$acc exit data delete(evc_r)
     DEALLOCATE(evc_r, STAT = ierr)
     IF (ierr /= 0) CALL errore('dvqpsi_us3', 'Error deallocating evc_r', 1)
+    !$acc exit data delete(dvpsi_r)
     DEALLOCATE(dvpsi_r, STAT = ierr)
     IF (ierr /= 0) CALL errore('dvqpsi_us3', 'Error deallocating dvpsi_r', 1)
     !
@@ -176,7 +194,7 @@
     USE gvect,            ONLY : g
     USE ions_base,        ONLY : nat, ityp, ntyp => nsp
     USE lsda_mod,         ONLY : lsda, current_spin, nspin
-    USE wvfct,            ONLY : npwx, et
+    USE wvfct,            ONLY : npwx
     USE uspp,             ONLY : okvan, nkb, vkb
     USE uspp_param,       ONLY : nh, nhm
     USE phus,             ONLY : int1, int1_nc, int2, int2_so, alphap
@@ -185,7 +203,13 @@
     USE global_var,       ONLY : lower_band, upper_band, ibndkept
     USE noncollin_module, ONLY : noncolin, npol, lspinorb
     USE ep_constants,     ONLY : czero, zero, cone, eps12
-    USE input,            ONLY : isk_loc
+    USE input,            ONLY : isk_loc, et_loc
+#if defined(__CUDA)
+    USE cublas
+#endif
+#if defined (__ONEMKL)
+    USE epw_onemkl
+#endif
     !
     IMPLICIT NONE
     !
@@ -255,6 +279,18 @@
     !!
     COMPLEX(KIND = DP), ALLOCATABLE :: ps2_nc(:, :, :, :)
     !!
+    INTEGER, ALLOCATABLE :: nnzlist(:, :)
+    !!
+    COMPLEX(KIND = DP), ALLOCATABLE :: aux2(:, :)
+    !!
+    COMPLEX(KIND = DP), ALLOCATABLE :: aux3(:, :, :)
+    !!
+    INTEGER :: l
+    !!
+    INTEGER :: nnz
+    !!
+    INTEGER :: nbnd
+    !!
     !
     CALL start_clock('dvqpsi_us_on')
     IF (noncolin) THEN
@@ -289,9 +325,9 @@
     DO ibnd = lower_band, upper_band
       jbnd = ibndkept(ibnd)
       IF (noncolin) THEN
-        CALL compute_deff_nc(deff_nc, et(jbnd, ik))
+        CALL compute_deff_nc(deff_nc, et_loc(jbnd, ik))
       ELSE
-        CALL compute_deff(deff, et(jbnd, ik))
+        CALL compute_deff(deff, et_loc(jbnd, ik))
       ENDIF
       !
       ijkb0 = 0
@@ -377,16 +413,129 @@
     !
     IF (nkb > 0) THEN
       IF (noncolin) THEN
+#if defined (__ONEMKL)
+        !$omp target data map(tofrom:vkb, ps1_nc, dvpsi)
+        !$omp dispatch
+#endif
         CALL ZGEMM('n', 'n', npwq, (upper_band - lower_band + 1)*npol, nkb, &
                    cone, vkb, npwx, ps1_nc, nkb, cone, dvpsi, npwx)
+#if defined (__ONEMKL)
+        !$omp end target data
+#endif
       ELSE
+#if defined (__ONEMKL)
+        !$omp target data map(tofrom:vkb, ps1, dvpsi)
+        !$omp dispatch
+#endif
         CALL ZGEMM('n', 'n', npwq, (upper_band - lower_band + 1), nkb, &
                    cone, vkb, npwx, ps1, nkb, cone, dvpsi, npwx)
+#if defined (__ONEMKL)
+        !$omp end target data
+#endif
       ENDIF
     ENDIF
     !
     !      This term is proportional to (k+q+G)_\alpha*beta(k+q+G)
     !
+#if defined (__CUDA) || defined (__ONEMKL)
+    !   Figure out which values of ikb, ipol need accumulation
+    ALLOCATE(nnzlist(3*nkb, 2))
+    l = 0
+    DO ikb = 1, nkb
+      DO ipol = 1, 3
+        ok = .FALSE.
+        DO ibnd = lower_band, upper_band
+          IF (noncolin) THEN
+            ok = ok .OR. (ABS(ps2_nc(ikb, 1, ibnd, ipol) ) > eps12) .OR. &
+                         (ABS(ps2_nc(ikb, 2, ibnd, ipol) ) > eps12)
+          ELSE
+            ok = ok .OR. (ABS(ps2(ikb, ibnd, ipol)) > eps12)
+          ENDIF
+          IF (ok) EXIT
+        ENDDO
+        IF (ok) THEN
+          l = l + 1
+          nnzlist(l, 1) = ikb
+          nnzlist(l, 2) = ipol
+        ENDIF
+      ENDDO
+    ENDDO
+
+    nnz = l
+    nbnd = upper_band - lower_band + 1
+    ALLOCATE(aux2(npwq, nnz), STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvqpsi_us_only3', 'Error allocating aux2', 1)
+    ALLOCATE(aux3(nnz, nbnd, npol), STAT = ierr)
+    IF (ierr /= 0) CALL errore('dvqpsi_us_only3', 'Error allocating aux3', 1)
+
+    DO ibnd = lower_band, upper_band
+      DO l = 1, nnz
+        ikb = nnzlist(l, 1)
+        ipol = nnzlist(l, 2)
+        IF (noncolin) THEN
+          aux3(l, ibnd - lower_band + 1, 1) = ps2_nc(ikb, 1, ibnd, ipol)
+          aux3(l, ibnd - lower_band + 1, 2) = ps2_nc(ikb, 2, ibnd, ipol)
+        ELSE
+          aux3(l, ibnd - lower_band + 1, 1) = ps2(ikb, ibnd, ipol)
+        ENDIF
+      ENDDO
+    ENDDO
+ 
+    !TODO: vkb is the largest object here, consider splitting it if memory issues arise
+    !$acc data copyin(igkq,vkb,xxkq,g,aux3,nnzlist) &
+    !$acc      create(aux2) copy(dvpsi)
+    !$omp target data map(to:igkq,vkb,xxkq,g,aux3,nnzlist) &
+    !$omp             map(alloc:aux2) map(tofrom:dvpsi)
+
+    ! Construct the auxiliary array for each allowed value of ikb, ipol
+#if defined (__CUDA)
+    !$acc parallel loop gang vector collapse(2) private(igg,ikb,ipol)
+#elif defined (__ONEMKL)
+    !$omp target teams distribute parallel do collapse(2) private(igg,ikb,ipol)
+#endif
+    DO l = 1, nnz
+       DO ig = 1, npwq
+          igg = igkq(ig)
+          ikb = nnzlist(l, 1)
+          ipol = nnzlist(l, 2)
+          aux2(ig, l) = vkb(ig, ikb) * (xxkq(ipol) + g(ipol, igg))
+       ENDDO
+    ENDDO
+#if defined (__CUDA)
+    !$acc end parallel loop
+#elif defined (__ONEMKL)
+    !$omp end target teams distribute parallel do
+#endif
+
+#if defined(__CUDA)
+    !$acc host_data use_device(aux2,aux3,dvpsi)
+    CALL CUBLASZGEMM('n', 'n', npwq, nbnd, nnz, cone, aux2, npwq, aux3(1, 1, 1), nnz, cone, &
+                     dvpsi(1, 1), npwx * npol)
+    !$acc end host_data
+    IF (noncolin) THEN
+      !$acc host_data use_device(aux2,aux3,dvpsi)
+      CALL CUBLASZGEMM('n', 'n', npwq, nbnd, nnz, cone, aux2, npwq, aux3(1, 1, 2), nnz, cone, &
+                       dvpsi(1 + npwx, 1), npwx * npol) 
+      !$acc end host_data
+    ENDIF
+#else
+#if defined (__ONEMKL)
+    !$omp dispatch
+#endif
+    CALL ZGEMM('n', 'n', npwq, nbnd, nnz, cone, aux2, npwq, aux3(1, 1, 1), nnz, cone, &
+                 dvpsi(1, lower_band), npwx * npol)
+    IF (noncolin) THEN
+#if defined (__ONEMKL)
+      !$omp dispatch
+#endif
+      CALL ZGEMM('n', 'n', npwq, nbnd, nnz, cone, aux2, npwq, aux3(1, 1, 2), nnz, cone, &
+                   dvpsi(1 + npwx, lower_band), npwx * npol)
+    ENDIF
+#endif
+    !$omp end target data
+    !$acc end data
+    DEALLOCATE(nnzlist, aux2, aux3)
+#else
     DO ikb = 1, nkb
       DO ipol = 1, 3
         ok = .FALSE.
@@ -416,6 +565,7 @@
         ENDIF
       ENDDO
     ENDDO
+#endif
     !
     DEALLOCATE(aux, STAT = ierr)
     IF (ierr /= 0) CALL errore('dvqpsi_us_only3', 'Error deallocating aux', 1)
@@ -523,8 +673,6 @@
     !! e^{-i q * \tau} * CONJG(e^{-i q * \tau})
     COMPLEX(KIND = DP) :: fact1
     !! -i * omega
-    COMPLEX(KIND = DP), EXTERNAL :: ZDOTC
-    !! the scalar product function
     COMPLEX(KIND = DP), ALLOCATABLE :: aux1(:), aux2(:), aux5(:)
     !! Auxiallary array
     COMPLEX(KIND = DP), ALLOCATABLE :: sk(:)
@@ -640,7 +788,7 @@
                     DO ig = 1, ngvec
                       aux5(ig) = sk(ig) * (g(ipol, ig + ig_s - 1) + xq(ipol))
                     ENDDO
-                    int2(ih, jh, ipol, na, nb) = fact * fact1 * ZDOTC(ngvec, aux1, 1, aux5, 1)
+                    int2(ih, jh, ipol, na, nb) = fact * fact1 * DOT_PRODUCT(aux1(1:ngvec), aux5(1:ngvec))
                     !
                   ENDDO !ipol
                   !
@@ -657,7 +805,7 @@
                     DO ig = 1, ngvec
                       aux2(ig) = veff(dfftp%nl(ig + ig_s - 1), is) * g(ipol, ig + ig_s - 1)
                     ENDDO
-                    int1(ih, jh, ipol, nb, is) = - fact1 * ZDOTC(ngvec, aux1, 1, aux2, 1)
+                    int1(ih, jh, ipol, nb, is) = - fact1 * DOT_PRODUCT(aux1(1:ngvec), aux2(1:ngvec))
                   ENDDO ! ipol
                 ENDDO ! is
               ENDIF ! ityp
@@ -686,8 +834,6 @@
         ENDDO ! ih
       ENDIF ! upf
     ENDDO ! ntb
-    CALL mp_sum(int1, intra_image_comm)
-    CALL mp_sum(int2, intra_image_comm)
     !
     IF (noncolin) THEN
       CALL set_int12_nc(0)
@@ -791,8 +937,6 @@
     !! the values of q+G
     REAL(KIND = DP), ALLOCATABLE :: ylmk0(:, :)
     !! the spherical harmonics at q+G
-    COMPLEX(KIND = DP), EXTERNAL :: ZDOTC
-    !! the scalar product function
     COMPLEX(KIND = DP), ALLOCATABLE :: aux1(:), aux2(:, :)
     !! Auxillary variable
     COMPLEX(KIND = DP), ALLOCATABLE :: qgm(:)
@@ -874,7 +1018,7 @@
                                          eigqts(na)
                   ENDDO
                   DO is = 1, nspin_mag
-                    int3(ih, jh, na, is, ipert) = omega * ZDOTC(ngvec, aux1, 1, aux2(1, is), 1)
+                    int3(ih, jh, na, is, ipert) = omega * DOT_PRODUCT(aux1(1:ngvec), aux2(1:ngvec, is))
                   ENDDO
                 ENDIF
               ENDDO
@@ -898,8 +1042,6 @@
         ENDIF ! upf
       ENDDO ! nt
     ENDDO ! ipert
-    !
-    CALL mp_sum(int3, intra_image_comm)
     !
     ! Sum of the USPP and PAW terms
     ! (see last two terms in Eq.(12) in PRB 81, 075123 (2010))

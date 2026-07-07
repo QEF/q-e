@@ -625,10 +625,12 @@ CONTAINS
     IF( size( desc%iplp ) < ( nr1x ) .or. size( desc%iplw ) < ( nr1x ) ) &
       CALL fftx_error__( ' fft_type_set ', ' wrong descriptor dimensions, ipl ', 5 )
 
-    IF( desc%my_nr3p == 0 .and. ( .not. desc%use_pencil_decomposition ) ) &
+    IF( desc%my_nr3p == 0 .and. ( .not. desc%use_pencil_decomposition ) ) THEN
+      WRITE( stderr , '(/5x,"Too few processes for given FFT dimensions: (",i4,",",i4,",",i4,")")') &
+                         desc%nr1, desc%nr2, desc%nr3
       CALL fftx_error__( ' fft_type_set ', &
                          ' there are processes with no planes. Use pencil decomposition (-pd .true.) ', 6 )
-
+    END IF
     !
     !  1. Temporarily store in the array "desc%isind" the index of the processor
     !     that own the corresponding stick (index of proc starting from 1)

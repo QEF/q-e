@@ -29,4 +29,77 @@ build:pgi:
     - make -j 2 pw cp ph
 
 
+# Validate every INPUT_*.def with `helpdoc -strict` when a .def file or the
+# helpdoc tooling changes.
+docs:helpdoc-strict:
+  tags: [gitlab-org-docker]
+  image: ubuntu:24.04
+  variables:
+    DEBIAN_FRONTEND: "noninteractive"
+  rules:
+    # on-demand: manual pipeline trigger with GENERATE_DOCS=true
+    - if: '$GENERATE_DOCS == "true"'
+    # on-demand: commit message starts with [doc] or docs:
+    - if: '$CI_COMMIT_MESSAGE =~ /^(\[doc\]|docs:)/'
+    # automatic: MR touches a .def file or helpdoc tooling
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - "**/INPUT_*.def"
+        - dev-tools/helpdoc
+        - dev-tools/helpdoc.d/**/*
+        - dev-tools/helpdoc.schema
+        - dev-tools/input_xx.xsl
+    # automatic: same on master/develop
+    - if: '$CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"'
+      changes:
+        - "**/INPUT_*.def"
+        - dev-tools/helpdoc
+        - dev-tools/helpdoc.d/**/*
+        - dev-tools/helpdoc.schema
+        - dev-tools/input_xx.xsl
+  script:
+    - apt-get -qq update
+    - apt-get -qq install -y tcl tcllib xsltproc
+    - |
+      VERSION=$(awk -F\' '/version_number/{print $2}' include/qe_version.h)
+      echo "Using helpdoc version string: $VERSION"
+      fail=0
+      for def in $(find . -path ./external -prune -o -name 'INPUT_*.def' -print | grep -v '/external/'); do
+        d=$(dirname "$def"); b=$(basename "$def")
+        cp -f dev-tools/input_xx.xsl "$d/" 2>/dev/null || true
+        out=$(cd "$d" && ../../dev-tools/helpdoc -version "$VERSION" -strict "$b" 2>&1) || true
+        if printf '%s\n' "$out" | grep -q 'passed strict validation'; then
+          echo "  ok    $def"
+        else
+          fail=1
+          echo "======================================================================"
+          echo "  FAIL  $def"
+          printf '%s\n' "$out" | grep -E '^[[:space:]]+\* |VALIDATION FAILED|ABORT' \
+            || printf '%s\n' "$out" | tail -25
+        fi
+      done
+      if [ "$fail" -ne 0 ]; then
+        echo ""
+        echo "######################################################################"
+        echo "##  helpdoc --strict validation FAILED for one or more INPUT_*.def  ##"
+        echo "##  see the per-file violations listed above                        ##"
+        echo "######################################################################"
+        exit 1
+      fi
+      echo ""
+      echo "All INPUT_*.def files passed helpdoc --strict."
+  artifacts:
+    name: "helpdoc-html-$CI_COMMIT_REF_SLUG"
+    when: always
+    expire_in: 1 week
+    paths:
+      - "**/INPUT_*.html"
+      - "**/INPUT_*.xml"
+
+
+# Soft, non-blocking check that version strings (CMakeLists.txt,
+# configure.ac, Doc/*.tex, Doc/release-notes, ...) haven't drifted from
+# include/qe_version.h -- see dev-tools/version-update-checklist.md.
+include:
+  - local: '.gitlab-ci-version-consistency.yml'
 

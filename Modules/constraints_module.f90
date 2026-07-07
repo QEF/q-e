@@ -7,7 +7,8 @@
 !
 #define __REMOVE_CONSTRAINT_FORCE
 !#define __DEBUG_CONSTRAINTS
-#define __USE_PBC
+! comment out next line to remove periodic boundary conditions
+#define __PBC pbc
 !
 !----------------------------------------------------------------------------
 MODULE constraints_module
@@ -29,6 +30,7 @@ MODULE constraints_module
    USE kinds,     ONLY : DP
    USE constants, ONLY : eps32, tpi, fpi
    USE io_global, ONLY : stdout
+   USE cell_base, ONLY : pbc
    !
    USE basic_algebra_routines
    !
@@ -46,7 +48,6 @@ MODULE constraints_module
                remove_constr_vec,     &
                deallocate_constraint, &
                compute_dmax,          &
-               pbc,                   &
                constraint_grad, &
                check_wall_constraint
    !
@@ -363,7 +364,7 @@ CONTAINS
                !
                IF ( ityp(ia2) /= type_coord2 ) CYCLE
                !
-               dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
+               dtau(:) = __PBC( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
                !
                norm_dtau = norm( dtau(:) )
                !
@@ -401,7 +402,7 @@ CONTAINS
             !
             IF ( ityp(ia2) /= type_coord1 ) CYCLE
             !
-            dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
+            dtau(:) = __PBC( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
             !
             norm_dtau = norm( dtau(:) )
             !
@@ -421,7 +422,7 @@ CONTAINS
          ia1 = anint( constr(1,ia) )
          ia2 = anint( constr(2,ia) )
          !
-         dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
+         dtau(:) = __PBC( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
          !
          constr_target(ia) = norm( dtau(:) )
          !
@@ -437,8 +438,8 @@ CONTAINS
          ia1 = anint( constr(2,ia) )
          ia2 = anint( constr(3,ia) )
          !
-         d0(:) = pbc( ( tau(:,ia0) - tau(:,ia1) )*tau_units )
-         d1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
+         d0(:) = __PBC( ( tau(:,ia0) - tau(:,ia1) )*tau_units )
+         d1(:) = __PBC( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
          !
          d0(:) = d0(:) / norm( d0(:) )
          d1(:) = d1(:) / norm( d1(:) )
@@ -459,9 +460,9 @@ CONTAINS
          ia2 = anint( constr(3,ia) )
          ia3 = anint( constr(4,ia) )
          !
-         d0(:) = pbc( ( tau(:,ia0) - tau(:,ia1) )*tau_units )
-         d1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
-         d2(:) = pbc( ( tau(:,ia2) - tau(:,ia3) )*tau_units )
+         d0(:) = __PBC( ( tau(:,ia0) - tau(:,ia1) )*tau_units )
+         d1(:) = __PBC( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
+         d2(:) = __PBC( ( tau(:,ia2) - tau(:,ia3) )*tau_units )
          !
          x01(:) = cross(d0,d1)
          x12(:) = cross(d1,d2)
@@ -491,7 +492,7 @@ CONTAINS
          !
          DO i = 1, nat
             !
-            dtau(:) = pbc( ( tau(:,i) - tau(:,1) )*tau_units )
+            dtau(:) = __PBC( ( tau(:,i) - tau(:,1) )*tau_units )
             !
             phase = k(:) .dot. dtau(:)
             !
@@ -517,7 +518,7 @@ CONTAINS
             !
             DO j = i + 1, nat
                !
-               dtau(:) = pbc( ( tau(:,i) - tau(:,j) )*tau_units )
+               dtau(:) = __PBC( ( tau(:,i) - tau(:,j) )*tau_units )
                !
                norm_dtau = norm( dtau(:) )
                !
@@ -552,8 +553,8 @@ CONTAINS
          d0(:) = tau(:,ia0)
          d1(:) = sum( tau(:,:), dim = 2 )
          !
-         d1(:) = pbc( ( d1(:) - d0(:) )*tau_units ) / dble( nat - 1 ) - &
-                  pbc( d0(:)*tau_units )
+         d1(:) = __PBC( ( d1(:) - d0(:) )*tau_units ) / dble( nat - 1 ) - &
+                  __PBC( d0(:)*tau_units )
          !
          d2(:) = constr(2:4,ia)
          !
@@ -624,7 +625,7 @@ CONTAINS
                !
                IF ( ityp(ia2) /= type_coord2 ) CYCLE
                !
-               dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
+               dtau(:) = __PBC( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
                !
                norm_dtau = norm( dtau(:) )
                !
@@ -669,7 +670,7 @@ CONTAINS
             !
             IF ( ityp(ia1) /= type_coord1 ) CYCLE
             !
-            dtau(:) = pbc( ( tau(:,ia) - tau(:,ia1) )*tau_units )
+            dtau(:) = __PBC( ( tau(:,ia) - tau(:,ia1) )*tau_units )
             !
             norm_dtau = norm( dtau(:) )
             !
@@ -695,7 +696,7 @@ CONTAINS
          ia1 = anint( constr(1,idx) )
          ia2 = anint( constr(2,idx) )
          !
-         dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
+         dtau(:) = __PBC( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
          !
          norm_dtau = norm( dtau(:) )
          !
@@ -714,8 +715,8 @@ CONTAINS
          ia1 = anint( constr(2,idx) )
          ia2 = anint( constr(3,idx) )
          !
-         d0(:) = pbc( ( tau(:,ia0) - tau(:,ia1) )*tau_units )
-         d1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
+         d0(:) = __PBC( ( tau(:,ia0) - tau(:,ia1) )*tau_units )
+         d1(:) = __PBC( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
          !
          C00 = d0(:) .dot. d0(:)
          C01 = d0(:) .dot. d1(:)
@@ -743,9 +744,9 @@ CONTAINS
          ia2 = anint( constr(3,idx) )
          ia3 = anint( constr(4,idx) )
          !
-         r0(:) = pbc( ( tau(:,ia0) - tau(:,ia1) )*tau_units )
-         r1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
-         r2(:) = pbc( ( tau(:,ia2) - tau(:,ia3) )*tau_units )
+         r0(:) = __PBC( ( tau(:,ia0) - tau(:,ia1) )*tau_units )
+         r1(:) = __PBC( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
+         r2(:) = __PBC( ( tau(:,ia2) - tau(:,ia3) )*tau_units )
          n1 = sqrt(r1.dot.r1)
          !
          x01(:) = cross(r0,r1)
@@ -815,7 +816,7 @@ CONTAINS
          !
          DO i = 1, nat - 1
             !
-            dtau(:) = pbc( ( tau(:,i+1) - r0(:) )*tau_units )
+            dtau(:) = __PBC( ( tau(:,i+1) - r0(:) )*tau_units )
             !
             phase = k(1)*dtau(1) + k(2)*dtau(2) + k(3)*dtau(3)
             !
@@ -825,7 +826,7 @@ CONTAINS
             !
             DO j = i + 1, nat
                !
-               dtau(:) = pbc( ( tau(:,j) - ri(:) )*tau_units )
+               dtau(:) = __PBC( ( tau(:,j) - ri(:) )*tau_units )
                !
                phase = k(1)*dtau(1) + k(2)*dtau(2) + k(3)*dtau(3)
                !
@@ -859,7 +860,7 @@ CONTAINS
             !
             DO j = i + 1, nat
                !
-               dtau(:) = pbc( ( ri(:) - tau(:,j) )*tau_units )
+               dtau(:) = __PBC( ( ri(:) - tau(:,j) )*tau_units )
                !
                norm_dtau_sq = dtau(1)**2 + dtau(2)**2 + dtau(3)**2
                !
@@ -901,8 +902,8 @@ CONTAINS
          d0(:) = tau(:,ia0)
          d1(:) = sum( tau(:,:), dim = 2 )
          !
-         d1(:) = pbc( ( d1(:) - d0(:) )*tau_units ) / dble( nat - 1 ) - &
-               pbc( d0(:)*tau_units )
+         d1(:) = __PBC( ( d1(:) - d0(:) )*tau_units ) / dble( nat - 1 ) - &
+               __PBC( d0(:)*tau_units )
          !
          d2(:) = constr(2:4,idx)
          !
@@ -1333,38 +1334,6 @@ CONTAINS
    END FUNCTION
    !
    !-----------------------------------------------------------------------
-   FUNCTION pbc( vect )
-      !-----------------------------------------------------------------------
-      !
-      !! Periodic boundary conditions ( vect is assumed to be given
-      !! in cartesian coordinates and in atomic units )
-      !
-      USE cell_base, ONLY : at, bg, alat
-      !
-      IMPLICIT NONE
-      !
-      REAL(DP), INTENT(in) :: vect(3)
-      REAL(DP)             :: pbc(3)
-      !
-      !
-#if defined (__USE_PBC)
-      !
-      pbc(:) = matmul( vect(:), bg(:,:) )/alat
-      !
-      pbc(:) = pbc(:) - anint( pbc(:) )
-      !
-      pbc(:) = matmul( at(:,:), pbc(:) )*alat
-      !
-#else
-      !
-      pbc(:) = vect(:)
-      !
-#endif
-      RETURN
-      !
-   END FUNCTION pbc
-   !
-   !-----------------------------------------------------------------------
    SUBROUTINE compute_dmax()
       !-----------------------------------------------------------------------
       !
@@ -1434,7 +1403,7 @@ CONTAINS
          !
          ! This computes shortest vector from the origin to the atom coordinates
          ! given the PBCs. Origin is picked since the wall is at the origin.
-         tau_pbc_vec = pbc( tau(:,na)*tau_units )
+         tau_pbc_vec = __PBC( tau(:,na)*tau_units )
          tau_pbc = tau_pbc_vec( dir )
          tau_abs = abs( tau_pbc )
          !

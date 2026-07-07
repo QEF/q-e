@@ -15,7 +15,7 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 
 	Needed for pseudo-potential (PP) test. optional for PP generation:
 	  3   namelist &test
-	  3.1 optional cards for PP test	  
+	  3.1 optional cards for PP test
     }
 
     namelist INPUT {
@@ -25,6 +25,7 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 	var title  -type CHARACTER {
 	    info { A string describing the job. }
 	    status { OPTIONAL }
+	    default { ' ' }
 	}
 
 	group {
@@ -32,73 +33,83 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 
 	    var zed  -type REAL {
 		see { atom }
-		info { 
-		    The nuclear charge (1 < zed < 100). 
-		    
+		info {
+		    The nuclear charge (1 < zed < 100).
+
 		    @b IMPORTANT:
 		    Specify either @ref zed OR @ref atom, not both!
 		}
+		default { 0.0 }
+		dimensionality { charge }
+		units { e }
 	    }
 
 	    label { Or: }
 
-	    var atom  -type CHARACTER { 
+	    var atom  -type CHARACTER {
 		see { zed }
 		info {
 		    Atomic symbol: atom='H', 'He', 'Be', etc.
-		    
+
 		    @b IMPORTANT:
 		    Specify either @ref atom OR @ref zed, not both!
 		}
+		default { '  ' }
 	    }
 	}
 
 	group {
 	    label { Radial grid parameters: }
-	    
-	    var xmin  -type REAL { 
+
+	    var xmin  -type REAL {
 		see { dx }
-		default {
-		    -7.0 if @ref iswitch>1 or @ref rel=0,
-		    -8.0 otherwise
+		default -kind conditional {
+		    case -test {@ref iswitch==1 .and. .not.@ref vdw .and. @ref rel>0} { -8.0 }
+		    case { -7.0 }
 		}
+		dimensionality { dimensionless }
 		info { Radial grid parameter. }
 	    }
-	    
+
 	    var dx -type REAL {
-		info { 
+		info {
 		    Radial grid parameter.
-		    
+
 		    The radial grid is: r(i+1) = exp(xmin+i*dx)/zed  a.u.
 		}
-		default { 
-		    0.0125 if @ref iswitch>1,
-		    0.008 otherwise
+		default -kind conditional {
+		    case -test {@ref iswitch==1 .and. .not.@ref vdw} { 0.008 }
+		    case { 0.0125 }
 		}
+		dimensionality { dimensionless }
 	    }
 
-	    var rmax -type REAL { 
+	    var rmax -type REAL {
 		info { Outermost grid point. }
-		default { 100.0 a.u. }
+		default { 100.0 }
+		dimensionality { length }
+		units { bohr }
 	    }
 	}
 
-	var beta  -type REAL { 
+	var beta  -type REAL {
 	    info { parameter for potential mixing }
 	    default { 0.2 }
+	    dimensionality { dimensionless }
 	}
 	var tr2  -type REAL {
 	    info { convergence threshold for scf }
 	    default { 1e-14 }
+	    dimensionality { dimensionless }
 	}
-	
+
 	var iswitch  -type INTEGER {
-	    info { 
+	    info {
 		1    all-electron calculation
                 2    PP test calculation
                 3    PP generation
-                4    LDA-1/2 correction, needs a previously generated PP file 
-	    } 
+                4    LDA-1/2 correction, needs a previously generated PP file
+	    }
 	    default { 1 }
 	}
 
@@ -107,30 +118,44 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 
 	    var nld  -type INTEGER {
 		info { the number of logarithmic derivatives to be calculated }
-	    }
-	    
-	    var rlderiv -type REAL { 
-		info { radius (a.u.) at which logarithmic derivatives are calculated }
-	    }
-	    
-	    vargroup -type REAL {
-		var eminld
-		var emaxld 
-		info { 
-		    Energy range (min, max energy, in Ry) at which
-		    logarithmic derivatives are calculated.
-		}
-	    }
-	    
-	    var deld  -type REAL {  
-		info { 
-		    Delta e (Ry) of energy for logarithmic derivatives.
-		}
+		default { 0 }
 	    }
 
-	    var rpwe -type REAL { 
-		info { radius (a.u.) at which partial wave expansions are calculated }
-		default { rlderiv }
+	    var rlderiv -type REAL {
+		info { radius at which logarithmic derivatives are calculated }
+		default { 4.0 }
+		dimensionality { length }
+		units { bohr }
+	    }
+
+	    vargroup -type REAL {
+		var eminld
+		var emaxld
+		info {
+		    Energy range (min, max energy) at which
+		    logarithmic derivatives are calculated.
+		}
+		dimensionality { energy }
+		units { Ry }
+	    }
+
+	    var deld  -type REAL {
+		info {
+		    Delta e of energy for logarithmic derivatives.
+		}
+		default { 0.03 }
+		dimensionality { energy }
+		units { Ry }
+	    }
+
+	    var rpwe -type REAL {
+		info { radius at which partial wave expansions are calculated }
+		default -kind conditional {
+		    case -test {@ref nld>0} { rlderiv }
+		    case { 0.0 }
+		}
+		dimensionality { length }
+		units { bohr }
 	    }
 
 	    message {
@@ -140,14 +165,14 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 	}
 
 	var rel  -type INTEGER {
-	    info {  
-		0 ... non relativistic calculation     
-		1 ... scalar relativistic calculation  
+	    info {
+		0 ... non relativistic calculation
+		1 ... scalar relativistic calculation
 		2 ... full relativistic calculation with spin-orbit
 	    }
-	    default {
-		0 for Z <= 18;
-		1 for Z >  18
+	    default -kind conditional {
+		case -test {@ref zed < 19} { 0 }
+		case { 1 }
 	    }
 	}
 
@@ -170,15 +195,15 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 	    default { .false. }
 	    info {
 		if .true. the charge is not computed. The occupations are
-                not used and the eigenvalues and eigenfunctions are those 
+                not used and the eigenvalues and eigenfunctions are those
                 of a hydrogen-like atom.
 	    }
 	}
 
-	var lsd  -type INTEGER { 
-	    info { 
+	var lsd  -type INTEGER {
+	    info {
 		0 ... non spin polarized calculation
-		1 ... spin-polarized calculation   
+		1 ... spin-polarized calculation
 
 		@b BEWARE:
 		not allowed if @ref iswitch=3 (PP generation) or with full
@@ -186,10 +211,10 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 	    }
 	    default { 0 }
 	}
-	
+
 	var dft  -type CHARACTER {
-	    info { 
-		Exchange-correlation functional. 
+	    info {
+		Exchange-correlation functional.
 
 		Examples:
 		@b 'PZ'    Perdew and Zunger formula for LDA
@@ -202,18 +227,19 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 		The default is @b 'PZ' for all-electron calculations,
 		it is read from the PP file in a PP calculation.
 	    }
+	    default { 'LDA' }
 
 	}
-	var latt -type INTEGER { 
-	    info { 
-		0 ... no Latter correction 
-		1 ... apply Latter correction 
+	var latt -type INTEGER {
+	    info {
+		0 ... no Latter correction
+		1 ... apply Latter correction
 	    }
-	    default { 0 }		
+	    default { 0 }
 	}
-	
+
 	var isic -type INTEGER {
-	    info { 
+	    info {
 		0 ... no Self-interaction correction
 		1 ... apply Self-interaction correction
 	    }
@@ -222,34 +248,42 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 		only for all-electron calculation
 	    }
 	}
-	
+
 	var rytoev_fact  -type REAL {
-	    default { as specified in file Modules/constants.f90 }
+	    default -kind computed { internal }
+	    dimensionality { dimensionless }
 	    info {
-		Factor used to convert Ry into eV. 
+		Factor used to convert Ry into eV.
+
+		By default the value specified in file Modules/constants.f90
+		is used.
 	    }
 	}
 
 	var cau_fact  -type REAL {
-	    default { as specified in file Modules/constants.f90 }
+	    default -kind computed { internal }
+	    dimensionality { dimensionless }
 	    info {
 		Speed of light in a.u..
- 
-		(Be careful the default value is always used in the 
+
+		By default the value specified in file Modules/constants.f90
+		is used.
+
+		(Be careful the default value is always used in the
                  relativistic exchange.)
 	    }
 	}
 
 
 	var vdw  -type LOGICAL {
-	    default { .false. } 
-	    info { 
+	    default { .false. }
+	    info {
 		If .true., the frequency dependent polarizability and van der
-		Waals coefficient C6 will be computed in Thomas-Fermi and 
+		Waals coefficient C6 will be computed in Thomas-Fermi and
 		von Weizsaecker approximation(only for closed-shell ions).
 	    }
 	    status {
-		Gradient-corrected DFT not yet implemented. 
+		Gradient-corrected DFT not yet implemented.
 	    }
 	}
 
@@ -265,38 +299,44 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 
 	var verbosity  -type CHARACTER {
 	    default { 'low' }
-	    info {
-		@b 'low' or @b 'high'
-
-		if @b 'high' with @ref iswitch=2,3 prints separately core and
-		valence contributions to the energies. Print the
-		frozen-core energy.
+	    options {
+		info {
+		    Controls how much information is printed on output.
+		}
+		opt -val 'low' {
+		    Standard output.
+		}
+		opt -val 'high' {
+		    With @ref iswitch=2,3 prints separately core and
+		    valence contributions to the energies, and prints the
+		    frozen-core energy.
+		}
 	    }
 	}
 
 	var file_charge  -type CHARACTER {
 	    default { ' ' }
 	    info {
-	        Name of the file where the code writes the all-electron 
+	        Name of the file where the code writes the all-electron
 		total charge. No charge is written if file_charge=' '.
 	    }
 	}
 
 	var config  -type CHARACTER {
 	    default { ' ' }
-	    info { 
-		A string with the electronic configuration. 
+	    info {
+		A string with the electronic configuration.
 
 		Example:
-                  '[Ar] 3d10 4s2 4p2.5'              
-               
+                  '[Ar] 3d10 4s2 4p2.5'
+
 		* If @ref lsd=1, spin-up and spin-down state may appear twice
-		  with the respective occupancy: 3p4 3p2 = 4 up, 
+		  with the respective occupancy: 3p4 3p2 = 4 up,
 		  2 down. Otherwise, the Hund's rule is assumed.
-               
-		* If @ref rel=2, states with jj=l-1/2 are filled first.		
-		  If a state appears twice, the first one has jj=l-1/2, 
-		  the second one jj=l+1/2 (except S states)                 
+
+		* If @ref rel=2, states with jj=l-1/2 are filled first.
+		  If a state appears twice, the first one has jj=l-1/2,
+		  the second one jj=l+1/2 (except S states)
 		  (Use rel_dist if you want to average the electrons
 		  over all available states.)
 
@@ -311,35 +351,40 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
         var relpert  -type LOGICAL {
             default { .false. }
             info {
-                  If .true. the relativistic corrections to the non-relativistic 
-                  Kohn-Sham energy levels (@ref rel=0 .and. @ref lsd=0) are computed using 
+                  If .true. the relativistic corrections to the non-relativistic
+                  Kohn-Sham energy levels (@ref rel=0 .and. @ref lsd=0) are computed using
                   first-order perturbation theory in all-electron calculations.
                   The corrections consist of the following terms:
                      E_vel: velocity (p^4) correction
                      E_Dar: Darwin term
                      E_S-O: spin-orbit coupling
-                  The spin-orbit term vanishes for s-electron states and gives 
+                  The spin-orbit term vanishes for s-electron states and gives
                   rise to a splitting of (2*l+1)*E_S-O for the other states.
                   The separate contributions are printed only if verbosity='high'.
 
                   Formulas and notation are based on the Herman-Skillman book:
-                  F. Herman and S. Skillman, "Atomic Structure Calculations", 
+                  F. Herman and S. Skillman, "Atomic Structure Calculations",
                   Prentice-Hall, Inc., Englewood Cliffs, New Jersey, 1963
             }
         }
-	
+
 	var rel_dist  -type CHARACTER {
 	    default { 'energy' }
-	    info {
-		@b 'energy' or @b 'average'
-
-		* if @b 'energy' the relativistic l-1/2 states are filled first.
-
-		* if @b 'average' the electrons are uniformly distributed 
-		  among all the states with the given l.  
+	    options {
+		info {
+		    Distribution of electrons among the relativistic
+		    states with the same l.
+		}
+		opt -val 'energy' {
+		    The relativistic l-1/2 states are filled first.
+		}
+		opt -val 'average' -alias {'AVERAGE', 'Average'} {
+		    The electrons are uniformly distributed among all
+		    the states with the given l.
+		}
 	    }
 	}
-	
+
 	var write_coulomb  -type LOGICAL {
 	    default { .false. }
 	    info {
@@ -366,18 +411,31 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 			    info {
 				number of wavefunctions
 			    }
+			    default -kind computed { internal }
 			}
-		    }	    
+		    }
 		    table AE_wfs {
 			rows -start 1 -end nwf {
 			    col nl -type CHARACTER {
 				info { wavefunction label (e.g. 1s, 2s, etc.) }
+				default -kind computed { internal }
 			    }
-			    col n -type INTEGER { info { principal quantum number } }
-			    col l -type INTEGER { info { angular quantum number } }
-			    col oc -type REAL { info { occupation number } }
-			    col isw -type INTEGER { 
-				info { the spin index (1-2) used only in the lsda case } 
+			    col n -type INTEGER {
+				info { principal quantum number }
+				default -kind computed { internal }
+			    }
+			    col l -type INTEGER {
+				info { angular quantum number }
+				default -kind computed { internal }
+			    }
+			    col oc -type REAL {
+				info { occupation number }
+				default -kind computed { internal }
+				dimensionality { dimensionless }
+			    }
+			    col isw -type INTEGER {
+				info { the spin index (1-2) used only in the lsda case }
+				default -kind computed { internal }
 			    }
 			}
 		    }
@@ -387,19 +445,21 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 		syntax {
 		    line {
 			var nwf
-		    }	    
+		    }
 		    table AE_wfs {
 			rows -start 1 -end nwf {
 			    col nl
 			    col n
 			    col l
 			    col oc
-			    col jj -type REAL { 
-				info { 
-				    The total angular momentum (0.0 is allowed for complete 
-				    shells: the codes fills 2l states with jj=l-1/2, 
+			    col jj -type REAL {
+				info {
+				    The total angular momentum (0.0 is allowed for complete
+				    shells: the codes fills 2l states with jj=l-1/2,
                                     2l+2 with jj=l+1/2).
 				}
+				default -kind computed { internal }
+				dimensionality { dimensionless }
 			    }
 			}
 		    }
@@ -410,9 +470,11 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 
     namelist INPUTP {
 	var zval  -type REAL {
-	    default { (calculated) }
-	    info { 
-		Valence charge.                                  
+	    default -kind computed { internal }
+	    dimensionality { charge }
+	    units { e }
+	    info {
+		Valence charge.
 
 		zval is automatically calculated from available data.
 		If the value of zval is provided in input, it will be
@@ -421,13 +483,13 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 		for noninteger zval (i.e. half core-hole pseudo-potentials).
 	    }
 	}
-	
+
 	var pseudotype  -type INTEGER {
 	    info {
 		1 ... norm-conserving, single-projector PP
                       @b IMPORTANT: if pseudotype=1 all calculations are done
                       using the SEMILOCAL form, not the separable nonlocal form
-		
+
 		2 ... norm-conserving PP in separable form (obsolescent)
                       All calculations are done using SEPARABLE non-local form
                       @b IMPORTANT: multiple projectors allowed but not properly
@@ -435,13 +497,14 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 
 		3 ... ultrasoft PP or PAW
 	    }
+	    default { 0 }
 	}
 
 	var file_pseudopw -type CHARACTER {
 	    status { REQUIRED }
-	    info { 
+	    info {
 		File where the generated PP is written.
-		
+
 		* if the file name ends with "upf" or "UPF",
 		or in any case for spin-orbit PP (rel=2),
 		the file is written in UPF format;
@@ -455,20 +518,20 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 	    }
 	}
 
-	var file_recon  -type CHARACTER { 
-	    info {  
-		File containing data needed for GIPAW reconstruction 
+	var file_recon  -type CHARACTER {
+	    info {
+		File containing data needed for GIPAW reconstruction
 		of all-electron wavefunctions from PP results.
 		If you want to use additional states to perform the
 		reconstruction, add them at the end of the list
 		of all-electron states.
-	    } 
+	    }
 	    default { ' ' }
 	}
 
-	var lloc  -type INTEGER { 
+	var lloc  -type INTEGER {
 	    default { -1 }
-	    info { 
+	    info {
 		Angular momentum of the local channel.
 
 		* lloc=-1 or lloc=-2 pseudizes the all-electron potential
@@ -483,17 +546,20 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 	    }
 	}
 
-	var rcloc  -type REAL { 
+	var rcloc  -type REAL {
 	    status {
 		Must be specified only if @ref lloc=-1, otherwise the
-		corresponding value of @ref rcut is used. 
+		corresponding value of @ref rcut is used.
 	    }
-	    info { 
-		Matching radius (a.u.) for local pseudo-potential (no default).
+	    info {
+		Matching radius for local pseudo-potential (no default).
 	    }
+	    default { -1.0 }
+	    dimensionality { length }
+	    units { bohr }
 	}
 
-	var nlcc  -type LOGICAL { 
+	var nlcc  -type LOGICAL {
 	    default { .false. }
 	    info {
 		If .true. produce a PP with the nonlinear core
@@ -506,39 +572,44 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 	    default { .false. }
 	    status { requires nlcc=.true. }
 	    info {
-		If .true. pseudizes the core charge with bessel functions. 
+		If .true. pseudizes the core charge with bessel functions.
 	    }
 	}
-		
+
 	var rcore -type REAL {
-	    info { 
-		Matching radius (a.u.) for the smoothing of the core charge.
-		If not specified, the matching radius is determined 
+	    info {
+		Matching radius for the smoothing of the core charge.
+		If not specified, the matching radius is determined
 		by the condition:  rho_core(rcore) = 2*rho_valence(rcore)
 	    }
+	    default { 0.0 }
+	    dimensionality { length }
+	    units { bohr }
 	}
-	
+
 	var tm  -type LOGICAL {
 	    default {  .false. }
-	    info { 
+	    info {
 		* .true. for Troullier-Martins pseudization [PRB 43, 1993 (1991)]
 
-		* .false. for Rappe-Rabe-Kaxiras-Joannopoulos pseudization 
+		* .false. for Rappe-Rabe-Kaxiras-Joannopoulos pseudization
 		  [PRB 41, 1227 (1990), erratum PRB 44, 13175 (1991)]
 	    }
 	}
 
-	var rho0  -type REAL { 
-	    info { 
+	var rho0  -type REAL {
+	    info {
 		Charge at the origin: when the Rappe-Rabe-Kaxiras-Joannopoulos
 		method with 3 Bessel functions fails, specifying rho0 > 0
 		may allow to override the problem (using 4 Bessel functions).
 		Typical values are in the order of 0.01-0.02
 	    }
 	    default { 0.0 }
+	    dimensionality { charge length^-3 }
+	    units { e bohr^-3 }
 	}
 
-	var lpaw  -type LOGICAL { 
+	var lpaw  -type LOGICAL {
 	    info {
 		If .true. produce a PAW dataset, experimental feature
 		only for @ref pseudotype=3
@@ -547,43 +618,57 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 	}
 
 	group {
-	    var which_augfun  -type CHARACTER { 
-		default { 
-		    @tt 'AE' for Vanderbilt-Ultrasoft pseudo-potentials and 'BESSEL' for PAW datasets.
+	    var which_augfun  -type CHARACTER {
+		default -kind conditional {
+		    case -test {(@ref lpaw .and. lnc2paw) .or. (.not. @ref lpaw)} { 'AE' }
+		    case { 'BESSEL' }
 		}
-		info {                 
-		    If different from @b 'AE' the augmentation functions are pseudized
-		    before @ref rmatch_augfun. The pseudization options are:
-		    
-		    * @b 'PSQ'        Use Bessel functions to pseudize Q 
-                                   from the origin to rmatch_augfun.
-		    
-		    These features are available only for PAW: 
-		    
-		    * @b 'BESSEL'     Use Bessel functions to pseudize the Q.
-		    * @b 'GAUSS'      Use 2 Gaussian functions to pseudize the Q.
-		    * @b 'BG'         Use original Bloechl's recipe with a single gaussian.
-
-		    Note: if lpaw is true and which_augfun is set to AE real all-
-		    electron charge will be used, which will produce extremely
-		    hard augmentation.
+		options {
+		    info {
+			If different from @b 'AE' the augmentation functions are pseudized
+			before @ref rmatch_augfun. The pseudization options are:
+		    }
+		    opt -val 'AE' {
+			Use the real all-electron augmentation charge. If @ref lpaw
+			is true this will produce extremely hard augmentation.
+		    }
+		    opt -val 'PSQ' {
+			Use Bessel functions to pseudize Q from the origin
+			to @ref rmatch_augfun.
+		    }
+		    info {
+			The following options are available only for PAW
+			(@ref lpaw=.true.):
+		    }
+		    opt -val 'BESSEL' {
+			Use Bessel functions to pseudize the Q (Kresse-Joubert style).
+		    }
+		    opt -val 'GAUSS' {
+			Use 2 Gaussian functions to pseudize the Q.
+		    }
+		    opt -val 'BG' {
+			Use the original Bloechl recipe with a single Gaussian.
+		    }
 		}
 	    }
-	    
+
 	    var rmatch_augfun  -type REAL {
-		default { 0.5 a.u. }
-		status { Used only if which_augfun is different from 'AE'. }		
+		default -kind computed { internal }
+		dimensionality { length }
+		units { bohr }
+		status { Used only if which_augfun is different from 'AE'. }
 		info {
 		    Pseudization radius for the augmentation functions. Presently
-		    it has the same value for all L.    
+		    it has the same value for all L. If not specified, the
+		    largest ultrasoft core radius is used.
 		}
 	    }
-	    var rmatch_augfun_nc  -type REAL {
+	    var rmatch_augfun_nc  -type LOGICAL {
 		default { .false. }
-		status { Used only if which_augfun is 'PSQ'. }		
+		status { Used only if which_augfun is 'PSQ'. }
 		info {
                   If .true. the augmentation functions are pseudized
-                  from the origin to min(rcut(ns),rcut(ns1)) where ns 
+                  from the origin to min(rcut(ns),rcut(ns1)) where ns
                   and ns1 are the two channels for that Q. In this case
                   rmatch_augfun is not used.
 		}
@@ -591,11 +676,18 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 	}
 
 	var lsave_wfc -type LOGICAL {
-	    default { .false. if .not. lpaw, otherwise .true. }
+	    default -kind conditional {
+		case -test {@ref lpaw} { .true. }
+		case { .false. }
+	    }
 	    info {
 		Set it to .true. to save all-electron and pseudo wavefunctions
 		used in the pseudo-potential generation in the UPF file. Only
 		works for UPFv2 format.
+
+		The default is .false. for a norm-conserving or ultrasoft
+		calculation (.not. lpaw), and .true. for a PAW calculation
+		(lpaw=.true.).
 	    }
 	}
 
@@ -603,18 +695,18 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 	    default { .false. }
 	    info {
 		Set it to .true. to generate pseudo-potentials containing the
-                additional info required for reconstruction of all-electron 
-                orbitals, used by GIPAW. You will typically need to specify 
-		additional projectors beyond those used in the generation of 
+                additional info required for reconstruction of all-electron
+                orbitals, used by GIPAW. You will typically need to specify
+		additional projectors beyond those used in the generation of
 		pseudo-potentials. You should also specify @ref file_recon.
 
-		All projectors used in the reconstruction must be listed BOTH 
-		in the test configuration after namelist &test AND in the 
+		All projectors used in the reconstruction must be listed BOTH
+		in the test configuration after namelist &test AND in the
 		all-electron configuration (variable 'config', namelist &inputp,
-		Use negative occupancies for projectors on unbound states). The 
+		Use negative occupancies for projectors on unbound states). The
 		core radii in the test configuration should be the same as in
 		the pseudo-potential generation section and will be used as the
-		radius of reconstruction. Projectors not used to generate the 
+		radius of reconstruction. Projectors not used to generate the
 		pseudo-potential should have zero occupation number.
 	    }
 	}
@@ -629,7 +721,7 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
                projectors for the valence wavefunctions.
 
                In the default case, the GIPAW valence wavefunction and projectors
-               are independent from the PAW ones and must be then specified as 
+               are independent from the PAW ones and must be then specified as
 	       explained above in lgipaw_reconstruction.
 
                Setting this to .true. always implies @ref lgipaw_reconstruction = .true.
@@ -641,38 +733,38 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
             default { 'anonymous' }
 	}
 
-	var file_chi  -type CHARACTER {   
+	var file_chi  -type CHARACTER {
 	    info {   file containing output PP chi functions }
 	    default { ' ' }
 	}
-	var file_beta  -type CHARACTER {  
+	var file_beta  -type CHARACTER {
 	    info {   file containing output PP beta functions }
 	    default { ' ' }
 	}
-	var file_qvan  -type CHARACTER {  
+	var file_qvan  -type CHARACTER {
 	    info {   file containing output PP qvan functions }
 	    default { ' ' }
 	}
 
-	var file_screen    -type CHARACTER { 
+	var file_screen    -type CHARACTER {
 	    info {   file containing output screening potential }
 	    default { ' ' }
 	}
 
-	var file_core      -type CHARACTER { 
+	var file_core      -type CHARACTER {
 	    info {   file containing output total and core charge }
 	    default { ' ' }
 	}
 
-	var file_wfcaegen  -type CHARACTER { 
-	    info { file with the all-electron wfc for generation } 
+	var file_wfcaegen  -type CHARACTER {
+	    info { file with the all-electron wfc for generation }
 	    default { ' ' }
 	}
-	var file_wfcncgen  -type CHARACTER { 
-	    info { file with the norm-conserving wfc for generation } 
+	var file_wfcncgen  -type CHARACTER {
+	    info { file with the norm-conserving wfc for generation }
 	    default { ' ' }
 	}
-	var file_wfcusgen  -type CHARACTER { 
+	var file_wfcusgen  -type CHARACTER {
 	    info { file with the ultra-soft wfc for generation }
 	    default { ' ' }
 	}
@@ -685,49 +777,74 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 		    line {
 			var nwfs -type INTEGER {
 			    info { number of wavefunctions to be pseudized }
+			    default -kind computed { internal }
 			}
 		    }
 		    table PP_wfs {
 			rows -start 1 -end nwfs {
-			    col nls -type CHARACTER { 
-				info { 
-				    Wavefunction label (same as in the all-electron configuration). 
-				} 
+			    col nls -type CHARACTER {
+				info {
+				    Wavefunction label (same as in the all-electron configuration).
+				}
+				default -kind computed { internal }
 			    }
-			    col nns -type INTEGER { 
-				info { 
+			    col nns -type INTEGER {
+				info {
 				    Principal quantum number (referred to the PSEUDOPOTENTIAL case;
 				    nns=1 for lowest s, nns=2 for lowest p, and so on).
 				}
+				default -kind computed { internal }
 			    }
-			    col lls -type INTEGER { info { Angular momentum quantum number. } }
-			    col ocs -type REAL { info { Occupation number  (same as in the all-electron configuration). } }
+			    col lls -type INTEGER {
+				info { Angular momentum quantum number. }
+				default -kind computed { internal }
+			    }
+			    col ocs -type REAL {
+				info { Occupation number  (same as in the all-electron configuration). }
+				default -kind computed { internal }
+				dimensionality { dimensionless }
+			    }
 			    col ener -type REAL {
 				info {
-				    Energy (Ry) used to pseudize the corresponding state.
+				    Energy used to pseudize the corresponding state.
 				    If 0.d0, use the one-electron energy of the all-electron state.
 				    Do not use 0.d0 for unbound states!
 				}
+				default -kind computed { internal }
+				dimensionality { energy }
+				units { Ry }
 			    }
-			    col rcut -type REAL { info { Matching radius (a.u.) for norm conserving PP. } }
-			    col rcutus -type REAL { 
-				info { Matching radius (a.u.) for ultrasoft PP - only for pseudotype=3. } 
-			    } 
-			    col jjs -type REAL { info { The total angular momentum (0.0 is allowed for complete shells). } }
+			    col rcut -type REAL {
+				info { Matching radius for norm conserving PP. }
+				default -kind computed { internal }
+				dimensionality { length }
+				units { bohr }
+			    }
+			    col rcutus -type REAL {
+				info { Matching radius for ultrasoft PP - only for pseudotype=3. }
+				default -kind computed { internal }
+				dimensionality { length }
+				units { bohr }
+			    }
+			    col jjs -type REAL {
+				info { The total angular momentum (0.0 is allowed for complete shells). }
+				default -kind computed { internal }
+				dimensionality { dimensionless }
+			    }
 			}
 		    }
 		}
 		message {
 		    * if @ref lloc>-1 the state with @ref lls=@ref lloc must be the last
-		    
+
 		    * if @ref lloc>0 in the relativistic case, both states with @ref jjs=@ref lloc-1/2
 		      and @ref jjs=@ref lloc+1/2 must be the last two
 		}
-	    }	
+	    }
 	    otherwise {
 		syntax {
 		    line {
-			var nwfs 
+			var nwfs
 		    }
 		    table PP_wfs {
 			rows -start 1 -end nwfs {
@@ -748,53 +865,59 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
     namelist TEST {
 	label { needed only if @ref iswitch=2 or @ref iswitch=4, optional if @ref iswitch=3 }
 
-	var nconf  -type INTEGER { 
+	var nconf  -type INTEGER {
 	    info {   the number of configurations to be tested. For @ref iswitch=4 nconf=2 }
 	    default { 1 }
 	}
-	
-	var file_pseudo  -type CHARACTER { 
+
+	var file_pseudo  -type CHARACTER {
 	    status { ignored if @ref iswitch=3 }
-	    info { 
+	    info {
 		File containing the PP.
 
 		* If the file name contains  ".upf" or ".UPF",
-		the file is assumed to be in UPF format; 
+		the file is assumed to be in UPF format;
 
 		* else if the file name contains ".rrkj3" or ".RRKJ3",
 		the old RRKJ format is first tried;
 
 		* otherwise, the old NC format is read.
-		
+
 		@b IMPORTANT: in the latter case, all calculations are done
 		using the SEMILOCAL form, not the separable nonlocal form.
 		Use the UPF format if you want to test the separable form!
 	    }
 	    default { ' ' }
-	}       
-         
+	}
+
 	vargroup -type REAL {
 	    var ecutmin
 	    var ecutmax
 	    var decut
+	    default { [0, 0, 5.0] }
+	    dimensionality { energy }
+	    units { Ry }
+	    status { specify @ref ecutmin and @ref ecutmax if you want to perform this test }
 	    info {
-		Parameters (Ry) used for test with a basis set of spherical		    
-		Bessel functions j_l(qr) . The hamiltonian at fixed scf
+		Parameters used for test with a basis set of spherical
+		Bessel functions j_l(qr). The hamiltonian at fixed scf
 		potential is diagonalized for various values of ecut:
 		@ref ecutmin, @ref ecutmin+@ref decut, @ref ecutmin+2*@ref decut ... up to @ref ecutmax.
 		This yields an indication of convergence with the
-		corresponding plane-wave cutoff in solids, and shows 
-		in an unambiguous way if there are "ghost" states
+		corresponding plane-wave cutoff in solids, and shows
+		in an unambiguous way if there are "ghost" states.
+
+		The bracketed default list maps positionally onto the
+		variables in declaration order: ecutmin = 0, ecutmax = 0,
+		decut = 5.0.
 	    }
-	    default { 
-		decut=5.0 Ry; ecutmin=ecutmax=0Ry
-	    }
-	    status { specify @ref ecutmin and @ref ecutmax if you want to perform this test }	    	    
 	}
 
 	var rm  -type REAL {
 	    info { Radius of the box used with spherical Bessel functions. }
-	    default { 30 a.u. }
+	    default { 30.0 }
+	    dimensionality { length }
+	    units { bohr }
 	}
 
 	dimension configts -start 1 -end nconf -type CHARACTER {
@@ -802,25 +925,26 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 		A string array containing the test electronic configuration.
                 @ref configts(nc), nc=1,@ref nconf, has the same syntax as for @ref config
                 but only VALENCE states must be included.
-		If @ref configts(i) is not set, the electron configuration 
+		If @ref configts(i) is not set, the electron configuration
 		is read from the cards following the namelist.
 	    }
+	    default { ' ' }
 	}
-	
+
 	dimension lsdts -start 1 -end nconf -type INTEGER {
-	    default { 1 }
+	    default -kind ref { lsd }
 	    see { lsd }
 	    info {
 		0 or 1. It is the value of lsd used in the i-th test.
-		Allows to make simultaneously spin-polarized and 
-		spin-unpolarized tests. 
+		Allows to make simultaneously spin-polarized and
+		spin-unpolarized tests.
 	    }
 	}
- 
+
 	var frozen_core  -type LOGICAL {
 	    default { .false. }
 	    info {
-		If .true. only the core wavefunctions of the first 
+		If .true. only the core wavefunctions of the first
 		configuration are calculated. The eigenvalues, orbitals
 		and energies of the other configurations are calculated
 		with the core of the first configuration.
@@ -830,14 +954,16 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 
 	var rcutv  -type REAL {
 	    info {
-                Cutoff distance (CUT) for the inclusion of LDA-1/2 potential. 
+                Cutoff distance (CUT) for the inclusion of LDA-1/2 potential.
                 Needed (mandatory) only if @ref iswitch = 4
             }
 	    default { -1.0 }
+	    dimensionality { length }
+	    units { bohr }
 	}
 
     }
-    
+
     card PseudoPotentialTestCards -nameless 1 {
 	label { IMPORTANT: this card has to be specified for each missing configts(i) }
 
@@ -845,18 +971,52 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 	    when -test "lsd=1" {
 		syntax {
 		    line {
-			var nwfts -type INTEGER { info { number of wavefunctions } }
+			var nwfts -type INTEGER {
+			    info { number of wavefunctions }
+			    default -kind computed { internal }
+			}
 		    }
 		    table test_wfs {
 			rows -start 1 -end nwfts {
-			    col elts -type CHARACTER { see { nls } }
-			    col nnts -type INTEGER { see { nns } }
-			    col llts -type INTEGER { see { lls } }
-			    col octs -type REAL    { see { ocs } }
-			    col enerts -type REAL  { status { not used } }
-			    col rcutts -type REAL  { status { not used } }
-			    col rcutusts -type REAL { status { not used } }
-			    col iswts -type INTEGER { info { spin index (1 or 2, used in lsda case) } }
+			    col elts -type CHARACTER {
+				see { nls }
+				default -kind computed { internal }
+			    }
+			    col nnts -type INTEGER {
+				see { nns }
+				default -kind computed { internal }
+			    }
+			    col llts -type INTEGER {
+				see { lls }
+				default -kind computed { internal }
+			    }
+			    col octs -type REAL    {
+				see { ocs }
+				default -kind computed { internal }
+				dimensionality { dimensionless }
+			    }
+			    col enerts -type REAL  {
+				status { not used }
+				default -kind computed { internal }
+				dimensionality { energy }
+				units { Ry }
+			    }
+			    col rcutts -type REAL  {
+				status { not used }
+				default -kind computed { internal }
+				dimensionality { length }
+				units { bohr }
+			    }
+			    col rcutusts -type REAL {
+				status { not used }
+				default -kind computed { internal }
+				dimensionality { length }
+				units { bohr }
+			    }
+			    col iswts -type INTEGER {
+				info { spin index (1 or 2, used in lsda case) }
+				default -kind computed { internal }
+			    }
 			}
 		    }
 		}
@@ -873,7 +1033,11 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 			    col enerts
 			    col rcutts
 			    col rcutusts
-			    col jjts -type REAL { info {  total angular momentum of the state } }
+			    col jjts -type REAL {
+				info {  total angular momentum of the state }
+				default -kind computed { internal }
+				dimensionality { dimensionless }
+			    }
 			}
 		    }
 		}
@@ -894,20 +1058,20 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 		    }
 		}
 	    }
-	}	
+	}
     }
 
     section -title {Notes} {
-	
+
 	text {
 	    For PP generation you do not need to specify namelist &test, UNLESS:
-	    
+
 	    1. you want to use a different configuration for unscreening wrt the
 	    one used to generate the PP. This is useful for PP with semicore
-	    states: use semicore states ONLY to produce the PP, use semicore 
+	    states: use semicore states ONLY to produce the PP, use semicore
 	    AND valence states (if occupied) to make the unscreening
-	    
-	    2. you want to specify some more states for PAW style reconstruction of 
+
+	    2. you want to specify some more states for PAW style reconstruction of
 	    all-electron orbitals from pseudo-orbitals
 	}
 
@@ -920,7 +1084,7 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 
 		* file_wavefunctions    "prefix"N.wfc     all-electron KS orbitals
 		* file_wavefunctionsps  "prefix"Nps.wfc   pseudo KS orbitals
-		
+
 		if lsd=1:
 
 		* file_wavefunctions    "prefix"N.wfc.up  all-electron KS up orbitals
@@ -939,13 +1103,13 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 	    }
 
 	}
-	 
+
 	subsection -title {Recipes to reproduce old all-electron atomic results with the ld1 program} {
 
-	    text {	    
+	    text {
                 * The Hartree results in Phys. Rev. 59, 299 (1940) or in
                   Phys. Rev. 59, 306 (1940) can be reproduced with:
-        
+
 		    rel=0,
 		    isic=1,
 		    dft='NOX-NOC'
@@ -957,7 +1121,7 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 		    latt=1,
 		    dft='SL1-NOC'
 
-		* Data on the paper Liberman, Waber, Cromer Phys. Rev. 137, A27 (1965) can be 
+		* Data on the paper Liberman, Waber, Cromer Phys. Rev. 137, A27 (1965) can be
 		reproduced with:
 
 		    rel=2,
@@ -977,37 +1141,36 @@ input_description -distribution {Quantum ESPRESSO} -program ld1.x {
 		    isic=0
 		    latt=0
 		    dft='SLA-PW-RPB-PBC' or 'dft='revPBE'
-		
+
 		* The relativistic energies of closed shell atoms reported in PRB 64 235126 (2001)
-		can be reproduced with: 
-   
+		can be reproduced with:
+
 		    isic=0
 		    latt=0
 		    cau_fact=137.0359895
 		    dft='sla-vwn' for the LDA case
-		    dft='PBE'     for the PBE case  
-		    
-		* The NIST results in PRA 55, 191 (1997): 
-		    
+		    dft='PBE'     for the PBE case
+
+		* The NIST results in PRA 55, 191 (1997):
+
 		    LDA:
 		        rel=0
 		        dft='sla-vwn'
-		    
-		    LSD: 
+
+		    LSD:
 		        rel=0
 		        lsd=1
 		        dft='sla-vwn'
-		    
+
 		    RLDA
 		        rel=2
 		        rel_dist='average'
 		        dft='rxc-vwn'
-		    
-		    ScRLDA: 
+
+		    ScRLDA:
 		        rel=1
 		        dft='rxc-vwn'
 	    }
 	}
     }
 }
-

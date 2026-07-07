@@ -82,7 +82,7 @@ subroutine solve_head
   COMPLEX(kind=DP), ALLOCATABLE :: e_head_pol(:,:,:)
   INTEGER :: i, j,k,iun
   REAL(kind=DP) :: ww, weight
-  COMPLEX(kind=DP), ALLOCATABLE :: tmp_g(:)
+  COMPLEX(kind=DP), ALLOCATABLE :: wing(:,:)
   COMPLEX(kind=DP), ALLOCATABLE :: psi_v(:,:), prod(:)
   COMPLEX(kind=DP), ALLOCATABLE :: pola_charge(:,:,:,:)
   COMPLEX(kind=DP), ALLOCATABLE :: dpsi_ipol(:,:,:)
@@ -94,7 +94,6 @@ subroutine solve_head
   COMPLEX(kind=DP), ALLOCATABLE :: z_dl(:),z_d(:),z_du(:),z_b(:)
   COMPLEX(kind=DP) :: csca, csca1
   COMPLEX(kind=DP), ALLOCATABLE :: t_out(:,:,:), psi_tmp(:)
-  TYPE(scf_type) :: wing
   INTEGER :: n
   INTEGER :: npwx_g
 
@@ -118,7 +117,7 @@ subroutine solve_head
   allocate(head(n_gauss+1,3),head_tmp(n_gauss+1))
   head(:,:)=0.d0
   allocate(prod(dfftp%nnr))
-  allocate (tmp_g(ngm))
+  allocate (wing(ngm,nspin))
  ! allocate( pola_charge(dfftp%nnr,nspin,3,n_gauss+1))
   allocate(epsilon_g(3,3,n_gauss+1))
   allocate(psi_tmp(npwx))
@@ -473,24 +472,21 @@ subroutine solve_head
         call ph_set_upert_e()
 #if defined(__MPI)
         call mp_sum ( pola_charge(:,:,:,i) , inter_pool_comm )
-        call psymdvscf (pola_charge(:,:,:,i))
+        call psymdvscf (pola_charge(:,:,:,i), dfftp)
 #else
-        call symdvscf (pola_charge(:,:,:,i))
+        call symdvscf (pola_charge(:,:,:,i), dfftp)
 #endif
         call ph_deallocate_upert()
-        call create_scf_type ( wing, .true. )
         do ipol=1,3
            CALL fwfft ('Rho',  pola_charge(1:dfftp%nnr,1,ipol,i), dfftp)
-           tmp_g(:)=(0.d0,0.d0)
-           tmp_g(gstart:ngm)=pola_charge(dfftp%nl(gstart:ngm),1,ipol,i) 
-           wing%of_g(1:ngm,1)=-4.d0*tmp_g(1:ngm)
-           call write_wing (  wing, nspin,ipol,i)
+           wing(:,1)=(0.d0,0.d0)
+           wing(gstart:ngm,1)=-4.d0*pola_charge(dfftp%nl(gstart:ngm),1,ipol,i) 
+           call write_wing ( wing, ngm, nspin, ipol, i )
 !loop on frequency
            do ig=gstart,ngm
-              e_head_pol(ig,i,ipol)=-4.d0*tmp_g(ig)
+              e_head_pol(ig,i,ipol)=wing(ig,1)
            enddo
         enddo
-       call  destroy_scf_type (wing )
 
      enddo
 
@@ -566,16 +562,15 @@ subroutine solve_head
     
 
   deallocate(head,head_tmp,freqs)
-  deallocate( tmp_g)
+  deallocate(wing)
   deallocate(epsilon_g)
 
   call stop_clock ('solve_head')
   return
+
 end subroutine solve_head
 
-
-
-SUBROUTINE write_wing ( rho, nspin,ipol,iw)
+SUBROUTINE write_wing ( wing, ngm, nspin, ipol, iw )
 
   
   USE kinds,       ONLY : DP
@@ -600,10 +595,11 @@ SUBROUTINE write_wing ( rho, nspin,ipol,iw)
 
       !
       IMPLICIT NONE
-      TYPE(scf_type),   INTENT(IN)           :: rho
       INTEGER,          INTENT(IN)           :: nspin
+      INTEGER,          INTENT(IN)           :: ngm
       INTEGER,          INTENT(IN)           :: ipol!direction
       INTEGER,          INTENT(IN)           :: iw !frequency
+      COMPLEX(dp),      INTENT(IN)           :: wing(ngm,nspin)
       !
       CHARACTER (LEN=256) :: dirname
       LOGICAL :: lexist
@@ -630,10 +626,8 @@ SUBROUTINE write_wing ( rho, nspin,ipol,iw)
            CALL write_rhog( TRIM(dirname) // "wing_" // npol // "_" //nfile, &
            root_bgrp, intra_bgrp_comm, &
            bg(:,1)*tpiba, bg(:,2)*tpiba, bg(:,3)*tpiba, &
-           gamma_only, mill, ig_l2g, rho%of_g(:,1:nspin_) )
-    
-
-   
-
+           gamma_only, mill, ig_l2g, wing(:,1:nspin_) )
       RETURN
+
     END SUBROUTINE write_wing
+

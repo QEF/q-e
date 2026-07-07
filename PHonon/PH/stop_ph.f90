@@ -20,6 +20,13 @@ SUBROUTINE stop_ph( flag )
   !
   LOGICAL :: flag
   !
+  ! ... flag=.FALSE. means we are stopping on a non-convergence or a
+  ! wall-clock interruption, not on successful completion: keep the
+  ! buffers (dwf, bar, ebar, com, ...) on disk so a restart can find
+  ! them, instead of losing whatever is still only held in memory.
+  !
+  IF ( .NOT. flag ) CALL close_phq( .FALSE. )
+  !
   CALL clean_input_variables()
   !
   CALL destroy_status_run()
@@ -28,7 +35,7 @@ SUBROUTINE stop_ph( flag )
   !
   CALL print_clock_ph()
   !
-  CALL environment_end('PHONON')
+  CALL environment_end( )
   !
   CALL mp_global_end()
   !

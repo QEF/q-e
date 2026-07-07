@@ -19,6 +19,8 @@ set card_TOTAL_CHARGE {
         syntax {
             list tot_charge_list -type REAL {
                 format { tot_charge }
+                dimensionality { charge }
+                units { e }
                 info {
                     tot_charge is the total charge of the system.
                 }
@@ -128,11 +130,11 @@ input_description -distribution {Quantum ESPRESSO} -package NEB -program neb.x {
                         number of ionic + electronic steps
                     }
                     default {
-                        1 
+                        1
                     }
                 }
                 
-                var num_of_images -type INTEGER { 
+                var num_of_images -type INTEGER {
                     default { 0 }
                     info {
                         Number of points used to discretize the path
@@ -140,7 +142,7 @@ input_description -distribution {Quantum ESPRESSO} -package NEB -program neb.x {
                     }
                 }
 
-                var opt_scheme -type CHARACTER { 
+                var opt_scheme -type CHARACTER {
                     default { 'quick-min' }
 		    options {
 			info {
@@ -190,7 +192,7 @@ input_description -distribution {Quantum ESPRESSO} -package NEB -program neb.x {
                     }
                 }
 
-                var first_last_opt -type LOGICAL { 
+                var first_last_opt -type LOGICAL {
                     default { .FALSE. }
                     info {
                         Also the first and the last configurations are optimized
@@ -198,7 +200,7 @@ input_description -distribution {Quantum ESPRESSO} -package NEB -program neb.x {
                     }
                 }
 
-                var minimum_image -type LOGICAL { 
+                var minimum_image -type LOGICAL {
                     default { .FALSE. }
                     info {
                         Assume a "minimum image criterion" to build the path. If an atom
@@ -209,15 +211,18 @@ input_description -distribution {Quantum ESPRESSO} -package NEB -program neb.x {
                     }
                 }
 
-                var temp_req -type REAL { 
-                    default { 0.D0 Kelvin }
+                var temp_req -type REAL {
+                    default { 0.D0 }
+                    dimensionality { temperature }
+                    units { K }
                     info {
                         Temperature used for the langevin dynamics of the string.
                     }
                 }
 
-                var ds -type REAL { 
+                var ds -type REAL {
                     default { 1.D0 }
+                    dimensionality { dimensionless }
                     info {
                         Optimisation step length ( Hartree atomic units ).
                         If @ref opt_scheme=="broyden", ds is used as a guess for the
@@ -228,7 +233,9 @@ input_description -distribution {Quantum ESPRESSO} -package NEB -program neb.x {
                 vargroup -type REAL {
                     var k_max
                     var k_min
-                    default { 0.1D0 Hartree atomic units }
+                    default { 0.1D0 }
+                    dimensionality { energy length^-2 }
+                    units { Hartree bohr^-2 }
                     info {
                         Set them to use a Variable Elastic Constants scheme
                         elastic constants are in the range [ k_min, k_max ]
@@ -236,15 +243,17 @@ input_description -distribution {Quantum ESPRESSO} -package NEB -program neb.x {
                     }
                 }
 
-                var path_thr -type REAL { 
-                    default { 0.05D0 eV / Angstrom }
+                var path_thr -type REAL {
+                    default { 0.05D0 }
+                    dimensionality { energy length^-1 }
+                    units { eV angstrom^-1 }
                     info {
                         The simulation stops when the error ( the norm of the force
-                        orthogonal to the path in eV/A ) is less than path_thr.
+                        orthogonal to the path ) is less than path_thr.
                     }
                 }
 
-                var use_masses -type LOGICAL { 
+                var use_masses -type LOGICAL {
                     default { .FALSE. }
                     info {
                         If. TRUE. the optimisation of the path is performed using
@@ -255,7 +264,7 @@ input_description -distribution {Quantum ESPRESSO} -package NEB -program neb.x {
                     }
                 }
 
-                var use_freezing -type LOGICAL { 
+                var use_freezing -type LOGICAL {
                     default { .FALSE. }
                     info {
                         If. TRUE. the images are optimised according to their error:
@@ -283,8 +292,10 @@ input_description -distribution {Quantum ESPRESSO} -package NEB -program neb.x {
                 var fcp_mu -type REAL {
                     see { lfcp }
                     default { 0.d0 }
+                    dimensionality { energy }
+                    units { eV }
                     info {
-                        If @ref lfcp == .TRUE., gives the target Fermi energy [eV].
+                        If @ref lfcp == .TRUE., gives the target Fermi energy.
                         One can specify the total charge of the system for the first
                         and last image by giving @ref TOTAL_CHARGE cards
                         so that the Fermi energy of these systems will be the target value,
@@ -297,7 +308,9 @@ input_description -distribution {Quantum ESPRESSO} -package NEB -program neb.x {
 
                 var fcp_thr -type REAL {
                     see { lfcp }
-                    default { 0.01D0 V }
+                    default { 0.01D0 }
+                    dimensionality { energy }
+                    units { eV }
                     info {
                         The simulation stops when the error ( the maximum of the force
                         acting on the FCP in V ) is less than fcp_thr.
@@ -340,7 +353,7 @@ input_description -distribution {Quantum ESPRESSO} -package NEB -program neb.x {
                 syntax {
                     list climbing_images_list -type INTEGER {
                         format { index1, index2, ... indexN }
-                        info {          
+                        info {
                             index1, index2, ..., indexN are indices of the images to which the 
                             Climbing-Image procedure apply. If more than one image is specified 
                             they must be separated by a comma.

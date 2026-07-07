@@ -13,14 +13,15 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !
   USE kinds,                    ONLY : DP
   USE constants,                ONLY : bohr_radius_angs, amu_au, au_gpa
-  USE control_flags,            ONLY : iprint, isave, thdyn, tpre, iverbosity, &
-                                       tfor, remove_rigid_rot, taurdr, llondon,&
-                                       tprnfor, tsdc, lconstrain, lwf,         &
-                                       ndr, ndw, nomore, tsde, textfor,        &
-                                       tortho, tnosee, tnosep, trane, tranp,   &
-                                       tsdp, tcp, tcap, ampre, amprp, tnoseh,  &
-                                       tolp, ortho_eps, ortho_max,             &
-                                       tfirst, tlast, do_makov_payne
+  USE control_flags,            ONLY : iprint, iverbosity, lconstrain, &
+                                       remove_rigid_rot, llondon,      &
+                                       textfor, tnosep, tnoseh, tolp,  &
+                                       conv_elec, do_makov_payne
+  USE cp_control,               ONLY : tfirst, tlast, tconvthrs, tcp, isave, &
+                                       tfor, tortho, ortho_eps, ortho_max,   &
+                                       tsdp, tsdc, tsde, nomore, ndr, ndw,   &
+                                       thdyn, tprnfor, trane, tranp, ampre,  &
+                                       amprp, tnosee, tpre, lwf
   USE core,                     ONLY : rhoc
   USE uspp_param,               ONLY : nhm, nh
   USE uspp,                     ONLY : nkb, vkb, becsum, deeq, okvan, nlcc_any
@@ -60,7 +61,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE io_files,                 ONLY : psfile, pseudo_dir
   USE wave_base,                ONLY : wave_steepest, wave_verlet
   USE wave_base,                ONLY : wave_speed2, frice, grease
-  USE control_flags,            ONLY : conv_elec, tconvthrs
   USE check_stop,               ONLY : check_stop_now
   USE efcalc,                   ONLY : clear_nbeg, ef_force
   USE ions_base,                ONLY : zv, ions_vel
@@ -111,7 +111,7 @@ USE cp_main_variables,        ONLY : eigr_d
   USE cp_autopilot,             ONLY : pilot
   USE ions_nose,                ONLY : ions_nose_allocate, ions_nose_shiftvar
   USE orthogonalize_base,       ONLY : updatc
-  USE control_flags,            ONLY : force_pairing, tprint
+  USE cp_control,               ONLY : tprint, force_pairing
   USE mp,                       ONLY : mp_bcast, mp_sum
   USE mp_global,                ONLY : root_bgrp, intra_bgrp_comm, &
                                        me_bgrp, inter_bgrp_comm, nbgrp, me_image
@@ -185,7 +185,7 @@ USE cp_main_variables,        ONLY : eigr_d
   enow     = 1.D9
   stress   = 0.0D0
   thstress   = 0.0D0
-  !  moved to control_flags.f90 (Modules)
+  !  moved to cp_control.f90 
   !  tfirst = .TRUE.
   !  tlast  = .FALSE.
   nacc   = 5
@@ -1059,11 +1059,11 @@ SUBROUTINE terminate_run()
   !! Terminate CP run and print statistics.
   !
   USE io_global,         ONLY : stdout, ionode
-  USE control_flags,     ONLY : ts_vdw, thdyn, tortho
+  USE control_flags,     ONLY : ts_vdw
   USE cg_module,         ONLY : tcg, print_clock_tcg
   USE ldaU_cp,           ONLY : lda_plus_u
   USE mp,                ONLY : mp_report
-  USE control_flags,     ONLY : lwf, lwfpbe0nscf
+  USE cp_control,        ONLY : thdyn, lwf, lwfpbe0nscf, tortho
   USE tsvdw_module,      ONLY : tsvdw_finalize
   USE exx_module,        ONLY : exx_finalize
   USE xc_lib,     ONLY : xclib_dft_is, exx_is_active

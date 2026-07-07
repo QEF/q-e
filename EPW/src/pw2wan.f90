@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
@@ -39,10 +40,13 @@
     USE klist,            ONLY : nkstot
     USE io_files,         ONLY : prefix
     USE input,            ONLY : scdm_proj, scdm_entanglement, &
-                                 scdm_sigma, wannier_plot
-    USE wann_common,      ONLY : seedname2, ispinw, ikstart, ikstop, iknum
+                                 scdm_sigma, wannier_plot, lsda, lwfpt
+    USE io_ahc,           ONLY : check_ahc_bands
+    USE wann_common,      ONLY : seedname2, ispinw, ikstart, ikstop, iknum, &
+                                 excluded_band
     USE ep_constants,     ONLY : zero, one
     USE noncollin_module, ONLY : noncolin
+    USE lsda_mod,         ONLY : current_spin
     !
     IMPLICIT NONE
     !
@@ -53,7 +57,8 @@
     !
     outdir = './'
     seedname2 = prefix
-    spin_component = 'none'
+    IF (TRIM(lsda) == 'down') seedname2 = TRIM(prefix) // '.down'
+    spin_component = lsda
     !
     IF (scdm_proj) THEN
       IF ((TRIM(scdm_entanglement) /= 'isolated') .AND. &
@@ -75,12 +80,14 @@
       ikstart = 1
       ikstop  = nkstot / 2
       iknum   = nkstot / 2
+      current_spin = 1
     CASE ('down')
       WRITE(stdout, *) '    Spin CASE ( down )'
       ispinw  = 2
       ikstart = nkstot / 2 + 1
       ikstop  = nkstot
       iknum   = nkstot / 2
+      current_spin = 2
     CASE DEFAULT
       IF (noncolin) THEN
         WRITE(stdout, *) '    Spin CASE ( non-collinear )'
@@ -91,6 +98,7 @@
       ikstart = 1
       ikstop  = nkstot
       iknum   = nkstot
+      current_spin = 1
     END SELECT
     !
     WRITE(stdout, *)
@@ -98,6 +106,13 @@
     WRITE(stdout, *)
     !
     CALL setup_nnkp()
+    !
+    ! WFPT: Read AHC parameters from ahc_info.dat and check band consistency
+    !
+    IF (lwfpt) THEN
+      CALL check_ahc_bands(excluded_band)
+    ENDIF
+    !
     CALL ylm_expansion()
     IF (scdm_proj) THEN
       CALL compute_amn_with_scdm()
@@ -226,7 +241,7 @@
     USE pwcom,            ONLY : nelec
     USE ep_constants,     ONLY : bohr, eps6, twopi
     USE mp_pools,         ONLY : intra_pool_comm
-    USE input,            ONLY : scdm_proj
+    USE input,            ONLY : scdm_proj, lsda
     USE w90_io,           ONLY : post_proc_flag
     USE io_var,           ONLY : iunnkp
     USE global_var,       ONLY : nbndep, nbndskip, ibndkept
@@ -502,6 +517,9 @@
       ENDIF
     ENDDO
     !
+    ! In some cases in LSDA one can have and odd numeber of electrons
+    IF (TRIM(lsda) /= 'none' .AND. nbndskip + 1 == nexband) nbndskip = nexband 
+    !
     WRITE(stdout, '(/, "      - Number of bands is (", i3, ")")') num_bands
     WRITE(stdout, '("      - Number of total bands is (", i3, ")")') nbnd
     WRITE(stdout, '("      - Number of excluded bands is (", i3, ")")') nexband
@@ -771,14 +789,14 @@
     USE cell_base,     ONLY : alat
     USE io_files,      ONLY : prefix
     USE io_var,        ONLY : iuqpeig
-    USE pwcom,         ONLY : nkstot
     USE wann_common,   ONLY : u_mat, lwindow, wann_centers, wann_spreads, eigval,  &
                             n_wannier, spreads, nnb, rlatt, glatt, kpt_latt,     &
                             iknum, seedname2, num_bands, u_mat_opt, atsym, a_mat,&
-                            atcart, m_mat, mp_grid, excluded_band
+                            atcart, m_mat, mp_grid, excluded_band, ispinw
     USE input,         ONLY : eig_read
     USE wvfct,         ONLY : nbnd
     USE ep_constants,  ONLY : zero, czero, bohr
+    USE global_var,    ONLY : nkpts
     !
     IMPLICIT NONE
     !
@@ -825,18 +843,19 @@
         eigvaltmp(:, :) = zero
         eigval(:, :) = zero
         WRITE (stdout, '(5x, a, i5, a, i5, a)') "Reading external electronic eigenvalues (", &
-             nbnd, ",", nkstot,")"
+             nbnd, ",", nkpts,")"
         tempfile = TRIM(prefix)//'.eig'
+        IF (ispinw == 2) tempfile = TRIM(prefix) // '.down.eig'
         OPEN(iuqpeig, FILE = tempfile, FORM = 'formatted', ACTION = 'read', IOSTAT = ios)
-        IF (ios /= 0) CALL errore('run_wannier', 'error opening'//tempfile, 1)
+        IF (ios /= 0) CALL errore('run_wannier', 'error opening '//tempfile, 1)
         READ(iuqpeig, '(a)') line
-        DO ik = 1, nkstot
+        DO ik = 1, nkpts
           ! We do not save the k-point for the moment ==> should be read and
           ! tested against the current one
           READ(iuqpeig, '(a)') line
           READ(iuqpeig, *) eigvaltmp(:, ik)
         ENDDO
-        DO ik = 1, nkstot
+        DO ik = 1, nkpts
           ibnd1 = 0
           DO ibnd = 1, nbnd
             IF (excluded_band(ibnd)) CYCLE
@@ -902,8 +921,7 @@
     !!
     USE kinds,           ONLY : DP
     USE io_global,       ONLY : stdout
-    USE klist,           ONLY : nks, igk_k
-    USE input,           ONLY : xk_loc
+    USE input,           ONLY : xk_loc, isk_loc, lsda, igk_k_loc
     USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
     USE wavefunctions,   ONLY : evc
     USE gvect,           ONLY : g, ngm
@@ -922,6 +940,8 @@
     USE kfold,           ONLY : ktokpmq
     USE io,              ONLY : readwfc
     USE uspp_init,       ONLY : init_us_2
+    USE global_var,      ONLY : nkpts, nk_loc
+    USE lsda_mod,        ONLY : current_spin
     !
     IMPLICIT NONE
     !
@@ -957,8 +977,6 @@
     !! Temporary zero vector
     COMPLEX(KIND = DP) :: amn
     !! Element of A_mn matrix
-    COMPLEX(KIND = DP), EXTERNAL :: ZDOTC
-    !! <psi_mk|g_n>
     COMPLEX(KIND = DP) :: amn_tmp
     !! Element of A_mn matrix
     COMPLEX(KIND = DP) :: fac(2)
@@ -999,20 +1017,20 @@
     WRITE(stdout, '(6x, a, i5, a, i4, a)') 'k points = ', iknum, ' in ', npool, ' pools'
 #endif
     !
-    DO ik = 1, nks
+    DO ik = 1, nk_loc
       !
       ! returns in-pool index nkq and absolute index nkq_abs of xk
       CALL ktokpmq(xk_loc(:, ik), zero_vect, +1, ipool, nkq, nkq_abs)
-      ik_g = nkq_abs
+      ik_g = nkq_abs - (current_spin - 1) * nkpts
       !
-      WRITE(stdout, '(5x, i8, " of ", i4, a)') ik , nks, ' on ionode'
+      WRITE(stdout, '(5x, i8, " of ", i4, a)') ik , nk_loc, ' on ionode'
       FLUSH(stdout)
       !
       ! read wfc at k
-      CALL readwfc(my_pool_id + 1, ik, evc)
+      CALL readwfc(ipool, nkq, evc)
       !
       ! sorts k+G vectors in order of increasing magnitude, up to ecut
-      CALL gk_sort(xk_loc(1, ik), ngm, g, gcutw, npw, igk_k(1, ik), g2kin)
+      CALL gk_sort(xk_loc(1, ik), ngm, g, gcutw, npw, igk_k_loc(1, ik), g2kin)
       !
       CALL generate_guiding_functions(ik)   ! they are called gf(npw, n_proj)
       !
@@ -1023,7 +1041,7 @@
       !  USPP
       !
       IF (any_uspp) THEN
-        CALL init_us_2(npw, igk_k(1,ik), xk_loc(1,ik), vkb)
+        CALL init_us_2(npw, igk_k_loc(1,ik), xk_loc(1,ik), vkb)
         ! below we compute the product of beta functions with trial func.
         IF (noncolin) THEN
           CALL calbec(npw, vkb, gf_spinor, becp, n_proj)
@@ -1069,14 +1087,14 @@
               ELSE
                 ipol = (3 + spin_eig(iw)) / 2
               ENDIF
-              istart = (ipol - 1) * npwx + 1
+              istart = (ipol - 1) * npwx
               !
               amn = czero
               IF (any_uspp) THEN
-                amn = ZDOTC(npw, evc(1, ibnd), 1, sgf_spinor(1, iw), 1)
-                amn = amn + ZDOTC(npw, evc(npwx + 1, ibnd), 1, sgf_spinor(npwx + 1, iw), 1)
+                amn = DOT_PRODUCT(evc(1:npw, ibnd), sgf_spinor(1:npw, iw))
+                amn = amn + DOT_PRODUCT(evc(1+npwx:npw+npwx, ibnd), sgf_spinor(1+npwx:npw+npwx, iw))
               ELSE
-                amn = ZDOTC(npw, evc(istart, ibnd), 1, sgf(1, iw), 1)
+                amn = DOT_PRODUCT(evc(istart+1:istart+npw, ibnd), sgf(1:npw, iw))
               ENDIF
               CALL mp_sum(amn, intra_pool_comm)
               !
@@ -1107,14 +1125,14 @@
               !
               amn = czero
               DO ipol = 1, npol
-                istart = (ipol - 1) * npwx + 1
+                istart = (ipol - 1) * npwx
                 amn_tmp = czero
                 IF (any_uspp) THEN
-                  amn_tmp = ZDOTC(npw, evc(istart, ibnd), 1, sgf_spinor(istart, iw), 1)
+                  amn_tmp = DOT_PRODUCT(evc(istart+1:istart+npw, ibnd), sgf_spinor(istart+1:istart+npw, iw))
                   CALL mp_sum(amn_tmp, intra_pool_comm)
                   amn = amn + amn_tmp
                 ELSE
-                  amn_tmp = ZDOTC(npw, evc(istart, ibnd), 1, sgf(1, iw), 1)
+                  amn_tmp = DOT_PRODUCT(evc(istart+1:istart+npw, ibnd), sgf(1:npw, iw))
                   CALL mp_sum(amn_tmp, intra_pool_comm)
                   amn = amn + fac(ipol) * amn_tmp
                 ENDIF
@@ -1134,8 +1152,7 @@
             IF (excluded_band(ibnd)) CYCLE
             ibnd1 = ibnd1 + 1
             !
-            amn = czero
-            amn = ZDOTC(npw, evc(1, ibnd), 1, sgf(1, iw), 1)
+            amn = DOT_PRODUCT(evc(1:npw, ibnd), sgf(1:npw, iw))
             CALL mp_sum(amn, intra_pool_comm)
             !
             a_mat(ibnd1, iw, ik_g) = amn
@@ -1212,8 +1229,7 @@
     USE noncollin_module,ONLY : noncolin
     USE wann_common,     ONLY : n_wannier, iknum, nexband, &
                                 excluded_band, kpt_latt, a_mat
-    USE klist,           ONLY : nks, igk_k
-    USE input,           ONLY : xk_all, xk_loc
+    USE input,           ONLY : xk_all, xk_loc, igk_k_loc, et_all
     USE gvect,           ONLY : g, ngm, mill
     USE fft_base,        ONLY : dffts
     USE scatter_mod,     ONLY : gather_grid
@@ -1225,6 +1241,8 @@
     USE kfold,           ONLY : ktokpmq
     USE input,           ONLY : scdm_entanglement, scdm_mu, scdm_sigma
     USE io,              ONLY : readwfc
+    USE global_var,      ONLY : nk_loc, nkpts, igk_k_all
+    USE lsda_mod,        ONLY : current_spin
     !
     IMPLICIT NONE
     !
@@ -1432,10 +1450,12 @@
     IF (meta_ionode) THEN
       ! read wfc at G-point
       ik = 1
-      CALL readwfc(my_pool_id + 1, ik, evc)
+      CALL ktokpmq(xk_all(:,ik), zero_vect, +1, ipool, nkq, nkq_abs)
+      !
+      CALL readwfc(ipool, nkq, evc)
       !
       ! sorts k+G vectors in order of increasing magnitude, up to ecut
-      CALL gk_sort(xk_all(1, ik), ngm, g, gcutw, npw, igk_k(1, ik), g2kin)
+      CALL gk_sort(xk_all(1, ik), ngm, g, gcutw, npw, igk_k_all(1, ik), g2kin)
       !
       ibnd1 = 0
       f_gamma = zero
@@ -1452,9 +1472,9 @@
           IF (TRIM(scdm_entanglement) == 'isolated') THEN
             f_gamma = 1.d0
           ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
-            f_gamma = 0.5d0 * ERFC((et(ibnd, ik) * rytoev - scdm_mu) / scdm_sigma)
+            f_gamma = 0.5d0 * ERFC((et_all(ibnd, ik) * rytoev - scdm_mu) / scdm_sigma)
           ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
-            f_gamma = EXP(-1.d0 * ((et(ibnd, ik) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
+            f_gamma = EXP(-1.d0 * ((et_all(ibnd, ik) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
           ELSE
             CALL errore('compute_amn_with_scdm', 'scdm_entanglement value not recognized.', 1)
           ENDIF
@@ -1462,8 +1482,8 @@
           ! vv: Compute unk's on a real grid (the fft grid)
           !
           psic_nc(:, :) = czero
-          psic_nc(dffts%nl(igk_k(1:npw, ik)), 1) = evc(       1:npw,        ibnd)
-          psic_nc(dffts%nl(igk_k(1:npw, ik)), 2) = evc(1 + npwx:npw + npwx, ibnd)
+          psic_nc(dffts%nl(igk_k_all(1:npw, ik)), 1) = evc(       1:npw,        ibnd)
+          psic_nc(dffts%nl(igk_k_all(1:npw, ik)), 2) = evc(1 + npwx:npw + npwx, ibnd)
           CALL invfft('Wave', psic_nc(:, 1), dffts)
           CALL invfft('Wave', psic_nc(:, 2), dffts)
           !
@@ -1486,9 +1506,9 @@
           IF (TRIM(scdm_entanglement) == 'isolated') THEN
             f_gamma = 1.d0
           ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
-            f_gamma = 0.5d0 * ERFC((et(ibnd, ik) * rytoev - scdm_mu) / scdm_sigma)
+            f_gamma = 0.5d0 * ERFC((et_all(ibnd, ik) * rytoev - scdm_mu) / scdm_sigma)
           ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
-            f_gamma = EXP(-1.d0 * ((et(ibnd, ik) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
+            f_gamma = EXP(-1.d0 * ((et_all(ibnd, ik) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
           ELSE
             CALL errore('compute_amn_with_scdm', 'scdm_entanglement value not recognized.', 1)
           ENDIF
@@ -1496,7 +1516,7 @@
           ! vv: Compute unk's on a real grid (the fft grid)
           !
           psic(:) = czero
-          psic(dffts%nl(igk_k(1:npw, ik))) = evc(1:npw, ibnd)
+          psic(dffts%nl(igk_k_all(1:npw, ik))) = evc(1:npw, ibnd)
           CALL invfft('Wave', psic, dffts)
           !
           ! vv: Build Psi_k = Unk * focc at G-point only
@@ -1601,20 +1621,20 @@
     WRITE(stdout, '(6x, a, i5, a, i4, a)') 'k points = ', iknum, ' in ', npool, ' pools'
 #endif
     !
-    DO ik = 1, nks
+    DO ik = 1, nk_loc
       !
       ! returns in-pool index nkq and absolute index nkq_abs of xk
       CALL ktokpmq(xk_loc(:,ik), zero_vect, +1, ipool, nkq, nkq_abs)
-      ik_g = nkq_abs
+      ik_g = nkq_abs - (current_spin - 1) * nkpts
       !
-      WRITE(stdout, '(5x, i8, " of ", i4, a)') ik , nks, ' on ionode'
+      WRITE(stdout, '(5x, i8, " of ", i4, a)') ik , nk_loc, ' on ionode'
       FLUSH(stdout)
       !
       ! read wfc at k
-      CALL readwfc(my_pool_id + 1, ik, evc)
+      CALL readwfc(ipool, nkq, evc)
       !
       ! sorts k+G vectors in order of increasing magnitude, up to ecut
-      CALL gk_sort(xk_loc(1, ik), ngm, g, gcutw, npw, igk_k(1, ik), g2kin)
+      CALL gk_sort(xk_loc(1, ik), ngm, g, gcutw, npw, igk_k_loc(1, ik), g2kin)
       !
       ! vv: SCDM method for generating the Amn matrix
       ! jml: calculate of psi_nk at pivot points using slow FT
@@ -1634,7 +1654,7 @@
                                cpos(iw, 3) * kpt_latt(3, ik_g))
         phase(iw) = CMPLX(COS(tpi_r_dot_k), SIN(tpi_r_dot_k), KIND = DP)
         DO ig_local = 1, npw
-          ig = igk_k(ig_local, ik)
+          ig = igk_k_loc(ig_local, ik)
           g_(:) = REAL(mill(:, ig), KIND = DP)
           !tpi_r_dot_g = twopi * DDOT(3, cpos(iw, :), 1, g_(:), 1)
           tpi_r_dot_g = twopi * (cpos(iw, 1) * g_(1) + &
@@ -1656,9 +1676,9 @@
           IF (TRIM(scdm_entanglement) == 'isolated') THEN
             focc(ibnd1) = 1.0d0
           ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
-            focc(ibnd1) = 0.5d0 * ERFC((et(ibnd, ik_g) * rytoev - scdm_mu) / scdm_sigma)
+            focc(ibnd1) = 0.5d0 * ERFC((et_all(ibnd, ik_g) * rytoev - scdm_mu) / scdm_sigma)
           ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
-            focc(ibnd1) = EXP(-1.0d0 * ((et(ibnd, ik_g) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
+            focc(ibnd1) = EXP(-1.0d0 * ((et_all(ibnd, ik_g) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
           ELSE
             CALL errore('compute_amn_with_scdm', 'scdm_entanglement value not recognized.', 1)
           ENDIF
@@ -1687,9 +1707,9 @@
           IF (TRIM(scdm_entanglement) == 'isolated') THEN
             focc(ibnd1) = 1.0d0
           ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
-            focc(ibnd1) = 0.5d0 * ERFC((et(ibnd, ik_g) * rytoev - scdm_mu) / scdm_sigma)
+            focc(ibnd1) = 0.5d0 * ERFC((et_all(ibnd, ik_g) * rytoev - scdm_mu) / scdm_sigma)
           ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
-            focc(ibnd1) = EXP(-1.0d0 * ((et(ibnd, ik_g) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
+            focc(ibnd1) = EXP(-1.0d0 * ((et_all(ibnd, ik_g) * rytoev - scdm_mu)**2) / (scdm_sigma**2))
           ELSE
             CALL errore('compute_amn_with_scdm', 'scdm_entanglement value not recognized.', 1)
           ENDIF
@@ -1910,8 +1930,7 @@
     USE units_lr,        ONLY : lrwfc, iuwfc
     USE fft_base,        ONLY : dffts
     USE fft_interfaces,  ONLY : fwfft, invfft
-    USE klist,           ONLY : nkstot, nks, igk_k
-    USE input,           ONLY : xk_all, xk_loc
+    USE input,           ONLY : xk_all, xk_loc, igk_k_loc
     USE gvect,           ONLY : g, ngm
     USE gvecw,           ONLY : gcutw
     USE cell_base,       ONLY : omega, tpiba, bg
@@ -1923,7 +1942,7 @@
                                 deallocate_bec_type
     USE noncollin_module,ONLY : noncolin, npol, lspinorb
     USE wann_common,     ONLY : m_mat, num_bands, nnb, iknum, g_kpb, kpb, ig_, &
-                                excluded_band, write_mmn, zerophase
+                                excluded_band, write_mmn, zerophase, ispinw
     USE ep_constants,    ONLY : czero, cone, twopi, zero
     USE io_var,          ONLY : iummn
 #if defined(__NAG)
@@ -1933,8 +1952,9 @@
     USE mp_global,       ONLY : my_pool_id, npool, intra_pool_comm, inter_pool_comm
     USE kfold,           ONLY : ktokpmq
     USE io,              ONLY : readwfc
-    USE global_var,      ONLY : nbndep
+    USE global_var,      ONLY : nbndep, nk_loc, nkpts
     USE uspp_init,       ONLY : init_us_2
+    USE lsda_mod,        ONLY : current_spin
     !
     IMPLICIT NONE
     !
@@ -2005,8 +2025,6 @@
     !! Temporary zero vector
     REAL(KIND = DP) :: g_(3)
     !! Temporary vector G_k+b, g_(:) = g_kpb(:,ik,ib)
-    COMPLEX(KIND = DP), EXTERNAL :: ZDOTC
-    !! Scalar product of complex vectors
     COMPLEX(KIND = DP) :: phase1
     !! e^{i*2*pi*(k+b - k)*R}
     COMPLEX(KIND = DP), ALLOCATABLE :: phase(:)
@@ -2135,32 +2153,32 @@
 #endif
     !
     ! returns in-pool index nkq and absolute index nkq_abs of first k-point in this pool
-    IF (nks > 0) THEN
+    IF (nk_loc > 0) THEN
       CALL ktokpmq( xk_loc(:,1), zero_vect, +1, ipool, nkq, nkq_abs )
-      ind0 = (nkq_abs - 1) * nnb
+      ind0 = (nkq_abs - 1 - (current_spin - 1) * nkpts) * nnb
       !
       ind = ind0
     ENDIF
     !
-    DO ik = 1, nks
+    DO ik = 1, nk_loc
       !
       ! returns in-pool index nkq and absolute index nkq_abs of xk
       CALL ktokpmq(xk_loc(:, ik), zero_vect, +1, ipool, nkq, nkq_abs)
-      ik_g = nkq_abs
+      ik_g = nkq_abs - (current_spin - 1) * nkpts
       !
-      WRITE(stdout, '(5x, i8, " of ", i4, a)') ik , nks, ' on ionode'
+      WRITE(stdout, '(5x, i8, " of ", i4, a)') ik , nk_loc, ' on ionode'
       FLUSH(stdout)
       !
       ! read wfc at k
-      CALL readwfc(my_pool_id + 1, ik, evc)
+      CALL readwfc(ipool, nkq, evc)
       !
       ! sorts k+G vectors in order of increasing magnitude, up to ecut
-      CALL gk_sort(xk_loc(1, ik), ngm, g, gcutw, npw, igk_k(1, ik), g2kin)
+      CALL gk_sort(xk_loc(1, ik), ngm, g, gcutw, npw, igk_k_loc(1, ik), g2kin)
       !
       !  USPP
       !
       IF (any_uspp) THEN
-        CALL init_us_2(npw, igk_k(1, ik), xk_loc(1, ik), vkb)
+        CALL init_us_2(npw, igk_k_loc(1, ik), xk_loc(1, ik), vkb)
         ! below we compute the product of beta functions with |psi>
         CALL calbec(npw, vkb, evc, becp)
       ENDIF
@@ -2267,7 +2285,7 @@
             DO ipol = 1, 2 !npol
               istart = (ipol - 1) * npwx + 1
               iend   = (ipol - 1) * npwx + npw
-              psic_nc(dffts%nl(igk_k(1:npw, ik)), ipol) = evc(istart:iend, m)
+              psic_nc(dffts%nl(igk_k_loc(1:npw, ik)), ipol) = evc(istart:iend, m)
               IF (.NOT. zerophase(ik_g, ib)) THEN
                 CALL invfft('Wave', psic_nc(:, ipol), dffts)
                 psic_nc(1:dffts%nnr, ipol) = psic_nc(1:dffts%nnr, ipol) * &
@@ -2278,7 +2296,7 @@
             ENDDO
           ELSE
             psic(:) = czero
-            psic(dffts%nl(igk_k(1:npw, ik))) = evc(1:npw, m)
+            psic(dffts%nl(igk_k_loc(1:npw, ik))) = evc(1:npw, m)
             IF (.NOT. zerophase(ik_g,ib)) THEN
               CALL invfft('Wave', psic, dffts)
               psic(1:dffts%nnr) = psic(1:dffts%nnr) * phase(1:dffts%nnr)
@@ -2294,9 +2312,8 @@
           IF (noncolin) THEN
             DO n = 1, nbnd
               IF (excluded_band(n)) CYCLE
-              mmn = czero
-              mmn = mmn + ZDOTC(npwq, aux_nc(1, 1), 1, evcq(       1, n), 1) &
-                        + ZDOTC(npwq, aux_nc(1, 2), 1, evcq(1 + npwx, n), 1)
+              mmn = DOT_PRODUCT(aux_nc(1:npwq, 1), evcq(1:npwq, n)) &
+                + DOT_PRODUCT(aux_nc(1:npwq, 2), evcq(1+npwx:npwq+npwx, n))
               CALL mp_sum(mmn, intra_pool_comm)
               Mkb(m, n) = mmn + Mkb(m, n)
               !  aa = aa + ABS(mmn)**2
@@ -2304,7 +2321,7 @@
           ELSE ! scalar wavefunction
             DO n = 1, nbnd
               IF (excluded_band(n)) CYCLE
-              mmn = ZDOTC(npwq, aux, 1, evcq(1, n), 1)
+              mmn = DOT_PRODUCT(aux(1:npwq), evcq(1:npwq, n))
               CALL mp_sum(mmn, intra_pool_comm)
               Mkb(m, n) = mmn + Mkb(m, n)
               !  aa = aa + ABS(mmn)**2
@@ -2337,8 +2354,9 @@
       IF (write_mmn) THEN
         !
         filmmn = TRIM(prefix)//'.mmn'
+        IF (ispinw == 2) filmmn = TRIM(prefix)//'.down.mmn'
         OPEN(UNIT = iummn, FILE = filmmn, FORM = 'formatted')
-        DO ik = 1, nkstot
+        DO ik = 1, iknum
           DO ib = 1, nnb
             !
             DO n = 1, nbndep
@@ -2417,25 +2435,31 @@
     !!
     !
     USE kinds,                ONLY : DP
-    USE wvfct,                ONLY : nbnd, npwx, et
+    USE wvfct,                ONLY : nbnd, npwx
     USE wavefunctions,        ONLY : evc
     USE noncollin_module,     ONLY : noncolin, npol, lspinorb
     USE uspp,                 ONLY : vkb, nkb, okvan
     USE becmod,               ONLY : bec_type, calbec, allocate_bec_type, &
                                      deallocate_bec_type
-    USE klist,                ONLY : ngk, igk_k, nks
+    USE klist,                ONLY : nks
     USE mp_pools,             ONLY : my_pool_id
-    USE global_var,           ONLY : dmec, pmec, ibndkept, nbndep
-    USE input,                ONLY : xk_loc
-    USE ep_constants,         ONLY : czero, ci
+    USE global_var,           ONLY : dmec, pmec, ibndkept, nbndep, nk_loc, nkpts
+    USE input,                ONLY : xk_loc, et_loc, ngk_loc, igk_k_loc, lsda
+    USE ep_constants,         ONLY : czero, ci, zero
     USE io,                   ONLY : readwfc
     USE control_lr,           ONLY : nbnd_occ
     USE ions_base,            ONLY : ntyp => nsp
-    USE lsda_mod,             ONLY : nspin
+    USE lsda_mod,             ONLY : nspin, current_spin
     USE uspp_param,           ONLY : nhm
     USE lrus,                 ONLY : dpqq, dpqq_so
     USE io_global,            ONLY : stdout
     USE uspp_init,            ONLY : init_us_2
+    USE qe_wrappers,          ONLY : adddvepsi_us_epw, commutator_Hx_psi_epw
+    USE kfold,                ONLY : ktokpmq
+    USE dvqhub,               ONLY : lr_orthoUwfc2
+    USE ldaU,                 ONLY : lda_plus_u, nwfcU
+    USE io_files,             ONLY : iunhub, iunhub_noS, nwordwfcU
+    USE buffers,              ONLY : open_buffer, close_buffer
     !
     IMPLICIT NONE
     !
@@ -2466,32 +2490,44 @@
     !! Error status
     INTEGER :: nbnd_occ_save(nks)
     !! Temporary copy of nbnd_occ
+    INTEGER :: ipool
+    !! Index of the current pool
+    INTEGER :: nkq
+    !! Index of k-point in the pool
+    INTEGER :: nkq_abs
+    !! Absolut index of k-point
     !
     REAL(KIND = DP)                 :: a0(3, 3)
     !! Cartesian unit vectors
+    REAL(KIND = DP)                 :: zero_vect(3)
     !
-    COMPLEX(KIND = DP), EXTERNAL    :: ZDOTC
-    !!
     COMPLEX(KIND = DP)              :: dipole_aux(3, nbnd, nbnd)
     !! Auxilary dipole
     COMPLEX(KIND = DP), ALLOCATABLE :: dpsi(:, :)
     !! i * [H, r] | psi_nk >
     COMPLEX(KIND = DP), ALLOCATABLE :: dvpsi(:, :)
     !! Commutator term due to the augmentation part
+    COMPLEX(KIND = DP), ALLOCATABLE :: wfcatomk_(:, :)
+    !! projector for atomic wavefunctions at k-point
+    COMPLEX(KIND = DP), ALLOCATABLE :: swfcatomk_(:, :)
+    !! projector for S*atomic wavefunctions at k-point
+    INTEGER :: io_level_wfc
+    LOGICAL :: exst
     !
     include_nonlocal_ = .TRUE.
     IF (PRESENT(include_nonlocal)) include_nonlocal_ = include_nonlocal
     !
+    zero_vect(:) = zero
     a0(:, 1) = (/ 1d0, 0d0, 0d0 /)
     a0(:, 2) = (/ 0d0, 1d0, 0d0 /)
     a0(:, 3) = (/ 0d0, 0d0, 1d0 /)
     !
     IF (include_nonlocal_) THEN
-      ALLOCATE(dmec(3, nbndep, nbndep, nks), STAT = ierr)
+      ALLOCATE(dmec(3, nbndep, nbndep, nk_loc), STAT = ierr)
       IF (ierr /= 0) CALL errore('compute_pmn_para', 'Error allocating dmec', 1)
       dmec = czero
     ELSE
-      ALLOCATE(pmec(3, nbndep, nbndep, nks), STAT = ierr)
+      ALLOCATE(pmec(3, nbndep, nbndep, nk_loc), STAT = ierr)
       IF (ierr /= 0) CALL errore('compute_pmn_para', 'Error allocating pmec', 1)
       pmec = czero
     ENDIF
@@ -2499,6 +2535,19 @@
     ALLOCATE(dpsi(npwx * npol, nbnd), STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_pmn_para', 'Error allocating dpsi', 1)
     !
+    IF (lda_plus_u) THEN
+      nwordwfcU = npwx * nwfcU * npol
+      io_level_wfc = 1
+      !
+      CALL open_buffer( iunhub_noS, 'hubnoS', nwordwfcU, io_level_wfc, exst)
+      CALL open_buffer( iunhub, 'hub', nwordwfcU, io_level_wfc, exst)
+      !      
+      ALLOCATE(wfcatomk_(npwx * npol, nwfcU), STAT = ierr)
+      IF (ierr /= 0) CALL errore('compute_pmn_para', 'Error allocating wfcatomk_', 1)
+      ALLOCATE(swfcatomk_(npwx * npol, nwfcU), STAT = ierr)
+      IF (ierr /= 0) CALL errore('compute_pmn_para', 'Error allocating swfcatomk_', 1)
+    ENDIF
+    ! 
     IF (okvan) THEN
       !
       ALLOCATE(dvpsi(npwx * npol, nbnd), STAT = ierr)
@@ -2518,28 +2567,42 @@
     CALL allocate_bec_type(nkb, nbnd, becp2)
     CALL allocate_bec_type(nkb, nbnd, becp3)
     !
+
     IF (okvan) THEN
       nbnd_occ_save = nbnd_occ
       nbnd_occ = nbnd
     ENDIF
+    current_spin = 1
+    IF (TRIM(lsda) == 'down') current_spin = 2
     !
-    DO ik = 1, nks
+    DO ik = 1, nk_loc
       !
-      CALL readwfc(my_pool_id + 1, ik, evc)
+      CALL ktokpmq(xk_loc(:, ik), zero_vect, +1, ipool, nkq, nkq_abs)
       !
-      npw = ngk(ik)
+      CALL readwfc(ipool, nkq, evc)
       !
-      CALL init_us_2(npw, igk_k(1, ik), xk_loc(1, ik), vkb)
+      npw = ngk_loc(ik)
+      !
+      CALL init_us_2(npw, igk_k_loc(1, ik), xk_loc(1, ik), vkb)
       !
       CALL calbec(npw, vkb, evc, becp2)
       !
       dipole_aux = czero
       !
+      ! Construct the atomic wavefunctions (wfcatomk_, swfcatomk_)
+      ! The atomic wavefunctions are needed to commutator_Vhubx_psi 
+      ! in commutator_Hx_psi routine below. 
+      ! 
+      IF (lda_plus_u .AND. include_nonlocal_) THEN
+         CALL lr_orthoUwfc2(xk_loc(1,ik), xk_loc(1,ik), igk_k_loc(1,ik), igk_k_loc(1,ik), npw, npw, &
+                            wfcatomk_, wfcatomk_, swfcatomk_, swfcatomk_, .true., ik)     
+      ENDIF
+      !
       DO ipol = 1, 3
         !
         IF (include_nonlocal_) THEN
           ! commutator_Hx_psi returns [H, r] |psi>, we want v = i[H, r].
-          CALL commutator_Hx_psi(ik, nbnd, a0(:, ipol), becp2, becp3, dpsi)
+          CALL commutator_Hx_psi_epw(ik, nbnd, a0(:, ipol), becp2, becp3, dpsi)
           dpsi = ci * dpsi
         ELSE
           CALL multiply_momentum_psi(ik, nbnd, a0(:, ipol), dpsi)
@@ -2547,7 +2610,7 @@
         !
         IF (okvan) THEN
           dvpsi = czero
-          CALL adddvepsi_us(becp2, becp3, ipol, ik, dvpsi)
+          CALL adddvepsi_us_epw(becp2, becp3, ipol, ik, dvpsi)
           dvpsi = ci * dvpsi
         ENDIF
         !
@@ -2556,20 +2619,20 @@
           DO jbnd = 1, nbndep
             lbnd = ibndkept(jbnd)
             !
-            dipole_aux(ipol, lbnd, hbnd) = ZDOTC(npw, evc(1, lbnd), 1, dpsi(1, hbnd), 1)
+            dipole_aux(ipol, lbnd, hbnd) = DOT_PRODUCT(evc(1:npw, lbnd), dpsi(1:npw, hbnd))
             IF (noncolin) THEN
               dipole_aux(ipol, lbnd, hbnd) = dipole_aux(ipol, lbnd, hbnd) + &
-                ZDOTC(npw, evc(1+npwx, lbnd), 1, dpsi(1+npwx, hbnd), 1)
+              DOT_PRODUCT(evc(1+npwx:npw+npwx, lbnd), dpsi(1+npwx:npw+npwx, hbnd))
             ENDIF
             !
             IF (okvan) THEN
               dipole_aux(ipol, lbnd, hbnd) = dipole_aux(ipol, lbnd, hbnd) + &
-                (et(lbnd, ik) - et(hbnd, ik)) * &
-                ZDOTC(npw, evc(1, lbnd), 1, dvpsi(1, hbnd), 1)
+                (et_loc(lbnd, ik) - et_loc(hbnd, ik)) * &
+                DOT_PRODUCT(evc(1:npw, lbnd), dvpsi(1:npw, hbnd))
               IF (noncolin) &
                 dipole_aux(ipol, lbnd, hbnd) = dipole_aux(ipol, lbnd, hbnd) +  &
-                  (et(lbnd, ik) - et(hbnd, ik)) * &
-                  ZDOTC(npw, evc(1+npwx, lbnd), 1, dvpsi(1+npwx, hbnd), 1)
+                  (et_loc(lbnd, ik) - et_loc(hbnd, ik)) * &
+                  DOT_PRODUCT(evc(1+npwx:npw+npwx, lbnd), dvpsi(1+npwx:npw+npwx, hbnd))
             ENDIF
             !
           ENDDO
@@ -2612,6 +2675,16 @@
       !
     ENDIF
     !
+    IF (lda_plus_u) THEN
+      CALL close_buffer( iunhub_noS, 'delete')
+      CALL close_buffer( iunhub, 'delete')
+      !
+      DEALLOCATE(wfcatomk_, STAT = ierr)
+      IF (ierr /= 0) CALL errore('compute_pmn_para', 'Error deallocating wfcatomk_', 1)
+      DEALLOCATE(swfcatomk_, STAT = ierr)
+      IF (ierr /= 0) CALL errore('compute_pmn_para', 'Error deallocating swfcatomk_', 1)
+    ENDIF
+    !
     WRITE(stdout, '(/5x, a)') 'Dipole matrix elements calculated'
     WRITE(stdout, *)
     !
@@ -2636,7 +2709,7 @@
     USE wvfct,        ONLY : nbnd
     USE wann_common,  ONLY : n_wannier, iknum, u_mat, u_mat_opt, lwindow, &
                              excluded_band, num_bands, wann_centers
-    USE input,        ONLY : filukk
+    USE input,        ONLY : filukk, lsda
     USE ep_constants, ONLY : czero, bohr
     USE io_global,    ONLY : meta_ionode
     USE cell_base,    ONLY : alat
@@ -2683,6 +2756,7 @@
       !
       OPEN(UNIT = iunukk, FILE = filukk, FORM = 'formatted')
       !
+      IF (TRIM(lsda) /= 'none' .AND. (ibndkept(1) - nbndskip) < 1 ) nbndskip = ibndkept(1) - 1 
       WRITE(iunukk, *) nbndep, nbndskip
       !
       DO ibnd = 1, nbndep
@@ -2741,14 +2815,14 @@
     USE kinds,           ONLY : DP
     USE mp_global,       ONLY : inter_pool_comm
     USE mp,              ONLY : mp_sum
-    USE klist,           ONLY : nkstot, nks
-    USE input,           ONLY : xk_loc
+    USE input,           ONLY : xk_loc, lsda
     USE wvfct,           ONLY : nbnd
     USE wann_common,     ONLY : a_mat, m_mat, n_wannier, n_proj, &
                                 nnb, kpb, iknum, excluded_band
-    USE global_var,      ONLY : umat, umat_all
+    USE global_var,      ONLY : umat, umat_all, nk_loc, nkpts
     USE ep_constants,    ONLY : czero, cone, zero
     USE kfold,           ONLY : ktokpmq
+    USE lsda_mod,        ONLY : current_spin
     !
     IMPLICIT NONE
     !
@@ -2823,7 +2897,7 @@
     !
     ! full size a_mat_tmp1 and m_mat_tmp matrices to nbnd bands
     !
-    DO ik = 1, nkstot
+    DO ik = 1, iknum
       DO iw = 1, n_proj
         ibnd_m = 0
         DO m = 1, nbnd
@@ -2848,11 +2922,14 @@
       ENDDO
     ENDDO
     !
-    DO ik = 1, nks
+    current_spin = 1
+    IF (TRIM(lsda) == 'down') current_spin = 2
+    !
+    DO ik = 1, nk_loc
       !
       ! returns in-pool index nkq and absolute index nkq_abs of xk
       CALL ktokpmq(xk_loc(:, ik), zero_vect, +1, ipool, nkq, nkq_abs)
-      ik_g = nkq_abs
+      ik_g = nkq_abs - (current_spin - 1) * nkpts
       !
       !  GF_n are the guiding functions which are our initial guesses
       !  Amn(k) = <psi_k,m|GF_n>.
@@ -2892,7 +2969,7 @@
     !
     ! slim down a_mat and m_mat matrices to num_bands=nbnd-nexband bands
     !
-    DO ik = 1, nkstot
+    DO ik = 1, iknum
       DO iw = 1, n_proj
         ibnd_m = 0
         DO m = 1, nbnd
@@ -2951,8 +3028,7 @@
     USE gvect,          ONLY : g
     USE cell_base,      ONLY : tpiba
     USE wann_common,    ONLY : n_proj, gf, center_w, csph, alpha_w, r_w
-    USE klist,          ONLY : igk_k
-    USE input,          ONLY : xk_loc
+    USE input,          ONLY : xk_loc, igk_k_loc
     USE ep_constants,   ONLY : zero, czero, ci, twopi, eps8
     !
     IMPLICIT NONE
@@ -2991,8 +3067,6 @@
     !! Radiam
     COMPLEX(KIND = DP) :: lphase
     !! (-i)^l
-    COMPLEX(KIND = DP), EXTERNAL :: ZDOTC
-    !! Scalar product of two complex vectors
     COMPLEX(KIND = DP), ALLOCATABLE :: sk(:)
     !! e^{-i*2*pi*(k+G)*r}
     !
@@ -3013,7 +3087,7 @@
     radial(:, 0:lmax) = zero
     !
     DO ig = 1, npw
-      gk(:, ig) = xk_loc(:, ik) + g(:, igk_k(ig, ik))
+      gk(:, ig) = xk_loc(:, ik) + g(:, igk_k_loc(ig, ik))
       qg(ig) = SUM(gk(:, ig) * gk(:, ig))
     ENDDO
     !
@@ -3040,7 +3114,7 @@
       ENDDO ! lm
       !
       DO ig = 1, npw
-        iig = igk_k(ig, ik)
+        iig = igk_k_loc(ig, ik)
         arg = twopi * DDOT(3, gk(:, ig), 1, center_w(:, iw), 1)
         ! center_w are cartesian coordinates in units of alat
         sk(ig) = CMPLX(COS(arg), - SIN(arg), KIND = DP)
@@ -3071,19 +3145,18 @@
     !!
     !! Write bands
     !!
-    USE wvfct,         ONLY : nbnd, et
+    USE wvfct,         ONLY : nbnd
     USE ep_constants,  ONLY : rytoev
-    USE wann_common,   ONLY : ikstart, ikstop, iknum, num_bands, eigval, &
+    USE wann_common,   ONLY : iknum, num_bands, eigval, &
                               excluded_band
     USE ep_constants,  ONLY : zero
+    USE input,         ONLY : et_all
     !
     IMPLICIT NONE
     !
     ! Local variables
     INTEGER :: ik
     !! Counter on k-point
-    INTEGER ikevc
-    !! k-point index
     INTEGER :: ibnd
     !! Counter on bands
     INTEGER :: ibnd1
@@ -3095,8 +3168,7 @@
     IF (ierr /= 0) CALL errore('write_band', 'Error allocating eigval', 1)
     eigval(:, :) = zero
     !
-    DO ik = ikstart, ikstop
-      ikevc = ik - ikstart + 1
+    DO ik = 1, iknum
       ibnd1 = 0
       DO ibnd = 1, nbnd
         IF (excluded_band(ibnd)) CYCLE
@@ -3104,7 +3176,7 @@
         !
         ! RM - same value for rytoev as in wannier90
         ! eigval(ibnd1, ikevc) = et(ibnd, ik) * ryd2ev
-        eigval(ibnd1, ikevc) = et(ibnd, ik) * rytoev
+        eigval(ibnd1, ik) = et_all(ibnd, ik) * rytoev
       ENDDO
     ENDDO
     !
@@ -3133,9 +3205,8 @@
     USE wavefunctions,   ONLY : evc, psic, psic_nc
     USE wann_common,     ONLY : excluded_band, u_mat, u_mat_opt, iknum, &
                                 n_wannier, num_bands, lwindow, wann_centers
-    USE input,           ONLY : wannier_plot_supercell, reduce_unk
-    USE klist,           ONLY : nks, igk_k, ngk
-    USE input,           ONLY : xk_loc
+    USE input,           ONLY : wannier_plot_supercell, reduce_unk, &
+                                xk_loc, igk_k_loc, ngk_loc
     USE fft_base,        ONLY : dffts
     USE fft_interfaces,  ONLY : invfft
     USE noncollin_module,ONLY : noncolin, npol
@@ -3144,7 +3215,8 @@
     USE kfold,           ONLY : ktokpmq
     USE io,              ONLY : readwfc
     USE mp_world,        ONLY : world_comm
-    USE global_var,      ONLY : nbndep, wanplotlist, num_wannier_plot
+    USE global_var,      ONLY : nbndep, wanplotlist, num_wannier_plot, &
+                                nk_loc, nkpts
     USE cell_base,       ONLY : at, bg, alat, tpiba
     USE ep_constants,    ONLY : bohr
     USE input,           ONLY : wannier_plot_radius, wannier_plot_scale
@@ -3152,6 +3224,7 @@
     USE control_flags,   ONLY : iverbosity
     USE mp,              ONLY : mp_barrier
     USE parallel_include
+    USE lsda_mod,        ONLY : current_spin
     !
     IMPLICIT NONE
     !
@@ -3220,7 +3293,7 @@
     !! Counter index
     INTEGER :: ierr
     !! Error status
-    INTEGER :: ndimwin(nks)
+    INTEGER :: ndimwin(nk_loc)
     !! Number of bands within outer window at each k-point
     INTEGER :: ngs(3)
     !! Size of the supercell for Wannier function plot
@@ -3305,18 +3378,18 @@
     ALLOCATE(u_kc(nbndep, n_wannier), STAT = ierr)
     IF (ierr /= 0) CALL errore('write_plot', 'Error allocating u_kc', 1)
     u_kc(:, :) = czero
-    ALLOCATE(rotwf(npwx*npol, num_wannier_plot, nks), STAT = ierr)
+    ALLOCATE(rotwf(npwx*npol, num_wannier_plot, nk_loc), STAT = ierr)
     IF (ierr /= 0) CALL errore('write_plot', 'Error allocating rotwf', 1)
     rotwf(:, :, :) = czero
     !
-    DO ik = 1, nks
+    DO ik = 1, nk_loc
       !
-      npw = ngk(ik)
+      npw = ngk_loc(ik)
       !
       ! returns in-pool index nkq and absolute index nkq_abs of xk
       !
       CALL ktokpmq(xk_loc(:, ik), zero_vect, +1, ipool, nkq, nkq_abs)
-      ik_g = nkq_abs
+      ik_g = nkq_abs - (current_spin - 1) * nkpts
       !
       DO ibnd = 1, num_bands
         IF (lwindow(ibnd, ik_g)) ndimwin(ik) = ndimwin(ik) + 1
@@ -3330,7 +3403,7 @@
       !
       ! read wfc at ik
       !
-      CALL readwfc(my_pool_id + 1, ik, evc)
+      CALL readwfc(ipool, nkq, evc)
       !
       ibnd0 = 0
       ibnd1 = 0
@@ -3456,9 +3529,9 @@
       ENDIF
       wann_func(:, :, :, :) = czero
       !
-      DO ik = 1, nks
+      DO ik = 1, nk_loc
         !
-        npw = ngk(ik)
+        npw = ngk_loc(ik)
         xcrys = xk_loc(:, ik)
         CALL cryst_to_cart(1, xcrys, at, -1)
         IF (noncolin) THEN
@@ -3466,12 +3539,12 @@
           DO ipol = 1, 2
             ispw = 1 + npwx * (ipol - 1)
             iepw = npw + npwx * (ipol - 1)
-            psic_nc(dffts%nl(igk_k(1:npw, ik)), ipol) = rotwf(ispw:iepw, loop_w, ik)
+            psic_nc(dffts%nl(igk_k_loc(1:npw, ik)), ipol) = rotwf(ispw:iepw, loop_w, ik)
             CALL invfft('Wave', psic_nc(:,ipol), dffts)
           ENDDO
         ELSE
           psic(:) = czero
-          psic(dffts%nl(igk_k(1:npw, ik))) = rotwf(1:npw, loop_w, ik)
+          psic(dffts%nl(igk_k_loc(1:npw, ik))) = rotwf(1:npw, loop_w, ik)
           CALL invfft('Wave', psic, dffts)
         ENDIF
         !
@@ -3641,6 +3714,7 @@
       USE ions_base,        ONLY : nat, tau, ityp, atm, nsp
       USE io_var,           ONLY : iun_plot
       USE io_files,         ONLY : prefix
+      USE wann_common,      ONLY : ispinw
       !
       IMPLICIT NONE
       !
@@ -3725,9 +3799,12 @@
       ENDDO
       !
       wann_index = wanplotlist(loop_w)
-      WRITE(wancube, 202) TRIM(prefix), wann_index
-      WRITE(wancube_r, 203) TRIM(prefix), wann_index ! ZD: write the real part of Wanfunc
-      WRITE(wancube_i, 204) TRIM(prefix), wann_index ! ZD: write the imag part of Wanfunc
+      IF (ispinw < 2) WRITE(wancube, 202) TRIM(prefix), wann_index
+      IF (ispinw == 2) WRITE(wancube, 202) TRIM(prefix)//".down", wann_index
+      IF (ispinw < 2) WRITE(wancube_r, 203) TRIM(prefix), wann_index ! ZD: write the real part of Wanfunc
+      IF (ispinw == 2) WRITE(wancube_r, 203) TRIM(prefix)//".down", wann_index
+      IF (ispinw < 2) WRITE(wancube_i, 204) TRIM(prefix), wann_index ! ZD: write the imag part of Wanfunc
+      IF (ispinw == 2) WRITE(wancube_i, 204) TRIM(prefix)//".down", wann_index
       IF (iverbosity == 1) THEN
         WRITE(stdout, '(a,i12)') 'loop_w  =', loop_w
         WRITE(stdout, '(a,3i12)') 'ngi     =', ngx, ngy, ngz
@@ -4448,11 +4525,11 @@
     !
     USE kinds,           ONLY : DP
     USE cell_base,       ONLY : tpiba
-    USE klist,           ONLY : xk, igk_k, ngk
     USE gvect,           ONLY : g
     USE wvfct,           ONLY : npwx
     USE wavefunctions,   ONLY : evc
     USE noncollin_module,ONLY : noncolin, npol
+    USE input,           ONLY : xk_loc, igk_k_loc, ngk_loc
     !
     IMPLICIT NONE
     !
@@ -4472,11 +4549,11 @@
     !
     ppsi = (0.d0, 0.d0)
     !
-    npw = ngk(ik)
+    npw = ngk_loc(ik)
     ALLOCATE(gk_vpol(npw), g2k(npw) )
     !
     DO ig = 1, npw
-      gk_ig(1:3) = (xk (1:3, ik) + g (1:3, igk_k(ig,ik) ) ) * tpiba
+      gk_ig(1:3) = (xk_loc (1:3, ik) + g (1:3, igk_k_loc(ig,ik) ) ) * tpiba
       g2k (ig) = SUM(gk_ig**2)
       !
       ! Take the component along the vpol vector

@@ -30,6 +30,7 @@ SUBROUTINE kcw_pp_readin()
   USE control_kcw
   USE control_flags,     ONLY : iverbosity
   USE mp_pools,          ONLY : npool
+  USE upf_utils,         ONLY : imatches
   !
   IMPLICIT NONE
   !
@@ -45,7 +46,6 @@ SUBROUTINE kcw_pp_readin()
   !
   INTEGER, EXTERNAL  :: atomic_number
   REAL(DP), EXTERNAL :: atom_weight
-  LOGICAL, EXTERNAL  :: imatches
   LOGICAL, EXTERNAL  :: has_xml
   !
   ! kcw_iverbosity   : verbosity control

@@ -18,7 +18,8 @@
       use fft_base,        only : dfftp, dffts
       use cell_base,       only : ainv, omega, h
       use ions_base,       only : nsp
-      use control_flags,   only : tpre, iverbosity
+      use control_flags,   only : iverbosity
+      use cp_control,      only : tpre
       use core,            only : drhocg
       use gvect,           only : g
       use uspp,            only : nlcc_any
@@ -267,7 +268,8 @@
 !     plus the gradient-correction contribution to pressure
 !           
       USE kinds,              ONLY: DP
-      use control_flags, only: iprint, tpre
+      use control_flags, only: iprint
+      use cp_control, only: tpre
       use gvect, only: g
       use cell_base, only: ainv, tpiba, omega
       use cp_main_variables, only: drhog

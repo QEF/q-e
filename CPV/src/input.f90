@@ -76,7 +76,7 @@ MODULE input
    SUBROUTINE iosys()
      !-------------------------------------------------------------------------
      !
-     USE control_flags,      ONLY : fix_dependencies, lconstrain
+     USE control_flags,      ONLY : lconstrain
      USE io_global,          ONLY : ionode, stdout
      USE ions_base,          ONLY : nat, tau, ityp
      USE constraints_module, ONLY : init_constraint
@@ -122,65 +122,61 @@ MODULE input
      USE io_global,     ONLY : stdout
      USE autopilot,     ONLY : auto_check
      USE autopilot,     ONLY : restart_p
-     USE control_flags, ONLY : ndw_        => ndw, &
-                               ndr_        => ndr, &
-                               iprint_     => iprint, &
-                               isave_      => isave, &
-                               tstress_    => tstress, &
-                               tprnfor_    => tprnfor, &
-                               ampre_      => ampre, &
-                               trane_      => trane, &
-                               nomore_     => nomore, &
-                               memchk_     => memchk, &
-                               tpre_       => tpre, &
-                               timing_     => timing, &
+     USE control_flags, ONLY : iprint_     => iprint, &
                                iverbosity_ => iverbosity, &
-                               taurdr_     => taurdr, &
-                               nbeg_       => nbeg, &
                                gamma_only_ => gamma_only, &
-                               tortho_     => tortho,   &
                                nstep_      => nstep
-     USE control_flags, ONLY : tsde_          => tsde, &
-                               tzeroe_        => tzeroe, &
-                               trescalee_     => trescalee, &
-                               trhor_         => trhor, &
-                               trhow_         => trhow, &
-                               tksw_          => tksw,  &
-                               ortho_eps_     => ortho_eps, &
-                               ortho_max_     => ortho_max, &
-                               tnosee_        => tnosee
-     USE control_flags, ONLY : tfor_      => tfor, &
-                               tsdp_      => tsdp
      USE control_flags, ONLY : tnosep_ => tnosep, &
-                               tcap_   => tcap, &
-                               tcp_    => tcp, &
                                tolp_   => tolp, &
-                               tzerop_ => tzerop, &
                                tv0rd_  => tv0rd, &
-                               tranp_  => tranp, &
-                               amprp_  => amprp, &
-                               dt_old_ => dt_old
-     USE control_flags, ONLY : tionstep_ => tionstep, &
-                               nstepe_   => nstepe
-     USE control_flags, ONLY : tzeroc_ => tzeroc, &
-                               tnoseh_ => tnoseh, &
-                               thdyn_  => thdyn, &
-                               tsdc_   => tsdc, &
-                               tbeg_   => tbeg
+                               tnoseh_ => tnoseh
      USE control_flags, ONLY : ekin_conv_thr_ => ekin_conv_thr, &
                                etot_conv_thr_ => etot_conv_thr, &
                                forc_conv_thr_ => forc_conv_thr, &
                                ekin_maxiter_  => ekin_maxiter, &
                                etot_maxiter_  => etot_maxiter, &
                                forc_maxiter_  => forc_maxiter
-     USE control_flags, ONLY : force_pairing_ => force_pairing
      USE control_flags, ONLY : remove_rigid_rot_ => remove_rigid_rot
-     USE control_flags, ONLY : iesr_ => iesr
      USE control_flags, ONLY : textfor
      USE control_flags, ONLY : do_makov_payne
-     USE control_flags, ONLY : lwf, lwfnscf, lwfpbe0nscf
      USE control_flags, ONLY : smallmem
-     USE control_flags, ONLY : tconvthrs
+     USE cp_control,    ONLY : tconvthrs, lwf, lwfnscf, lwfpbe0nscf, &
+                               isave_     => isave, &
+                               taurdr_    => taurdr, &
+                               trhor_     => trhor, &
+                               trhow_     => trhow, &
+                               tksw_      => tksw,  &
+                               tcap_      => tcap,  &
+                               tcp_       => tcp,   &
+                               tortho_    => tortho,&
+                               ortho_eps_ => ortho_eps, &
+                               ortho_max_ => ortho_max, &
+                               dt_old_    => dt_old, &
+                               tbeg_      => tbeg,   &
+                               nbeg_      => nbeg,   &
+                               nomore_    => nomore, &
+                               tsde_      => tsde,   &
+                               tzeroe_    => tzeroe, &
+                               tsdp_      => tsdp,   &
+                               tzerop_    => tzerop, &
+                               tsdc_      => tsdc,   &
+                               tzeroc_    => tzeroc
+     USE cp_control, ONLY :    ndw_       => ndw,      &
+                               ndr_       => ndr,      &
+                               trescalee_ => trescalee,&
+                               tfor_      => tfor,     &
+                               tpre_      => tpre,     &
+                               tnosee_    => tnosee,   &
+                               tranp_     => tranp,    &
+                               amprp_     => amprp,    &
+                               ampre_     => ampre,    &
+                               trane_     => trane,    &
+                               thdyn_     => thdyn,    &
+                               iesr_      => iesr,     &
+                               tprnfor_   => tprnfor,  &
+                               tionstep_  => tionstep, &
+                               nstepe_    => nstepe,   &
+                               force_pairing_ => force_pairing
      !
      ! ...  Other modules
      !
@@ -231,7 +227,6 @@ MODULE input
      ndw_           = ndw
      iprint_        = iprint
      isave_         = isave
-     tstress_       = tstress
      tpre_          = tstress
      gamma_only_    = ( TRIM( k_points ) == 'gamma' )
      tprnfor_       = tprnfor
@@ -298,13 +293,6 @@ MODULE input
      tksw_  = ( TRIM( disk_io ) == 'high' )
      !
      iverbosity_ = 0
-     timing_ = .FALSE.
-          ! The code write to files fort.8 fort.41 fort.42 fort.43
-          ! a detailed report of subroutines timing
-     memchk_ = .FALSE.
-          ! The code performs a memory check, write on standard
-          ! output the allocated memory at each step.
-          ! Architecture Dependent
      !
      SELECT CASE( TRIM( verbosity ) )
        CASE( 'minimal' )
@@ -314,24 +302,18 @@ MODULE input
        CASE( 'low', 'default' )
          !
          iverbosity_ = 0
-         timing_ = .TRUE.
          !
        CASE( 'medium' )
          !
          iverbosity_ = 1
-         timing_   = .TRUE.
          !
        CASE( 'high' )
          !
          iverbosity_ = 2
-         memchk_   = .TRUE.
-         timing_   = .TRUE.
          !
        CASE( 'debug' )
          !
          iverbosity_ = 3
-         memchk_   = .TRUE.
-         timing_   = .TRUE.
          !
        CASE DEFAULT
          !
@@ -784,7 +766,8 @@ MODULE input
      USE input_parameters, ONLY : exx_fraction, screening_parameter
      !
      USE constants,        ONLY : amu_au, pi
-     USE control_flags,    ONLY : lconstrain, tpre, thdyn, tksw
+     USE control_flags,    ONLY : lconstrain
+     USE cp_control,       ONLY : tksw, thdyn, tpre
      USE ions_base,        ONLY : zv
      USE cell_base,        ONLY : cell_base_init, cell_dyn_init, at, cell_alat
      USE cell_base,        ONLY : ref_cell_base_init
@@ -1011,7 +994,8 @@ MODULE input
     ! ----------------------------------------------
 
     USE input_parameters,   ONLY: restart_mode
-    USE control_flags,      ONLY: nbeg, iprint, ndr, ndw, nomore
+    USE control_flags,      ONLY: iprint
+    USE cp_control,         ONLY: nbeg, nomore, ndr, ndw
     USE time_step,          ONLY: delt
     USE cp_electronic_mass, ONLY: emass, emass_cutoff
     USE io_global,          ONLY: ionode, stdout
@@ -1049,10 +1033,9 @@ MODULE input
     USE input_parameters, ONLY: electron_dynamics, electron_temperature, &
       orthogonalization
 
-    USE control_flags, ONLY:  tortho, tnosee, trane, ampre, &
-                              trhor, tksw, tfor, tnosep, iverbosity, &
-                              thdyn, tnoseh
-    !
+    USE control_flags,    ONLY: tnosep, iverbosity, tnoseh
+    USE cp_control,       ONLY: tfor, tnosee, trane, ampre, thdyn, tortho,&
+                                trhor, tksw
     USE electrons_nose,       ONLY: electrons_nose_info
     USE sic_module,           ONLY: sic_info
     USE wave_base,            ONLY: frice, grease

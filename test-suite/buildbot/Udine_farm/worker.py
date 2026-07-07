@@ -20,13 +20,8 @@ class Steps:
             'repository': 'https://gitlab.com/QEF/q-e.git',
             'branch': 'develop',
         },
-        'quantum_espresso_GPU': {
-            'repository': 'https://gitlab.com/QEF/q-e-gpu.git',
-            'branch': 'gpu-develop',
-        },        
         'wannier90': {
             'repository': 'https://github.com/wannier-developers/wannier90.git',
-#            'repository': 'https://github.com/sponce24/wannier90.git',
             'branch': 'develop',
         },
     }
@@ -38,22 +33,13 @@ class Steps:
     self.checkout_qe = [steps.Git(
                  name="checkout_qe",
                  method="copy",
+                 env=Environ,
                  repourl=all_repos["quantum_espresso"]["repository"],
                  branch=all_repos["quantum_espresso"]["branch"],
                  haltOnFailure = True,
                  alwaysUseLatest = True,
              )]
 
-    self.checkout_qe_GPU = [steps.Git(
-                 name="checkout_qe",
-                 method="copy",
-                 repourl=all_repos["quantum_espresso_GPU"]["repository"],
-                 branch=all_repos["quantum_espresso_GPU"]["branch"],
-                 haltOnFailure = True,
-                 alwaysUseLatest = True,
-             )]    
-
-  
     self.configure_qe = [ShellCommand(
                    name="configure_qe",
                    command=["./configure"], 
@@ -65,7 +51,7 @@ class Steps:
 
     self.configure_qe_hdf5 = [ShellCommand(
                    name="configure_qe_hdf5",
-                   command=["./configure","--with-hdf5=/home/buildbot/local/hdf5-104-gcc102"],
+                   command=["./configure","--with-hdf5=/home/buildbot/local/hdf5-146-gcc102"],
                    env=Environ,
                    workdir="build",
                    locks=[build_lock.access('counting')],
@@ -74,16 +60,17 @@ class Steps:
 
     self.configure_qe_libxc = [ShellCommand(
                    name="configure_qe_libxc",
-                   command=["./configure","--with-libxc=yes --with-libxc-prefix=/home/buildbot/local/libxc-512-gcc102"],
+                   command=["./configure", "--with-libxc=yes", "--with-libxc-prefix=/home/buildbot/local/libxc"],
                    env=Environ,
-                   workdir="build",
+                   workdir="build", 
                    locks=[build_lock.access('counting')],
-                   haltOnFailure = True,descriptionDone=["configure_qe_libxc"]
-               )]
+                   haltOnFailure = True, 
+                   descriptionDone=["configure_qe_libxc"] 
+               )] 
 
     self.configure_qe_serial = [ShellCommand(
                    name="configure_qe_serial",
-                   command=["./configure","--enable-parallel=no"],
+                   command=["./configure","--disable-parallel","--enable-openmp"],
                    env=Environ,
                    workdir="build",
                    locks=[build_lock.access('counting')],
@@ -101,11 +88,20 @@ class Steps:
 
     self.configure_qe_GPU = [ShellCommand(
                    name="configure_qe_GPU",
-                   command=["./configure","--with-cuda=/opt/pgi/linux86-64/2019/cuda/10.1/","--with-cuda-runtime=10.1","--with-cuda-cc=60","--with-scalapack=no","--enable-openmp"],
+                   command=["./configure","--with-cuda=$CUDA_HOME","--with-cuda-runtime=11.4","--with-cuda-cc=70","--disable-parallel"],
                    env=Environ,
                    workdir="build",
                    locks=[build_lock.access('counting')],
                    haltOnFailure = True,descriptionDone=["configure_qe_GPU"]
+               )]
+
+    self.configure_qe_GPU2 = [ShellCommand(
+                   name="configure_qe_GPU2",
+                   command=["./configure","--with-cuda=$CUDA_HOME","--with-cuda-runtime=11.7","--with-cuda-cc=70","--enable-parallel","--with-cuda-mpi=yes"],
+                   env=Environ,
+                   workdir="build",
+                   locks=[build_lock.access('counting')],
+                   haltOnFailure = True,descriptionDone=["configure_qe_GPU2"]
                )]
 
     self.debug_flags  = [ShellCommand(
@@ -117,9 +113,9 @@ class Steps:
                    haltOnFailure = True,descriptionDone=["debug_flags"]
                )]
 
-    self.env_qe1     = [ShellCommand(
+    self.env_omp3    = [ShellCommand(
                    name="env_qe1",
-                   command=Interpolate('sed -i "s/TESTCODE_NPROCS=4/TESTCODE_NPROCS=4/g" ENVIRONMENT'),
+                   command=Interpolate('sed -i "s/OMP_NUM_THREADS=1/OMP_NUM_THREADS=3/g" ENVIRONMENT'),
                    env=Environ,
                    workdir="build/test-suite/",
                    locks=[build_lock.access('counting')],
@@ -127,17 +123,16 @@ class Steps:
                    descriptionDone=["env_qe1"]
                )]
 
-    self.env_qe2     = [ShellCommand(
-                   name="env_qe2",
-                   command=Interpolate('echo "export OMP_NUM_THREADS=1" >> ENVIRONMENT'),
-                   #command=["cat","'export OMP_NUM_THREADS=2'",">>", "ENVIRONMENT"], 
+    self.env_omp2    = [ShellCommand(
+                   name="env_qe1",
+                   command=Interpolate('sed -i "s/OMP_NUM_THREADS=1/OMP_NUM_THREADS=2/g" ENVIRONMENT'),
                    env=Environ,
                    workdir="build/test-suite/",
                    locks=[build_lock.access('counting')],
-                   haltOnFailure = True,descriptionDone=["env_qe2"]
+                   haltOnFailure = True,
+                   descriptionDone=["env_qe1"]
                )]
 
-    
     self.make_pw    = [ShellCommand(
                    name="make_pw",
                    command=["make","-j","4","pwall","cp","ld1","hp"], 
@@ -220,288 +215,66 @@ class Steps:
                    locks=[build_lock.access('counting')]
                 )]
     
-    self.test_para_PW = [ShellCommand(
-                   name="PW_para",
-                   command=["make","run-tests-pw-parallel"], 
+    self.test_PW = [ShellCommand(
+                   name="PW_test",
+                   command=["make","run-tests-pw"], 
                    env=Environ,
                    workdir="build/test-suite",
                    haltOnFailure=False, descriptionDone=["PW para tests"],
                    locks=[build_lock.access('counting')]
                 )]
-    self.test_serial_PW = [ShellCommand(
-                   name="PW_serial",
-                   command=["make","run-tests-pw-serial"], 
+    
+    self.test_PP = [ShellCommand(
+                   name="PP_test",
+                   command=["make","run-tests-pp"], 
                    env=Environ,
                    workdir="build/test-suite",
-                   haltOnFailure=False, descriptionDone=["PW serial tests"],
+                   haltOnFailure=False, descriptionDone=["PP para tests"],
                    locks=[build_lock.access('counting')]
                 )]
 
-    self.test_para_CP = [ShellCommand(
-                   name="CP_para",
-                   command=["make","run-tests-cp-parallel"], 
+    self.test_CP = [ShellCommand(
+                   name="CP_test",
+                   command=["make","run-tests-cp"], 
                    env=Environ,
                    workdir="build/test-suite",
                    haltOnFailure=False, descriptionDone=["CP para tests"],
                    locks=[build_lock.access('counting')]
                 )]
-    self.test_serial_CP = [ShellCommand(
-                   name="CP_serial",
-                   command=["make","run-tests-cp-serial"], 
-                   env=Environ,
-                   workdir="build/test-suite",
-                   haltOnFailure=False, descriptionDone=["CP serial tests"],
-                   locks=[build_lock.access('counting')]
-                )]
 
-    self.test_para_PH = [ShellCommand(
-                   name="PH_para",
-                   command=["make","run-tests-ph-parallel"], 
+    self.test_PH = [ShellCommand(
+                   name="PH_test",
+                   command=["make","run-tests-ph"], 
                    env=Environ,
                    workdir="build/test-suite",
                    haltOnFailure=False, descriptionDone=["PH para tests"],
                    locks=[build_lock.access('counting')]
                 )]
-    self.test_serial_PH = [ShellCommand(
-                   name="PH_serial",
-                   command=["make","run-tests-ph-serial"], 
+
+    self.test_para_IMAGE = [ShellCommand(
+                   name="IMAGE_para",
+                   command=["make","run-tests-image","NPROCS=4"],
                    env=Environ,
                    workdir="build/test-suite",
-                   haltOnFailure=False, descriptionDone=["PH serial tests"],
+                   haltOnFailure=False, descriptionDone=["IMAGE para tests"],
                    locks=[build_lock.access('counting')]
-                )]
+                )]    
 
-    self.test_para_EPW  = [ShellCommand(
-                   name="EPW_para",
-                   command=["make","run-tests-epw-parallel"], 
+    self.test_EPW  = [ShellCommand(
+                   name="EPW_test",
+                   command=["make","run-tests-epw"], 
                    env=Environ,
                    workdir="build/test-suite",
                    haltOnFailure=False, descriptionDone=["EPW para tests"],
                    locks=[build_lock.access('counting')]
                 )]
-    self.test_serial_EPW  = [ShellCommand(
-                   name="EPW_serial",
-                   command=["make","run-tests-epw-serial"], 
-                   env=Environ,
-                   workdir="build/test-suite",
-                   haltOnFailure=False, descriptionDone=["EPW serial tests"],
-                   locks=[build_lock.access('counting')]
-                )]
-    self.test_para_HP  = [ShellCommand(
-                   name="HP_para",
-                   command=["make","run-tests-hp-parallel"],
+
+    self.test_HP  = [ShellCommand(
+                   name="HP_test",
+                   command=["make","run-tests-hp"],
                    env=Environ,
                    workdir="build/test-suite",
                    haltOnFailure=False, descriptionDone=["HP para tests"],
                    locks=[build_lock.access('counting')]
-                )]
-    self.test_serial_HP  = [ShellCommand(
-                   name="HP_serial",
-                   command=["make","run-tests-hp-serial"],
-                   env=Environ,
-                   workdir="build/test-suite",
-                   haltOnFailure=False, descriptionDone=["HP serial tests"],
-                   locks=[build_lock.access('counting')]
-                )]
-
-
-
-
-############################################################################
-# SGW code
-############################################################################
-#    self.configure_qe2 = [ShellCommand(
-#                   name="configure_qe",
-#                   command=["./configure"],
-#                   env=Environ,
-#                   workdir="build",
-#                   locks=[build_lock.access('counting')],
-#                   haltOnFailure = True,descriptionDone=["configure_qe"]
-#               )]
-#
-#    self.make_pw2   = [ShellCommand(
-#                   name="make_pw",
-#                   command=["make","pw","lrmods"], 
-#                   env=Environ,
-#                   workdir="build",
-#                   haltOnFailure=True, descriptionDone=["make_pw"],
-#                   locks=[build_lock.access('counting')]
-#                )]
-#    
-#    self.checkout_sgw = [steps.Git(
-#                   name="checkout_sgw",
-#                   repourl=all_repos["sternheimer_gw"]["repository"],
-#                   branch=all_repos["sternheimer_gw"]["branch"],
-#                   workdir="build/SGW",
-#                   haltOnFailure = True,
-#                   alwaysUseLatest = True,
-#                )]
-#
-#    self.make_clean = [ShellCommand(
-#                  name="make_clean",
-#                  command=["make", "clean"],
-#                  env=Environ,
-#                  workdir="build/SGW",
-#                  haltOnFailure = True,
-#                  descriptionDone = ["make_clean"],
-#                  locks=[build_lock.access('counting')],
-#                )]
-#
-#    self.make_sgw   = [ShellCommand(
-#                  name="make_sgw",
-#                  command=["make"],
-#                  env=Environ,
-#                  workdir="build/SGW",
-#                  haltOnFailure = True,
-#                  descriptionDone = ["make_sgw"],
-#                  locks=[build_lock.access('counting')],
-#                )]
-#
-#    self.test_sgw   = [ShellCommand(
-#                  name="test_sgw",
-#                  command=["make", "run-tests"],
-#                  env=Environ,
-#                  workdir="build/SGW/test-suite",
-#                  haltOnFailure = True,
-#                  descriptionDone = ["test_sgw"],
-#                  locks=[build_lock.access('counting')],
-#                )]
-#
-#    self.test_clean_sgw = [ShellCommand(
-#                  name="test_clean",
-#                  command=["make", "clean"],
-#                  env=Environ,
-#                  workdir="build/SGW/test-suite",
-#                  descriptionDone = ["test_clean"],
-#                  locks=[build_lock.access('counting')],
-#                )]
-
-    
-############################################################################
-# Wannier code
-############################################################################
-    
-    self.checkout_wannier = [steps.Git(
-                   name="checkout_wannier",
-                   method="copy",
-                   workdir="build/WAN",
-                   repourl=all_repos["wannier90"]["repository"],
-                   branch=all_repos["wannier90"]["branch"],
-                   haltOnFailure = True,
-                   alwaysUseLatest = True,
-                )]
-    
-    self.cpconfig    = [ShellCommand(
-                   name="cp_config",
-                   command=["cp","test-suite/config/TestFarm/farmer_gcc640_serial.inc","make.inc"], 
-                   env=Environ,
-                   workdir="build/WAN",
-                   haltOnFailure=True, descriptionDone=["cp_config"],
-                   locks=[build_lock.access('counting')]
-                )]
-
-    self.cpgcc730    = [ShellCommand(
-                   name="cp_config",
-                   command=["cp","test-suite/config/TestFarm/farmer_gcc730_openmpi1107.inc","make.inc"], 
-                   env=Environ,
-                   workdir="build/WAN",
-                   haltOnFailure=True, descriptionDone=["cp_config"],
-                   locks=[build_lock.access('counting')]
-                )]
-
-    self.cpintel17    = [ShellCommand(
-                   name="cp_config",
-                   command=["cp","test-suite/config/TestFarm/farmer_intel17_openmpi313.inc","make.inc"], 
-                   env=Environ,
-                   workdir="build/WAN",
-                   haltOnFailure=True, descriptionDone=["cp_config"],
-                   locks=[build_lock.access('counting')]
-                )]
-
-    self.cpintel17i    = [ShellCommand(
-                   name="cp_config",
-                   command=["cp","test-suite/config/TestFarm/farmer_intel17_impi.inc","make.inc"],
-                   env=Environ,
-                   workdir="build/WAN",
-                   haltOnFailure=True, descriptionDone=["cp_config"],
-                   locks=[build_lock.access('counting')]
-                )]
-
-    self.cpintel18    = [ShellCommand(
-                   name="cp_config",
-                   command=["cp","test-suite/config/TestFarm/farmer_intel18_openmpi313.inc","make.inc"],
-                   env=Environ,
-                   workdir="build/WAN",
-                   haltOnFailure=True, descriptionDone=["cp_config"],
-                   locks=[build_lock.access('counting')]
-                )]
-
-    self.cppgi18    = [ShellCommand(
-                   name="cp_config",
-                   command=["cp","test-suite/config/TestFarm/farmer_pgi18_mvapich23b.inc","make.inc"],
-                   env=Environ,
-                   workdir="build/WAN",
-                   haltOnFailure=True, descriptionDone=["cp_config"],
-                   locks=[build_lock.access('counting')]
-                )]
-    
-    self.clean_wannier   = [ShellCommand(
-                  name="clean_wannier",
-                  command=["make","clean"],
-                  env=Environ,
-                  workdir="build/WAN",
-                  haltOnFailure = True, 
-                  descriptionDone = ["clean_wannier"],
-                  locks=[build_lock.access('counting')],
-                )]
-
-    self.clean_tests   = [ShellCommand(
-                  name="clean_tests",
-                  command=["python","clean_tests"],
-                  env=Environ,
-                  workdir="build/WAN/test-suite",
-                  haltOnFailure = True, 
-                  descriptionDone = ["clean_tests"],
-                  locks=[build_lock.access('counting')],
-                )]
-    
-    self.make_wannier   = [ShellCommand(
-                  name="make_wannier",
-                  command=["make"],
-                  env=Environ,
-                  workdir="build/WAN",
-                  haltOnFailure = True, 
-                  descriptionDone = ["make_wannier"],
-                  locks=[build_lock.access('counting')],
-                )]
-    
-    self.make_wannier2   = [ShellCommand(
-                  name="make_wannier2",
-                  command=["make","default","w90chk2chk"],
-                  env=Environ,
-                  workdir="build/WAN",
-                  haltOnFailure = True, 
-                  descriptionDone = ["make_wannier2"],
-                  locks=[build_lock.access('counting')],
-                )]
-    
-    self.test_wannier_serial   = [ShellCommand(
-                  name="test_wannier_seq",
-                  command=["./run_tests","--category=default"],
-                  env=Environ,
-                  workdir="build/WAN/test-suite",
-                  haltOnFailure = True, 
-                  descriptionDone = ["test_wannier_seq"],
-                  locks=[build_lock.access('counting')],
-                )]
-    
-    self.test_wannier_para   = [ShellCommand(
-                  name="test_wannier_para",
-                  command=["./run_tests","--category=default", "--numprocs=4"],
-                  env=Environ,
-                  workdir="build/WAN/test-suite",
-                  haltOnFailure = True, 
-                  descriptionDone = ["test_wannier_para"],
-                  locks=[build_lock.access('counting')],
                 )]
 

@@ -1,0 +1,154 @@
+# Test .def file: a fully-migrated, strict-valid input description.
+# Used by run-tests.sh of the helpdoc --strict test harness.
+
+input_description -distribution {Quantum ESPRESSO} -package TEST -program test.x {
+
+    namelist TEST {
+
+        var ecutwfc -type REAL {
+            default { 25.0 }
+            dimensionality { energy }
+            units { Ry }
+            info { kinetic energy cutoff for wavefunctions }
+        }
+
+        var celldm -type REAL {
+            default { 0.0 }
+            dimensionality { length }
+            units { bohr }
+            info { lattice parameter }
+        }
+
+        var nbnd -type INTEGER {
+            default -kind computed { from_pseudo }
+            info { number of electronic states }
+        }
+
+        var nat -type INTEGER {
+            # a required INTEGER var carries NO <default> (rule B) and, being
+            # non-REAL, carries NO <dimensionality> (rule A).
+            status { REQUIRED }
+            info { number of atoms }
+        }
+
+        var occupations -type CHARACTER {
+            default -kind conditional {
+                case -test "ltetra" { tetrahedra }
+                case { fixed }
+            }
+            info { occupation scheme }
+        }
+
+        var amass -type REAL {
+            # conditional <default> whose <case> bodies span MULTIPLE lines:
+            # exercises the brace-aware bodyHasChildTags_ heuristic. The test
+            # also carries an "@ref" cross-reference to another variable.
+            default -kind conditional {
+                case -test {@ref amass(nt) <= 0.0} {
+                    read from file fildyn
+                    (divided by amu_ry)
+                }
+                case { 0.0 }
+            }
+            dimensionality { dimensionless }
+            info { atomic mass }
+        }
+
+        var calculation -type CHARACTER {
+            # an enumerated CHARACTER var whose literal <default> is BLANK:
+            # a legitimate "unset / user-must-choose" sentinel.
+            default { '' }
+            info { the kind of calculation to perform }
+            options {
+                opt -val 'scf'   { self-consistent field }
+                opt -val 'nscf'  { non-self-consistent field }
+            }
+        }
+
+        var diagonalization -type CHARACTER {
+            # an enumerated var whose <default> is an opt ALIAS rather than a
+            # primary -val: the enum-default check must accept alias values.
+            default { 'david' }
+            info { the diagonalization method }
+            options {
+                opt -val 'davidson' -alias {'david', 'cg-style'} { Davidson iterative }
+                opt -val 'rmm' { RMM-DIIS }
+            }
+        }
+
+        var legacy_default -type REAL {
+            default { 0.5 }
+            dimensionality { dimensionless }
+            info { a plain default with no kind attribute (backward compat) }
+        }
+
+        var dt -type REAL {
+            default { 20.0 }
+            dimensionality { time }
+            units { bohr electron_mass^1/2 Ry^-1/2 }
+            info { time step (product-of-powers composite unit) }
+        }
+
+        var dos -type REAL {
+            default { 0.0 }
+            dimensionality { energy }
+            units { states eV^-1 }
+            info { density of states (composite with negative exponent) }
+        }
+
+        var force_conv_thr -type REAL {
+            default { 1.0d-3 }
+            dimensionality { energy length^-1 }
+            units { Ry bohr^-1 }
+            info { force convergence threshold (composite dimensionality) }
+        }
+
+        dimension starting_magnetization -start 1 -end 3 -type REAL {
+            default { 0.0 }
+            dimensionality { 1-2:dimensionless, 3:charge length^2 time^-1 }
+            units { 3:bohr_magneton }
+            info { starting magnetization per type }
+        }
+    }
+
+    #
+    # card with a column whose units are selected by a runtime card flag:
+    # exercises the conditional <units> form (kind="conditional", a list of
+    # <case> branches with a testless fallback).
+    #
+    card ATOMIC_POSITIONS {
+
+        flag atompos_unit -use optional {
+            enum { alat | bohr | angstrom }
+            default { alat }
+        }
+
+        syntax {
+            table positions {
+                rows -start 1 -end nat {
+                    col X -type CHARACTER {
+                        info { label of the atom }
+                    }
+                    col x -type REAL {
+                        dimensionality { length }
+                        units -kind conditional {
+                            case -test "atompos_unit == 'alat'"     { alat }
+                            case -test "atompos_unit == 'bohr'"     { bohr }
+                            case -test "atompos_unit == 'angstrom'" { angstrom }
+                            case -test "atompos_unit == 'crystal'"  { dimensionless }
+                            case { alat }
+                        }
+                        info { first cartesian coordinate of the atom }
+                    }
+                    col frac -type REAL {
+                        dimensionality { dimensionless }
+                        # whole-value literal "dimensionless" <units>: a
+                        # unit-free (fractional / crystal) coordinate.
+                        units { dimensionless }
+                        info { fractional coordinate of the atom }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -2,6 +2,8 @@
 #
 include ../../make.inc
 
+VPATH = @srcdir@
+
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
 	$(MOD_FLAG)../../GWW/gww 
@@ -21,9 +23,12 @@ build_eemat.o
 
 QEMODS = $(BASEMODS)
 
-TLDEPS=bindir mods gwwlib
+# TLDEPS should contain the same list of dependencies as in the main Makefile
+TLDEPS= mods gwwlib
+# Ensure that "make" run in this subdirectory builds the needed dependencies
+include ../../install/tldeps
 
-all : tldeps simple_bse.x  libsimple_exc.a
+all : simple_bse.x  libsimple_exc.a
 
 simple_bse.x : simple_bse.o $(EXCOBJS) $(QEMODS)  
 	$(MPIF90) $(LDFLAGS) -o $@ \
@@ -34,13 +39,7 @@ simple_bse.x : simple_bse.o $(EXCOBJS) $(QEMODS)
 libsimple_exc.a : $(EXCOBJS)
 	$(AR) $(ARFLAGS) $@ $(EXCOBJS)
 
-tldeps :
-	if test -n "$(TLDEPS)" ; then \
-	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
-
 clean :
 	- /bin/rm -f -v simple_bse.x  *.o *~ *.F90 *.d *.mod *.i work.pc
 
 include make.depend
-
-# DO NOT DELETE

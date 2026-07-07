@@ -115,7 +115,7 @@ MODULE xmltools
   END INTERFACE get_attr
 
   INTERFACE add_attr
-     MODULE PROCEDURE add_i_attr, add_l_attr, add_r_attr, add_c_attr
+     MODULE PROCEDURE add_i_attr, add_iv_attr, add_l_attr, add_r_attr, add_c_attr
   END INTERFACE add_attr
   
 CONTAINS
@@ -238,6 +238,26 @@ CONTAINS
     !
   END SUBROUTINE add_i_attr
   !
+  SUBROUTINE add_iv_attr ( attrname, attrval_iv )
+    !
+    IMPLICIT NONE
+    CHARACTER(LEN=*), INTENT(IN) :: attrname
+    INTEGER, INTENT(IN) :: attrval_iv(:)
+    !
+    INTEGER :: n_el, n
+    CHARACTER(LEN=:), ALLOCATABLE :: attr_iv
+    !
+    n_el = SIZE(attrval_iv)
+    IF ( n_el <= 0 ) RETURN
+    attr_iv = i2c(attrval_iv(1))
+    DO n = 2, n_el
+       attr_iv = attr_iv // ' '  // i2c(attrval_iv(n))
+    END DO
+    CALL add_c_attr ( attrname, attr_iv )
+    DEALLOCATE (attr_iv)
+    !
+  END SUBROUTINE add_iv_attr
+    !
   SUBROUTINE add_l_attr ( attrname, attrval_l )
     !
     IMPLICIT NONE

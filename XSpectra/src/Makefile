@@ -2,6 +2,8 @@
 
 include ../../make.inc
 
+VPATH = @srcdir@
+
 # location of needed modules and included files (if any)
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src \
@@ -36,13 +38,14 @@ GIPAWOBJS=./paw_gipaw.o \
 ./init_gipaw_2.o
 
 MANIP_XS_OBJ=./gaunt_mod.o 
-             
 QEMODS = $(BASEMODS)
 PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a
 
-TLDEPS = pwlibs
+# see comments in file tldeps for explanations
+TLDEPS=pwlibs
+include ../../install/tldeps
 
-all : tldeps xspectra.x spectra_correction.x molecularnexafs.x
+all : xspectra.x spectra_correction.x molecularnexafs.x
 
 xspectra.x :   xspectra.o $(XOBJS) $(GIPAWOBJS) $(QEMODS) $(PWOBJS)
 	$(MPIF90) -o $@  xspectra.o $(XOBJS) $(GIPAWOBJS) \
@@ -58,12 +61,8 @@ molecularnexafs.x : molecularnexafs.o
 	$(MPIF90) -o $@  molecularnexafs.o $(LDFLAGS)
 	- ( cd ../../bin ; ln -fs ../XSpectra/src/$@ . )
 
-tldeps : 
-	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
-
 clean :
 	- /bin/rm -f *.x *.o *~ *_tmp.f90 *.d *.mod *.i *.L
 	- /bin/rm -f ../../bin/xspectra.x
 
 include make.depend
-# DO NOT DELETE

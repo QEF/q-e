@@ -55,7 +55,7 @@ subroutine drhodv (nu_i0, nper, drhos)
   USE mp,               ONLY : mp_sum
   USE uspp_init,        ONLY : init_us_2
   USE control_flags,    ONLY : offload_type
-  USE control_lr,       ONLY : lmultipole
+  USE control_ph,       ONLY : lmultipole
 
   implicit none
 

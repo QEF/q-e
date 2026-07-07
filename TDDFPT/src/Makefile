@@ -2,6 +2,8 @@
 
 include ../../make.inc
 
+VPATH = @srcdir@
+
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src \
@@ -64,16 +66,17 @@ lr_us.o\
 lr_test_restart.o\
 plugin_tddfpt_potential.o\
 linear_solvers.o\
-orthogonalize_omega.o\
 lr_sternheimer.o\
 lr_apply_liouvillian_magnons.o\
 lr_dvpsi_magnons.o\
 lr_Opsi_magnons.o\
 lr_calc_dens_magnons.o
 
+# see comments in file tldeps for explanations
 TLDEPS=lrmods
+include ../../install/tldeps
 
-all : tldeps libtddfpt.a turbo_lanczos.x turbo_davidson.x turbo_eels.x turbo_magnon.x turbo_spectrum.x
+all : libtddfpt.a turbo_lanczos.x turbo_davidson.x turbo_eels.x turbo_magnon.x turbo_spectrum.x
 
 libtddfpt.a : $(LROBJS) 
 	$(AR) $(ARFLAGS) $@ $?
@@ -109,14 +112,8 @@ turbo_spectrum.x : turbo_spectrum.o libtddfpt.a $(PWOBJS) $(QEMODS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
 	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../src/$@ . ); fi
 
-tldeps :
-	if test -n "$(TLDEPS)" ; then \
-	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
-
 clean :
 	- /bin/rm -f ../bin/turbo_lanczos.x ../bin/turbo_davidson.x ../bin/turbo_eels.x \
 		../bin/turbo_magnons.x ../bin/turbo_spectrum.x *.x *.o *~ *.d *.mod *.i work.pc *.a *_tmp.f90
 
 include make.depend
-
-# DO NOT DELETE

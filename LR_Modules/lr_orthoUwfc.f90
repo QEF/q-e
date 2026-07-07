@@ -240,7 +240,7 @@ SUBROUTINE s_phi (npw_, ik_, wfc, swfc)
   !
   ! Calculate S*|wfc> = |wfc> + \sum qq * |vkb> * becp 
   !  
-  CALL s_psi_acc (npwx, npw_, natomwfc, wfc, swfc)
+  CALL s_psi (npwx, npw_, natomwfc, wfc, swfc)
   !
   RETURN
   !

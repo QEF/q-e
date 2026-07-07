@@ -27,12 +27,13 @@ subroutine ld1_writeout
   use funct, only : get_dft_name
   use paw_type, only : deallocate_pseudo_paw
   use open_close_input_file, only: close_input_file
+  USE upf_utils, ONLY : imatches
+  
   implicit none
 
   integer :: &
        ios,   &  ! I/O control
        iunps     ! the unit with the pseudopotential
-  logical, external :: matches
   logical :: oldformat
   character (len=20) :: dft_name
   
@@ -44,13 +45,11 @@ subroutine ld1_writeout
        call errore('ld1_writeout','more than one test configuration',1)
 
   if ( (( rel == 2) .or. lpaw) &
-       .and. .not. matches('.UPF',file_pseudopw) &
-       .and. .not. matches('.upf',file_pseudopw) ) then
+       .and. .not. imatches('.upf',file_pseudopw) ) then
      file_pseudopw=trim(file_pseudopw)//'.UPF'
   end if
 
-  oldformat = .not. matches('.UPF',file_pseudopw) .and. &
-              .not. matches('.upf',file_pseudopw)
+  oldformat = .not. imatches('.upf',file_pseudopw)
 
   iunps=28
   if (ionode)  then 
@@ -70,7 +69,7 @@ subroutine ld1_writeout
           dft_name = get_dft_name()
           !
           ! write in CPMD format 
-          if ( matches('.psp',file_pseudopw) ) then
+          if ( imatches('.psp',file_pseudopw) ) then
              call write_cpmd &
                   (iunps,zed,grid%xmin,grid%dx,grid%mesh,ndmx,grid%r,grid%r2,  &
                   dft_name,lmax,lloc,zval,nlc,nnl,cc,alpc,alc,alps,nlcc, &

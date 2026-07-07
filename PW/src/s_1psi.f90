@@ -14,7 +14,7 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
   USE kinds,              ONLY: DP
   USE uspp,               ONLY: vkb, nkb
   USE becmod,             ONLY: becp, calbec
-  USE control_flags,      ONLY: gamma_only 
+  USE control_flags,      ONLY: gamma_only, offload_type 
   USE noncollin_module,   ONLY: noncolin, npol 
   USE realus,             ONLY: real_space, invfft_orbital_gamma,     &
                                 fwfft_orbital_gamma, calbec_rs_gamma, &
@@ -42,6 +42,7 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
   !
   IF ( real_space) THEN
      !
+     !$acc update self(psi, spsi)
      IF ( gamma_only ) THEN
         !
         DO ibnd = 1, nbnd, 2
@@ -68,9 +69,10 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
         !
      ENDIF
      !
+     !$acc update device(spsi)
   ELSE
      !
-     CALL calbec( n, vkb, psi, becp )
+     CALL calbec( offload_type, n, vkb, psi, becp )
      CALL s_psi( npwx, n, 1, psi, spsi )
      !
   ENDIF

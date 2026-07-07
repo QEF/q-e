@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2020 Quantum ESPRESSO Foundation
+! Copyright (C) 2020-2026 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,16 +10,17 @@ MODULE upf_utils
   IMPLICIT NONE
   PRIVATE
 
-  PUBLIC :: capital, lowercase, isnumeric, matches, version_compare
+  PUBLIC :: capital, lowercase, isnumeric, matches, imatches, version_compare
 
-!! FUNCTION capital : converts a lowercase letter to uppercase
-!!                    returns input character if not a lowercase letter
-!! FUNCTION lowercase : as above, in reverse
+!! FUNCTION capital : converts lowercase letters to uppercase in a string
+!!                    other characters are not affected
+!! FUNCTION lowercase : converts single character from upper- to lowercase
 !! FUNCTION isnumeric : returns .true. if input character is a digit
+!! FUNCTION matches   : returns .true. if string1 matches string2
+!! FUNCTION imatches  : as above, case-insensitive
 !!
-!! FUNCTION matches   : returns .true. if string1 matches string2  
-!!
-!! FUNCTION version_compare: Compare two version strings; the result can be
+!! FUNCTION version_compare: Compares two version strings, the result can be
+!!                           "newer", "equal", "older", " "
 !!
   PUBLIC :: spdf_to_l, l_to_spdf
 
@@ -32,25 +33,25 @@ MODULE upf_utils
 CONTAINS
   
   !-----------------------------------------------------------------------
-FUNCTION capital( in_char )  
+FUNCTION capital( string )
   !-----------------------------------------------------------------------
   !
-  ! ... converts character to capital if lowercase
-  ! ... copy character to output in all other cases
+  ! ... converts lowercase letters to uppercase in a string
   !
   IMPLICIT NONE  
   !
-  CHARACTER(LEN=1), INTENT(IN) :: in_char
-  CHARACTER(LEN=1)             :: capital
-  INTEGER                      :: i
+  CHARACTER(LEN=*), INTENT(IN) :: string
+  CHARACTER(LEN=len(string))   :: capital
+  INTEGER                      :: i, l
   !
-  DO i=1, 26
-     IF ( in_char == lower(i:i) ) THEN
-        capital = upper(i:i)
-        RETURN
+  DO l=1,len(string)
+     i = SCAN( lower, string(l:l) )
+     IF ( i /= 0 ) THEN
+        capital(l:l) = upper(i:i)
+     ELSE
+        capital(l:l) = string(l:l)
      END IF
   END DO
-  capital = in_char
   !
 END FUNCTION capital
 !
@@ -67,13 +68,12 @@ FUNCTION lowercase( in_char )
   CHARACTER(LEN=1)             :: lowercase
   INTEGER                      :: i
   !
-  DO i=1, 26
-     IF ( in_char == upper(i:i) ) THEN
-        lowercase = lower(i:i)
-        RETURN
-     END IF
-  END DO
-  lowercase = in_char
+  i = SCAN( upper, in_char )
+  IF ( i /= 0 ) THEN
+     lowercase = lower(i:i)
+  ELSE
+     lowercase = in_char
+  END IF
   !
 END FUNCTION lowercase
 !
@@ -89,38 +89,38 @@ LOGICAL FUNCTION isnumeric ( in_char )
   CHARACTER(LEN=10), PARAMETER :: numbers = '0123456789'
   INTEGER                      :: i
   !
-  DO i=1, 10
-     isnumeric = ( in_char == numbers(i:i) )
-     IF ( isnumeric ) RETURN
-  END DO
+  isnumeric = ( SCAN(numbers,in_char) /= 0 )
   !
 END FUNCTION isnumeric
 !
 !-----------------------------------------------------------------------
-FUNCTION matches( string1, string2 )  
+LOGICAL FUNCTION matches( string1, string2 )  
   !-----------------------------------------------------------------------
-  !
-  ! ... .TRUE. if string1 is contained in string2, .FALSE. otherwise
+  !! TRUE if string1 is contained in string2, FALSE otherwise.
   !
   IMPLICIT NONE
   !
   CHARACTER (LEN=*), INTENT(IN) :: string1, string2
-  LOGICAL                       :: matches
-  INTEGER                       :: len1, len2, l  
   !
-  !
-  len1 = LEN_TRIM( string1 )  
-  len2 = LEN_TRIM( string2 )  
-  !
-  DO l = 1, ( len2 - len1 + 1 )  
-     IF ( string1(1:len1) == string2(l:(l+len1-1)) ) THEN  
-        matches = .TRUE.  
-        RETURN  
-     END IF
-  END DO
-  matches = .FALSE.
+  matches = ( INDEX (string2, string1) /= 0 )
   !
 END FUNCTION matches
+!
+!-----------------------------------------------------------------------
+LOGICAL FUNCTION imatches( string1, string2 )
+  !-----------------------------------------------------------------------
+  !! TRUE if string1 is contained in string2, FALSE otherwise.  
+  !! NB: case insensitive.
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER (LEN=*), INTENT(IN) :: string1, string2
+  !
+  imatches = ( INDEX (capital(string2), capital(string1)) /= 0 )
+  !
+  RETURN
+  !
+END FUNCTION imatches
   !
   !--------------------------------------------------------------------------
   SUBROUTINE version_parse(str, major, minor, patch, ierr)
@@ -267,9 +267,14 @@ END FUNCTION matches
     CHARACTER(LEN=1) :: spdf
     LOGICAL :: flag_
     !
+    IF ( l < 0 .OR. l > 3 ) THEN
+       spdf = '?'
+       ! WRITE(*,'("l_to_spdf: incorrect l value")')
+       RETURN
+    END IF
     flag_=.true.
     IF ( PRESENT(flag) ) flag_=flag
-    IF (flag_) THEN
+    IF ( flag_) THEN
        IF (l == 0) THEN
           spdf = 'S'
        ELSEIF (l == 1) THEN
@@ -278,8 +283,6 @@ END FUNCTION matches
           spdf = 'D'
        ELSEIF (l == 3) THEN
           spdf = 'F'
-       ELSE
-          spdf = '?'
        ENDIF
     ELSE
        IF (l == 0) THEN
@@ -290,11 +293,8 @@ END FUNCTION matches
           spdf = 'd'
        ELSEIF (l == 3) THEN
           spdf = 'f'
-       ELSE
-          spdf = '?'
        ENDIF
     ENDIF
-    ! IF ( spdf == '?' ) WRITE(*,'("l_to_spdf: incorrect l value")')
     !
   END FUNCTION l_to_spdf
   !

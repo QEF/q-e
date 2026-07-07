@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Roxana Margine
@@ -1712,8 +1713,8 @@
     USE global_var,        ONLY : wqf
     USE input,             ONLY : muc, fsthick
     USE supercond_common,  ONLY : ixkqf, ixqfs, nqfs, w0g, ekfs, nkfs, nbndfs, spin_fac, &
-                                  dosef, ef0, nsiw, wsn, wsi, akeri, limag_fly, adeltai, &
-                                  adeltaip, aznormi, naznormi
+                                  dosef, ef0, nsiw, wsn, wsi, dwsi, akeri, limag_fly,    &
+                                  adeltai, adeltaip, aznormi, naznormi
     USE parallelism,       ONLY : fkbounds
     USE low_lvl,           ONLY : mem_size_eliashberg
     USE ep_constants,      ONLY : pi, zero, one
@@ -1787,7 +1788,8 @@
               IF (ABS(ekfs(jbnd, ixkqf(ik, iq0)) - ef0) < fsthick) THEN
                 weight = wqf(iq) * w0g(jbnd, ixkqf(ik, iq0)) * inv_dos
                 DO iwp = 1, nsiw(itemp) ! loop over omega_prime
-                  esqrt  = weight / DSQRT(wsi(iwp)**2.d0 + adeltaip(iwp, jbnd, ixkqf(ik, iq0))**2.d0)
+                  ! SM: Include frequency weight dwsi(iwp) for sparse sampling
+                  esqrt  = weight * dwsi(iwp) / DSQRT(wsi(iwp)**2.d0 + adeltaip(iwp, jbnd, ixkqf(ik, iq0))**2.d0)
                   zesqrt = esqrt * wsi(iwp)
                   desqrt = esqrt * adeltaip(iwp, jbnd, ixkqf(ik, iq0))
                   !
@@ -1804,7 +1806,8 @@
                     ! Eq. (4.4) in Picket, PRB 26, 1186 (1982)
                     kernelm = lambdam - lambdap
                     kernelp = lambdam + lambdap
-                    naznormi(iw, ibnd, ik) = naznormi(iw, ibnd, ik) + weight * kernelm
+                    ! SM: Include frequency weight dwsi(iwp) for sparse sampling
+                    naznormi(iw, ibnd, ik) = naznormi(iw, ibnd, ik) + weight * dwsi(iwp) * kernelm
                     ! Eqs.(21)-(22) in Margine and Giustino, PRB 87, 024505 (2013)
                     ! using kernelm and kernelp the sum over |wp| < wscut in Eqs. (21)-(22)
                     ! is rewritten as a sum over iwp = 1, nsiw(itemp)
@@ -2070,7 +2073,7 @@
     USE global_var,        ONLY : wqf
     USE input,             ONLY : muc, fsthick, muchem, positive_matsu
     USE supercond_common,  ONLY : ixkqf, ixqfs, nqfs, ekfs, nkfs, nbndfs, spin_fac, &
-                                  dosef, ef0, nsiw, wsn, wsi, akeri, limag_fly, adeltai, &
+                                  dosef, ef0, nsiw, wsn, wsi, dwsi, akeri, limag_fly, adeltai, &
                                   adeltaip, aznormi, aznormip, naznormi, ashifti, &
                                   ashiftip, muintr
     USE parallelism,       ONLY : fkbounds
@@ -2159,13 +2162,14 @@
                 !! this is for FBW case
                 weight = wqf(iq) * inv_dos
                 DO iwp = 1, nsiw(itemp) ! loop over omega_prime
-                  esqrt = weight / ((wsi(iwp) * aznormip(iwp, jbnd, ixkqf(ik, iq0)))**2.d0 &
+                  ! SM: Include frequency weight dwsi(iwp) for sparse sampling
+                  esqrt = weight * dwsi(iwp) / ((wsi(iwp) * aznormip(iwp, jbnd, ixkqf(ik, iq0)))**2.d0 &
                             + (ekfs(jbnd, ixkqf(ik, iq0)) - muintr + ashiftip(iwp, jbnd, ixkqf(ik, iq0)))**2.d0 &
                             + (adeltaip(iwp, jbnd, ixkqf(ik, iq0)) * aznormip(iwp, jbnd, ixkqf(ik, iq0)))**2.d0)
                   zesqrt = esqrt * wsi(iwp) * aznormip(iwp, jbnd, ixkqf(ik, iq0))
                   desqrt = esqrt * adeltaip(iwp, jbnd, ixkqf(ik, iq0)) * aznormip(iwp, jbnd, ixkqf(ik, iq0))
                   sesqrt = esqrt * (ekfs(jbnd, ixkqf(ik, iq0)) - muintr + ashiftip(iwp, jbnd, ixkqf(ik, iq0)))
-                  esqrt0 = weight / ((wsi(iwp) * aznormip(iwp, jbnd, ixkqf(ik, iq0)))**2.d0 &
+                  esqrt0 = weight * dwsi(iwp) / ((wsi(iwp) * aznormip(iwp, jbnd, ixkqf(ik, iq0)))**2.d0 &
                             + (ekfs(jbnd, ixkqf(ik, iq0)) - muintr + ashiftip(iwp, jbnd, ixkqf(ik, iq0)))**2.d0)
                   zesqrt0 = esqrt0 * wsi(iwp) * aznormip(iwp, jbnd, ixkqf(ik, iq0))
                   DO iw = 1, nsiw(itemp) ! loop over omega
@@ -4782,7 +4786,7 @@
     USE kinds,         ONLY : DP
     USE global_var,    ONLY : wqf
     USE input,         ONLY : muc, fsthick
-    USE supercond_common,     ONLY : nsw, nsiw, ws, wsi, adeltai, nkfs, nbndfs, &
+    USE supercond_common,     ONLY : nsw, nsiw, ws, wsi, dwsi, adeltai, nkfs, nbndfs, &
                               spin_fac, dosef, ixkqf, ixqfs, nqfs, &
                               w0g, ekfs, ef0, adsumi, azsumi
     USE ep_constants,  ONLY : zero, one
@@ -4873,7 +4877,8 @@
               IF (ABS(ekfs(jbnd, ixkqf(ik, iq0)) - ef0) < fsthick) THEN
                 weight = wqf(iq) * w0g(jbnd, ixkqf(ik, iq0)) * inv_dos
                 DO iwp = 1, nsiw(itemp) ! loop over iw_n
-                  esqrt = weight / DSQRT(wsi(iwp) * wsi(iwp) + &
+                  ! SM: Include frequency weight dwsi(iwp) for sparse sampling
+                  esqrt = weight * dwsi(iwp) / DSQRT(wsi(iwp) * wsi(iwp) + &
 !                          adeltai(iwp, jbnd, ixkqf(ik, iq0)) * adeltai(iwp, jbnd, ixkqf(ik, iq0)))
                           adeltai_tmp(iwp, jbnd, ixkqf(ik, iq0)) * adeltai_tmp(iwp, jbnd, ixkqf(ik, iq0)))
                   zesqrt =  esqrt * wsi(iwp)
@@ -5093,7 +5098,7 @@
     !!       using the Newton-Raphson method (Nov 2021).
     !!
     USE kinds,          ONLY : DP
-    USE supercond_common,      ONLY : ekfs, ef0, nkfs, nbndfs, wsi, nsiw, &
+    USE supercond_common,      ONLY : ekfs, ef0, nkfs, nbndfs, wsi, dwsi, nsiw, &
                                adeltaip, aznormip, ashiftip, wkfs
     USE global_var,     ONLY : gtemp
     USE input,          ONLY : fsthick, nsiter, broyden_beta, positive_matsu
@@ -5154,12 +5159,13 @@
               theta = (wsi(iw) * aznormip(iw, ibnd, ik))**2.d0 + &
                       (ekfs(ibnd, ik) - muin + ashiftip(iw, ibnd, ik))**2.d0 + &
                       (aznormip(iw, ibnd, ik) * adeltaip(iw, ibnd, ik))**2.d0
+              ! SM: dwsi(iw) is the frequency weight for sparse sampling (gridsamp=1)
               IF (positive_matsu) THEN
-                fmu = fmu + 2.d0 * wkfs(ik) * delta / theta
-                dmu = dmu + 2.d0 * wkfs(ik) * (2.d0 * delta**2.d0 - theta) / (theta**2.d0)
+                fmu = fmu + 2.d0 * wkfs(ik) * dwsi(iw) * delta / theta
+                dmu = dmu + 2.d0 * wkfs(ik) * dwsi(iw) * (2.d0 * delta**2.d0 - theta) / (theta**2.d0)
               ELSE
-                fmu = fmu + wkfs(ik) * delta / theta
-                dmu = dmu + wkfs(ik) * (2.d0 * delta**2.d0 - theta) / (theta**2.d0)
+                fmu = fmu + wkfs(ik) * dwsi(iw) * delta / theta
+                dmu = dmu + wkfs(ik) * dwsi(iw) * (2.d0 * delta**2.d0 - theta) / (theta**2.d0)
               ENDIF
             ENDDO ! iw
           ENDIF
@@ -5417,7 +5423,7 @@
     !!  where fmu is the difference between the target nel and the calculated nel
     !
     USE kinds,          ONLY : DP
-    USE supercond_common,      ONLY : ekfs, ef0, nkfs, nbndfs, wsi, nsiw, &
+    USE supercond_common,      ONLY : ekfs, ef0, nkfs, nbndfs, wsi, dwsi, nsiw, &
                                adeltaip, aznormip, ashiftip, wkfs
     USE global_var,     ONLY : gtemp
     USE input,          ONLY : fsthick, broyden_beta, positive_matsu
@@ -5461,10 +5467,11 @@
             inv_theta = one / ((wsi(iw) * aznormip(iw, ibnd, ik))**2.d0 + &
                     (ekfs(ibnd, ik) - mu + ashiftip(iw, ibnd, ik))**2.d0 + &
                     (aznormip(iw, ibnd, ik) * adeltaip(iw, ibnd, ik))**2.d0)
+            ! SM: dwsi(iw) is the frequency weight for sparse sampling (gridsamp=1)
             IF (positive_matsu) THEN
-              fmu = fmu + 2.d0 * wkfs(ik) * delta * inv_theta
+              fmu = fmu + 2.d0 * wkfs(ik) * dwsi(iw) * delta * inv_theta
             ELSE
-              fmu = fmu + wkfs(ik) * delta * inv_theta
+              fmu = fmu + wkfs(ik) * dwsi(iw) * delta * inv_theta
             ENDIF
           ENDDO ! iw
         ENDIF
@@ -5687,7 +5694,7 @@
     !
     USE control_flags, ONLY : iverbosity
     USE input,         ONLY : fbw, icoulomb, gridsamp, positive_matsu
-    USE supercond_common,     ONLY : wsi, wsn, deltai, znormi, adeltai, adeltaip, &
+    USE supercond_common,     ONLY : wsi, wsn, dwsi, deltai, znormi, adeltai, adeltaip, &
                               aznormi, aznormip, shifti, ashifti, ashiftip, &
                               fft_in1, fft_out1, fft_in2, fft_out2, &
                               ir_giw, ir_gl, ir_gtau, ir_knliw, ir_knll, &
@@ -5733,6 +5740,8 @@
       IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating wsi', 1)
       DEALLOCATE(wsn, STAT = ierr)
       IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating wsn', 1)
+      DEALLOCATE(dwsi, STAT = ierr)
+      IF (ierr /= 0) CALL errore('deallocate_aniso_iaxis', 'Error deallocating dwsi', 1)
       !
       ! sum_eliashberg_aniso_iaxis
       DEALLOCATE(adeltai, STAT = ierr)

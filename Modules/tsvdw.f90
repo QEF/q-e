@@ -65,7 +65,7 @@ REAL(DP), DIMENSION(:), ALLOCATABLE, PUBLIC :: VefftsvdW
 !
 ! PRIVATE variables 
 !
-INTEGER, PARAMETER, PRIVATE :: NgpA=1000                     !number of grid points for linear equispaced atomic grids (current value=1000pts)
+INTEGER, PARAMETER, PRIVATE :: NgpA=5000                     !number of grid points for linear equispaced atomic grids (increased from 1000 for smoother forces)
 INTEGER, PARAMETER, PRIVATE :: bsint=BIT_SIZE(NgpA)          !integer bit size (for use in bit array manipulation)
 INTEGER, PRIVATE :: me                                       !processor number (1,2,...,nproc_image)
 INTEGER, PRIVATE :: iproc                                    !processor dummy index
@@ -529,6 +529,18 @@ PRIVATE :: GetVdWParam
         !
         ir=FLOOR(DLOG(d*EXP(dxA)/gfctrA)/dxA)
         !
+      END IF
+      !
+      ! Guard against out-of-bounds access: the linear grid extends one
+      ! bohr beyond the radial grid (see buffer added at line 505), so
+      ! ir can exceed NrgpA-1 for points in the buffer region. Beyond the
+      ! radial grid the atomic pseudo-density is taken to be zero, which
+      ! is consistent with the radial cutoff already applied above.
+      !
+      IF (ir.GE.NrgpA) THEN
+        sprho(is,ip)=0.0_DP
+        spdrho(is,ip)=0.0_DP
+        CYCLE
       END IF
       !
       dk1=d-atgrdr(ir); dk2=dk1*dk1; dk3=dk2*dk1
@@ -1402,7 +1414,7 @@ PRIVATE :: GetVdWParam
   !
   ! Local variables
   !
-  INTEGER :: ia,ib,ias,ibs,iq,ir,i,j,ipair,off1,ioff,boff
+  INTEGER :: ia,ib,ias,ibs,iq,ir,i,j,ipair,off1
   REAL(DP) :: spcutA,spcutB,spdA,spdB,dq(3),dqA(3),dqAs(3),dqB(3),dqBs(3),dqAmic,dqBmic,dABmic,normr
   REAL(DP) :: dk1,dptmp1,dptmp2,dptmp3,dptmp4,dptmp5,rhoA,rhoB,drhoA,drhoB,dVAdRA(3),dVAdRB(3),dVBdRA(3)
   REAL(DP), DIMENSION(:), ALLOCATABLE :: predVAdRB
@@ -1415,9 +1427,9 @@ PRIVATE :: GetVdWParam
   ALLOCATE(dveffdR(nat,nat,3)); dveffdR=0.0_DP
   ALLOCATE(dveffdh(nat,3,3)); dveffdh=0.0_DP
   !
-  ! Normalization factor for dveff integrals...
+  ! Normalization factor for dveff integrals (using full grid for improved force accuracy)...
   !
-  normr=omega/DBLE(nr1r*nr2r*nr3r)
+  normr=omega/DBLE(nr1*nr2*nr3)
   !
   ! Loop over atoms A in the simulation cell and compute dveffdR and dveffdh...
   !
@@ -1441,24 +1453,25 @@ PRIVATE :: GetVdWParam
     !
     ! Allocate and initialize atom-specific arrays...
     !
-    ALLOCATE(dqxyzr(NsomegaAr(ia),3)); dqxyzr=0.0_DP
-    ALLOCATE(dqAxyzs(NsomegaAr(ia),3)); dqAxyzs=0.0_DP
-    ALLOCATE(predVAdRB(NsomegaAr(ia))); predVAdRB=0.0_DP
-    ALLOCATE(predVBdRA(NsomegaAr(ia),3)); predVBdRA=0.0_DP
+    ALLOCATE(dqxyzr(NsomegaA(ia),3)); dqxyzr=0.0_DP
+    ALLOCATE(dqAxyzs(NsomegaA(ia),3)); dqAxyzs=0.0_DP
+    ALLOCATE(predVAdRB(NsomegaA(ia))); predVAdRB=0.0_DP
+    ALLOCATE(predVBdRA(NsomegaA(ia),3)); predVBdRA=0.0_DP
     !
-    ! Initial loop over points in the (pre-screened) reduced spherical atomic integration domain for atom A to compute 
+    ! Initial loop over points in the full spherical atomic integration domain for atom A to compute
     ! self-derivative (dV(A)/dR(A)), quantities necessary for dV(A)/dR(B) and dV(B)/dR(A), and self-contribution to dV(A)/dh...
+    ! (Using full grid instead of reduced grid for improved force accuracy)
     !
 !$omp parallel do private(dq,dqA,dqAs,dqAmic,ir,dk1,rhoA,drhoA, &
 !$omp off1,dptmp1,dptmp2,dptmp3,dptmp4,dVAdRA,dptmp5,i,j), &
 !$omp reduction(+:dveffdh),reduction(+:dveffdR)
-    DO iq=1,NsomegaAr(ia)
+    DO iq=1,NsomegaA(ia)
       !
       ! Compute global/cell reference frame Cartesian coordinates of given real-space grid point...
       !
-      dq(1)=DBLE(somegaAr(iq,1,iproc)-1)/DBLE(nr1)   ! s_i(1)
-      dq(2)=DBLE(somegaAr(iq,2,iproc)-1)/DBLE(nr2)   ! s_i(2)
-      dq(3)=DBLE(somegaAr(iq,3,iproc)-1)/DBLE(nr3)   ! s_i(3)
+      dq(1)=DBLE(somegaA(iq,1,iproc)-1)/DBLE(nr1)   ! s_i(1)
+      dq(2)=DBLE(somegaA(iq,2,iproc)-1)/DBLE(nr2)   ! s_i(2)
+      dq(3)=DBLE(somegaA(iq,3,iproc)-1)/DBLE(nr3)   ! s_i(3)
       !
       dqA(1)=h(1,1)*dq(1)+h(1,2)*dq(2)+h(1,3)*dq(3)   ! r_i = h s_i
       dqA(2)=h(2,1)*dq(1)+h(2,2)*dq(2)+h(2,3)*dq(3)   ! r_i = h s_i
@@ -1518,7 +1531,7 @@ PRIVATE :: GetVdWParam
       !
       ! Compute global offset for rhosad(r) and rhotot(r), both computed on the real-space mesh...
       !
-      off1=somegaAr(iq,1,iproc)+(somegaAr(iq,2,iproc)-1)*nr1+(somegaAr(iq,3,iproc)-1)*nr1*nr2    !global offset [nr1,nr2,nr3]
+      off1=somegaA(iq,1,iproc)+(somegaA(iq,2,iproc)-1)*nr1+(somegaA(iq,3,iproc)-1)*nr1*nr2    !global offset [nr1,nr2,nr3]
       !
       ! Compute self-derivative dVA/dpA integrand for p={x,y,z}...
       !
@@ -1573,9 +1586,10 @@ PRIVATE :: GetVdWParam
 !$omp end parallel do 
     !
     ! Inner loop over unique atom pairs B in the simulation cell to compute pair contributions to dveffdR and dveffdh...
+    ! (Using full grid; distance check replaces gomegaAr bit-array pre-screening)
     !
 !$omp parallel do private(dqB,dqBs,dqBmic,ir,dk1,rhoB,drhoB,dVAdRB,dVBdRA, &
-!$omp i,j,ib,ibs,spcutB,spdB,ioff,boff), &
+!$omp i,j,ib,ibs,spcutB,spdB), &
 !$omp reduction(+:dveffdR),reduction(+:dveffdh)
     DO ipair=1,npair(ia)
       !
@@ -1585,7 +1599,7 @@ PRIVATE :: GetVdWParam
       !
       ! Connect atom type with species-dependent quantities...
       !
-      ibs=ityp(ib) 
+      ibs=ityp(ib)
       !
       ! Transfer species-specific cutoff to spcutB...
       !
@@ -1595,121 +1609,111 @@ PRIVATE :: GetVdWParam
       !
       spdB=1.0_DP/spdata(ibs,2)
       !
-      ! Determine atom B offsets for using gomegaAr bit array screening below...
-      !
-      ioff=((ib-1)/bsint)+1                     ! integer offset for gomegaAr bit array
-      boff=(ib-((ioff-1)*bsint))-1              ! bit offset for gomegaAr bit array
-      !
-      ! Inner loop over points in the (pre-screened) reduced spherical atomic integration domain for atom A to compute 
+      ! Inner loop over points in the full spherical atomic integration domain for atom A to compute
       ! non-self-derivatives (dV(A)/dR(B) and dV(B)/dR(A)) and non-self-contributions to dV(A)/dh and dV(B)/dh in the overlapping integration domain...
       !
-      DO iq=1,NsomegaAr(ia)
+      DO iq=1,NsomegaA(ia)
         !
-        ! Determine if atom B contributes to the given point on the reduced spherical atomic integration domain on atom A (using gomegaAr bit array)...
+        ! Compute distance between grid point and atom B according to minimum image convention (MIC)...
+        ! (replaces gomegaAr bit-array pre-screening with direct distance check below)
         !
-        IF (BTEST(gomegaAr(iq,ioff,iproc),boff)) THEN
+        dqB(1)=dqxyzr(iq,1)-atxyz(1,ib)   ! r_iB = r_i - r_B
+        dqB(2)=dqxyzr(iq,2)-atxyz(2,ib)   ! r_iB = r_i - r_B
+        dqB(3)=dqxyzr(iq,3)-atxyz(3,ib)   ! r_iB = r_i - r_B
+        !
+        dqBs(1)=ainv(1,1)*dqB(1)+ainv(1,2)*dqB(2)+ainv(1,3)*dqB(3)   ! s_iB = h^-1 r_iB
+        dqBs(2)=ainv(2,1)*dqB(1)+ainv(2,2)*dqB(2)+ainv(2,3)*dqB(3)   ! s_iB = h^-1 r_iB
+        dqBs(3)=ainv(3,1)*dqB(1)+ainv(3,2)*dqB(2)+ainv(3,3)*dqB(3)   ! s_iB = h^-1 r_iB
+        !
+        dqBs(1)=dqBs(1)-IDNINT(dqBs(1))   ! impose MIC on s_iB in range: [-0.5,+0.5]
+        dqBs(2)=dqBs(2)-IDNINT(dqBs(2))   ! impose MIC on s_iB in range: [-0.5,+0.5]
+        dqBs(3)=dqBs(3)-IDNINT(dqBs(3))   ! impose MIC on s_iB in range: [-0.5,+0.5]
+        !
+        dqB(1)=h(1,1)*dqBs(1)+h(1,2)*dqBs(2)+h(1,3)*dqBs(3)   ! r_iB = h s_iB (MIC)
+        dqB(2)=h(2,1)*dqBs(1)+h(2,2)*dqBs(2)+h(2,3)*dqBs(3)   ! r_iB = h s_iB (MIC)
+        dqB(3)=h(3,1)*dqBs(1)+h(3,2)*dqBs(2)+h(3,3)*dqBs(3)   ! r_iB = h s_iB (MIC)
+        !
+        dqBmic=DSQRT(dqB(1)*dqB(1)+dqB(2)*dqB(2)+dqB(3)*dqB(3))   ! |r_i - r_B| (MIC)
+        !
+        ! Final screening based on the (pre-screened) spherical atomic integration domain on atom B...
+        !
+        IF (dqBmic.LE.spcutB) THEN
           !
-          ! Compute distance between grid point and atom B according to minimum image convention (MIC)...
+          ! Determine the index in the atomic linear equispaced grid such that grd(ir) <= dqB <= grd(ir+1) and distance between dqB and grd(ir)...
           !
-          dqB(1)=dqxyzr(iq,1)-atxyz(1,ib)   ! r_iB = r_i - r_B
-          dqB(2)=dqxyzr(iq,2)-atxyz(2,ib)   ! r_iB = r_i - r_B
-          dqB(3)=dqxyzr(iq,3)-atxyz(3,ib)   ! r_iB = r_i - r_B
+          ir=INT(dqBmic*spdB)
+          dk1=dqBmic-spgrd(ibs,ir)
           !
-          dqBs(1)=ainv(1,1)*dqB(1)+ainv(1,2)*dqB(2)+ainv(1,3)*dqB(3)   ! s_iB = h^-1 r_iB
-          dqBs(2)=ainv(2,1)*dqB(1)+ainv(2,2)*dqB(2)+ainv(2,3)*dqB(3)   ! s_iB = h^-1 r_iB
-          dqBs(3)=ainv(3,1)*dqB(1)+ainv(3,2)*dqB(2)+ainv(3,3)*dqB(3)   ! s_iB = h^-1 r_iB
+          ! Perform linear interpolation to obtain the value of the atomic pseudo-density and its derivative at the given grid point...
           !
-          dqBs(1)=dqBs(1)-IDNINT(dqBs(1))   ! impose MIC on s_iB in range: [-0.5,+0.5]
-          dqBs(2)=dqBs(2)-IDNINT(dqBs(2))   ! impose MIC on s_iB in range: [-0.5,+0.5]
-          dqBs(3)=dqBs(3)-IDNINT(dqBs(3))   ! impose MIC on s_iB in range: [-0.5,+0.5]
+          rhoB=LIA(ibs,ir)+LIB(ibs,ir)*dk1         !rhoB at grid point via linear interpolation
+          drhoB=dLIA(ibs,ir)+dLIB(ibs,ir)*dk1      !drhoB at grid point via linear interpolation
           !
-          dqB(1)=h(1,1)*dqBs(1)+h(1,2)*dqBs(2)+h(1,3)*dqBs(3)   ! r_iB = h s_iB (MIC)
-          dqB(2)=h(2,1)*dqBs(1)+h(2,2)*dqBs(2)+h(2,3)*dqBs(3)   ! r_iB = h s_iB (MIC)
-          dqB(3)=h(3,1)*dqBs(1)+h(3,2)*dqBs(2)+h(3,3)*dqBs(3)   ! r_iB = h s_iB (MIC)
+          ! Compute dVA/dpB integrand for p={x,y,z}...
           !
-          dqBmic=DSQRT(dqB(1)*dqB(1)+dqB(2)*dqB(2)+dqB(3)*dqB(3))   ! |r_i - r_B| (MIC)
+          !   dVA/dpB = INT {(p-pB)/|r-rB|*[drho(|r-rB|)*|r-rA|^3*rho(|r-rA|)*rhotot(r)/rhosad(r)^2]}
           !
-          ! Final screening based on the (pre-screened) spherical atomic integration domain on atom B...
-          !
-          IF (dqBmic.LE.spcutB) THEN
+          IF (dqBmic.LT.(1.0E-12_DP)) THEN
             !
-            ! Determine the index in the atomic linear equispaced grid such that grd(ir) <= dqB <= grd(ir+1) and distance between dqB and grd(ir)...
+            dVAdRB(:)=predVAdRB(iq)*drhoB
             !
-            ir=INT(dqBmic*spdB)
-            dk1=dqBmic-spgrd(ibs,ir)
+          ELSE
             !
-            ! Perform linear interpolation to obtain the value of the atomic pseudo-density and its derivative at the given grid point...
-            !
-            rhoB=LIA(ibs,ir)+LIB(ibs,ir)*dk1         !rhoB at grid point via linear interpolation
-            drhoB=dLIA(ibs,ir)+dLIB(ibs,ir)*dk1      !drhoB at grid point via linear interpolation
-            !
-            ! Compute dVA/dpB integrand for p={x,y,z}...
-            !
-            !   dVA/dpB = INT {(p-pB)/|r-rB|*[drho(|r-rB|)*|r-rA|^3*rho(|r-rA|)*rhotot(r)/rhosad(r)^2]}
-            !
-            IF (dqBmic.LT.(1.0E-12_DP)) THEN
-              !
-              dVAdRB(:)=predVAdRB(iq)*drhoB
-              !
-            ELSE
-              !
-              dVAdRB(:)=predVAdRB(iq)*drhoB*dqB(:)/dqBmic
-              !
-            END IF
-            !
-            ! Increment non-self-derivative dVA/dpB for p={x,y,z}...
-            !
-            DO i=1,3
-              !
-              dveffdR(ia,ib,i)=dveffdR(ia,ib,i)+dVAdRB(i)
-              !
-            END DO !i
-            !
-            ! Increment non-self-contribution to dVA/dhpq for p,q={x,y,z} from atom B...
-            !
-            !   dVA/dhpq <-- INT {-(p-pB)*(qs-qsB)/|r-rB|*[drho(|r-rB|)*|r-rA|^3*rho(|r-rA|)*rhotot(r)/rhosad(r)^2]}
-            !
-            DO i=1,3
-              !
-              DO j=1,3
-                !
-                dveffdh(ia,i,j)=dveffdh(ia,i,j)-dVAdRB(i)*dqBs(j)
-                !
-              END DO !j
-              !
-            END DO !i
-            !
-            ! Compute dVB/dpA integrand for p={x,y,z}...
-            !
-            !   dVB/dpA = INT {(p-pA)/|r-rA|*[drho(|r-rA|)*|r-rB|^3*rho(|r-rB|)*rhotot(r)/rhosad(r)^2]}
-            !
-            dVBdRA(:)=predVBdRA(iq,:)*rhoB*dqBmic*dqBmic*dqBmic
-            !
-            ! Increment non-self-derivative dVB/dpA for p={x,y,z} from atom A...
-            !
-            DO i=1,3
-              !
-              dveffdR(ib,ia,i)=dveffdR(ib,ia,i)+dVBdRA(i)
-              !
-            END DO !i
-            !
-            ! Increment non-self-contribution to dVB/dhpq for p,q={x,y,z} from atom A...
-            !
-            !   dVB/dhpq <-- INT {-(p-pA)*(qs-qsA)/|r-rA|*[drho(|r-rA|)*|r-rB|^3*rho(|r-rB|)*rhotot(r)/rhosad(r)^2]}
-            !
-            DO i=1,3
-              !
-              DO j=1,3
-                !
-                dveffdh(ib,i,j)=dveffdh(ib,i,j)-dVBdRA(i)*dqAxyzs(iq,j)
-                !
-              END DO !j
-              !
-            END DO !i
+            dVAdRB(:)=predVAdRB(iq)*drhoB*dqB(:)/dqBmic
             !
           END IF
           !
-        END IF !BTEST
+          ! Increment non-self-derivative dVA/dpB for p={x,y,z}...
+          !
+          DO i=1,3
+            !
+            dveffdR(ia,ib,i)=dveffdR(ia,ib,i)+dVAdRB(i)
+            !
+          END DO !i
+          !
+          ! Increment non-self-contribution to dVA/dhpq for p,q={x,y,z} from atom B...
+          !
+          !   dVA/dhpq <-- INT {-(p-pB)*(qs-qsB)/|r-rB|*[drho(|r-rB|)*|r-rA|^3*rho(|r-rA|)*rhotot(r)/rhosad(r)^2]}
+          !
+          DO i=1,3
+            !
+            DO j=1,3
+              !
+              dveffdh(ia,i,j)=dveffdh(ia,i,j)-dVAdRB(i)*dqBs(j)
+              !
+            END DO !j
+            !
+          END DO !i
+          !
+          ! Compute dVB/dpA integrand for p={x,y,z}...
+          !
+          !   dVB/dpA = INT {(p-pA)/|r-rA|*[drho(|r-rA|)*|r-rB|^3*rho(|r-rB|)*rhotot(r)/rhosad(r)^2]}
+          !
+          dVBdRA(:)=predVBdRA(iq,:)*rhoB*dqBmic*dqBmic*dqBmic
+          !
+          ! Increment non-self-derivative dVB/dpA for p={x,y,z} from atom A...
+          !
+          DO i=1,3
+            !
+            dveffdR(ib,ia,i)=dveffdR(ib,ia,i)+dVBdRA(i)
+            !
+          END DO !i
+          !
+          ! Increment non-self-contribution to dVB/dhpq for p,q={x,y,z} from atom A...
+          !
+          !   dVB/dhpq <-- INT {-(p-pA)*(qs-qsA)/|r-rA|*[drho(|r-rA|)*|r-rB|^3*rho(|r-rB|)*rhotot(r)/rhosad(r)^2]}
+          !
+          DO i=1,3
+            !
+            DO j=1,3
+              !
+              dveffdh(ib,i,j)=dveffdh(ib,i,j)-dVBdRA(i)*dqAxyzs(iq,j)
+              !
+            END DO !j
+            !
+          END DO !i
+          !
+        END IF
         !
       END DO !iq
       !

@@ -384,7 +384,7 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
   USE gvect,                ONLY : ngm, g, gg, gstart, eigts1, eigts2, eigts3, &
                                    mill, ig_l2g
   USE lsda_mod,             ONLY : lsda, nspin
-  USE scf,                  ONLY : rho, rho_core, rhog_core, v
+  USE scf,                  ONLY : rho, rho_core, rhog_core, tau_core, v
   USE ldaU,                 ONLY : eth
   USE ener,                 ONLY : ehart, etxc, vtxc, epaw
   USE extfield,             ONLY : etotefield
@@ -590,7 +590,7 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
   !
   CALL rho_r2g (dfftp, rho%of_r, rho%of_g )
   !
-  CALL v_of_rho( rho, rho_core, rhog_core, &
+  CALL v_of_rho( rho, rho_core, rhog_core, tau_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
   IF (okpaw) CALL PAW_potential(rho%bec, ddd_paw, epaw)
   !

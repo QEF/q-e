@@ -263,7 +263,7 @@ PROGRAM wfck2r
   if (loctave .and. ionode) close(iuwfcr+1)
   DEALLOCATE (evc_r)
 
-  CALL environment_end ( 'WFCK2R' )
+  CALL environment_end( )
 
   CALL stop_pp
   STOP

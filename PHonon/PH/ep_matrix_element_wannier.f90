@@ -488,8 +488,7 @@ SUBROUTINE elphsum_wannier(q_index)
     CALL smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, &
       minus_qloc, gi, gimq)
 
-    sym(1:nsym)=.true.
-    call sgam_ph (at, bg, nsym, s, irt, tau, rtauloc, nat, sym)
+    call sgam_lr (at, bg, nsym, s, irt, tau, rtauloc, nat)
     call star_q(xq, at, bg, nsym , s , invs , nq, sxq, &
       isq, imq, .FALSE. )
 
@@ -972,7 +971,7 @@ SUBROUTINE readmat_findq (iudyn, ibrav, celldm, nat, ntyp, ityp, omega, &
   COMPLEX(DP) :: dynr_c(3,3,nat,nat)
 
   CHARACTER(len=80) :: line
-  CHARACTER(len=3)  :: atm
+  CHARACTER(len=6)  :: atm
   INTEGER :: nt, na, nb, naa, nbb, nu, mu, i, j
   LOGICAL :: lfound
 
@@ -1187,8 +1186,7 @@ subroutine symm_dump()
   CALL smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, &
     minus_qloc, gi, gimq)
 
-  sym(1:nsym)=.true.
-  call sgam_ph (at, bg, nsym, s, irt, tau, rtauloc, nat, sym)
+  call sgam_lr (at, bg, nsym, s, irt, tau, rtauloc, nat)
   call star_q(xq, at, bg, nsym , s , invs , nq, sxq, &
     isq, imq, .FALSE. )
 

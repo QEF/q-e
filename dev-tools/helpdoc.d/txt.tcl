@@ -64,6 +64,125 @@ proc helpdoc::labelMsg {label msg} {
     return $message
 }
 
+proc ::helpdoc::unitsNotation_ {expr} {
+    # Render a units product-of-powers expression in conventional notation,
+    # e.g. "Ry bohr^-1" -> "Ry/bohr". Keep in sync with the "units-notation"
+    # template in dev-tools/input_xx.xsl.
+    set num {}
+    set den {}
+    foreach tok [split [string trim $expr]] {
+        if { $tok eq {} } { continue }
+        if { [regexp {^(.+)\^-(.+)$} $tok -> base exp] } {
+            if { $exp eq "1" } {
+                lappend den $base
+            } else {
+                lappend den "$base^$exp"
+            }
+        } else {
+            lappend num $tok
+        }
+    }
+    set out [join $num " "]
+    foreach d $den {
+        append out "/$d"
+    }
+    return $out
+}
+
+proc ::helpdoc::unitsGloss {expr {kind dim}} {
+    # Render a <units> or <dimensionality> value as a human-readable phrase.
+    # kind=dim names the physical quantity; kind=units renders the unit in
+    # conventional notation (atomic-unit composites name the unit system).
+    # Keep the lookup tables in sync with the "units-gloss" template in
+    # dev-tools/input_xx.xsl.
+    set u [string trim $expr]
+    if { $u eq {} } { return $u }
+    set key [join [split $u] " "]
+
+    if { $kind eq "units" } {
+        # atomic-unit-system composites: name the unit system only
+        array set sys {
+            {bohr electron_mass^1/2 Ry^-1/2}      {Rydberg atomic units}
+            {bohr electron_mass^1/2 Hartree^-1/2} {Hartree atomic units}
+            {Ry e^-1 bohr^-1}                     {Rydberg atomic units}
+            {Hartree e^-1 bohr^-1}                {Hartree atomic units}
+        }
+        if { [info exists sys($key)] } {
+            return $sys($key)
+        }
+        # units: render the unit in conventional notation, no quantity name
+        return [unitsNotation_ $key]
+    }
+
+    # dimensionality: name the physical quantity
+    array set gloss {
+        {Ry bohr^-1}                          {force (Ry/bohr)}
+        {Hartree bohr^-1}                     {force (Hartree/bohr)}
+        {Ry bohr^-3}                          {pressure (Ry/bohr^3)}
+        {states eV^-1}                        {states/eV}
+        {energy length^-1}                    {force}
+        {energy length^-3}                    {pressure}
+        {time^-1}                             {frequency}
+        {length time^-1}                      {velocity}
+        {energy charge^-1}                    {electric potential}
+        {energy charge^-1 length^-1}          {electric field}
+        {charge length^-3}                    {charge density}
+    }
+    if { [info exists gloss($key)] } {
+        return $gloss($key)
+    }
+    # single token or unrecognized composite: fall back to the raw expression
+    return $u
+}
+
+proc ::helpdoc::unitsGlossClist {content {kind dim}} {
+    # Render the content of a <units>/<dimensionality> element: a single
+    # product-of-powers expression, or a keyed comma-list whose keyed entries
+    # are glossed to "<value> for index <i>" / "... otherwise".
+    set c [string trim $content]
+    if { $c eq {} } { return $c }
+    if { [string first , $c] < 0 && [string first : $c] < 0 } {
+        # not a comma-list and not keyed: a single plain expression
+        return [unitsGloss $c $kind]
+    }
+    set keyed {}
+    set unkeyed {}
+    foreach tok [split $c ,] {
+        set tok [string trim $tok]
+        if { $tok eq {} } { continue }
+        if { [regexp {^([0-9]+(?:-[0-9]+)?)\s*:\s*(.*)$} $tok -> key val] } {
+            lappend keyed [unitsGlossKeyed_ $key [unitsGloss [string trim $val] $kind]]
+        } else {
+            lappend unkeyed [unitsGloss $tok $kind]
+        }
+    }
+    set out $keyed
+    foreach u $unkeyed {
+        lappend out "$u otherwise"
+    }
+    return [join $out ", "]
+}
+
+proc ::helpdoc::computedSentinel_ {value} {
+    # A computed-sentinel value is rendered in square brackets. Keep the token
+    # list in sync with vocab(computed) in helpdoc.d/vocabularies.tcl and the
+    # "computed-sentinel" template in dev-tools/input_xx.xsl.
+    set v [string trim $value]
+    if { $v in {from_pseudopotential from_xml from_environment internal} } {
+        return "\[$v\]"
+    }
+    return $value
+}
+
+proc ::helpdoc::unitsGlossKeyed_ {key glossed} {
+    # render a keyed entry: "<i>" -> "for index <i>"; "<lo>-<hi>" ->
+    # "for indices <lo>-<hi>".
+    if { [string first - $key] >= 0 } {
+        return "$glossed for indices $key"
+    }
+    return "$glossed for index $key"
+}
+
 proc ::helpdoc::txt_ref_link {content} {
     set re_ref  {(@ref)\s+(\w+([%]\w)*)}
     set re_link {(@link)\s+([.,;:]*[\w\+-]+([.,;:][\w\+-]+)*)}

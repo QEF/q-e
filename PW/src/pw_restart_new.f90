@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2016-2022 Quantum ESPRESSO group
+! Copyright (C) 2016-2026 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -54,6 +54,7 @@ MODULE pw_restart_new
   PRIVATE
   PUBLIC :: pw_write_schema, write_collected_wfc
   PUBLIC :: read_xml_file, read_collected_wfc
+  PUBLIC :: gk_l2gmap_kdip
   !
   CONTAINS
     !------------------------------------------------------------------------
@@ -72,7 +73,7 @@ MODULE pw_restart_new
                                        lscf, scf_error, n_scf_steps, &
                                        tqr, tq_smoothing, tbeta_smoothing, &
                                        gamma_only, noinv, smallmem, &
-                                       lforce=> tprnfor, tstress, &
+                                       lforce, tstress, &
                                        mbd_vdw, llondon, lxdm, ts_vdw
       USE constants,            ONLY : e2  
       USE realus,               ONLY : real_space
@@ -106,9 +107,9 @@ MODULE pw_restart_new
       USE ldaU,                 ONLY : lda_plus_u, lda_plus_u_kind, Hubbard_projectors, &
                                        Hubbard_lmax, Hubbard_l, Hubbard_n, Hubbard_U, Hubbard_Um, Hubbard_Um_nc, & 
                                        Hubbard_J, Hubbard_n2, Hubbard_n3, Hubbard_l2, Hubbard_l3, Hubbard_V,     & 
-                                       Hubbard_occ, Hubbard_alpha, Hubbard_alpha_back, nsg, order_um, Hubbard_J0,&
-                                       Hubbard_beta, Hubbard_U2, is_hubbard, is_hubbard_back, backall, neighood, &
-                                       nsg
+                                       Hubbard_occ, Hubbard_alpha, Hubbard_alpha_back, order_um, Hubbard_J0,&
+                                       Hubbard_beta, Hubbard_U2, is_hubbard, is_hubbard_back, backall, neighood
+
       USE symm_base,            ONLY : nrot, nsym, invsym, s, ft, irt, &
                                        t_rev, sname, time_reversal, no_t_rev,&
                                        spacegroup
@@ -130,7 +131,7 @@ MODULE pw_restart_new
                                        get_screening_parameter, xclib_get_exx_fraction, exx_is_active
       USE exx_base,             ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
                                        exxdiv_treatment, yukawa, ecutvcut
-      USE exx,                  ONLY : ecutfock, local_thr 
+      USE exx,                  ONLY : ecutfock, local_thr, nbndproj, use_ace 
       USE london_module,        ONLY : scal6, lon_rcut, c6_i
       USE xdm_module,           ONLY : xdm_a1=>a1i, xdm_a2=>a2i
       USE tsvdw_module,         ONLY : vdw_isolated, vdw_econv_thr
@@ -168,7 +169,8 @@ MODULE pw_restart_new
       !
       ! Loop counters and other internal auxiliary variables 
       !
-      INTEGER    :: is, viz, na1, na2, nt1, m1, m2 
+      INTEGER    :: is, viz, na1, na2, nt1, m1, m2
+      INTEGER, ALLOCATABLE :: nbeta_upf(:), l_upf(:,:)
       !
       ! Auxiliary variables used to format arguments for xml file
       !
@@ -335,17 +337,27 @@ MODULE pw_restart_new
          ! while amass's are always present, starting_mag should not be passed
          ! for nspin==1 or contrained magnetization calculations
          !
+         ALLOCATE( nbeta_upf(nsp) )
+         ALLOCATE( l_upf(MAXVAL(upf(1:nsp)%nbeta), nsp) )
+         l_upf = 0
+         DO is = 1, nsp
+            nbeta_upf(is) = upf(is)%nbeta
+            IF ( nbeta_upf(is) > 0 ) l_upf(1:nbeta_upf(is), is) = upf(is)%lll(1:nbeta_upf(is))
+         END DO
+         !
          IF (noncolin) THEN
             CALL qexsd_init_atomic_species(output_obj%atomic_species, nsp, atm, psfile, &
                  amass, STARTING_MAGNETIZATION = starting_magnetization, &
-                 ANGLE1=angle1, ANGLE2=angle2)
-         ELSE IF (nspin==2) THEN 
+                 ANGLE1=angle1, ANGLE2=angle2, Zval=zv, NBETA=nbeta_upf, L=l_upf)
+         ELSE IF (nspin==2) THEN
             CALL qexsd_init_atomic_species(output_obj%atomic_species, nsp, atm, psfile, &
-                 amass, STARTING_MAGNETIZATION=starting_magnetization)
-         ELSE 
-            CALL qexsd_init_atomic_species(output_obj%atomic_species, nsp, atm,psfile, &
-                 amass)
+                 amass, STARTING_MAGNETIZATION=starting_magnetization, Zval=zv, &
+                 NBETA=nbeta_upf, L=l_upf)
+         ELSE
+            CALL qexsd_init_atomic_species(output_obj%atomic_species, nsp, atm, psfile, &
+                 amass, Zval=zv, NBETA=nbeta_upf, L=l_upf)
          END IF
+         DEALLOCATE( nbeta_upf, l_upf )
          output_obj%atomic_species%pseudo_dir = TRIM(pseudo_dir)
          output_obj%atomic_species%pseudo_dir_ispresent = .TRUE.
          !
@@ -431,7 +443,8 @@ MODULE pw_restart_new
                                    ECUTFOCK = ecutfock/e2, &
                                    EXX_FRACTION = xclib_get_exx_fraction(), SCREENING_PARAMETER = scr_par_pt, &
                                    EXXDIV_TREATMENT = exxdiv_treatment, X_GAMMA_EXTRAPOLATION = x_gamma_extrapolation,&
-                                   ECUTVCUT = ecutvcut_pt, LOCAL_THR = loc_thr_pt )
+                                   ECUTVCUT = ecutvcut_pt, LOCAL_THR = loc_thr_pt, &
+                                   USE_ACE = use_ace, NBNDPROJ = nbndproj )
          ELSE 
             hybrid_obj_opt%lwrite=.false. 
          END IF 
@@ -528,7 +541,7 @@ MODULE pw_restart_new
                            DO is = 1, nspin
                               DO m1 = 1, 2*Hubbard_l(nt1)+1
                                  DO m2 = 1, 2*Hubbard_l(nt1)+1
-                                    nsg_(m1,m2,is,na1) = DBLE(nsg(m1,m2,viz,na1,is)) 
+                                    nsg_(m1,m2,is,na1) = DBLE(rho%nsg(m1,m2,viz,na1,is)) 
                                  ENDDO
                               ENDDO
                            ENDDO   
@@ -898,7 +911,7 @@ MODULE pw_restart_new
     END SUBROUTINE pw_write_schema
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_collected_wfc( )
+    SUBROUTINE write_collected_wfc( wann_spin_component )
       !------------------------------------------------------------------------
       !
       USE mp,                   ONLY : mp_sum, mp_max
@@ -932,6 +945,17 @@ MODULE pw_restart_new
       CHARACTER(LEN=2), DIMENSION(2) :: updw = (/ 'up', 'dw' /)
       CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=320)    :: filename, filenameace
+      INTEGER, OPTIONAL, INTENT (IN)  :: wann_spin_component
+      !
+      LOGICAL               :: is_wann
+      INTEGER               :: wann_spin
+      !
+      is_wann = .false. 
+      wann_spin = 0
+      IF (present (wann_spin_component) ) THEN
+         is_wann = .true.
+         wann_spin = wann_spin_component
+      ENDIF
       !
       dirname = restart_dir ()
       !
@@ -968,6 +992,9 @@ MODULE pw_restart_new
       ALLOCATE ( mill_k( 3, npwx ) )
       !
       k_points_loop: DO ik = 1, nks
+         !
+         ! one spin component at the time in KCW
+         IF ( is_wann .AND. lsda .AND. isk(ik) /= wann_spin) CYCLE
          !
          ! ik_g is the index of k-point ik in the global list
          !
@@ -1008,6 +1035,8 @@ MODULE pw_restart_new
             ispin = isk(ik)
             filename = TRIM(dirname) // 'wfc' // updw(ispin) // &
                  & TRIM(int_to_char(ik_g))
+            IF (is_wann) filename = TRIM(dirname) // 'wan' // updw(ispin) // &
+                                 & TRIM(int_to_char(ik_g))
             !
             if(exx_is_active()) filenameace = TRIM(dirname) // 'ace' // updw(ispin) // &
                  & TRIM(int_to_char(ik_g))
@@ -1016,6 +1045,7 @@ MODULE pw_restart_new
             !
             ispin = 1
             filename = TRIM(dirname) // 'wfc' // TRIM(int_to_char(ik_g))
+            IF (is_wann) filename = TRIM(dirname) // 'wan' // TRIM(int_to_char(ik_g))
             !
             if(exx_is_active()) filenameace = TRIM(dirname) // 'ace' // TRIM(int_to_char(ik_g))
             !
@@ -1052,11 +1082,30 @@ MODULE pw_restart_new
     !-----------------------------------------------------------------------
     SUBROUTINE gk_l2gmap_kdip( npw_g, ngk_g, ngk, igk_l2g, igk_l2g_kdip, igwk )
       !-----------------------------------------------------------------------
-      !
-      ! ... This subroutine maps local G+k index to the global G vector index
-      ! ... the mapping is used to collect wavefunctions subsets distributed
-      ! ... across processors.
-      ! ... This map is used to obtained the G+k grids related to each kpt
+      !! This subroutine maps local G+k index to the global G vector index
+      !! the mapping is used to collect wavefunctions subsets distributed
+      !! across processors.
+      !!
+      !! There are 4 lists of G vectors:
+      !!   1) Local G vectors inside k-specific k+G sphere, size ngk(ik) (often called npw)
+      !!   2) Local G vectors shared for all k points, size ngm
+      !!   3) Global G vectors inside k-specific k+G sphere, size ngk_g
+      !!   4) Global G vectors shared for all k points, size ngm_g
+      !!
+      !! ngk_g is the size of the Hamiltonian at the given k point.
+      !!
+      !! The existing mapping are:
+      !!   - (1) -> (2) : igk_k(:, ik) in MODULE klist
+      !!   - (2) -> (4) : ig_l2g in MODULE gvect
+      !!
+      !! This subroutine builds the following mappings:
+      !!   - (1) -> (4) : igk_l2g = ig_l2g(igk_k(:, ik)) (internal only)
+      !!   - (4) -> (3) : igwk (optional output)
+      !!   - (3) -> (4) : igwk_lup (inverse of igwk, internal only)
+      !!   - (1) -> (3) : igk_l2g_kdip = igwk_lup(igk_l2g) (output)
+      !!
+      !! itmp is used to find which G vectors in list 4 are present in list 3.
+      !-----------------------------------------------------------------------
       !
       USE mp_bands,             ONLY : intra_bgrp_comm
       USE mp,                   ONLY : mp_sum
@@ -1186,7 +1235,7 @@ MODULE pw_restart_new
       USE tsvdw_module,    ONLY : vdw_isolated
       USE exx_base,        ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
            exxdiv_treatment, yukawa, ecutvcut
-      USE exx,             ONLY : ecutfock, local_thr
+      USE exx,             ONLY : ecutfock, local_thr, use_ace, nbndproj
       USE control_flags,   ONLY : noinv, gamma_only, tqr, llondon, ldftd3, &
            lxdm, ts_vdw, mbd_vdw, do_makov_payne 
       USE Coul_cut_2D,     ONLY : do_cutoff_2D
@@ -1210,7 +1259,6 @@ MODULE pw_restart_new
       USE mp_images,       ONLY : intra_image_comm
       USE mp,              ONLY : mp_bcast
       USE dftd3_qe,        ONLY : dftd3_in, dftd3, dftd3_xc 
-      USE dftd3_api,       ONLY : dftd3_init, dftd3_set_functional 
       USE tsvdw_module,    ONLY : vdw_econv_thr
       USE london_module,   ONLY : init_london
       USE xdm_module,      ONLY : init_xdm
@@ -1296,7 +1344,7 @@ MODULE pw_restart_new
       !! DFT section
       CALL qexsd_copy_dft ( output_obj%dft, nsp, atm, &
            dft_name, nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter, &
-           exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, &
+           exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, use_ace, nbndproj, &
            lda_plus_u, apply_u,lda_plus_u_kind, Hubbard_projectors, Hubbard_n, Hubbard_l, Hubbard_lmax, Hubbard_occ,&
            Hubbard_n2, Hubbard_l2, Hubbard_n3, Hubbard_l3, backall, Hubbard_lmax_back, Hubbard_alpha_back, &
            Hubbard_U, Hubbard_Um, Hubbard_U2, Hubbard_J0, Hubbard_alpha, Hubbard_alpha_m, Hubbard_beta, Hubbard_J, Hubbard_V, &
@@ -1492,6 +1540,7 @@ MODULE pw_restart_new
       CHARACTER(LEN=320)   :: filename, msg 
       CHARACTER(LEN=3)     :: label 
       LOGICAL              :: read_ace
+      LOGICAL              :: read_wann
       INTEGER              :: i, ik_g, ig
       INTEGER              :: npol_, nbnd_
       INTEGER              :: ike, iks, ngk_g, npw_g, ispin
@@ -1501,7 +1550,7 @@ MODULE pw_restart_new
       LOGICAL              :: ionode_k
       REAL(DP)             :: scalef, xk_(3), b1(3), b2(3), b3(3)
       !
-      ! ... decide whether to read wfc or ace
+      ! ... decide whether to read wfc or ace or wannier functions
       !
       if(present(label_)) then 
          label = label_
@@ -1509,14 +1558,20 @@ MODULE pw_restart_new
             if(.not.exx_is_active()) CALL errore ('pw_restart-read_collected_wfc',&
                  "ace but not exx_is_active", 1 ) 
             read_ace = .true.
+            read_wann = .false.
          else if(label.eq."wfc") then
             read_ace = .false.
-         else
+            read_wann = .false.
+         else if(label.eq."wan") then
+            read_ace = .false.
+            read_wann = .true. 
+         else 
             CALL errore ('pw_restart - read_collected_wfc', "wrong label", 1 )
          end if
       else
          label = "wfc"
          read_ace = .false.
+         read_wann = .false.
       end if
       !
       ! ... the root processor of each pool reads
@@ -1599,7 +1654,11 @@ MODULE pw_restart_new
         WRITE(stdout, '(5X,A,I8,A)') 'ACE potential read for ', nbnd_, ' bands'
         nbndproj = nbnd_
         !
-      ELSE IF ( nbnd_ < nbnd .and..not. read_ace) THEN
+      ELSE IF(read_wann) THEN
+        !
+        WRITE(stdout, '(5X,A,I8,A)') 'Read ', nbnd_, ' Wannier functions'
+        !
+      ELSE IF ( nbnd_ < nbnd .and..not. read_ace .and. .not. read_wann) THEN
         !
         WRITE (msg,'("The number of bands for this run is",I6,", but only",&
              & I6," bands were read from file")')  nbnd, nbnd_  

@@ -378,7 +378,7 @@ PROGRAM fermisurface
   CALL fill_fs_grid ( )
   IF ( ionode ) CALL write_xcrysden_fs ( )
   !
-  CALL environment_end ( 'FERMI' )
+  CALL environment_end( )
   !
   CALL stop_pp
   !

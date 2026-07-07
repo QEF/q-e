@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
@@ -14,6 +15,10 @@
   !! This module contains all global variables used in EPW.
   !!
   USE kinds, ONLY : DP
+#if defined(__CUDA)
+  USE cublas
+  USE cusolverdn
+#endif
   !
   SAVE
   !
@@ -21,7 +26,8 @@
     elph,                    &!  Perform electron-phonon interpolation
     adapt_smearing,          &!  Adaptative smearing
     qrpl,                    &!  If true use quadrupole during interpolation
-    do_cutoff_2D_epw          !  Used in restart calculations if system_2d = 'dipole_sh'. If true use 2D-limit kernel
+    do_cutoff_2D_epw,        &!  Used in restart calculations if system_2d = 'dipole_sh'. If true use 2D-limit kernel
+    ldfptu                    !  Adding Hubbard terms during interpolation
   LOGICAL, ALLOCATABLE ::    &!
     lwin(:, :),              &!  identify bands within outer energy windows (when disentanglement is used)
     lwinq(:, :),             &!  Excluded bands
@@ -35,7 +41,16 @@
     nktotf,                  &!  total number of k points (fine grid)
     nqtotf,                  &!  total number of q points (fine grid)
     totq,                    &!  total number of q-points within the fsthick window.
+    startq,                  &!  first q-point in the current image
+    lastq,                   &!  last q-point in the current image
     nrr,                     &!  number of wigner-seitz points (elec interp only)
+    irg_start,               &!  local start point of wigner-seitz index
+    irg_stop,                &!  local end point of wigner-seitz index
+    nirg_loc,                &!  local number of wigner-seitz points
+    irn_start,               &!  local start point of Mode*WS-vector index 
+    irn_stop,                &!  local end point of Mode*WS-vector index
+    nirn_loc,                &!  local number of Mode*WS-vector index
+    imode_start,             &!  Mode index of the first Mode*WS-vector index in local
     ibndmin,                 &!  Lower band bound for slimming down electron-phonon matrix
     ibndmax,                 &!  Upper band bound for slimming down electron-phonon matrix
     lower_band,              &!  Lower band index for image (band) parallelization
@@ -73,15 +88,19 @@
     stop_qdabs,              &!  If 1 stop qdabs
     size_m,                  &!  Decides maximum r_tot needed, 3 or 4 depending on Energy(mesh)
     ctype,                   &!  Transport calculation type: -1 = hole, +1 = electron and 0 = both.
-    maxdim                    !  Maximum number of states in QD bin after each q cycle
+    maxdim,                  &!  Maximum number of states in QD bin after each q cycle
+    nkpts,                   &!  Total number of k points in the given DFT calculation. (nkc1 * nkc2 * nkc3) 
+                              !  For non-magnetic or noncollinear magnetic calculations, identical to nkstot in module pwcom.
+                              !  For LSDA calculations, `nkstot = 2 * nkpts`.
+    nk_loc                    !  Number of k points at the given pool. The sum of nk_loc over pools equals nkpts. For non-magnetic
+                              !  or non collinear calculations, identical to nks in module pwcom. For LSDA calculations for each 
+                              !  pool it is built by dividing nkpts between the total number of pools.
   INTEGER, ALLOCATABLE ::    &!
     ibndkept(:),             &!  indices of remaining bands after excluding bands in Wannierization step
     igk(:),                  &!  Index for k+G vector
     igkq(:),                 &!  Index for k+q+G vector
     igk_k_all(:, :),         &!  Global index (in case of parallel)
     image_arr(:),            &!  Image array (size = maximum number of q-points per image)
-    startq,                  &!  first q-point in the current image
-    lastq,                   &!  last q-point in the current image
     ngk_all(:),              &!  Global number of plane wave for each global k-point
     map_rebal(:),            &!  Map between the k-point and their load rebalanced one
     map_rebal_inv(:),        &!  Map between the k-point and their load rebalanced one
@@ -106,13 +125,15 @@
     selecq(:),               &!  Selected q-points within the fsthick window
     H_ind1(:),               &!  Column index for QD matrix
     H_ind2(:),               &!  Row index of QD matrix
-    selecq_QD(:,:)            !  q-points inside the QD meshgrid
+    selecq_QD(:,:),          &!  q-points inside the QD meshgrid
+    index_save(:)             !  index of Hamiltonian blocks used in polaron module
   REAL(KIND = DP) ::         &!
     efnew,                   &!  Fermi level on the fine grid. Added globaly for efficiency reason
     inv_cell,                &!  Inverse of the unit cell volume (or area for 2D)
     deltaq,                  &!  Displacement of fine-mesh k-points for velocity corrections
     threshold,               &!  Threshold below which the transition probabilities are not written to file in transport.
     area,                    &!  Area of the 2D unit cell.
+    spin_fac,                &!  Spin degeneracy of electronic states
     L,                       &!  Range separation in 2D.
     g0vec_all_r(3, 125),     &!  G-vectors needed to fold the k+q grid into the k grid, cartesian coord.
     epsi_2d,                 &!  effective dielectric constant for 2D system in Sio-Giustino's method
@@ -231,7 +252,8 @@
     xkf_write(:,:,:,:),              &!  Index for Eigenvec for the QD grid |vk>|ck+q>|+-nqv> ->> (pool,interpolated (k),tot,6)
     sigmar_dw_all(:, :, :),          &!  AHC active-space Debye-Waller self-energy
     sigma_ahc_hdw(:, :, :),          &!  AHC electron-phonon self-energy, high-energy Debye-Waller part.
-    sigma_ahc_uf(:, :, :)             !  AHC electron-phonon self-energy, upper Fan part.
+    sigma_ahc_uf(:, :, :),           &!  AHC electron-phonon self-energy, upper Fan part.
+    smatf(:, :, :, :)                 !  Scattering matrix, fine grid for MC simulation
   COMPLEX(KIND = DP) ::       &
     eib3d,                    &!  exp(i*b3*d). Base for power function in 2D slab kernel. Added by V.-A. Ha
     Qa(3)                      !  FIXME
@@ -288,7 +310,8 @@
     dwf17(:, :, :, :),           &!  full Debye-Waller matrix in bloch rep stored in mem (nbnd, nbnd, nmodes, nkf)
     dgf17(:, :, :, :),           &!  full delta g matrix in bloch rep stored in mem (nbnd, nbnd, nmodes, nkf)
     pmec(:, :, :, :),            &!  momentum matrix elements on the coarse mesh (ipol, nbnd, nbnd, nks)
-    cpmew(:, :, :, :)             !  Momentum matrix in wannier basis
+    cpmew(:, :, :, :),           &!  Momentum matrix in wannier basis
+    Hamil_save(:, :)              !  Hamiltonian blocks in polaron module
     !--------------------------------------------------------------------------
     ! ZD: Added for excitonic polaron calculation
   COMPLEX(KIND=DP),ALLOCATABLE ::  &
@@ -309,6 +332,12 @@
     explrn_etot,                 & ! Total energy of the excitonic polaron
     explrn_eigval,               & ! explrn eigenvalue for the current iteration 
     explrn_eigval_old              ! explrn eigenvalue for the previous iteration 
+#if defined(__CUDA)
+  TYPE(cublashandle) :: &
+    cublas_h                      !  A pointer to an object that hold the cuBLAS library context 
+  TYPE(cusolverdnhandle) :: &
+    cusolverdn_h                  !  A pointer to an object that hold the cuSolverDN library context 
+#endif
   !--------------------------------------------------------------------------
   !--------------------------------------------------------------------------
   END MODULE global_var

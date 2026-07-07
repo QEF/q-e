@@ -53,7 +53,7 @@ subroutine dvanqq
   integer  ::  nat_l
   ! effective number of atoms to do when nat_todo_input > 0 
   integer,allocatable :: atomo_l(:)
-  integer :: nt, na, nb, ig, nta, ntb, ir, ih, jh, ijh, ipol, jpol, is, na_l, nb_l 
+  integer :: nt, na, nb, ig, nta, ntb, ir, ih, jh, ijh, ipol, jpol, is, na_l, nb_l, i 
   ! counters
 
   real(DP), allocatable :: qmod (:), qmodg (:), qpg (:,:), &
@@ -83,7 +83,7 @@ subroutine dvanqq
   int5(:,:,:,:,:) = (0.d0, 0.d0)
   allocate (sk  (  ngm))
   allocate (aux1(  ngm))
-  allocate(aux35(9,ngm))
+  allocate(aux35(9,128))
   allocate (qmodg( ngm))
   allocate (ylmk0( ngm , lmaxq * lmaxq))
   allocate (qgm  ( ngm))
@@ -178,14 +178,20 @@ subroutine dvanqq
                        ! 
                        ! FIXME: replace zgemv with zgemm
                        !
-                       !$omp parallel do default(shared) private(ig)
-                       do ig =1, ngm 
-                          aux35(1:3,ig) = conjg(sk(ig)) * (g(1:3,ig) + xq (1:3))
-                          aux35(4:6,ig) = aux35(1,ig) *  (g(1:3,ig) + xq (1:3))
-                          aux35(7:8,ig) = aux35(2,ig) *  (g(2:3,ig) + xq (2:3))
-                          aux35(9,ig)  =  aux35(3,ig) *  (g(3,ig) + xq (3))
+                       z9aux(:) = (0._dp, 0._dp)
+                       !$omp parallel do default(shared) private(ig,aux35,i) reduction(+:z9aux)
+                       do ig = 1, ngm, 128
+                          ! Batch computation in aux35
+                          do i = 1, min(128, ngm-ig+1)
+                             aux35(1:3,i) = conjg(sk(ig+i-1)) * (g(1:3,ig+i-1) + xq (1:3))
+                             aux35(4:6,i) = aux35(1,i) *  (g(1:3,ig+i-1) + xq (1:3))
+                             aux35(7:8,i) = aux35(2,i) *  (g(2:3,ig+i-1) + xq (2:3))
+                             aux35(9,i)   = aux35(3,i) *  (g(3,ig+i-1) + xq (3))
+                          end do
+                          ! Compute batch zgemv contribution
+                          call zgemv('N', 9, min(128, ngm-ig+1), cmplx(1._dp, 0._dp,kind=dp), &
+                                     aux35, 9, aux1(ig), 1, cmplx(1._dp, 0._dp,kind=dp), z9aux, 1)
                        end do 
-                       call zgemv('N', 9,ngm,cmplx(1._dp, 0._dp,kind=dp),aux35,9,aux1,1,(0._dp,0._dp),z9aux,1)
                        z9aux(4:9) = conjg(fact)*tpiba2*omega*z9aux(4:9)
                        !
                        int2(ih,jh,1:3,na,nb) = conjg(z9aux(1:3)) * fact * fact1
@@ -207,15 +213,20 @@ subroutine dvanqq
                        enddo
                     endif
                     do is = 1, nspin_mag
-                       !$omp parallel do default(shared) private(ig)
-                       do ig = 1, ngm 
-                          aux35(1:3,ig) = conjg(veff (dfftp%nl (ig), is)) * g (1:3, ig)
-                          aux35(4:6,ig) = aux35(1,ig) * g(1:3,ig)
-                          aux35(7:8,ig) = aux35(2,ig) * g(2:3,ig)
-                          aux35(9,ig)   = aux35(3,ig) * g(3,ig) 
+                       z9aux(:) = (0._dp, 0._dp)
+                       !$omp parallel do default(shared) private(ig,aux35,i) reduction(+:z9aux)
+                       do ig = 1, ngm, 128
+                          ! Batch computation in aux35
+                          do i = 1, min(128, ngm-ig+1)
+                             aux35(1:3,i) = conjg(veff (dfftp%nl (ig+i-1), is)) * g (1:3, ig+i-1)
+                             aux35(4:6,i) = aux35(1,i) * g(1:3,ig+i-1)
+                             aux35(7:8,i) = aux35(2,i) * g(2:3,ig+i-1)
+                             aux35(9,i)   = aux35(3,i) * g(3,ig+i-1) 
+                          end do
+                          ! Compute batch zgemv contribution
+                          call zgemv('N', 9, min(128, ngm-ig+1), cmplx(1._dp, 0._dp,kind=dp), &
+                                     aux35, 9, aux1(ig), 1, cmplx(1._dp, 0._dp,kind=dp), z9aux, 1)
                        end do 
-                       call zgemv('N',9,ngm,cmplx(1._dp, 0._dp,kind=dp), aux35,9,aux1,1,(0._dp,0._dp),z9aux,1)
-                       !
                        z9aux(4:9) = -tpiba2 * omega * z9aux(4:9)
                        int1(ih,jh,1:3,nb,is) = -fact1  * conjg(z9aux(1:3))
                        ! 

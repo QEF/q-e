@@ -154,11 +154,7 @@ MODULE oscdft_forces_subs
             CALL init_us_2(npw, igk_k(1,ik), xk(1,ik), vkb)
             ! proj = <wfcF|S|psi>
             CALL calbec(offload_type, npw, vkb, evc, becp)
-            IF (use_gpu) THEN
-               CALL s_psi_acc(npwx, npw, nbnd, evc, spsi)
-            ELSE
-               CALL s_psi(npwx, npw, nbnd, evc, spsi)
-            END IF
+            CALL s_psi(npwx, npw, nbnd, evc, spsi)
             CALL calbec(offload_type, npw, wfcF_wfc, spsi, proj)
 
             ! calculate <beta|psi>

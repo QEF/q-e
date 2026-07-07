@@ -16,7 +16,7 @@ MODULE read_mol_module
   USE kinds,          ONLY : DP
   USE molecule_const, ONLY : RY_TO_KJMOLm1, RY_TO_KCALMOLm1, BOHRm3_TO_MOLCMm3, BOHRm3_TO_MOLLm1
   USE molecule_types, ONLY : molecule, deallocate_molecule
-  USE upf_utils,      ONLY : version_compare
+  USE upf_utils,      ONLY : version_compare, matches, capital
 #if defined(__fox)
   USE FoX_dom
 #else
@@ -140,8 +140,6 @@ CONTAINS
     TYPE(DOMException)          :: ex
     LOGICAL                     :: found
     CHARACTER(len=6), PARAMETER :: max_version = '1.0.0'
-    !
-    LOGICAL, EXTERNAL :: matches
     !
     ! ... check DOM
     root = getTagname(u, EX=ex)
@@ -271,8 +269,6 @@ CONTAINS
       CHARACTER(LEN=16)           :: units
       INTEGER                     :: i
       !
-      CHARACTER(LEN=1), EXTERNAL :: capital
-      !
       masNode => item(getElementsByTagname(u, 'MOL_MASS'), 0)
       !
       CALL extractDataContent(masNode, mol%mass)
@@ -285,9 +281,7 @@ CONTAINS
       ELSE
         units = 'a.m.u.'
       END IF
-      DO i = 1, LEN_TRIM(units)
-        units(i:i) = capital(units(i:i))
-      END DO
+      units = capital(TRIM(units))
       !
       SELECT CASE (TRIM(units))
       CASE ('A.M.U.')
@@ -308,8 +302,6 @@ CONTAINS
       CHARACTER(LEN=16)           :: units
       INTEGER                     :: i
       !
-      CHARACTER(LEN=1), EXTERNAL :: capital
-      !
       denNode => item(getElementsByTagname(u, 'MOL_DENSITY'), 0)
       !
       CALL extractDataContent(denNode, mol%density)
@@ -322,9 +314,7 @@ CONTAINS
       ELSE
         units = '1/bohr^3'
       END IF
-      DO i = 1, LEN_TRIM(units)
-        units(i:i) = capital(units(i:i))
-      END DO
+      units = capital(TRIM(units))
       !
       SELECT CASE (TRIM(units))
       CASE ('1/BOHR^3')
@@ -396,8 +386,6 @@ CONTAINS
       CHARACTER(LEN=16)           :: units
       INTEGER                     :: i
       !
-      CHARACTER(LEN=1), EXTERNAL :: capital
-      !
       xyzNode => item(getElementsByTagname(u, 'MOL_XYZ'), 0)
       !
       IF (ASSOCIATED(mol%coord)) THEN
@@ -412,9 +400,7 @@ CONTAINS
       ELSE
         units = 'bohr'
       END IF
-      DO i = 1, LEN_TRIM(units)
-         units(i:i) = capital(units(i:i))
-      END DO
+      units = capital(TRIM(units))
       !
       SELECT CASE (TRIM(units))
       CASE ('BOHR')
@@ -459,8 +445,6 @@ CONTAINS
       INTEGER                     :: i
       INTEGER                     :: iatom
       !
-      CHARACTER(LEN=1), EXTERNAL :: capital
-      !
       IF (.NOT. mol%has_lj) THEN
         RETURN
       END IF
@@ -487,9 +471,7 @@ CONTAINS
       ELSE
         units = 'rydberg'
       END IF
-      DO i = 1, LEN_TRIM(units)
-        units(i:i) = capital(units(i:i))
-      END DO
+      units = capital(TRIM(units))
       !
       SELECT CASE (TRIM(units))
       CASE ('RYDBERG')
@@ -528,9 +510,7 @@ CONTAINS
       ELSE
         units = 'bohr'
       END IF
-      DO i = 1, LEN_TRIM(units)
-        units(i:i) = capital(units(i:i))
-      END DO
+      units = capital(TRIM(units))
       !
       SELECT CASE (TRIM(units))
       CASE ('BOHR')

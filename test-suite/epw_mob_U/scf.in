@@ -1,0 +1,33 @@
+ &control
+   calculation  = 'scf',
+   restart_mode = 'from_scratch',
+   prefix       = 'cdo',
+   pseudo_dir   = '../../pseudo/',
+   outdir       = './',
+   verbosity    = 'high'
+   disk_io      = 'low',
+/
+ &system
+   ibrav = 2, 
+   celldm(1) = 8.915
+   nat = 2, 
+   ntyp = 2, 
+   ecutwfc = 60, 
+ /
+ &electrons
+   diagonalization = 'david',
+   diago_full_acc  = .true.,
+   conv_thr        =  1.0D-15,
+ /
+ ATOMIC_SPECIES
+   Cd   0.000   Cd_ONCV_PBE_SR.upf
+   O    0.000   O_ONCV_PBE_SR.upf
+ ATOMIC_POSITIONS crystal
+   Cd     0.000000000         0.000000000         0.000000000
+   O      0.500000000         0.500000000         0.500000000
+
+K_POINTS automatic
+   4 4 4 0  0  0
+HUBBARD (atomic)
+U O-2p   5.13
+

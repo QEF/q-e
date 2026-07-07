@@ -182,6 +182,7 @@ MODULE path_io_routines
        USE fcp_variables,          ONLY : lfcp, fcp_nelec, fcp_ef, fcp_dos
        USE gcscf_variables,        ONLY : lgcscf, gcscf_nelec, gcscf_ef
        USE path_reparametrisation, ONLY : spline_interpolation
+       USE upf_utils,              ONLY : matches
        !
        IMPLICIT NONE
        !
@@ -190,7 +191,6 @@ MODULE path_io_routines
        CHARACTER(LEN=256) :: input_line
        LOGICAL            :: lfcp_inp
        LOGICAL            :: exists
-       LOGICAL, EXTERNAL  :: matches
        REAL(DP)           :: gcscf_tmp
        !
        !

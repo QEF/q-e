@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
@@ -115,13 +116,13 @@
     image = 1   
     size_image_arr(:) = 0 
     DO iq = 1, totq
-      IF (MOD(iq, nimage) == my_image_id) THEN
+      IF (MOD(iq - 1, nimage) == my_image_id) THEN
         image_array(image) = selecq(iq)
-        size_image_arr(my_image_id+1) = image
+        size_image_arr(my_image_id + 1) = image
         image = image + 1
       ENDIF
     ENDDO    
-    size_image = image-1
+    size_image = image - 1
     ! 
     !---------------------------------------------------------------------
     END SUBROUTINE image_division
@@ -136,7 +137,7 @@
     !---------------------------------------------------------------------
     !
     USE mp_global,   ONLY : my_pool_id,npool
-    USE pwcom,       ONLY : nkstot
+    USE global_var,  ONLY : nkpts
     !
     IMPLICIT NONE
     !
@@ -155,8 +156,8 @@
     !
     ! Number of kpoint blocks, kpoints per pool and reminder
     !
-    nkl = 1 * (nkstot / npool)
-    nkr = (nkstot - nkl * npool) / 1
+    nkl = 1 * (nkpts / npool)
+    nkr = (nkpts - nkl * npool) / 1
     !
     ! The reminder goes to the first nkr pools (0...nkr-1)
     !

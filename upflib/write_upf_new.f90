@@ -147,14 +147,10 @@ CONTAINS
     IMPLICIT NONE
     CHARACTER(LEN=*) :: strin
     !
-    INTEGER :: n
     CHARACTER(LEN=:), ALLOCATABLE :: strout
     !
     IF ( v2 ) THEN
-       strout = ''
-       DO n = 1,LEN_TRIM(strin)
-          strout = strout // capital(strin(n:n))
-       END DO
+       strout = capital(TRIM(strin))
     ELSE
        strout = TRIM(strin)
     END IF
@@ -662,7 +658,7 @@ CONTAINS
     TYPE(pseudo_upf),INTENT(IN) :: upf ! the pseudo data
     !
     INTEGER :: nw, ind, l
-    CHARACTER(LEN=8) :: tag
+    CHARACTER(LEN=9) :: tag
     !
     CALL xmlw_opentag( capitalize_if_v2('pp_pswfc') )
     DO nw =1, upf%nwfc

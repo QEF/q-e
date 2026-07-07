@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
@@ -46,13 +47,13 @@
                               eps_acoustic, efermi_read, fermi_energy, restart, restart_step, &
                               lwfpt, ahc_win_min, ahc_win_max, elecselfen_type, specfun_el, &
                               elecselfen, wmin_specfun, wmax_specfun, nw_specfun, &
-                              lfast_kmesh, nqf1, nqf2, nqf3
+                              lfast_kmesh, nqf1, nqf2, nqf3, eval_hplrn, eval_eplrn
     USE pwcom,         ONLY : ef
     USE global_var,    ONLY : etf, ibndmin, xqf, eta, nbndfst, &
                               nkf, epf17, wf, wqf, adapt_smearing, &
                               sigmar_all, sigmai_all, sigmai_mode, zi_all, efnew, &
                               nktotf, lower_bnd, gtemp, dwf17, esigmar_all, esigmai_all, &
-                              sigmar_dw_all
+                              sigmar_dw_all, evbm, ecbm
     USE control_flags, ONLY : iverbosity
     USE ep_constants,  ONLY : kelvin2eV, ryd2mev, ryd2ev, one, two, zero, ci, eps6, eps8
     USE constants,     ONLY : pi
@@ -115,6 +116,8 @@
     !! Temporary variable to store etmp1^2
     REAL(KIND = DP) :: sq_etmp2
     !! Temporary variable to store etmp2^2
+    REAL(KIND = DP) :: eval_plrn
+    !! Polaron eigenvalue (NOT relative to the Fermi level, NOT referenced to VBM or CBM)
     REAL(KIND = DP) :: wgkq
     !! Fermi-Dirac occupation factor $f_{mk+q}(T)$
     REAL(KIND = DP) :: fact1
@@ -211,6 +214,10 @@
       ENDDO
     ENDIF
     !
+    ! Convert from eV to Ry
+    eval_hplrn = eval_hplrn / ryd2ev
+    eval_eplrn = eval_eplrn / ryd2ev
+    !
     IF (iqq == 1) THEN
       !
       ! Print calculation information to stdout
@@ -227,6 +234,7 @@
         WRITE(stdout, '(/5x, a)') REPEAT('=', 67)
         WRITE(stdout, '(5x, "Electron (Imaginary) Self-Energy in the Migdal Approximation")')
         WRITE(stdout, '(5x, a/)') REPEAT('=', 67)
+        WRITE(stdout, '(5x, "Calculation type: ", a)') elecselfen_type
       ENDIF
       !
       IF (specfun_el) THEN
@@ -288,6 +296,18 @@
         ef0 = efnew
       ENDIF
       !
+      IF (elecselfen_type == 'manybodyplrn') THEN
+        ! obtain evbm and ecbm from the band structure
+        CALL get_vbm_cbm(ef0)
+        !
+        IF (iqq==1) THEN
+          WRITE(stdout, '(5x, "evbm = ", f10.6, " eV")') evbm * ryd2ev
+          WRITE(stdout, '(5x, "eval_hplrn = ", f10.6, " eV")') eval_hplrn * ryd2ev
+          WRITE(stdout, '(5x, "ecbm = ", f10.6, " eV")') ecbm * ryd2ev
+          WRITE(stdout, '(5x, "eval_eplrn = ", f10.6, " eV")') eval_eplrn * ryd2ev
+        ENDIF
+      ENDIF
+      !
       IF (restart) THEN
         ! Make everythin 0 except the range of k-points we are working on
         sigmar_all(:, 1:lower_bnd - 1, :) = zero
@@ -310,6 +330,10 @@
         !
         ! loop over all k points of the fine mesh
         !
+        !$omp parallel do private(ikk,ikq,ik_global,imode,ibnd,ekk,eta_tmp) &
+        !$omp private(sq_eta_tmp,inv_eta_tmp,jbnd,ekq,wgkq,g2,fact1,fact2) &
+        !$omp private(etmp1,etmp2,weight,w0g1,w0g2,sq_etmp1,sq_etmp2,weight0) &
+        !$omp private(iw,etmpw1,etmpw2,fact,eval_plrn)
         DO ik = 1, nkf
           !
           ikk = 2 * ik - 1
@@ -369,6 +393,28 @@
                   ELSEIF (elecselfen_type == 'nonadiabatic') THEN
                     etmp1 = ekk - (ekq - wq(imode))
                     etmp2 = ekk - (ekq + wq(imode))
+                  ELSEIF (elecselfen_type == 'manybodyplrn') THEN
+                    IF (ekk <= evbm - ef0) THEN
+                      ! For valence manifold, use the hole polaron eigenvalue (not referenced to VBM).
+                      eval_plrn = evbm + eval_hplrn
+                    ELSE
+                      ! For conduction manifold, use the electron polaron eigenvalue (not referenced to CBM).
+                      eval_plrn = ecbm + eval_eplrn
+                    ENDIF
+                    !
+                    ! In case of many-body polaron, replace ekk with eval_plrn - ef0 (energy of band extremum referenced to Ef)
+                    ! c.f. Below Eq. (63) of Phys. Rev. B 106, 075119 (2022)
+                    etmp1 = (eval_plrn - ef0) - (ekq - wq(imode))
+                    etmp2 = (eval_plrn - ef0) - (ekq + wq(imode))
+                    !
+                    ! ! DEBUG
+                    ! IF ((iq==1 .and. imode==1 .and. ibnd==10 .and. jbnd==2) .or. &
+                    !     (iq==1 .and. imode==1 .and. ibnd==12 .and. jbnd==3)) THEN
+                    !   WRITE(stdout, '(5x, "iq = ", i8, " imode = ", i3, " ibnd = ", i3, " jbnd = ", i3)') iq, imode, ibnd, jbnd
+                    !   WRITE(stdout, '(5x, "eval_plrn = ", f10.6, " eV")') eval_plrn * ryd2ev
+                    !   WRITE(stdout, '(5x, "ekk = ", f10.6, " eV")') ekk * ryd2ev
+                    !   WRITE(stdout, '(5x, "ef0 = ", f10.6, " eV")') ef0 * ryd2ev
+                    ! ENDIF
                   ENDIF
                   !
                   ! Self-energy at the bare electron energy
@@ -495,6 +541,7 @@
             ENDDO !imode
           ENDIF ! endif  fsthick
         ENDDO ! end loop on k
+        !$omp end parallel do
         !
         ! Creation of a restart point
         IF (restart) THEN
@@ -537,11 +584,13 @@
     USE kinds,         ONLY : DP
     USE ep_constants,  ONLY : ryd2mev, ryd2ev, czero, zero, eps6, one, kelvin2eV
     USE mp,            ONLY : mp_barrier, mp_sum
-    USE mp_global,     ONLY : inter_pool_comm, inter_image_comm
-    USE io_global,     ONLY : stdout, ionode
+    USE mp_world,      ONLY : world_comm
+    USE mp_images,     ONLY : inter_image_comm
+    USE mp_pools,      ONLY : inter_pool_comm
+    USE io_global,     ONLY : stdout, meta_ionode
     USE io_var,        ONLY : linewidth_elself, iuelself_wfpt
     USE input,         ONLY : nbndsub, efermi_read, fermi_energy, nstemp, &
-                              ahc_win_min, ahc_win_max, lwfpt
+                              ahc_win_min, ahc_win_max, lwfpt, lsda
     USE control_flags, ONLY : iverbosity
     USE modes,         ONLY : nmodes
     USE global_var,    ONLY : etf, ibndmin, nkqf, nbndfst, xkf, nkqtotf, gtemp, &
@@ -556,6 +605,8 @@
     !! string for temperatures
     CHARACTER(LEN = 256) :: fileselfen
     !! file name for self energy
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer file name
     INTEGER :: ierr
     !! Error status
     INTEGER :: ik
@@ -581,6 +632,8 @@
     REAL(KIND = DP), ALLOCATABLE :: sigmar_all_sum(:, :, :)
     !! Real part of the total self-energy, temporarily used for printing
     !
+    fnm = ''
+    IF (TRIM(lsda) == 'down') fnm = '.down'
     ! Fermi level
     !
     IF (efermi_read) THEN
@@ -607,6 +660,7 @@
     CALL mp_sum(sigmar_all, inter_pool_comm)
     CALL mp_sum(sigmai_all, inter_pool_comm)
     CALL mp_sum(zi_all, inter_pool_comm)
+    !
     CALL mp_sum(sigmar_all, inter_image_comm)
     CALL mp_sum(sigmai_all, inter_image_comm)
     CALL mp_sum(zi_all, inter_image_comm)
@@ -614,74 +668,80 @@
       CALL mp_sum(sigmar_dw_all, inter_pool_comm)
       CALL mp_sum(sigma_ahc_hdw, inter_pool_comm)
       CALL mp_sum(sigma_ahc_uf, inter_pool_comm)
+      !
+      CALL mp_sum(sigmar_dw_all, inter_image_comm)
+      CALL mp_sum(sigma_ahc_hdw, inter_image_comm)
+      CALL mp_sum(sigma_ahc_uf, inter_image_comm)
     ENDIF
     IF (iverbosity == 3) THEN 
       CALL mp_sum(sigmai_mode, inter_pool_comm)
+      !
       CALL mp_sum(sigmai_mode, inter_image_comm)
     ENDIF
     !
-    ! Average over degenerate eigenstates
-    !
-    WRITE(stdout, '(5x,"Average over degenerate eigenstates is performed")')
-    CALL degenerate_average_real(sigmar_all, etf_all)
-    CALL degenerate_average_real(sigmai_all, etf_all)
-    CALL degenerate_average_real(zi_all, etf_all)
-    IF (lwfpt) THEN
-      CALL degenerate_average_real(sigmar_dw_all, etf_all)
-      CALL degenerate_average_real(sigma_ahc_hdw, etf_all)
-      CALL degenerate_average_real(sigma_ahc_uf, etf_all)
-    ENDIF
-    !
-    ALLOCATE(sigmar_all_sum(nbndfst, nktotf, nstemp), STAT=ierr)
-    IF (ierr /=0) CALL errore('selfen_elec_print', 'Error allocating sigmar_all_sum', 1)
-    !
-    sigmar_all_sum(:,:,:) = 0.d0
-    !
-    IF (lwfpt) THEN
-      sigmar_all_sum = sigmar_all + sigmar_dw_all + sigma_ahc_hdw + sigma_ahc_uf
-    ELSE
-      sigmar_all_sum = sigmar_all
-    ENDIF
-    !
-    IF (lwfpt) THEN
-      WRITE(stdout, '(5x, "Electron Self-Energy using Wannier function perturbation theory")')
+    IF (meta_ionode) THEN
       !
-      ! Upper Fan self-energy is valid only if the energy is inside the AHC window.
-      ! Set it to NaN otherwise.
+      ! Average over degenerate eigenstates
       !
-      DO itemp = 1, nstemp
-        DO ik = 1, nktotf
-          ikk = 2 * ik - 1
-          DO ibnd = 1, nbndfst
-            !
-            ekk = etf_all(ibndmin - 1 + ibnd, ikk)
-            IF (ekk < ahc_win_min .OR. ahc_win_max < ekk) THEN
-              ! sigma_ahc_uf(ibnd, ik, itemp) = IEEE_VALUE(sigma_ahc_uf(ibnd, ik, itemp), IEEE_QUIET_NAN)
-              ! QE testcode cannot deal with NaNs. So, I set the values to zero instead of NaN.
-              ! FIXME: Delete the next two lines once gitlab.com/QEF/q-e/-/issues/623 is fixed.
-              sigma_ahc_uf(ibnd, ik, itemp) = zero
-              sigmar_all_sum(ibnd, ik, itemp) = zero
-            ENDIF
-            !
+      WRITE(stdout, '(5x,"Average over degenerate eigenstates is performed")')
+      CALL degenerate_average_real(sigmar_all, etf_all)
+      CALL degenerate_average_real(sigmai_all, etf_all)
+      CALL degenerate_average_real(zi_all, etf_all)
+      IF (lwfpt) THEN
+        CALL degenerate_average_real(sigmar_dw_all, etf_all)
+        CALL degenerate_average_real(sigma_ahc_hdw, etf_all)
+        CALL degenerate_average_real(sigma_ahc_uf, etf_all)
+      ENDIF
+      !
+      ALLOCATE(sigmar_all_sum(nbndfst, nktotf, nstemp), STAT=ierr)
+      IF (ierr /=0) CALL errore('selfen_elec_print', 'Error allocating sigmar_all_sum', 1)
+      !
+      sigmar_all_sum(:,:,:) = 0.d0
+      !
+      IF (lwfpt) THEN
+        sigmar_all_sum = sigmar_all + sigmar_dw_all + sigma_ahc_hdw + sigma_ahc_uf
+      ELSE
+        sigmar_all_sum = sigmar_all
+      ENDIF
+      !
+      IF (lwfpt) THEN
+        WRITE(stdout, '(5x, "Electron Self-Energy using Wannier function perturbation theory")')
+        !
+        ! Upper Fan self-energy is valid only if the energy is inside the AHC window.
+        ! Set it to NaN otherwise.
+        !
+        DO itemp = 1, nstemp
+          DO ik = 1, nktotf
+            ikk = 2 * ik - 1
+            DO ibnd = 1, nbndfst
+              !
+              ekk = etf_all(ibndmin - 1 + ibnd, ikk)
+              IF (ekk < ahc_win_min .OR. ahc_win_max < ekk) THEN
+                ! sigma_ahc_uf(ibnd, ik, itemp) = IEEE_VALUE(sigma_ahc_uf(ibnd, ik, itemp), IEEE_QUIET_NAN)
+                ! QE testcode cannot deal with NaNs. So, I set the values to zero instead of NaN.
+                ! FIXME: Delete the next two lines once gitlab.com/QEF/q-e/-/issues/623 is fixed.
+                sigma_ahc_uf(ibnd, ik, itemp) = zero
+                sigmar_all_sum(ibnd, ik, itemp) = zero
+              ENDIF
+              !
+            ENDDO
           ENDDO
         ENDDO
-      ENDDO
-    ENDIF
-    !
-    ! Output electron self-energy
-    !
-    DO itemp = 1, nstemp
-      WRITE(stdout, '(5x, a, f8.3, a)') "Temperature: ", gtemp(itemp) * ryd2ev / kelvin2eV, "K"
+      ENDIF
       !
-      ! Output electron SE here after looping over all q-points (with their contributions
-      ! summed in sigmar_all, etc.)
+      ! Output electron self-energy
       !
-      WRITE(stdout, '(5x,"WARNING: only the eigenstates within the Fermi window are meaningful")')
-      !
-      IF (ionode) THEN
+      DO itemp = 1, nstemp
+        WRITE(stdout, '(5x, a, f8.3, a)') "Temperature: ", gtemp(itemp) * ryd2ev / kelvin2eV, "K"
+        !
+        ! Output electron SE here after looping over all q-points (with their contributions
+        ! summed in sigmar_all, etc.)
+        !
+        WRITE(stdout, '(5x,"WARNING: only the eigenstates within the Fermi window are meaningful")')
+        !
         ! Write to file
         WRITE(tp, "(f8.3)") gtemp(itemp) * ryd2ev / kelvin2eV
-        fileselfen = 'linewidth.elself.' // trim(adjustl(tp)) // 'K'
+        fileselfen = 'linewidth.elself.' // trim(adjustl(tp)) // 'K' // TRIM(fnm)
         OPEN(UNIT = linewidth_elself, FILE = fileselfen)
         WRITE(linewidth_elself, '(a)') '# Electron linewidth = 2*Im(Sigma) (meV)'
         IF (iverbosity == 3) THEN
@@ -733,82 +793,84 @@
           !
         ENDDO
         CLOSE(linewidth_elself)
-      ENDIF ! inode
-      !
-      ! Print self-energy and Z factor to stdout
-      !
-      DO ibnd = 1, nbndfst
-        DO ik = 1, nktotf
-          !
-          ikk = 2 * ik - 1
-          ikq = ikk + 1
-          !
-          ! note that ekk does not depend on q
-          ekk = etf_all(ibndmin - 1 + ibnd, ikk) - ef0
-          !
-          ! calculate Z = 1 / (1 - \frac{\partial\Sigma}{\partial\omega})
-          !zi_all(ibnd,ik) = one / (one + zi_all(ibnd,ik))
-          !
-          WRITE(stdout, '(2i9, 5E22.14)') ik, ibndmin - 1 + ibnd, &
-            ryd2ev * ekk,&
-            ryd2mev * sigmar_all_sum(ibnd, ik, itemp), &
-            ryd2mev * sigmai_all(ibnd, ik, itemp), &
-            zi_all(ibnd, ik, itemp), &
-            one / zi_all(ibnd, ik, itemp) - one
-          !
-        ENDDO
         !
-        WRITE(stdout, '(a)') '  '
-        !
-      ENDDO
-      !
-      ! Print WFPT output self-energy to stdout
-      !
-      IF (lwfpt) THEN
-        !
-        WRITE(stdout, '(a)') ''
-        WRITE(stdout, '(5x,a)') 'Full decomposition of the Allen-Heine-Cardona self-energy into the Fan/Debye-Waller'
-        WRITE(stdout, '(5x,a)') 'and active-space/rest-space contributions is written to file elself_wfpt_sup.#K'
-        WRITE(stdout, '(a)') ''
-        WRITE(stdout, '(a)') ''
-        !
-        WRITE(tp, "(f8.3)") gtemp(itemp) * ryd2ev / kelvin2eV
-        fileselfen = 'elself_wfpt_sup.' // trim(adjustl(tp)) // 'K'
-        OPEN(UNIT = iuelself_wfpt, FILE = fileselfen)
-        !
-        WRITE(iuelself_wfpt, '(a)') '# Electron self-energy (meV) in the Allen-Heine-Cardona&
-                          & formalism at T = ' // trim(adjustl(tp)) // 'K'
-        WRITE(iuelself_wfpt, '(a)') '#   ik  ibnd      E_nk (eV) Re[Active_Fan]      Active_DW&
-                          &       Rest_Fan        Rest_DW Im[Active_Fan] (meV)'
+        ! Print self-energy and Z factor to stdout
         !
         DO ibnd = 1, nbndfst
           DO ik = 1, nktotf
             !
             ikk = 2 * ik - 1
+            ikq = ikk + 1
             !
-            ekk = etf_all(ibndmin - 1 + ibnd, ikk)
+            ! note that ekk does not depend on q
+            ekk = etf_all(ibndmin - 1 + ibnd, ikk) - ef0
             !
-            WRITE(iuelself_wfpt, '(2i6,6E22.14)') ik, ibndmin - 1 + ibnd, &
-              ryd2ev * ekk, &
-              ryd2mev * sigmar_all(ibnd, ik, itemp), &
-              ryd2mev * sigmar_dw_all(ibnd, ik, itemp), &
-              ryd2mev * sigma_ahc_uf(ibnd, ik, itemp), &
-              ryd2mev * sigma_ahc_hdw(ibnd, ik, itemp), &
-              ryd2mev * sigmai_all(ibnd, ik, itemp)
-          ENDDO ! ik
+            ! calculate Z = 1 / (1 - \frac{\partial\Sigma}{\partial\omega})
+            !zi_all(ibnd,ik) = one / (one + zi_all(ibnd,ik))
+            !
+            WRITE(stdout, '(2i9, 5E22.14)') ik, ibndmin - 1 + ibnd, &
+              ryd2ev * ekk,&
+              ryd2mev * sigmar_all_sum(ibnd, ik, itemp), &
+              ryd2mev * sigmai_all(ibnd, ik, itemp), &
+              zi_all(ibnd, ik, itemp), &
+              one / zi_all(ibnd, ik, itemp) - one
+            !
+          ENDDO
           !
-          WRITE(iuelself_wfpt, '(a)') '  '
+          WRITE(stdout, '(a)') '  '
           !
-        ENDDO ! ibnd
+        ENDDO
         !
-        CLOSE(iuelself_wfpt)
+        ! Print WFPT output self-energy to stdout
         !
-      ENDIF ! lwfpt
+        IF (lwfpt) THEN
+          !
+          WRITE(stdout, '(a)') ''
+          WRITE(stdout, '(5x,a)') 'Full decomposition of the Allen-Heine-Cardona self-energy into the Fan/Debye-Waller'
+          WRITE(stdout, '(5x,a)') 'and active-space/rest-space contributions is written to file elself_wfpt_sup.#K'
+          WRITE(stdout, '(a)') ''
+          WRITE(stdout, '(a)') ''
+          !
+          WRITE(tp, "(f8.3)") gtemp(itemp) * ryd2ev / kelvin2eV
+          fileselfen = 'elself_wfpt_sup.' // trim(adjustl(tp)) // 'K' // TRIM(fnm)
+          OPEN(UNIT = iuelself_wfpt, FILE = fileselfen)
+          !
+          WRITE(iuelself_wfpt, '(a)') '# Electron self-energy (meV) in the Allen-Heine-Cardona&
+                            & formalism at T = ' // trim(adjustl(tp)) // 'K'
+          WRITE(iuelself_wfpt, '(a)') '#   ik  ibnd      E_nk (eV) Re[Active_Fan]      Active_DW&
+                            &       Rest_Fan        Rest_DW Im[Active_Fan] (meV)'
+          !
+          DO ibnd = 1, nbndfst
+            DO ik = 1, nktotf
+              !
+              ikk = 2 * ik - 1
+              !
+              ekk = etf_all(ibndmin - 1 + ibnd, ikk)
+              !
+              WRITE(iuelself_wfpt, '(2i6,6E22.14)') ik, ibndmin - 1 + ibnd, &
+                ryd2ev * ekk, &
+                ryd2mev * sigmar_all(ibnd, ik, itemp), &
+                ryd2mev * sigmar_dw_all(ibnd, ik, itemp), &
+                ryd2mev * sigma_ahc_uf(ibnd, ik, itemp), &
+                ryd2mev * sigma_ahc_hdw(ibnd, ik, itemp), &
+                ryd2mev * sigmai_all(ibnd, ik, itemp)
+            ENDDO ! ik
+            !
+            WRITE(iuelself_wfpt, '(a)') '  '
+            !
+          ENDDO ! ibnd
+          !
+          CLOSE(iuelself_wfpt)
+          !
+        ENDIF ! lwfpt
+        !
+      ENDDO ! itemp
       !
-    ENDDO ! itemp
+      DEALLOCATE(sigmar_all_sum, STAT = ierr)
+      IF (ierr /= 0) CALL errore('selfen_elec_print', 'Error deallocating sigmar_all_sum', 1)
+      !
+    ENDIF ! inode
     !
-    DEALLOCATE(sigmar_all_sum, STAT = ierr)
-    IF (ierr /= 0) CALL errore('selfen_elec_print', 'Error deallocating sigmar_all_sum', 1)
     DEALLOCATE(xkf_all, STAT = ierr)
     IF (ierr /= 0) CALL errore('selfen_elec_print', 'Error deallocating xkf_all', 1)
     DEALLOCATE(etf_all, STAT = ierr)
@@ -824,7 +886,7 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE selfen_phon_q(iqq, iq, totq)
+    SUBROUTINE selfen_phon_q(iqq, iq, totq, nbndsub_tot, wkf_tot, etf_tot)
     !-----------------------------------------------------------------------
     !!
     !! Compute the imaginary part of the phonon self energy due to electron-
@@ -852,7 +914,7 @@
                               nsmear, delta_smear, eps_acoustic, specfun_ph, &
                               delta_approx, vme, lfast_kmesh, isk_dummy, &
                               wmax_specfun, wmin_specfun, nw_specfun, &
-                              phonselfen
+                              phonselfen, lsda
     USE pwcom,         ONLY : nelec, ef
     USE global_var,    ONLY : epf17, ibndmin, etf, wkf, xqf, wqf, nkqf,  &
                               nkf, wf, xqf, lambda_all, lambda_v_all,    &
@@ -874,6 +936,13 @@
     !! Current q-point index
     INTEGER, INTENT(in) :: totq
     !! Total number of q-points in selecq.fmt
+    INTEGER, INTENT(in) :: nbndsub_tot
+    !! Total number of bands 
+    REAL(KIND = DP), INTENT(in) :: wkf_tot(nkqf)
+    !! Integration weights on the fine mesh
+    REAL(KIND = DP), INTENT(in) :: etf_tot(nbndsub_tot, nkqf)
+    !! Interpolated eigenvalues
+    !
     !
     ! Local variables
     !
@@ -1077,7 +1146,7 @@
           ef0 = fermi_energy
         ELSEIF (nsmear > 1) THEN
           !
-          ef0 = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw0, ngaussw, 0, isk_dummy)
+          ef0 = efermig(etf_tot, nbndsub_tot, nkqf, nelec, wkf_tot, degaussw0, ngaussw, 0, isk_dummy)
           ! if some bands are skipped (nbndskip /= 0), nelec has already been
           ! recalculated in ephwann_shuffle
           !
@@ -1085,7 +1154,7 @@
           ef0 = efnew
         ENDIF
         !
-        dosef = dos_ef(ngaussw, degaussw0, ef0, etf, wkf, nkqf, nbndsub)
+        dosef = dos_ef(ngaussw, degaussw0, ef0, etf_tot, wkf_tot, nkqf, nbndsub_tot)
         !  N(Ef) in the equation for lambda is the DOS per spin
         dosef = dosef / two
         !
@@ -1245,8 +1314,8 @@
         ! collect contributions from all pools (sum over k-points)
         ! this finishes the integral over the BZ  (k)
         !
-	CALL mp_sum(pi_r, inter_pool_comm)
-	CALL mp_sum(pi_0, inter_pool_comm)
+        CALL mp_sum(pi_r, inter_pool_comm)
+        CALL mp_sum(pi_0, inter_pool_comm)
         CALL mp_sum(gamma, inter_pool_comm)
         CALL mp_sum(gamma_v, inter_pool_comm)
         CALL mp_sum(fermicount, inter_pool_comm)
@@ -1257,7 +1326,7 @@
           DO imode = 1, nmodes
             ! calculate the one-shot dynamical correction to the adiabatic frequency.
             wq_dyn(imode) = wq(imode)**2 + 2*wq(imode) * (pi_r(imode) - pi_0(imode))
-            wq_dyn(imode) =  SQRT(ABS(wq_dyn(imode))) * wq_dyn(imode) / ABS(wq_dyn(imode))
+            wq_dyn(imode) =  SQRT(ABS(wq_dyn(imode))) * SIGN(1.0_DP, wq_dyn(imode))
             !
             ! If there are any dynamical corrections to the DFPT frequency, calculate also the self-consistent (off-shell) correction 
             IF (abs(wq_dyn(imode) - wq(imode)) > 1.0D-5) THEN
@@ -2089,7 +2158,7 @@
     !--------------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE nesting_fn_q(iqq, iq)
+    SUBROUTINE nesting_fn_q(iqq, iq, nbndsub_tot, wkf_tot, etf_tot)
     !-----------------------------------------------------------------------
     !!
     !! Compute the imaginary part of the phonon self energy due to electron-
@@ -2103,7 +2172,7 @@
     !-----------------------------------------------------------------------
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
-    USE input,     ONLY : nbndsub, fsthick, ngaussw, degaussw, &
+    USE input,     ONLY : nbndsub, fsthick, ngaussw, degaussw, lsda, &
                           nsmear, delta_smear, efermi_read, fermi_energy
     USE pwcom,     ONLY : ef
     USE global_var,ONLY : ibndmin, etf, wkf, xqf, wqf, nkqf, nktotf, &
@@ -2118,6 +2187,13 @@
     !! Current q-point index from selecq
     INTEGER, INTENT(in) :: iq
     !! Current q-point index
+    INTEGER, INTENT(in) :: nbndsub_tot
+    !! Total number of bands 
+    REAL(KIND = DP), INTENT(in) :: wkf_tot(nkqf)
+    !! Integration weights on the fine mesh
+    REAL(KIND = DP), INTENT(in) :: etf_tot(nbndsub_tot,nkqf)
+    !! Interpolated eigenvalues
+
     !
     ! Local variables
     INTEGER :: ik
@@ -2189,7 +2265,7 @@
         ef0 = efnew
       ENDIF
       !
-      dosef = dos_ef(ngaussw, degaussw0, ef0, etf, wkf, nkqf, nbndsub)
+      dosef = dos_ef(ngaussw, degaussw0, ef0, etf_tot, wkf_tot, nkqf, nbndsub_tot)
       !  N(Ef) in the equation for lambda is the DOS per spin
       dosef = dosef / two
       !
@@ -2267,6 +2343,56 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE nesting_fn_q
     !-----------------------------------------------------------------------
+
+
+    !-----------------------------------------------------------------------
+    SUBROUTINE get_vbm_cbm(ef0)
+    !-----------------------------------------------------------------------
+    !! Donghwan Kim: Implemented 07/2025
+    !!
+    !! Calculates the valence band maximum (VBM) and conduction band
+    !! minimum (CBM) from the band structure eigenvalues (etf).
+    !! The results are broadcast across all MPI pools.
+    !-----------------------------------------------------------------------
+    USE kinds,            ONLY : DP
+    USE global_var,       ONLY : etf, nkf, evbm, ecbm
+    USE input,            ONLY : nbndsub
+    USE mp,               ONLY : mp_max, mp_min
+    USE mp_global,        ONLY : inter_pool_comm
+
+    IMPLICIT NONE
+
+    ! Local variables
+    INTEGER :: ik         !! k-point index
+    INTEGER :: ikk        !! Index for etf array
+    INTEGER :: ibnd       !! Band index
+    
+    REAL(KIND = DP), INTENT(in) :: ef0        !! Fermi energy level
+
+    ! Initialize band extrema to large/small values
+    evbm = -1.0d+8
+    ecbm =  1.0d+8
+
+    ! Find local VBM and CBM from the eigenvalues on this MPI pool
+    DO ik = 1, nkf
+      ikk = 2 * ik - 1
+      DO ibnd = 1, nbndsub
+        IF (etf(ibnd, ikk) <= ef0) THEN
+          evbm = MAX(evbm, etf(ibnd, ikk))
+        ELSE
+          ecbm = MIN(ecbm, etf(ibnd, ikk))
+        ENDIF
+      ENDDO
+    ENDDO
+
+    ! Find the global VBM and CBM across all MPI pools
+    CALL mp_max(evbm, inter_pool_comm)
+    CALL mp_min(ecbm, inter_pool_comm)
+
+    !-----------------------------------------------------------------------
+    END SUBROUTINE get_vbm_cbm
+    !-----------------------------------------------------------------------
+
 
   !-----------------------------------------------------------------------
   END MODULE selfen

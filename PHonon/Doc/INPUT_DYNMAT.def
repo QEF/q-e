@@ -9,16 +9,16 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program dynm
 
 	- adds the non-analytical part (if Z* and epsilon are read from
           file), applies the chosen Acoustic Sum Rule (if q=0)
-	
+
 	- diagonalise the dynamical matrix
-	
+
 	- calculates IR and Raman cross sections (if Z* and Raman
 	  tensors are read from file, respectively)
-	  
+
 	- writes the results to files, both for inspection and for
           plotting
 
-	
+
         @b {Structure of the input data:}
 	========================================================================
 
@@ -26,7 +26,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program dynm
 	   ...specs of namelist variables...
 	@b /
     }
-    
+
     namelist INPUT {
 
 	var fildyn -type CHARACTER {
@@ -40,14 +40,24 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program dynm
 	    info {
 		calculate LO modes (add non-analytic terms) along the direction q (Cartesian axis)
 	    }
-	    default { q = (0,0,0) }
+	    dimensionality { dimensionless }
+	    default { 0.0 }
 	}
 
 	dimension amass -start 1 -end ntyp -type REAL {
 	    info {
 		mass for each atom type
 	    }
-	    default { amass is read from file @ref fildyn }
+	    dimensionality { mass }
+	    units { amu }
+	    default -kind conditional {
+		case -test {@ref amass(nt) <= 0.0} {
+		    read from file @ref fildyn (amass_(nt); divided by amu_ry for non-XML files)
+		}
+		case {
+		    0.0
+		}
+	    }
 	}
 
 	var  asr -type  CHARACTER {
@@ -59,24 +69,24 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program dynm
                     Allowed values:
                 }
                 opt -val 'no' {
-                    no Acoustic Sum Rules imposed @b (default)
-                }               
+                    no Acoustic Sum Rules imposed
+                }
                 opt -val 'simple' {
                     previous implementation of the asr used
                     (3 translational asr imposed by correction of
                      the diagonal elements of the dynamical matrix)
-                }               
+                }
                 opt -val 'crystal' {
                     3 translational asr imposed by optimized
                     correction of the dyn. matrix (projection)
-                }                            
+                }
                 opt -val 'one-dim' {
                     3 translational asr + 1 rotational asr imposed
                     by optimized correction of the dyn. mat. (the
                     rotation axis is the direction of periodicity; it
                     will work only if this axis considered is one of
                     the Cartesian axis).
-                }         
+                }
                 opt -val 'zero-dim' {
                     3 translational asr + 3 rotational asr imposed
                     by optimized correction of the dyn. mat.
@@ -94,23 +104,23 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program dynm
                     previous implementation).
                 }
             }
-        }       
-      
+        }
+
         var remove_interaction_blocks -type LOGICAL {
-            info { 
-               If .true. lines and rows corresponding to atoms that are not displaced 
-               are set to 0. This can be used for ph.x calculations with nat_todo set 
-               in ph.x, to remove the interaction between the diplaced and fixed parts of the system.  
-               } 
-            default {.false.} 
-        } 
+            info {
+               If .true. lines and rows corresponding to atoms that are not displaced
+               are set to 0. This can be used for ph.x calculations with nat_todo set
+               in ph.x, to remove the interaction between the diplaced and fixed parts of the system.
+               }
+            default {.false.}
+        }
         var axis -type INTEGER {
             info {
                 indicates the rotation axis for a 1D system (1=Ox, 2=Oy, 3=Oz)
             }
             default { 3 }
         }
-        
+
         var lperm -type LOGICAL {
             info {
                 if .true. then calculate Gamma-point mode contributions to
@@ -121,7 +131,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program dynm
 
         var lplasma -type LOGICAL {
             info {
-                if .true. then calculate Gamma-point mode effective plasma 
+                if .true. then calculate Gamma-point mode effective plasma
                 frequencies, automatically triggers @ref lperm = .true.
             }
             default { .false. }
@@ -136,7 +146,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program dynm
             }
             default { 'dynmat.out' }
         }
-                
+
         var fileig -type CHARACTER {
             info {
                 output file containing phonon frequencies and eigenvectors
@@ -153,14 +163,14 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program dynm
         var filxsf -type CHARACTER {
             info {
                 as above, in axsf format suitable for xcrysden
-            }   
+            }
             default { 'dynmat.axsf' }
         }
         var loto_2d -type LOGICAL {
             info {
                 set to .true. to activate two-dimensional treatment of LO-TO splitting.
-            }   
-            default { '.false.' }
+            }
+            default { .false. }
         }
         var el_ph_nsig -type INTEGER {
             info {
@@ -173,6 +183,8 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program dynm
                 The spacing of double-delta smearing values used in an electron-phonon
                 coupling calculation.
             }
+            dimensionality { energy }
+            units { Ry }
         }
     }
 }

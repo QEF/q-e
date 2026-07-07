@@ -1,4 +1,4 @@
-LATEX   = pdflatex
+LATEX   = pdflatex -interaction=nonstopmode -halt-on-error
 LATEX2HTML = latex2html
 
 PDFS = constraints_HOWTO.pdf  user_guide.pdf brillouin_zones.pdf Hubbard_input.pdf 

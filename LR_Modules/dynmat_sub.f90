@@ -30,7 +30,7 @@ subroutine readmat2 ( fildyn, asr, axis, nat, ntyp, atm, &
   character(len=10), intent(in) :: asr
   integer, intent(in) :: axis
   integer, intent(inout) :: nat, ntyp
-  character(len=3), intent(out) ::  atm(ntyp)
+  character(len=6), intent(out) ::  atm(ntyp)
   real(DP), intent(out) :: amass(ntyp), a0, at(3,3), omega, &
        eps0(3,3), q(3)
   !
@@ -650,7 +650,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
      enddo
      !
      ! Projection of the dyn. "vector" on the orthogonal of the
-     ! subspace of the vectors verifying the sum rules and symmetry contraints
+     ! subspace of the vectors verifying the sum rules and symmetry constraints
      !
      w(:,:,:,:)=0.0d0
      do l=1,m

@@ -15,7 +15,14 @@ source [file join $sourcedir helpdoc.tcl]
 #
 
 set usage "
-    Usage: $argv0 \[-version value\] file1.def ?file2.def? ...
+    Usage: $argv0 \[-version value\] \[-strict\] file1.def ?file2.def? ...
+
+    -strict   enforce the modernized .def conventions: every var/dimension
+              must carry a <dimensionality>, dimensionful entries must carry
+              <units>, dimensionality/units/kind tokens must belong to the
+              closed vocabularies, keyed comma-list indices must be in range,
+              and <default> must be well-formed. Without -strict the legacy
+              lenient behavior is kept so unmigrated files still build.
 "
 
 if { $argc < 1 } {
@@ -25,6 +32,7 @@ if { $argc < 1 } {
 
 set options {
     {version.arg {} "Quantum ESPRESSO version number"}
+    {strict      0  "enforce modernized .def conventions (see usage)"}
 }
    
 set argv_orig $argv

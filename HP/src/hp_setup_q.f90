@@ -75,7 +75,7 @@ SUBROUTINE hp_setup_q()
   USE lr_nc_mag,        ONLY : deeq_nc_save
   USE dfunct,           ONLY : newd
   USE ldaU_lr,          ONLY : vh_u_save, vh_uv_save
-  USE ldaU,             ONLY : lda_plus_u_kind, Hubbard_lmax, max_num_neighbors, nsg, v_nsg
+  USE ldaU,             ONLY : lda_plus_u_kind, Hubbard_lmax, max_num_neighbors, v_nsg
   !
   IMPLICIT NONE
   INTEGER :: ir, isym, ik, it, na
@@ -143,7 +143,7 @@ SUBROUTINE hp_setup_q()
         ALLOCATE (nsg_nc(2*Hubbard_lmax+1, 2*Hubbard_lmax+1, max_num_neighbors, nat, nspin, 1))
         nsg_nc = (0.d0, 0.d0)
         vh_uv_save(:,:,:,:,:,1) = v_nsg(:,:,:,:,:)
-        nsg_nc(:,:,:,:,:,1) = nsg(:,:,:,:,:)
+        nsg_nc(:,:,:,:,:,1) = rho%nsg(:,:,:,:,:)
         CALL revert_mag_uv ( nsg_nc(:,:,:,:,:,1) )
         CALL calc_vh_uv (nsg_nc(:,:,:,:,:,1), vh_uv_save(:,:,:,:,:,2))
         DEALLOCATE(nsg_nc)

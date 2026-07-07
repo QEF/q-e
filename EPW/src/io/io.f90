@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   !
@@ -125,24 +126,33 @@
     !!
     !! Routine to write files on real-space grid for fine grid interpolation
     !!
-    USE kinds,     ONLY : DP
-    USE input,     ONLY : nbndsub, eig_read, etf_mem, lifc, lwfpt
-    USE pwcom,     ONLY : ef, nelec
-    USE klist,     ONLY : degauss, ngauss
-    USE global_var,ONLY : chw, rdw, cdmew, cvmew, chw_ks, zstar, epsi, &
-                          epmatwp, crrw, L, do_cutoff_2D_epw, dwmatwe, cpmew, &
-                          nbndskip
-    USE ions_base, ONLY : amass, ityp, nat, tau
-    USE cell_base, ONLY : at, bg, omega, alat
-    USE modes,     ONLY : nmodes
-    USE io_var,    ONLY : epwdata, iundmedata, iunvmedata, iunksdata, iunepmatwp, &
-                          crystal, iudwwe, iupmwe
+    USE kinds,            ONLY : DP
+    USE input,            ONLY : nbndsub, eig_read, etf_mem, lifc, lwfpt, lsda
+    USE pwcom,            ONLY : ef, nelec
+    USE klist,            ONLY : degauss, ngauss
+    USE global_var,       ONLY : chw, rdw, cdmew, cvmew, chw_ks, zstar, epsi, &
+                                 epmatwp, crrw, L, do_cutoff_2D_epw, dwmatwe, &
+                                 cpmew, nbndskip, irn_start, irn_stop, nirn_loc,&
+                                 nirg_loc, imode_start
+    USE ions_base,        ONLY : amass, ityp, nat, tau
+    USE cell_base,        ONLY : at, bg, omega, alat
+    USE modes,            ONLY : nmodes
+    USE io_var,           ONLY : epwdata, iundmedata, iunvmedata, iunksdata, &
+                                 iunepmatwp, crystal, iudwwe, iupmwe
     USE noncollin_module, ONLY : noncolin
-    USE io_files,  ONLY : prefix, diropn, tmp_dir
-    USE ep_constants,      ONLY : czero
-    USE mp,        ONLY : mp_barrier
-    USE mp_world,  ONLY : mpime
-    USE io_global, ONLY : ionode_id, stdout
+    USE io_files,         ONLY : prefix, diropn, tmp_dir
+    USE ep_constants,     ONLY : czero
+    USE mp,               ONLY : mp_barrier
+    USE mp_global,        ONLY : my_pool_id, my_image_id, inter_image_comm
+    USE mp_world,         ONLY : mpime, world_comm
+    USE io_global,        ONLY : ionode_id, stdout, ionode, meta_ionode
+    USE mp_pools,         ONLY : inter_pool_comm
+    USE ldaU,             ONLY : lda_plus_u, lda_plus_u_kind
+#if defined(__MPI)
+    USE parallel_include, ONLY : MPI_OFFSET_KIND, MPI_DOUBLE_COMPLEX, &
+                                 MPI_MODE_CREATE, MPI_MODE_WRONLY, &
+                                 MPI_INFO_NULL, MPI_STATUS_IGNORE       
+#endif
     !
     IMPLICIT NONE
     !
@@ -158,6 +168,8 @@
     ! Local variables
     CHARACTER(LEN = 256) :: filint
     !! Name of the file
+    CHARACTER(LEN = 256) :: fnm
+    !! buffer file name
     LOGICAL             :: exst
     !! The file exists
     INTEGER :: ibnd, jbnd
@@ -178,15 +190,31 @@
     !! Error index
     REAL(KIND = DP) :: dummy
     !! Dummy variable
+#if defined(__MPI)
+    INTEGER(KIND = MPI_OFFSET_KIND) :: epmatwp_offset
+    !! Offset for parallel reading epmatwp 
+    INTEGER :: epmatwp_block_dtype
+    !! MPI block datatype for parallel reading epmatwp
+#endif
     !
     WRITE(stdout,'(/5x,"Writing Hamiltonian, Dynamical matrix and EP vertex in Wann rep to file"/)')
     !
-    IF (mpime == ionode_id) THEN
+    IF (meta_ionode) THEN
       !
-      OPEN(UNIT = epwdata, FILE = 'epwdata.fmt')
-      OPEN(UNIT = crystal, FILE = 'crystal.fmt')
-      OPEN(UNIT = iunvmedata, FILE = 'vmedata.fmt')
-      OPEN(UNIT = iundmedata, FILE = 'dmedata.fmt')
+      fnm = 'epwdata.fmt'
+      IF (TRIM(lsda) == 'down') fnm = 'epwdata.down.fmt'
+      OPEN(UNIT = epwdata, FILE = TRIM(fnm))
+      fnm = 'crystal.fmt'
+      IF (TRIM(lsda) == 'down') fnm = 'crystal.down.fmt'
+      OPEN(UNIT = crystal, FILE = TRIM(fnm))
+      fnm = 'vmedata.fmt'
+      IF (TRIM(lsda) == 'down') fnm = 'vmedata.down.fmt'
+      OPEN(UNIT = iunvmedata, FILE = TRIM(fnm))
+      fnm = 'dmedata.fmt'
+      IF (TRIM(lsda) == 'down') fnm = 'dmedata.down.fmt'
+      OPEN(UNIT = iundmedata, FILE = TRIM(fnm))
+      fnm = 'ksdata.fmt'
+      IF (TRIM(lsda) == 'down') fnm = 'ksdata.down.fmt'
       IF (eig_read) OPEN(UNIT = iunksdata, FILE = 'ksdata.fmt')
       WRITE(crystal,*) nat
       WRITE(crystal,*) nmodes
@@ -204,6 +232,7 @@
       WRITE(crystal,*) L
       WRITE(crystal,*) degauss
       WRITE(crystal,*) ngauss
+      WRITE(crystal,*) lda_plus_u
       !
       WRITE(epwdata,*) ef
       WRITE(epwdata,*) nbndsub, nrr_k, nmodes, nrr_q, nrr_g
@@ -243,29 +272,6 @@
         ENDDO
       ENDIF
       !
-      IF (etf_mem == 0) THEN
-        ! SP: The call to epmatwp is now inside the loop
-        !     This is important as otherwise the lrepmatw INTEGER
-        !     could become too large for integer(kind=4).
-        !     Note that in Fortran the record length has to be a integer
-        !     of kind 4.
-        lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
-        filint   = TRIM(tmp_dir) // TRIM(prefix)//'.epmatwp'
-        INQUIRE(IOLENGTH = direct_io_factor) dummy
-        unf_recl = direct_io_factor * INT(lrepmatw, KIND = KIND(unf_recl))
-        IF (unf_recl <= 0) CALL errore('epw_write', 'wrong record length', 3)
-        OPEN(iunepmatwp, FILE = TRIM(ADJUSTL(filint)), IOSTAT = ierr, form='unformatted', &
-             STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
-        IF (ierr /= 0) CALL errore('epw_write', 'error opening ' // TRIM(filint), 1)
-        !
-        !CALL diropn(iunepmatwp, 'epmatwp', lrepmatw, exst)
-        DO irg = 1, nrr_g
-          CALL davcio(epmatwp(:, :, :, :, irg), lrepmatw, iunepmatwp, irg, +1)
-        ENDDO
-        !
-        CLOSE(iunepmatwp)
-      ENDIF
-      !
       ! Sternheimer and hopping correction matrices are written inside the loop
       ! over q-points in ephwann_shuffle
       !
@@ -289,7 +295,62 @@
       CLOSE(iundmedata)
       IF (eig_read) CLOSE(iunksdata)
       !
-    ENDIF ! ionode
+    ENDIF ! meta_ionode
+    !
+    IF (etf_mem == 0) THEN
+      filint   = TRIM(tmp_dir) // TRIM(prefix)//'.epmatwp'
+      IF (TRIM(lsda) == 'down') filint = TRIM(tmp_dir) // TRIM(prefix) //'.down.epmatwp'
+      !
+#if defined(__MPI)
+      !
+      CALL MPI_TYPE_CONTIGUOUS((nbndsub**2) * nrr_k, MPI_DOUBLE_COMPLEX, epmatwp_block_dtype, ierr)
+      IF (ierr /= 0) CALL errore('epw_write', 'Error creating epmatwp_block_dtype', 1)
+      !
+      CALL MPI_TYPE_COMMIT(epmatwp_block_dtype, ierr)
+      IF (ierr /= 0) CALL errore('epw_write', 'Error commiting epmatwp_block_dtype', 1)
+      !
+      CALL MPI_FILE_OPEN(inter_pool_comm, filint, MPI_MODE_CREATE + MPI_MODE_WRONLY, &
+        MPI_INFO_NULL, iunepmatwp, ierr)
+      IF (ierr /= 0) CALL errore('epw_write', 'error in MPI_FILE_OPEN', 1)
+      !
+      epmatwp_offset = 2_MPI_OFFSET_KIND * 8_MPI_OFFSET_KIND * &
+                                  INT(nbndsub , KIND = MPI_OFFSET_KIND) * &
+                                  INT(nbndsub , KIND = MPI_OFFSET_KIND) * &
+                                  INT(nrr_k, KIND = MPI_OFFSET_KIND) * &
+                                  INT(irn_start - 1, KIND = MPI_OFFSET_KIND)
+      !
+      imode_start = MOD(irn_start - 1, nmodes) + 1
+      CALL MPI_FILE_WRITE_AT_ALL(iunepmatwp, epmatwp_offset, epmatwp(1, 1, 1, imode_start, 1), &
+        nirn_loc, epmatwp_block_dtype, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('epw_write', 'Error writing epmatwp', 1)
+      !
+      CALL MPI_FILE_CLOSE(iunepmatwp, ierr)
+      IF (ierr /= 0) CALL errore('epw_write', 'Error closing epmatwp', 1)
+      !
+      CALL MPI_TYPE_FREE(epmatwp_block_dtype, ierr)
+      IF (ierr /= 0) CALL errore('epw_write', 'Error freeing epmatwp_block_dtype', 1)
+#else
+      ! SP: The call to epmatwp is now inside the loop
+      !     This is important as otherwise the lrepmatw INTEGER
+      !     could become too large for integer(kind=4).
+      !     Note that in Fortran the record length has to be a integer
+      !     of kind 4.
+      lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
+      INQUIRE(IOLENGTH = direct_io_factor) dummy
+      unf_recl = direct_io_factor * INT(lrepmatw, KIND = KIND(unf_recl))
+      IF (unf_recl <= 0) CALL errore('epw_write', 'wrong record length', 3)
+      OPEN(iunepmatwp, FILE = TRIM(ADJUSTL(filint)), IOSTAT = ierr, form='unformatted', &
+          STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
+      IF (ierr /= 0) CALL errore('epw_write', 'error opening ' // TRIM(filint), 1)
+      !
+      !CALL diropn(iunepmatwp, 'epmatwp', lrepmatw, exst)
+      DO irg = 1, nrr_g
+        CALL davcio(epmatwp(:, :, :, :, irg), lrepmatw, iunepmatwp, irg, +1)
+      ENDDO
+      !
+      CLOSE(iunepmatwp)
+#endif
+    ENDIF
     !--------------------------------------------------------------------------------
     END SUBROUTINE epw_write
     !--------------------------------------------------------------------------------
@@ -301,29 +362,29 @@
     !! Routine to read the real space quantities for fine grid interpolation
     !!
     USE kinds,     ONLY : DP
-    USE input,     ONLY : nbndsub, eig_read, etf_mem, lifc, lwfpt, epw_memdist
+    USE input,     ONLY : nbndsub, eig_read, etf_mem, lifc, lwfpt, lsda
     USE pwcom,     ONLY : ef
     USE global_var,ONLY : chw, rdw, epmatwp, cdmew, cvmew, chw_ks, zstar, &
-                          epsi, crrw, dwmatwe, cpmew, epmatwp_dist
+                          epsi, crrw, dwmatwe, cpmew, epmatwp_dist,       &
+                          irn_start, irn_stop, nirn_loc, nirg_loc, imode_start
     USE ions_base, ONLY : nat
     USE modes,     ONLY : nmodes
-    USE io_global, ONLY : stdout, ionode_id
+    USE io_global, ONLY : stdout, meta_ionode, meta_ionode_id
     USE io_files,  ONLY : prefix, diropn, tmp_dir
     USE io_var,    ONLY : epwdata, iundmedata, iunvmedata, iunksdata, &
                           iunepmatwp, iudwwe, iupmwe
     USE ep_constants,     ONLY : czero, zero, eps10
-    USE parallelism,      ONLY : para_bounds
 #if defined(__MPI)
-    USE parallel_include, ONLY : MPI_OFFSET_KIND, MPI_MODE_RDONLY, MPI_DOUBLE_PRECISION, &
-                                 MPI_STATUS_IGNORE, MPI_MODE_WRONLY, MPI_MODE_CREATE, MPI_INFO_NULL, &
-                                 MPI_DOUBLE_COMPLEX
+    USE parallel_include, ONLY : MPI_OFFSET_KIND, MPI_DOUBLE_COMPLEX, &
+                                 MPI_MODE_CREATE, MPI_MODE_RDONLY, &
+                                 MPI_INFO_NULL, MPI_STATUS_IGNORE
 #endif
 #if defined(__NAG)
     USE f90_unix_io,ONLY : flush
 #endif
     USE mp,        ONLY : mp_barrier, mp_bcast
-    USE mp_global, ONLY : world_comm, inter_pool_comm
-    USE mp_world,  ONLY : mpime
+    USE mp_world,  ONLY : world_comm
+    USE mp_images, ONLY : inter_image_comm, intra_image_comm, my_image_id
 
     !
     IMPLICIT NONE
@@ -339,6 +400,8 @@
     !
     CHARACTER(LEN = 256) :: filint
     !! Name of the file
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer file name
     LOGICAL :: exst
     !! The file exists
     INTEGER :: ibnd, jbnd
@@ -347,8 +410,6 @@
     !! Mode index
     INTEGER :: irk, irq, irg
     !! WS-vector index (electrons, phonons, and electron-phonon)
-    INTEGER :: ir_start, ir_stop
-    !! locally start and end points of WS-vector index (electrons, phonons, and electron-phonon)
     INTEGER :: ipol
     !! Cartesian direction (polarison direction)
     INTEGER :: lrepmatw
@@ -364,21 +425,11 @@
     REAL(KIND = DP) :: dummy
     !! Dummy variable
 #if defined(__MPI)
-    INTEGER(KIND = MPI_OFFSET_KIND) :: epmatwp_recl
-    !! Record length for parallel reading epmatwp
     INTEGER(KIND = MPI_OFFSET_KIND) :: epmatwp_offset
     !! Offset for parallel reading epmatwp 
     INTEGER :: epmatwp_block_dtype
     !! MPI block datatype for parallel reading epmatwp
 #endif
-    INTEGER :: irn
-    !! Mode*WS-vector Index
-    INTEGER :: irn_loc
-    !! Mode*WS-vector Index in local
-    INTEGER :: nirn_loc
-    !! Number of Mode*WS-vector Index in the local
-
-
     !
     WRITE(stdout,'(/5x,"Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file"/)')
     FLUSH(stdout)
@@ -389,29 +440,37 @@
     ALLOCATE(epsi(3, 3), STAT = ierr)
     IF (ierr /= 0) CALL errore('epw_read', 'Error allocating epsi', 1)
     !
-    IF (mpime == ionode_id) THEN
+    IF (meta_ionode) THEN
       !
-      OPEN(UNIT = epwdata, FILE = 'epwdata.fmt', STATUS = 'old', IOSTAT = ios)
+      fnm = 'epwdata.fmt'
+      IF (TRIM(lsda) == 'down') fnm = 'epwdata.down.fmt'
+      OPEN(UNIT = epwdata, FILE = TRIM(fnm), STATUS = 'old', IOSTAT = ios)
       IF (ios /= 0) CALL errore ('epw_read', 'error opening epwdata.fmt', epwdata)
-      IF (eig_read) OPEN(UNIT = iunksdata, FILE = 'ksdata.fmt', STATUS = 'old', IOSTAT = ios)
+      fnm = 'ksdata.fmt'
+      IF (TRIM(lsda) == 'down') fnm = 'ksdata.down.fmt'
+      IF (eig_read) OPEN(UNIT = iunksdata, FILE = TRIM(fnm), STATUS = 'old', IOSTAT = ios)
       IF (eig_read .AND. ios /= 0) CALL errore ('epw_read', 'error opening ksdata.fmt', iunksdata)
-      OPEN(UNIT = iunvmedata, FILE = 'vmedata.fmt', STATUS = 'old', IOSTAT = ios)
+      fnm = 'vmedata.fmt'
+      IF (TRIM(lsda) == 'down') fnm = 'vmedata.down.fmt'
+      OPEN(UNIT = iunvmedata, FILE = TRIM(fnm), STATUS = 'old', IOSTAT = ios)
       IF (ios /= 0) CALL errore ('epw_read', 'error opening vmedata.fmt', iunvmedata)
-      OPEN(UNIT = iundmedata, FILE = 'dmedata.fmt', STATUS = 'old', IOSTAT = ios)
+      fnm = 'dmedata.fmt'
+      IF (TRIM(lsda) == 'down') fnm = 'dmedata.down.fmt'
+      OPEN(UNIT = iundmedata, FILE = TRIM(fnm), STATUS = 'old', IOSTAT = ios)
       IF (ios /= 0) CALL errore ('epw_read', 'error opening dmedata.fmt', iundmedata)
       READ(epwdata,*) ef
       READ(epwdata,*) nbndsub, nrr_k, nmodes, nrr_q, nrr_g
       READ(epwdata,*) zstar, epsi
       !
     ENDIF
-    CALL mp_bcast(ef,      ionode_id, world_comm)
-    CALL mp_bcast(nbndsub, ionode_id, world_comm)
-    CALL mp_bcast(nrr_k,   ionode_id, world_comm)
-    CALL mp_bcast(nmodes,  ionode_id, world_comm)
-    CALL mp_bcast(nrr_q,   ionode_id, world_comm)
-    CALL mp_bcast(nrr_g,   ionode_id, world_comm)
-    CALL mp_bcast(zstar,   ionode_id, world_comm)
-    CALL mp_bcast(epsi,    ionode_id, world_comm)
+    CALL mp_bcast(ef,      meta_ionode_id, world_comm)
+    CALL mp_bcast(nbndsub, meta_ionode_id, world_comm)
+    CALL mp_bcast(nrr_k,   meta_ionode_id, world_comm)
+    CALL mp_bcast(nmodes,  meta_ionode_id, world_comm)
+    CALL mp_bcast(nrr_q,   meta_ionode_id, world_comm)
+    CALL mp_bcast(nrr_g,   meta_ionode_id, world_comm)
+    CALL mp_bcast(zstar,   meta_ionode_id, world_comm)
+    CALL mp_bcast(epsi,    meta_ionode_id, world_comm)
     !
     ALLOCATE(chw(nbndsub, nbndsub, nrr_k), STAT = ierr)
     IF (ierr /= 0) CALL errore('epw_read', 'Error allocating chw', 1)
@@ -432,7 +491,7 @@
     crrw(:, :, :, :) = czero
     cdmew(:, :, :, :) = czero
     !
-    IF (mpime == ionode_id) THEN
+    IF (meta_ionode) THEN
       !
       DO ibnd = 1, nbndsub
         DO jbnd = 1, nbndsub
@@ -458,10 +517,10 @@
       !
     ENDIF
     !
-    CALL mp_bcast(chw, ionode_id, world_comm)
+    CALL mp_bcast(chw, meta_ionode_id, world_comm)
     !
-    IF (eig_read) CALL mp_bcast(chw_ks, ionode_id, world_comm)
-    CALL mp_bcast(rdw, ionode_id, world_comm)
+    IF (eig_read) CALL mp_bcast(chw_ks, meta_ionode_id, world_comm)
+    CALL mp_bcast(rdw, meta_ionode_id, world_comm)
     IF (lifc) THEN
       ! HM: If lifc=true was used in the previous calculation,
       !     the rdw should be zero.
@@ -478,9 +537,9 @@
       ENDIF
     ENDIF
     !
-    CALL mp_bcast(cvmew, ionode_id, world_comm)
-    CALL mp_bcast(crrw, ionode_id, world_comm)
-    CALL mp_bcast(cdmew, ionode_id, world_comm)
+    CALL mp_bcast(cvmew, meta_ionode_id, world_comm)
+    CALL mp_bcast(crrw, meta_ionode_id, world_comm)
+    CALL mp_bcast(cdmew, meta_ionode_id, world_comm)
     !
     IF (lifc) THEN
       CALL read_ifc_epw
@@ -488,83 +547,76 @@
     !
     IF (etf_mem == 0) THEN
       !
+      filint = TRIM(tmp_dir) // TRIM(prefix) // '.epmatwp'
+      IF (TRIM(lsda) == 'down') filint = TRIM(tmp_dir) // TRIM(prefix) // '.down.epmatwp'
+      !
 #if defined(__MPI)
+      !
+      ALLOCATE(epmatwp(nbndsub, nbndsub, nrr_k, nmodes, nirg_loc), STAT = ierr)
+      IF (ierr /= 0) CALL errore('epw_read', 'Error allocating epmatwp', 1)
+      epmatwp = czero
+      !
       CALL MPI_TYPE_CONTIGUOUS((nbndsub**2) * nrr_k, MPI_DOUBLE_COMPLEX, epmatwp_block_dtype, ierr)
       IF (ierr /= 0) CALL errore('epw_read', 'Error creating epmatwp_block_dtype', 1)
       !
       CALL MPI_TYPE_COMMIT(epmatwp_block_dtype, ierr)
       IF (ierr /= 0) CALL errore('epw_read', 'Error commiting epmatwp_block_dtype', 1)
-#endif
       !
-      IF (.NOT. epw_memdist) THEN
-        ALLOCATE(epmatwp(nbndsub, nbndsub, nrr_k, nmodes, nrr_g), STAT = ierr)
-        IF (ierr /= 0) CALL errore('epw_read', 'Error allocating epmatwp', 1)
-        epmatwp = czero
-        IF (mpime == ionode_id) THEN
-          ! SP: The call to epmatwp is now inside the loop
-          !     This is important as otherwise the lrepmatw INTEGER
-          !     could become too large for integer(kind=4).
-          !     Note that in Fortran the record length has to be a integer
-          !     of kind 4.
-          lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
-          filint   = TRIM(tmp_dir) // TRIM(prefix)//'.epmatwp'
-          !
-          INQUIRE(IOLENGTH = direct_io_factor) dummy
-          unf_recl = direct_io_factor * INT(lrepmatw, KIND = KIND(unf_recl))
-          IF (unf_recl <= 0) CALL errore('epw_read', 'wrong record length', 3)
-          OPEN(iunepmatwp, FILE = TRIM(ADJUSTL(filint)), IOSTAT = ierr, FORM = 'unformatted', &
-              STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
-          IF (ierr /= 0) CALL errore('epw_read', 'error opening ' // TRIM(filint), 1)
-          !
-          DO irg = 1, nrr_g
-            CALL davcio(epmatwp(:, :, :, :, irg), lrepmatw, iunepmatwp, irg, -1)
-          ENDDO
-          !
-          CLOSE(iunepmatwp)
-        ENDIF
+      IF (my_image_id == meta_ionode_id) THEN
         !
-#if defined(__MPI)
-        CALL MPI_BCAST(epmatwp, nmodes * nrr_g, epmatwp_block_dtype, ionode_id, world_comm, ierr)
-        IF (ierr /= 0) CALL errore('epw_read', 'Error broadcasting epmatwp', ierr)
-#endif
-        !
-      ELSE ! epw_memdist
-#if defined(__MPI)
-        !
-        WRITE(stdout,'(/5x,"EP vertexes are distributed into MPI processes"/)')
-        FLUSH(stdout)
-        !
-        CALL para_bounds(ir_start, ir_stop, nrr_g * nmodes)
-        nirn_loc = ir_stop - ir_start + 1
-        !
-        ALLOCATE(epmatwp_dist(nbndsub, nbndsub, nrr_k, nirn_loc), STAT = ierr)
-        IF (ierr /= 0) CALL errore('epw_read', 'Error allocating epmatwp_dist', 1)
-        epmatwp_dist = czero
-        !
-        filint = TRIM(tmp_dir) // TRIM(prefix) // '.epmatwp'
-        CALL MPI_FILE_OPEN(inter_pool_comm, filint, MPI_MODE_RDONLY, MPI_INFO_NULL, iunepmatwp, ierr)
+        CALL MPI_FILE_OPEN(intra_image_comm, filint, MPI_MODE_RDONLY, MPI_INFO_NULL, iunepmatwp, ierr)
         IF (ierr /= 0) CALL errore('epw_read', 'error in MPI_FILE_OPEN', 1)
         !
         epmatwp_offset = 2_MPI_OFFSET_KIND * 8_MPI_OFFSET_KIND * &
                                     INT(nbndsub , KIND = MPI_OFFSET_KIND) * &
                                     INT(nbndsub , KIND = MPI_OFFSET_KIND) * &
                                     INT(nrr_k, KIND = MPI_OFFSET_KIND) * &
-                                    INT(ir_start - 1, KIND = MPI_OFFSET_KIND)
-        !                                    
-        CALL MPI_FILE_READ_AT_ALL(iunepmatwp, epmatwp_offset, epmatwp_dist, &
+                                    INT(irn_start - 1, KIND = MPI_OFFSET_KIND)
+        !
+        imode_start = MOD(irn_start - 1, nmodes) + 1
+        CALL MPI_FILE_READ_AT_ALL(iunepmatwp, epmatwp_offset, epmatwp(1, 1, 1, imode_start, 1), &
           nirn_loc, epmatwp_block_dtype, MPI_STATUS_IGNORE, ierr)
         IF (ierr /= 0) CALL errore('epw_read', 'Error reading epmatwp', 1)
         !
         CALL MPI_FILE_CLOSE(iunepmatwp, ierr)
         IF (ierr /= 0) CALL errore('epw_read', 'Error closing epmatwp', 1)
-#else
-        CALL errore('epw_read', 'Distributed storage of epmatwp can only be used with MPI', 1)
-#endif
-      ENDIF ! epw_memdist
+        !
+        WRITE(stdout,'(/5x,"EP vertexes are distributed across pools"/)')
+      FLUSH(stdout)
+        !
+      ENDIF
       !
-#if defined(__MPI)
+      ! WARNING: epmatwp may exceed 2GB.
+      !          mp_bcast provided by QE can silently fail for large arrays 
+      !          because of 32-bit count and message size limits.
+      !          Do NOT use mp_bcast for epmatwp.
+      CALL MPI_BCAST(epmatwp, nmodes * nirg_loc, epmatwp_block_dtype, &
+                     meta_ionode_id, inter_image_comm, ierr)
+      IF (ierr /= 0) CALL errore('epw_read', 'Error broadcasting epmatwp', ierr)
+      !
       CALL MPI_TYPE_FREE(epmatwp_block_dtype, ierr)
       IF (ierr /= 0) CALL errore('epw_read', 'Error freeing epmatwp_block_dtype', 1)
+      !
+#else
+      ! SP: The call to epmatwp is now inside the loop
+      !     This is important as otherwise the lrepmatw INTEGER
+      !     could become too large for integer(kind=4).
+      !     Note that in Fortran the record length has to be a integer
+      !     of kind 4.
+      lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
+      !
+      INQUIRE(IOLENGTH = direct_io_factor) dummy
+      unf_recl = direct_io_factor * INT(lrepmatw, KIND = KIND(unf_recl))
+      IF (unf_recl <= 0) CALL errore('epw_read', 'wrong record length', 3)
+      OPEN(iunepmatwp, FILE = TRIM(ADJUSTL(filint)), IOSTAT = ierr, FORM = 'unformatted', &
+          STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
+      IF (ierr /= 0) CALL errore('epw_read', 'error opening ' // TRIM(filint), 1)
+      !
+      DO irg = 1, nrr_g
+        CALL davcio(epmatwp(:, :, :, :, irg), lrepmatw, iunepmatwp, irg, -1)
+      ENDDO
+      !
+      CLOSE(iunepmatwp)
 #endif
       !
     ENDIF
@@ -583,7 +635,7 @@
       IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error allocating dwmatwe', 1)
       dwmatwe = czero
       !
-      IF (mpime == ionode_id) THEN
+      IF (meta_ionode) THEN
         lrepmatw = 2 * nbndsub * nbndsub * nrr_k * 3
         CALL diropn(iupmwe, 'cpmew', lrepmatw, exst)
         CALL davcio(cpmew, lrepmatw, iupmwe, 1, -1)
@@ -595,12 +647,12 @@
         CLOSE(iudwwe)
       ENDIF ! ionode
       !
-      CALL mp_bcast(cpmew, ionode_id, world_comm)
-      CALL mp_bcast(dwmatwe, ionode_id, world_comm)
+      CALL mp_bcast(cpmew, meta_ionode_id, world_comm)
+      CALL mp_bcast(dwmatwe, meta_ionode_id, world_comm)
       !
     ENDIF ! lwfpt
     !
-    IF (mpime == ionode_id) THEN
+    IF (meta_ionode) THEN
       CLOSE(epwdata)
       CLOSE(iunvmedata)
       CLOSE(iundmedata)
@@ -622,6 +674,7 @@
     USE kinds,     ONLY : DP
     USE io_global, ONLY : ionode
     USE io_var,    ONLY : iuwigner
+    USE input,     ONLY : lsda
     !
     IMPLICIT NONE
     !
@@ -642,10 +695,14 @@
     !
     INTEGER :: ir, iw, na
     !! WS-vector, Wannier-function, and atom indices
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer file name
     !
     IF (.NOT. ionode) RETURN
     !
-    OPEN(UNIT=iuwigner, FILE='wigner.fmt', ACTION='write', STATUS='replace')
+    fnm = 'wigner.fmt'
+    IF (TRIM(lsda) == 'down') fnm = 'wigner.down.fmt'
+    OPEN(UNIT=iuwigner, FILE= TRIM(fnm), ACTION='write', STATUS='replace')
     !
     WRITE(iuwigner, 1) nrr_k, nrr_q, nrr_g, dims, dims2
     !
@@ -691,6 +748,7 @@
     USE mp,        ONLY : mp_bcast
     USE mp_global, ONLY : world_comm
     USE io_var,    ONLY : iuwigner
+    USE input,     ONLY : lsda
     !
     IMPLICIT NONE
     !
@@ -713,9 +771,13 @@
     !! WS-vector, Wannier-function, and atom indices
     INTEGER :: ierr
     !! Error status
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer file name
     !
     IF (ionode) THEN
-      OPEN(UNIT=iuwigner, FILE='wigner.fmt', ACTION='read', STATUS='old')
+      fnm = 'wigner.fmt'
+      IF (TRIM(lsda) == 'down') fnm = 'wigner.down.fmt'
+      OPEN(UNIT=iuwigner, FILE=TRIM(fnm), ACTION='read', STATUS='old')
       !
       READ(iuwigner, *) nrr_k, nrr_q, nrr_g, dims, dims2
     ENDIF
@@ -822,7 +884,7 @@
     !!
     CHARACTER(LEN = 256) :: tempfile
     !!
-    CHARACTER(LEN = 3), ALLOCATABLE :: atm(:)
+    CHARACTER(LEN = 6), ALLOCATABLE :: atm(:)
     !!
     INTEGER :: ios
     !!
@@ -1070,8 +1132,13 @@
     ! (i.e. the rotation axis is (Ox) if axis='1', (Oy) if axis='2' and (Oz) if
     ! axis='3')
     !
-    IF ((asr /= 'simple') .AND. (asr /= 'crystal') .AND. (asr /= 'one-dim') .AND. (asr /= 'zero-dim')) THEN
+    IF ((asr /= 'simple') .AND. (asr /= 'crystal') .AND. (asr /= 'one-dim') .AND. (asr /= 'zero-dim') &
+       .AND. (asr /= 'no')) THEN
       CALL errore('set_asr','invalid Acoustic Sum Rule:' // asr, 1)
+    ENDIF
+    !
+    IF (asr == 'no') THEN
+      WRITE (stdout,'(5x,a)') " WARNING: NO ASR imposed!"
     ENDIF
     !
     IF (asr == 'simple') THEN
@@ -1753,7 +1820,6 @@
     USE fft_base,  ONLY : dfftp
     USE input,     ONLY : dvscf_dir
     USE io_var,    ONLY : iudvscf
-    USE low_lvl,   ONLY : set_ndnmbr
     USE noncollin_module, ONLY : nspin_mag
     !
     IMPLICIT NONE
@@ -1771,7 +1837,7 @@
     !
     CHARACTER(LEN = 256) :: tempfile
     !! Temp file
-    CHARACTER(LEN = 4) :: filelab
+    CHARACTER(LEN = 8) :: filelab
     !! File number
     INTEGER :: unf_recl
     !! Rcl unit
@@ -1784,12 +1850,8 @@
     REAL(KIND = DP) :: dummy
     !! Dummy variable
     !
-    !  the call to set_ndnmbr is just a trick to get quickly
-    !  a file label by exploiting an existing subroutine
-    !  (if you look at the sub you will find that the original
-    !  purpose was for pools and nodes)
-    !
-    CALL set_ndnmbr(0, iq, 1, nqc, filelab)
+    !CALL set_ndnmbr(0, iq, 1, nqc, filelab)
+    WRITE(filelab, '(I0)') iq
     tempfile = TRIM(dvscf_dir) // TRIM(prefix) // '.dvscf_q' // filelab
     INQUIRE(IOLENGTH = unf_recl) dummy
     unf_recl = unf_recl  * lrdrho
@@ -1830,7 +1892,6 @@
     USE units_ph,         ONLY : lint3paw
     USE input,            ONLY : dvscf_dir
     USE io_var,           ONLY : iuint3paw
-    USE low_lvl,          ONLY : set_ndnmbr
     USE uspp_param,       ONLY : nhm
     USE ions_base,        ONLY : nat
     USE noncollin_module, ONLY : nspin_mag
@@ -1850,7 +1911,7 @@
     !
     CHARACTER(LEN = 256) :: tempfile
     !! Temp file
-    CHARACTER(LEN = 4) :: filelab
+    CHARACTER(LEN = 8) :: filelab
     !! File number
     INTEGER :: unf_recl
     !! Rcl unit
@@ -1863,12 +1924,8 @@
     REAL(KIND = DP) :: dummy
     !! Dummy variable
     !
-    !  the call to set_ndnmbr is just a trick to get quickly
-    !  a file label by exploiting an existing subroutine
-    !  (if you look at the sub you will find that the original
-    !  purpose was for pools and nodes)
-    !
-    CALL set_ndnmbr(0, iq, 1, nqc, filelab)
+    !CALL set_ndnmbr(0, iq, 1, nqc, filelab)
+    WRITE(filelab, '(I0)') iq
     tempfile = TRIM(dvscf_dir) // TRIM(prefix) // '.dvscf_paw_q' // filelab
     INQUIRE(IOLENGTH = unf_recl) dummy
     unf_recl = unf_recl  * lint3paw
@@ -1893,6 +1950,124 @@
     !
     !-------------------------------------------------------------
     END SUBROUTINE readint3paw
+    !-------------------------------------------------------------
+    !
+    !-------------------------------------------------------------
+    SUBROUTINE readdnsbare(dnsbare, iq, nqc, hub_lmax)
+    !-------------------------------------------------------------
+    !!
+    !! Open dnsbare files for sequential I/O access.
+    !! Refer to seqopn in Modules/io_files.f90.  
+    !! dnsbare is originally written/read in PHonon/PH/dnsq_bare.f90
+    !
+    !-------------------------------------------------------------
+    USE kinds,            ONLY : DP
+    USE io_files,         ONLY : prefix
+    USE input,            ONLY : dvscf_dir
+    USE io_var,           ONLY : iundnsbare
+    USE uspp_param,       ONLY : nhm
+    USE ions_base,        ONLY : nat
+    USE noncollin_module, ONLY : nspin_mag
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: iq
+    !! the current q-point
+    INTEGER, INTENT(in) :: nqc
+    !! the total number of q-points in the list
+    INTEGER, INTENT(in) :: hub_lmax
+    !! maximum quantum l number of Hubbard corection
+    COMPLEX(KIND = DP), INTENT(inout) :: dnsbare(2*hub_lmax+1, 2*hub_lmax+1, nspin_mag, nat, 3, nat)
+    !! dnsbare is read from file
+    !
+    ! Local variables
+    !
+    CHARACTER(LEN = 256) :: tempfile
+    !! Temp file
+    CHARACTER(LEN = 8) :: filelab
+    !! File number
+    INTEGER :: ios
+    !! Error number
+    LOGICAL :: exst
+    !! true if the file alread exist
+    !
+    WRITE(filelab, '(I0)') iq
+    tempfile = TRIM(dvscf_dir) // TRIM(prefix) // '.dnsbare_q' // filelab
+    INQUIRE(FILE = tempfile, EXIST = exst)
+    IF (.NOT. exst) CALL errore('readdnsbare', 'dnsbare file not found', iundnsbare)
+    !
+    !  open the dnsbare file, read and close
+    !
+    OPEN(UNIT = iundnsbare, FILE = tempfile, FORM = 'formatted', &
+         ACCESS = 'sequential', IOSTAT = ios, STATUS = 'old')
+    IF (ios /= 0) CALL errore('readdnsbare', 'error opening ' // tempfile, iundnsbare)
+    !
+    READ(iundnsbare, *) dnsbare
+    CLOSE(iundnsbare, STATUS = 'keep')
+    !
+    RETURN
+    !
+    !-------------------------------------------------------------
+    END SUBROUTINE readdnsbare
+    !-------------------------------------------------------------
+    !
+    !-------------------------------------------------------------
+    SUBROUTINE readdnsscf(dnsscf, nmodes, iq, nqc, hub_lmax)
+    !-------------------------------------------------------------
+    !!
+    !! Open dnsscf files for sequential I/O access.
+    !! refer to seqopn in Modules/io_files.f90
+    !-------------------------------------------------------------
+    USE kinds,            ONLY : DP
+    USE io_files,         ONLY : prefix
+    USE input,            ONLY : dvscf_dir
+    USE io_var,           ONLY : iundnsscf
+    USE uspp_param,       ONLY : nhm
+    USE ions_base,        ONLY : nat
+    USE noncollin_module, ONLY : nspin_mag
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: nmodes
+    !! Number of modes
+    INTEGER, INTENT(in) :: iq
+    !! the current q-point
+    INTEGER, INTENT(in) :: nqc
+    !! the total number of q-points in the list
+    INTEGER, INTENT(in) :: hub_lmax
+    !! maximum quantum l number of Hubbard corection
+    COMPLEX(KIND = DP), INTENT(inout) :: dnsscf(2*hub_lmax+1, 2*hub_lmax+1, nspin_mag, nat, nmodes)
+    !! dnsscf is read from file
+    !
+    ! Local variables
+    !
+    CHARACTER(LEN = 256) :: tempfile
+    !! Temp file
+    CHARACTER(LEN = 4) :: filelab
+    !! File number
+    INTEGER :: ios
+    !! Error number
+    LOGICAL :: exst
+    !! true if the file alread exist
+    !
+    WRITE(filelab, '(I0)') iq
+    tempfile = TRIM(dvscf_dir) // TRIM(prefix) // '.dnsscf_q' // filelab
+    INQUIRE(FILE = tempfile, EXIST = exst)
+    IF (.NOT. exst) CALL errore('readdnsscf', 'dnsscf file not found', iundnsscf)
+    !
+    !  open the dnsscf file, read and close
+    !
+    OPEN(UNIT = iundnsscf, FILE = tempfile, FORM = 'formatted', &
+         ACCESS = 'sequential', IOSTAT = ios, STATUS = 'old')
+    IF (ios /= 0) CALL errore('readdnsscf', 'error opening ' // tempfile, iundnsscf)
+    !
+    READ(iundnsscf, *) dnsscf
+    CLOSE(iundnsscf, STATUS = 'keep')
+    !
+    RETURN
+    !
+    !-------------------------------------------------------------
+    END SUBROUTINE readdnsscf
     !-------------------------------------------------------------
     !
     !------------------------------------------------------------
@@ -1937,7 +2112,7 @@
     !
     ! Open the wfc file, read and close
     CALL set_ndnmbr(ipool, me_pool, nproc_pool, npool, nd_nmbr0)
-    !print*,'nd_nmbr0 ',nd_nmbr0
+    !print*,'nd_nmbr0 ',nd_nmbr0, me_pool
     !
 #if defined(__MPI)
     tempfile = TRIM(tmp_dir) // TRIM(prefix) // '.wfc' // nd_nmbr0
@@ -1967,12 +2142,13 @@
     !!
     !
     USE kinds,      ONLY : DP
-    USE mp_global,  ONLY : world_comm
+    USE mp_global,  ONLY : world_comm, inter_pool_comm
     USE mp,         ONLY : mp_bcast, mp_max
-    USE io_global,  ONLY : meta_ionode, meta_ionode_id
+    USE io_global,  ONLY : meta_ionode,ionode_id,ionode, meta_ionode_id
     USE io_var,     ONLY : iukgmap
     USE global_var, ONLY : ngxxf, ngxx, ng0vec, shift, gmap, g0vec_all_r
     USE io_files,   ONLY : prefix
+    USE input,      ONLY : lsda
     !
     IMPLICIT NONE
     !
@@ -1994,10 +2170,14 @@
     !! Integer variable for I/O control
     INTEGER :: ierr
     !! Error status
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer file name
     !
     IF (meta_ionode) THEN
       !
-      OPEN(iukgmap, FILE = TRIM(prefix)//'.kgmap', FORM = 'formatted', STATUS = 'old', IOSTAT = ios)
+      fnm = TRIM(prefix) // '.kgmap'
+      IF (TRIM(lsda) == 'down') fnm = TRIM(prefix) // '.down.kgmap'
+      OPEN(iukgmap, FILE = TRIM(fnm), FORM = 'formatted', STATUS = 'old', IOSTAT = ios)
       IF (ios /=0) CALL errore('readgmap', 'error opening kgmap file', iukgmap)
       !
       READ(iukgmap, *) ngxxf
@@ -2014,14 +2194,14 @@
     !
     ! first node broadcasts ng0vec to all nodes for allocation of gmap
     !
-    CALL mp_bcast(ngxxf, meta_ionode_id, world_comm)
-    CALL mp_bcast(ng0vec, meta_ionode_id, world_comm)
+    CALL mp_bcast(ngxxf, ionode_id, inter_pool_comm)
+    CALL mp_bcast(ng0vec, ionode_id, inter_pool_comm)
     !
     ALLOCATE(gmap(ngxx * ng0vec), STAT = ierr)
     IF (ierr /= 0) CALL errore('readgmap', 'Error allocating gmap', 1)
     gmap(:) = 0
     !
-    IF (meta_ionode) THEN
+    IF (ionode) THEN
        !
       DO ig0 = 1, ng0vec
         READ(iukgmap,*) g0vec_all_r(:,ig0)
@@ -2054,12 +2234,13 @@
     !!
     !
     USE kinds,      ONLY : DP
-    USE mp_global,  ONLY : world_comm
+    USE mp_global,  ONLY : world_comm, my_image_id, inter_pool_comm
     USE mp,         ONLY : mp_bcast
-    USE io_global,  ONLY : meta_ionode, meta_ionode_id
+    USE io_global,  ONLY : meta_ionode, meta_ionode_id, ionode_id, ionode
     USE io_var,     ONLY : iukmap
     USE io_files,   ONLY : prefix
     USE global_var, ONLY : shift
+    USE input,      ONLY : lsda
     !
     IMPLICIT NONE
     !
@@ -2075,10 +2256,18 @@
     !! Temporary indices when reading kmap files
     INTEGER :: ios
     !! Integer variable for I/O control
+    CHARACTER(LEN = 256) :: my_image_id_ch
+    !! Image ID
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer file name
     !
-    IF (meta_ionode) THEN
+    WRITE(my_image_id_ch, "(I0)") my_image_id
+    ! 
+    IF (ionode) THEN
       !
-      OPEN(iukmap, FILE = TRIM(prefix)//'.kmap', FORM = 'formatted', STATUS = 'old', IOSTAT = ios)
+      fnm = TRIM(prefix)// '_' // TRIM(my_image_id_ch) //'.kmap'
+      IF (TRIM(lsda) == 'down') fnm = TRIM(prefix) // '_' // TRIM(my_image_id_ch)// '.down.kmap'
+      OPEN(iukmap, FILE = TRIM(fnm), FORM = 'formatted', STATUS = 'old', IOSTAT = ios)
       IF (ios /= 0) CALL errore('readkmap', 'error opening kmap file', iukmap)
       DO ik = 1, nkstot
         READ(iukmap,*) ik1, itmp, shift(ik1)
@@ -2089,7 +2278,7 @@
     !
     ! first node broadcasts shift to all nodes
     !
-    CALL mp_bcast(shift, meta_ionode_id, world_comm)
+    CALL mp_bcast(shift, ionode_id, inter_pool_comm)
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE readkmap
@@ -2254,7 +2443,7 @@
     !----------------------------------------------------------------------------
     !----------------------------------------------------------------------------
     SUBROUTINE dynmat_asr(iq_irr, nqc_irr, nq, iq_first, sxq, imq, isq, &
-                                invs, s, irt, rtau, sumr)
+                                invs, s, irt, rtau, sumr, control)
     !-----------------------------------------------------------------------
     !!
     !! read dynamical matrix for the q points, either in plain text or xml.
@@ -2267,19 +2456,21 @@
     USE ions_base,        ONLY : amass, tau, nat, ntyp => nsp, ityp
     USE global_var,       ONLY : dynq, zstar, epsi, wf_temp
     USE symm_base,        ONLY : nsym
-    USE input,            ONLY : dvscf_dir, lpolar, nqc1, nqc2, nqc3, exciton
+    USE input,            ONLY : dvscf_dir, lpolar, nqc1, nqc2, nqc3, exciton, &
+                                 asr_typ
     USE modes,            ONLY : nmodes
     USE control_flags,    ONLY : iverbosity
     USE noncollin_module, ONLY : nspin_mag
     USE io_global,        ONLY : ionode, stdout, ionode_id, meta_ionode_id
-    USE ep_constants,     ONLY : cone, czero, twopi, rydcm1, eps6, zero
+    USE ep_constants,     ONLY : cone, czero, twopi, rydcm1, eps6, zero, one
     USE io_var,           ONLY : iudyn
     USE low_lvl,          ONLY : set_ndnmbr, eqvect_strict
     USE io_dyn_mat,       ONLY : read_dyn_mat_param, read_dyn_mat_header, &
                                  read_dyn_mat, read_dyn_mat_tail
     USE mp_world,         ONLY : mpime
-    USE mp_global,        ONLY : world_comm
-    USE mp,               ONLY : mp_bcast
+    USE mp_images,        ONLY : inter_image_comm, nimage
+    USE mp_global,        ONLY : my_pool_id, world_comm, inter_pool_comm
+    USE mp,               ONLY : mp_bcast, mp_sum
     USE rigid,            ONLY : cdiagh2
     !
     IMPLICIT NONE
@@ -2295,6 +2486,8 @@
     !! The index of the first qpoint to be read in the uniform q-grid
     INTEGER, INTENT(in) :: imq
     !! Flag which tells whether we have to consider the -q vectors
+    INTEGER, INTENT(in) :: control
+    !! A controller for various logical aspects
     INTEGER, INTENT(in) :: isq(48)
     !! Index of q in the star for a given symmetry.
     INTEGER, INTENT(in) :: invs(48)
@@ -2321,9 +2514,9 @@
     !!
     LOGICAL :: is_xml_file
     !! Is the file XML
-    CHARACTER(LEN = 3), ALLOCATABLE :: atm(:)
+    CHARACTER(LEN = 6), ALLOCATABLE :: atm(:)
     !! dummy variable for atom types when xml is used
-    CHARACTER(LEN = 3) :: atm_
+    CHARACTER(LEN = 6) :: atm_
     !! dummy variable for atom types when xml is not used
     CHARACTER(LEN = 4) :: filelab
     !!
@@ -2423,6 +2616,8 @@
     !!
     REAL(KIND = DP) :: amass2(ntypx)
     !!
+    REAL(KIND = DP) :: asr_switch
+    !! A 1/0 variable to switch on/off the ASR
     !REAL(KIND = DP) :: rws(0:3, nrwsx)
     !!
     !REAL(KIND = DP) :: atws(3, 3)
@@ -2447,6 +2642,11 @@
     !! Dynamical matrix
     !
     q(:, :) = zero
+    asr_switch = one
+    IF (asr_typ == 'no') THEN
+      asr_switch = zero
+      WRITE(stdout, '(5x,a)') 'WARNING: NO acoustic sum rule imposed.'
+    ENDIF
     !
     ! the call to set_ndnmbr is just a trick to get quickly
     ! a file label by exploiting an existing subroutine
@@ -2497,7 +2697,8 @@
               sumz = sumz + zstar(i, j, na)
             ENDDO
             DO na = 1,nat
-              zstar(i, j, na) = zstar(i, j, na) - sumz / nat
+              zstar(i, j, na) = zstar(i, j, na) - sumz / nat &
+                                * asr_switch
             ENDDO
           ENDDO
         ENDDO
@@ -2536,6 +2737,7 @@
           IF (lpolar .AND. .NOT. lrigid) CALL errore('dynmat', &
             &'You set lpolar = .TRUE. but did not put epsil = true in the PH calculation at Gamma. ',1)
         ENDIF
+        !
         DO na = 1, nat
           DO ipol = 1, 3
             DO jpol = ipol, 3
@@ -2545,7 +2747,8 @@
                 sumr(2, ipol, na, jpol) = SUM(dynr(2, ipol, na, jpol, :))
               ENDIF
               !
-              dynr(:, ipol, na, jpol, na) = dynr(:, ipol, na, jpol, na) - sumr(:, ipol, na, jpol)
+              dynr(:, ipol, na, jpol, na) = dynr(:, ipol, na, jpol, na) - sumr(:, ipol, na, jpol) &
+                                            * asr_switch
               !
             ENDDO
           ENDDO
@@ -2576,8 +2779,13 @@
       ! Close the dyn file
       CALL read_dyn_mat_tail(nat)
       !
+      IF ((.NOT. ionode) .AND. (control == 1)) THEN
+        sumr(:, :, :, :) = 0.d0
+        zstar(:, :, :) = 0.d0
+        epsi(:, :) = 0.d0
+      ENDIF
     ELSE ! not a xml file
-      IF (mpime == ionode_id) THEN
+      IF (my_pool_id == ionode_id) THEN
         OPEN(UNIT = iudyn, FILE = tempfile, STATUS = 'old', IOSTAT = ios)
         IF (ios /= 0) CALL errore('dynmat_asr', 'opening file' // tempfile, ABS(ios))
         !
@@ -2633,7 +2841,6 @@
           READ(iudyn, '(///a)') line
           READ(line(11:80), *) (q(i, iq), i = 1, 3)
           READ(iudyn, '(a)') line
-          !
           DO na = 1, nat
             DO nb = 1, nat
               READ(iudyn, *) naa, nbb
@@ -2657,7 +2864,8 @@
                   sumr(2, ipol, na, jpol) = SUM(dynr(2, ipol, na, jpol, :))
                 ENDIF
                 !
-                dynr(:, ipol, na, jpol, na) = dynr(:, ipol, na, jpol, na) - sumr(:, ipol, na, jpol)
+                dynr(:, ipol, na, jpol, na) = dynr(:, ipol, na, jpol, na) - sumr(:, ipol, na, jpol) &
+                                              * asr_switch
                 !
               ENDDO
             ENDDO
@@ -2709,7 +2917,8 @@
                   sumz = sumz + zstar(i, j, na)
                 ENDDO
                 DO na = 1, nat
-                  zstar(i, j, na) = zstar(i, j, na) - sumz / nat
+                  zstar(i, j, na) = zstar(i, j, na) - sumz / nat &
+                                    * asr_switch
                 ENDDO
               ENDDO
             ENDDO
@@ -2719,13 +2928,17 @@
                'You set lpolar = .TRUE. but did not put epsil = true in the PH calculation at Gamma. ', 1)
           ENDIF
         ENDIF
+        CALL mp_sum(zstar, inter_image_comm)
+        CALL mp_sum(epsi , inter_image_comm)
         CLOSE(iudyn)
       ENDIF ! mpime
-      CALL mp_bcast(zstar, meta_ionode_id, world_comm)
-      CALL mp_bcast(epsi , meta_ionode_id, world_comm)
-      CALL mp_bcast(dynq , meta_ionode_id, world_comm)
-      CALL mp_bcast(q    , meta_ionode_id, world_comm)
-      CALL mp_bcast(mq   , meta_ionode_id, world_comm)
+      ! S. Tiwari: commented in v6.1 since they are world summed in ep_coarse_unfolding  
+      !CALL mp_bcast(zstar, ionode_id, inter_pool_comm)
+      !CALL mp_bcast(epsi , ionode_id, inter_pool_comm)
+      !
+      CALL mp_bcast(dynq , ionode_id, inter_pool_comm)
+      CALL mp_bcast(q    , ionode_id, inter_pool_comm)
+      CALL mp_bcast(mq   , ionode_id, inter_pool_comm)
     ENDIF ! not xml
     !
     !
@@ -3052,7 +3265,8 @@
     USE input,         ONLY : filukk
     USE ep_constants,  ONLY : czero, zero
     USE io_var,        ONLY : iunukk
-    USE io_global,     ONLY : meta_ionode_id, meta_ionode
+    USE io_global,     ONLY : meta_ionode_id, meta_ionode, ionode_id, ionode
+    USE mp_global,     ONLY : my_pool_id, inter_pool_comm
     USE mp,            ONLY : mp_sum, mp_barrier, mp_bcast
     USE parallelism,   ONLY : fkbounds
     USE global_var,    ONLY : xkq
@@ -3118,7 +3332,7 @@
     !
     cu_big = czero
     cuq_big = czero
-    IF (meta_ionode) THEN
+    IF (ionode) THEN
       !
       ! First proc read rotation matrix (coarse mesh) from file
       !
@@ -3168,15 +3382,15 @@
         cuq_big(:, :, ik) = cu_big(:, :, kmap(ik))
         lwinq_big(:, ik) = lwin_big(:, kmap(ik))
       ENDDO
-    ENDIF ! meta_ionode
+    ENDIF ! ionode
     !
-    CALL mp_bcast(cu_big, meta_ionode_id, world_comm)
-    CALL mp_bcast(cuq_big, meta_ionode_id, world_comm)
-    CALL mp_bcast(lwin_big, meta_ionode_id, world_comm)
-    CALL mp_bcast(lwinq_big, meta_ionode_id, world_comm)
-    CALL mp_bcast(exband, meta_ionode_id, world_comm)
-    CALL mp_bcast(w_centers, meta_ionode_id, world_comm)
-    !
+    CALL mp_bcast(cu_big,    ionode_id, inter_pool_comm)
+    CALL mp_bcast(cuq_big,   ionode_id, inter_pool_comm)
+    CALL mp_bcast(lwin_big,  ionode_id, inter_pool_comm)
+    CALL mp_bcast(lwinq_big, ionode_id, inter_pool_comm)
+    CALL mp_bcast(exband,    ionode_id, inter_pool_comm)
+    CALL mp_bcast(w_centers, ionode_id, inter_pool_comm)
+    ! 
     CALL fkbounds(nkstot, ik_start, ik_stop)
     !
     IF ((ik_stop - ik_start + 1) /= nks) CALL errore('loadumat', "Improper parallel ukk load", 1)

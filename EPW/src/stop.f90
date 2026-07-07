@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   !
@@ -28,17 +29,18 @@
     !! Called at the end of the run
     !!
     USE mp,            ONLY : mp_end, mp_barrier
-    USE mp_global,     ONLY : mp_global_end
+    USE mp_global,     ONLY : mp_global_end, nimage
     USE io_global,     ONLY : stdout
     USE printing,      ONLY : print_clock_epw
     USE input,         ONLY : eliashberg, gridsamp, plselfen, specfun_pl, scattering, iterative_bte, lpolar, &
                               lindabs, bfieldx, bfieldy, bfieldz, system_2d, ii_scattering, plrn, loptabs, &
-                              lwfpt, do_tdbe
-    USE global_var,    ONLY : adapt_smearing, qrpl
+                              lwfpt, do_tdbe, lsda
+    USE global_var,    ONLY : adapt_smearing, qrpl, ldfptu
     USE io_var,        ONLY : epwbib
     USE mp_world,      ONLY : world_comm
     USE io_global,     ONLY : ionode
     USE ep_constants,  ONLY : eps40
+    USE control_flags, ONLY : use_gpu
     !
     IMPLICIT NONE
     !
@@ -461,6 +463,57 @@
         WRITE(epwbib, '(a)') " }                                                                                       "
       ENDIF
       !
+      ! LSDA
+      IF (TRIM(lsda) /= 'none') THEN
+        WRITE(epwbib, '(a)') "                                                                                         "
+        WRITE(epwbib, '(a)') " % Since you used the [lsda] input, please consider also citing                          "
+        WRITE(epwbib, '(a)') "                                                                                         "
+        WRITE(epwbib, '(a)') " @misc{Carrascoalvarez2025,                                                              "
+        WRITE(epwbib, '(a)') "   Title   = {Electron-phonon coupling in magnetic materials using using &    
+                                            the local spin density approximation},                                     "
+        WRITE(epwbib, '(a)') "   Author  = {Carrasco {\'A}lvarez, {\'A}lvaro Adri{\'a}n and Giantomassi, &
+                                            Matteo and Lihm, Jae-Mo and Allemand, Gillaume and Mignolet, &
+                                            Maxime and Verstraete, Matthieu and Ponc{\'e}, Samuel},                    "
+        WRITE(epwbib, '(a)') "   eprint = {2510.11350},                                                                "
+        WRITE(epwbib, '(a)') "   Year    = {2025},                                                                     "
+        WRITE(epwbib, '(a)') "   ArchivePrefix  = {arXiv}                                                              "
+        WRITE(epwbib, '(a)') "   url={https://arxiv.org/abs/2510.11350},                                               "
+        WRITE(epwbib, '(a)') "   Doi     = {10.48550/arXiv.2510.11350}                                                 "
+      ENDIF
+      ! Hubbard U
+      IF (ldfptu) THEN
+        WRITE(epwbib, '(a)') "                                                                                         "
+        WRITE(epwbib, '(a)') " % Since you used the dft+u file,     please consider also citing                        "
+        WRITE(epwbib, '(a)') " @Article{Yang2025,                                                                      "
+        WRITE(epwbib, '(a)') "   Title   = {First-principles electron-phonon interactions with self-consistent &
+                                            &Hubbard interaction: Application to transparent conducting oxides},       "
+        WRITE(epwbib, '(a)') "   Author  = {Wooil Yang, Sabyasachi Tiwari, Feliciano Giustino, Young-Woo Son},         "
+        WRITE(epwbib, '(a)') "   Journal = {Phys. Rev. B},                                                             "
+        WRITE(epwbib, '(a)') "   Year    = {2025},                                                                     "
+        WRITE(epwbib, '(a)') "   Volume  = {112},                                                                      "
+        WRITE(epwbib, '(a)') "   Pages   = {075203},                                                                   "
+        WRITE(epwbib, '(a)') "   Doi     = {10.1103/w2y5-rl8s}                                                         "
+        WRITE(epwbib, '(a)') " }                                                                                       "
+      ENDIF
+      !
+      ! GPU acceleration & image parallelization
+      IF ( use_gpu .OR. (nimage > 1) ) THEN
+        WRITE(epwbib, '(a)') "                                                                                         "
+        WRITE(epwbib, '(a)') " % Since you used the GPU acceleration and/or image parallelization, please consider &
+                                   &also citing                                                                        "
+        WRITE(epwbib, '(a)') " @Article{Kim2026,                                                                       "
+        WRITE(epwbib, '(a)') "   Title   = {Electron-phonon physics at the exascale: A hybrid MPI-GPU-OpenMP &
+                                            &framework for scalable Wannier interpolation},                            "
+        WRITE(epwbib, '(a)') "   Author  = {Tae Yun Kim, Zhe Liu, Sabyasachi Tiwari, &
+                                            &Elena R. Margine, Feliciano Giustino},                                    "
+        WRITE(epwbib, '(a)') "   eprint = {2603.10295},                                                                "
+        WRITE(epwbib, '(a)') "   Year    = {2026},                                                                     "
+        WRITE(epwbib, '(a)') "   ArchivePrefix  = {arXiv}                                                              "
+        WRITE(epwbib, '(a)') "   url={https://arxiv.org/abs/2603.10295},                                               "
+        WRITE(epwbib, '(a)') "   Doi     = {10.48550/arXiv.2603.10295}                                                 "
+        WRITE(epwbib, '(a)') " }                                                                                       "
+      ENDIF
+      !
       CLOSE(epwbib)
       !
     ENDIF
@@ -483,9 +536,11 @@
     USE io_global,     ONLY : stdout
     USE input,         ONLY : eliashberg, gridsamp, plselfen, specfun_pl, scattering, iterative_bte, lpolar, &
                               lindabs, bfieldx, bfieldy, bfieldz, system_2d, loptabs, plrn, ii_scattering, &
-                              lwfpt
-    USE global_var,    ONLY : adapt_smearing, qrpl
+                              lwfpt, lsda
+    USE global_var,    ONLY : adapt_smearing, qrpl, ldfptu
     USE ep_constants,  ONLY : eps40
+    USE control_flags, ONLY : use_gpu
+    USE mp_global,     ONLY : nimage
     !
     IMPLICIT NONE
     !
@@ -614,6 +669,28 @@
       WRITE(stdout, '(a)') "       J.-M. Lihm and C.-H. Park, PRX 11, 041053 (2021)                                      "
     ENDIF
     !
+    ! LSDA calculation
+    IF (TRIM(lsda) /= 'none') THEN
+      WRITE(stdout, '(a)') "                                                                                             "
+      WRITE(stdout, '(a)') "     % Since you used the [lsda] input,     please consider also citing                      "
+      WRITE(stdout, '(a)') "       \'A. A. Carrasco \'Alvarez et al, arXiv:2510.11350 (2025)                             "
+    ENDIF
+    !
+    ! Hubbard U
+    IF (ldfptu) THEN
+      WRITE(stdout, '(a)') "                                                                                             "
+      WRITE(stdout, '(a)') "     % Since you used the dft+u file,     please consider also citing                        "
+      WRITE(stdout, '(a)') "       W. Yang et al, Phys. Rev. B 112, 075203 (2025)                                        "
+    ENDIF
+    !
+    ! GPU acceleration & image parallelization
+    IF ( use_gpu .OR. (nimage > 1) ) THEN
+      WRITE(stdout, '(a)') "                                                                                             "
+      WRITE(stdout, '(a)') "     % Since you used the GPU acceleration and/or image parallelization, please consider &
+                                 &also citing                                                                            "
+      WRITE(stdout, '(a)') "       T. Y. Kim et al, arXiv:2603.10295 (2026)                                              "
+    ENDIF
+    !
     !-----------------------------------------------------------------------
     END SUBROUTINE  write_citation
     !-----------------------------------------------------------------------
@@ -679,7 +756,9 @@
     !
     !-----------------------------------------------------------------------
     SUBROUTINE ephf_deallocate(epmatwef, cufkk, cufkq, uf, w2, cfac, cfacq,  &
-                               rdotk, rdotk2, irvec_r, etf_all, epmatf, eimpmatf)
+                               rdotk, rdotk2, irvec_r, etf_all, epmatf, eimpmatf, &
+                               chf_batch, wb_batch, chf_a, vmef_tmp, rrf_batch, &
+                               rfac_batch, xkq_batch, cfac_batch, cuf_batch)
     !-----------------------------------------------------------------------
     !!
     !! Deallocate variables at the end of fine grid interpolation
@@ -688,8 +767,7 @@
     USE input,        ONLY : isk_dummy
     USE input,        ONLY : iterative_bte, ephwrite, mp_mesh_k, etf_mem, vme, &
                              epmatkqread, lcumulant, eliashberg, assume_metal, &
-                             lindabs, carrier, ii_g, scattering, lfast_kmesh,  &
-                             epw_memdist
+                             lindabs, carrier, ii_g, scattering, lfast_kmesh
     USE global_var,   ONLY : map_rebal, map_rebal_inv, vmef, cvmew, cdmew,     &
                              epmatwp, epmatwp_dist, chw, chw_ks, rdw,          &
                              epsi, zstar, wf, etf, etf_ks, eps_rpa,            &
@@ -697,6 +775,11 @@
                              dos, Qmat, ef0_fca, partion, qtf2_therm,          &
                              epsilon2_abs, epsilon2_abs_lorenz,                &
                              epsilon2_abs_all, epsilon2_abs_lorenz_all
+#if defined(__CUDA)
+    USE global_var,   ONLY : cublas_h, cusolverdn_h
+    USE cublas
+    USE cusolverdn
+#endif
     !
     IMPLICIT NONE
     !
@@ -726,6 +809,24 @@
     !! Used to store $e^{2\pi r \cdot k}$ exponential
     COMPLEX(KIND = DP), ALLOCATABLE, INTENT(inout) :: cfacq(:)
     !! Used to store $e^{2\pi r \cdot k+q}$ exponential
+    COMPLEX(KIND = DP), ALLOCATABLE, INTENT(inout) :: chf_batch(:, :, :)
+    !! Batch of electron Hamiltonina matrices on the fine mesh (nbnd, nbnd, nkqf)
+    REAL(KIND = DP), ALLOCATABLE, INTENT(inout) :: wb_batch(:, :)
+    !! Batch of electron energies on the fine mesh (nbnd, nkqf)
+    COMPLEX(KIND = DP), ALLOCATABLE, INTENT(inout) :: chf_a(:, :, :, :)
+    !! Batch of velocity matrices on the fine mesh (nbnd, nbnd, nkqf, 3)
+    COMPLEX(KIND = DP), ALLOCATABLE, INTENT(inout) :: vmef_tmp(:, :, :, :)
+    !! Batch of electron velocity on the fine mesh (nbnd, nbnd, 3, nkqf)
+    COMPLEX(KIND = DP), ALLOCATABLE, INTENT(inout) :: rrf_batch(:, :, :, :)
+    !! Batch of position matrix elements on the fine mesh (3, nbnd, nbnd, nkqf)
+    REAL(KIND = DP), ALLOCATABLE, INTENT(inout) :: rfac_batch(:, :)
+    !! Batch of Fourier factors for electron Hamiltonian on the fine mesh (nrr_k, nkqf)
+    REAL(KIND = DP), ALLOCATABLE, INTENT(inout) :: xkq_batch(:, :)
+    !! Batch of k+q points on the fine mesh (3, nkqf)
+    COMPLEX(KIND = DP), ALLOCATABLE, INTENT(inout) :: cfac_batch(:, :)
+    !! Batch of Fourier factors for electron Hamiltonian on the fine mesh (nrr_k, nkqf)
+    COMPLEX(KIND = DP), ALLOCATABLE, INTENT(inout) :: cuf_batch(:, :, :)
+    !! Batch of rotation matrix on the fine mesh (nbnd, nbnd, nkqf)
     !
     ! Local variables
     INTEGER :: ierr
@@ -744,13 +845,10 @@
     DEALLOCATE(vmef, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephf_deallocate', 'Error deallocating vmef', 1)
     IF (etf_mem == 0) THEN
-      IF (.NOT. epw_memdist) THEN
-        DEALLOCATE(epmatwp, STAT = ierr)
-        IF (ierr /= 0) CALL errore('ephf_deallocate', 'Error deallocating epmatwp', 1)
-      ELSE
-        DEALLOCATE(epmatwp_dist, STAT = ierr)
-        IF (ierr /= 0) CALL errore('ephf_deallocate', 'Error deallocating epmatwp_dist', 1)
-      ENDIF
+      !$acc exit data delete(epmatwp)
+      !$omp target exit data map(delete:epmatwp)
+      DEALLOCATE(epmatwp, STAT = ierr)
+      IF (ierr /= 0) CALL errore('ephf_deallocate', 'Error deallocating epmatwp', 1)
     ENDIF
     !
     DEALLOCATE(chw, STAT = ierr)
@@ -764,6 +862,8 @@
     DEALLOCATE(zstar, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephf_deallocate', 'Error deallocating zstar', 1)
     !
+    !$acc exit data delete(epmatwef)
+    !$omp target exit data map(delete:epmatwef)
     DEALLOCATE(epmatwef, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephf_deallocate', 'Error deallocating epmatwef', 1)
     IF (.NOT. epmatkqread) THEN
@@ -800,6 +900,10 @@
     IF (ierr /= 0) CALL errore('ephf_deallocate', 'Error deallocating rdotk', 1)
     DEALLOCATE(rdotk2, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephf_deallocate', 'Error deallocating rdotk2', 1)
+    !$acc exit data delete(irvec_r)
+    !$omp target exit data map(delete:irvec_r)
+    DEALLOCATE(irvec_r, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ephf_deallocate', 'Error deallocating irvec_r', 1)
     DEALLOCATE(etf_all, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephf_deallocate', 'Error deallocating etf_all', 1)
     IF (mp_mesh_k .OR. lfast_kmesh) THEN
@@ -843,7 +947,59 @@
       DEALLOCATE(epsilon2_abs_lorenz_all, STAT = ierr)
       IF (ierr /= 0) CALL errore('ephf_deallocate', 'Error deallocating epsilon2_abs_lorenz_all', 1)
     ENDIF
-
+    ! Deallocate arrays for batched GPU subroutines 
+    !$acc exit data delete(chf_batch)
+    !$omp target exit data map(delete:chf_batch)
+    DEALLOCATE(chf_batch, STAT = ierr)
+    IF (ierr /= 0) CALL errore('use_wannier', 'Error deallocating chf_batch', 1)
+    !
+    !$acc exit data delete(wb_batch)
+    !$omp target exit data map(delete:wb_batch)
+    DEALLOCATE(wb_batch, STAT = ierr)
+    IF (ierr /= 0) CALL errore('use_wannier', 'Error deallocating wb', 1)
+    !
+    !$acc exit data delete(chf_a)
+    !$omp target exit data map(delete:chf_a)
+    DEALLOCATE(chf_a, STAT = ierr)
+    IF (ierr /= 0) CALL errore('use_wannier', 'Error deallocating chf_a', 1)
+    !
+    !$acc exit data delete(vmef_tmp)
+    !$omp target exit data map(delete:vmef_tmp)
+    DEALLOCATE(vmef_tmp, STAT = ierr)
+    IF (ierr /= 0) CALL errore('use_wannier', 'Error deallocating vmef_tmp', 1)
+    !
+    !$acc exit data delete(rrf_batch)
+    !$omp target exit data map(delete:rrf_batch)
+    DEALLOCATE(rrf_batch, STAT = ierr)
+    IF (ierr /= 0) CALL errore('use_wannier', 'Error deallocating rrf_batch', 1)
+    !
+    !$acc exit data delete(rfac_batch)
+    !$omp target exit data map(delete:rfac_batch)
+    DEALLOCATE(rfac_batch, STAT = ierr)
+    IF (ierr /= 0) CALL errore('use_wannier', 'Error deallocating rfac_batch', 1)
+    !
+    !$acc exit data delete(xkq_batch)
+    !$omp target exit data map(delete:xkq_batch)
+    DEALLOCATE(xkq_batch, STAT = ierr)
+    IF (ierr /= 0) CALL errore('use_wannier', 'Error deallocating xkq_batch', 1)
+    !
+    !$acc exit data delete(cfac_batch)
+    !$omp target exit data map(delete:cfac_batch)
+    DEALLOCATE(cfac_batch, STAT = ierr)
+    IF (ierr /= 0) CALL errore('use_wannier', 'Error deallocating cfac_batch', 1)
+    !
+    !$acc exit data delete(cuf_batch)
+    !$omp target exit data map(delete:cuf_batch)
+    DEALLOCATE(cuf_batch, STAT = ierr)
+    IF (ierr /= 0) CALL errore('use_wannier', 'Error deallocating cuf_batch', 1)
+    !
+    ! Cleanup the cuBLAS handle
+#if defined(__CUDA)
+    ierr = CUBLASDESTROY(cublas_h)
+    IF (ierr /= 0) CALL errore('ephf_deallocate', 'Error deallocating cublas handle', 1)
+    ierr = CUSOLVERDNDESTROY(cusolverdn_h)
+    IF (ierr /= 0) CALL errore('ephf_deallocate', 'Error deallocating cusolverdn handle', 1)
+#endif
     !-----------------------------------------------------------------------
     END SUBROUTINE  ephf_deallocate
     !-----------------------------------------------------------------------

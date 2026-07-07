@@ -23,5 +23,5 @@ else
 fi
 
 echo "Running PIOUD..."
-${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pioud.x ${PARA_SUFFIX} -in $1 > $2 2> $3
+${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pioud.x ${PARA_SUFFIX} -in $1 > $2 2> $3
 rm -f pw_?.in

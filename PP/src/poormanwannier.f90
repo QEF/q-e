@@ -105,7 +105,7 @@ PROGRAM pmw
   !
   CALL projection( first_band, last_band, min_energy, max_energy, sigma, writepp)
   !
-  CALL environment_end ( 'PMW' )
+  CALL environment_end( )
   !
   CALL stop_pp
   !

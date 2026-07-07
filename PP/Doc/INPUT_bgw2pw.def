@@ -32,14 +32,17 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program bgw2p
     namelist INPUT_BGW2PW {
 
 	var prefix -type STRING {
-	    status { MANDATORY }
+	    status { REQUIRED }
 	    info {
 		prefix of files saved by program pw.x
 	    }
 	}
 
 	var outdir -type STRING {
-	    default { './' }
+	    default -kind conditional {
+		case -test "ESPRESSO_TMPDIR environment variable is set and non-blank" { value of the ESPRESSO_TMPDIR environment variable }
+		case { './' }
+	    }
 	    info {
 		the scratch directory where the massive data-files are written
 	    }
@@ -47,11 +50,20 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program bgw2p
 
 	var real_or_complex -type INTEGER {
 	    default { 2 }
-	    info {
-		1 | 2
-		@b 1 for real flavor of BerkeleyGW (for systems with inversion symmetry and
-		time-reversal symmetry) or @b 2 for complex flavor of BerkeleyGW (for systems
-		without inversion symmetry and time-reversal symmetry)
+	    options {
+		info {
+		    BerkeleyGW data flavor.
+		}
+
+		opt -val 1 {
+		    Real flavor of BerkeleyGW (for systems with inversion symmetry
+		    and time-reversal symmetry).
+		}
+
+		opt -val 2 {
+		    Complex flavor of BerkeleyGW (for systems without inversion
+		    symmetry and time-reversal symmetry).
+		}
 	    }
 	}
 

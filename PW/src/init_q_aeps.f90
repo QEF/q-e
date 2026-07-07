@@ -103,7 +103,7 @@ SUBROUTINE init_q_aeps()
                ! compute norm of the difference [pswfc(r) - chi(r)]
                aux(1:msh(nt)) = (upf(nt)%pswfc(1:msh(nt),nb) - wsgn*upf(nt)%chi(1:msh(nt),nchiH))**2
                CALL simpson( msh(nt), aux, rgrid(nt)%rab, psint )
-               IF ( ABS(psint) <= 1.d-9 ) nbH = nb
+               IF ( ABS(psint) <= 1.d-8 ) nbH = nb
             ENDIF
             !
          ENDDO

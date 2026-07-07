@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
@@ -555,12 +556,12 @@
     USE io_files,         ONLY : prefix
     USE io_var,           ONLY : iufilsigma
     USE input,            ONLY : nbndsub, fsthick, system_2d, nstemp, assume_metal,&
-                                 int_mob, ncarrier, scatread, iterative_bte
+                                 int_mob, ncarrier, scatread, iterative_bte, lsda
     USE pwcom,            ONLY : ef
     USE global_var,       ONLY : ibndmin, etf, nkf, wkf, vmef, bztoibz,            &
                                  inv_tau_all, nkqtotf, inv_tau_allcb, gtemp,       &
                                  zi_allvb, zi_allcb, map_rebal, nbndfst, nktotf,   &
-                                 s_bztoibz
+                                 s_bztoibz, spin_fac
     USE ep_constants,     ONLY : zero, one, bohr2ang, ryd2ev, ang2cm, czero,       &
                                  kelvin2eV, hbar, Ang2m, hbarJ, eps6, eps4
     USE constants,        ONLY : electron_si
@@ -575,7 +576,6 @@
     USE parallelism,      ONLY : fkbounds
     USE bzgrid,           ONLY : kpoint_grid_epw
     USE parallelism,      ONLY : poolgatherc4, poolgather2
-    USE noncollin_module, ONLY : noncolin
     !
     IMPLICIT NONE
     !
@@ -970,23 +970,13 @@
                           DO i = 1, 3
                             ij = ij + 1
                             ! The factor two in the weight at the end is to account for spin
-                            IF (noncolin) THEN
-                              tdf_sigma(ij) = tdf_sigma(ij) + (v_rot(i) * v_rot(j)) * 1.0 / (nkf1 * nkf2 * nkf3)
-                            ELSE
-                              tdf_sigma(ij) = tdf_sigma(ij) + (v_rot(i) * v_rot(j)) * 2.0 / (nkf1 * nkf2 * nkf3)
-                            ENDIF
+                            tdf_sigma(ij) = tdf_sigma(ij) + (v_rot(i) * v_rot(j)) * spin_fac / (nkf1 * nkf2 * nkf3)
                           ENDDO
                         ENDDO
                       ENDIF
                     ENDDO ! ikbz
-                    IF (noncolin) THEN
-                      IF (ABS(nb * 1.0 / (nkf1 * nkf2 * nkf3) - wkf(ikk)) > eps6) THEN
-                        CALL errore('transport', ' The number of kpoint in the IBZ is not equal to the weight', 1)
-                      ENDIF
-                    ELSE
-                      IF (ABS(nb * 2.0 / (nkf1 * nkf2 * nkf3) - wkf(ikk)) > eps6) THEN
-                        CALL errore('transport', ' The number of kpoint in the IBZ is not equal to the weight', 1)
-                      ENDIF
+                    IF (ABS(nb * spin_fac / (nkf1 * nkf2 * nkf3) - wkf(ikk)) > eps6) THEN
+                      CALL errore('transport', ' The number of kpoint in the IBZ is not equal to the weight', 1)
                     ENDIF
                   ! withtout symmetries
                   ELSE
@@ -1029,6 +1019,7 @@
         !
         IF (mpime == meta_ionode_id) THEN
           filsigma = TRIM(prefix) // '_elcond_h'
+          IF (TRIM(lsda) == 'down') filsigma = TRIM(prefix) // '.down_elcond_h'
           OPEN(iufilsigma, FILE = filsigma, FORM = 'formatted')
           WRITE(iufilsigma, '(a)') "# Electrical conductivity in 1/(Ohm * m)"
           WRITE(iufilsigma, '(a)') "#         Ef(eV)         Temp(K)        Sigma_xx        Sigma_xy        Sigma_xz" // &
@@ -1178,23 +1169,13 @@
                             DO i = 1, 3
                               ij = ij + 1
                               ! The factor two in the weight at the end is to account for spin
-                              IF (noncolin) THEN
-                                tdf_sigma(ij) = tdf_sigma(ij) + (v_rot(i) * v_rot(j)) * 1.0 / (nkf1 * nkf2 * nkf3)
-                              ELSE
-                                tdf_sigma(ij) = tdf_sigma(ij) + (v_rot(i) * v_rot(j)) * 2.0 / (nkf1 * nkf2 * nkf3)
-                              ENDIF
+                              tdf_sigma(ij) = tdf_sigma(ij) + (v_rot(i) * v_rot(j)) * spin_fac / (nkf1 * nkf2 * nkf3)
                             ENDDO
                           ENDDO
                         ENDIF
                       ENDDO ! ikbz
-                      IF (noncolin) THEN
-                        IF (ABS(nb * 1.0 / (nkf1 * nkf2 * nkf3) - wkf(ikk)) > eps6) THEN
-                          CALL errore('transport', ' The number of kpoint in the IBZ is not equal to the weight', 1)
-                        ENDIF
-                      ELSE
-                        IF (ABS(nb * 2.0 / (nkf1 * nkf2 * nkf3) - wkf(ikk)) > eps6) THEN
-                          CALL errore('transport', ' The number of kpoint in the IBZ is not equal to the weight', 1)
-                        ENDIF
+                      IF (ABS(nb * spin_fac / (nkf1 * nkf2 * nkf3) - wkf(ikk)) > eps6) THEN
+                        CALL errore('transport', ' The number of kpoint in the IBZ is not equal to the weight', 1)
                       ENDIF
                     ! withtout symmetries
                     ELSE
@@ -1250,23 +1231,13 @@
                             DO i = 1, 3
                               ij = ij + 1
                               ! The factor two in the weight at the end is to account for spin
-                              IF (noncolin) THEN
-                                tdf_sigma(ij) = tdf_sigma(ij) + (v_rot(i) * v_rot(j)) * 1.0 / (nkf1 * nkf2 * nkf3)
-                              ELSE
-                                tdf_sigma(ij) = tdf_sigma(ij) + (v_rot(i) * v_rot(j)) * 2.0 / (nkf1 * nkf2 * nkf3)
-                              ENDIF
+                              tdf_sigma(ij) = tdf_sigma(ij) + (v_rot(i) * v_rot(j)) * spin_fac / (nkf1 * nkf2 * nkf3)
                             ENDDO
                           ENDDO
                         ENDIF
                       ENDDO ! ikbz
-                      IF (noncolin) THEN
-                        IF (ABS(nb * 1.0 / (nkf1 * nkf2 * nkf3) - wkf(ikk)) > eps6) THEN
-                          CALL errore('transport', ' The number of kpoint in the IBZ is not equal to the weight', 1)
-                        ENDIF
-                      ELSE
-                        IF (ABS(nb * 2.0 / (nkf1 * nkf2 * nkf3) - wkf(ikk)) > eps6) THEN
-                          CALL errore ('transport', ' The number of kpoint in the IBZ is not equal to the weight', 1)
-                        ENDIF
+                      IF (ABS(nb * spin_fac / (nkf1 * nkf2 * nkf3) - wkf(ikk)) > eps6) THEN
+                        CALL errore('transport', ' The number of kpoint in the IBZ is not equal to the weight', 1)
                       ENDIF
                     ! withtout symmetries
                     ELSE
@@ -1307,6 +1278,7 @@
         ENDDO ! nstemp
         IF (mpime == meta_ionode_id) THEN
           filsigma = TRIM(prefix) // '_elcond_e'
+          IF (TRIM(lsda) == 'down') filsigma = TRIM(prefix) // '.down_elcond_e'
           OPEN(iufilsigma, FILE = filsigma, FORM = 'formatted')
           WRITE(iufilsigma, '(a)') "# Electrical conductivity in 1/(Ohm * m)"
           WRITE(iufilsigma, '(a)') "#         Ef(eV)         Temp(K)        Sigma_xx        Sigma_xy        Sigma_xz" // &

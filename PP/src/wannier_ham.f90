@@ -68,7 +68,7 @@ PROGRAM wannier_ham
 
   CALL new_hamiltonian(form, plot_bands)
 
-  CALL environment_end ( 'WANNIER_HAM')
+  CALL environment_end( )
 
   CALL stop_pp
 

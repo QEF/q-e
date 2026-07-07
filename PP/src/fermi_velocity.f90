@@ -148,7 +148,7 @@ PROGRAM fermi_velocity
   !
   DEALLOCATE(vf, eig, equiv)
   !
-  CALL environment_end ('FERMI_VELOCITY')
+  CALL environment_end( )
   CALL stop_pp
   !
 END PROGRAM fermi_velocity

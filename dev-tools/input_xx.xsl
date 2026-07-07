@@ -898,6 +898,8 @@
 	  </xsl:choose>
 	</tr>
 	<xsl:apply-templates select="default"/> 
+	<xsl:apply-templates select="dimensionality"/>
+	<xsl:apply-templates select="units"/>
 	<xsl:apply-templates select="status"/>
 	<xsl:apply-templates select="see"/>
 	<xsl:apply-templates select="info | options"/>
@@ -947,6 +949,8 @@
 	</td>
       </tr>
       <xsl:apply-templates select="default"/> 
+      <xsl:apply-templates select="dimensionality"/>
+      <xsl:apply-templates select="units"/>
       <xsl:apply-templates select="status"/>
       <xsl:apply-templates select="see"/>
       <xsl:apply-templates select="info | options"/>
@@ -956,11 +960,348 @@
 
   <!--    *** VAR's elements ***  -->
 
+  <!-- render a computed-sentinel value in square brackets, others unchanged.
+       Keep in sync with helpdoc.d/txt.tcl. -->
+  <xsl:template name="computed-sentinel">
+    <xsl:param name="value"/>
+    <xsl:variable name="v" select="normalize-space($value)"/>
+    <xsl:choose>
+      <xsl:when test="$v = 'from_pseudopotential' or $v = 'from_xml' or $v = 'from_environment' or $v = 'internal'">[<xsl:value-of select="$v"/>]</xsl:when>
+      <xsl:otherwise><xsl:value-of select="$value"/></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
   <xsl:template match="default">
     <tr>
       <td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "> <i>Default:</i> </td>
       <td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
-	<xsl:apply-templates/>
+	<xsl:choose>
+	  <!-- conditional: render each "case" as header line + indented value -->
+	  <xsl:when test="case">
+	    <xsl:for-each select="case">
+	      <xsl:choose>
+		<xsl:when test="@test">
+		  <i>if </i><xsl:call-template name="linkify-refs"><xsl:with-param name="text" select="@test"/></xsl:call-template><i>:</i>
+		</xsl:when>
+		<xsl:otherwise>
+		  <i>otherwise:</i>
+		</xsl:otherwise>
+	      </xsl:choose>
+	      <br/>
+	      <xsl:text>&#160;&#160;&#160;</xsl:text>
+	      <xsl:variable name="caseval">
+		<xsl:apply-templates/>
+	      </xsl:variable>
+	      <xsl:call-template name="computed-sentinel">
+		<xsl:with-param name="value" select="$caseval"/>
+	      </xsl:call-template>
+	      <br/>
+	    </xsl:for-each>
+	  </xsl:when>
+	  <!-- plain default: render the text body -->
+	  <xsl:otherwise>
+	    <xsl:apply-templates/>
+	  </xsl:otherwise>
+	</xsl:choose>
+      </td>
+    </tr>
+  </xsl:template>
+
+  <xsl:template match="dimensionality">
+    <tr>
+      <td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "> <i>Dimensionality:</i> </td>
+      <td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+	<xsl:choose>
+	  <!-- conditional: render each "case" as header line + indented value -->
+	  <xsl:when test="case">
+	    <xsl:for-each select="case">
+	      <xsl:choose>
+		<xsl:when test="@test">
+		  <i>if </i><xsl:call-template name="linkify-refs"><xsl:with-param name="text" select="@test"/></xsl:call-template><i>:</i>
+		</xsl:when>
+		<xsl:otherwise>
+		  <i>otherwise:</i>
+		</xsl:otherwise>
+	      </xsl:choose>
+	      <br/>
+	      <xsl:text>&#160;&#160;&#160;</xsl:text>
+	      <xsl:call-template name="units-gloss">
+		<xsl:with-param name="expr" select="."/>
+	      </xsl:call-template>
+	      <br/>
+	    </xsl:for-each>
+	  </xsl:when>
+	  <!-- plain dimensionality: render the text body (may be a keyed clist) -->
+	  <xsl:otherwise>
+	    <xsl:call-template name="units-gloss-clist">
+	      <xsl:with-param name="expr" select="."/>
+	    </xsl:call-template>
+	  </xsl:otherwise>
+	</xsl:choose>
+      </td>
+    </tr>
+  </xsl:template>
+
+  <!-- render a units product-of-powers expression in conventional notation,
+       e.g. "Ry bohr^-1" -> "Ry/bohr". Keep in sync with
+       ::helpdoc::unitsNotation_ in dev-tools/helpdoc.d/txt.tcl. -->
+  <xsl:template name="units-notation">
+    <xsl:param name="expr"/>
+    <xsl:variable name="u" select="normalize-space($expr)"/>
+    <xsl:variable name="num">
+      <xsl:call-template name="units-notation-rec">
+        <xsl:with-param name="rest" select="$u"/>
+        <xsl:with-param name="mode" select="'num'"/>
+      </xsl:call-template>
+    </xsl:variable>
+    <xsl:variable name="den">
+      <xsl:call-template name="units-notation-rec">
+        <xsl:with-param name="rest" select="$u"/>
+        <xsl:with-param name="mode" select="'den'"/>
+      </xsl:call-template>
+    </xsl:variable>
+    <xsl:value-of select="$num"/>
+    <xsl:value-of select="$den"/>
+  </xsl:template>
+
+  <!-- recursive helper for units-notation: mode='num' emits positive-power
+       tokens, mode='den' emits negative-power tokens as "/base[^exp]". -->
+  <xsl:template name="units-notation-rec">
+    <xsl:param name="rest"/>
+    <xsl:param name="mode"/>
+    <xsl:param name="first" select="'yes'"/>
+    <xsl:variable name="tok">
+      <xsl:choose>
+        <xsl:when test="contains($rest, ' ')">
+          <xsl:value-of select="substring-before($rest, ' ')"/>
+        </xsl:when>
+        <xsl:otherwise><xsl:value-of select="$rest"/></xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:variable name="is-neg" select="contains($tok, '^-')"/>
+    <!-- 'yes' if this token belongs in the current pass -->
+    <xsl:variable name="emit">
+      <xsl:choose>
+        <xsl:when test="$tok = ''">no</xsl:when>
+        <xsl:when test="$mode = 'num' and not($is-neg)">yes</xsl:when>
+        <xsl:when test="$mode = 'den' and $is-neg">yes</xsl:when>
+        <xsl:otherwise>no</xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:if test="$emit = 'yes'">
+      <xsl:choose>
+        <xsl:when test="$mode = 'num'">
+          <xsl:if test="$first != 'yes'"><xsl:text> </xsl:text></xsl:if>
+          <xsl:value-of select="$tok"/>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:variable name="base" select="substring-before($tok, '^-')"/>
+          <xsl:variable name="exp" select="substring-after($tok, '^-')"/>
+          <xsl:text>/</xsl:text>
+          <xsl:value-of select="$base"/>
+          <xsl:if test="$exp != '1'">^<xsl:value-of select="$exp"/></xsl:if>
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:if>
+    <xsl:if test="contains($rest, ' ')">
+      <xsl:call-template name="units-notation-rec">
+        <xsl:with-param name="rest" select="substring-after($rest, ' ')"/>
+        <xsl:with-param name="mode" select="$mode"/>
+        <xsl:with-param name="first">
+          <xsl:choose>
+            <xsl:when test="$first = 'yes' and $emit != 'yes'">yes</xsl:when>
+            <xsl:otherwise>no</xsl:otherwise>
+          </xsl:choose>
+        </xsl:with-param>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
+  <!-- render a <units>/<dimensionality> value as a human-readable phrase:
+       $kind='dim' names the physical quantity, $kind='units' renders the
+       unit notation. Keep in sync with ::helpdoc::unitsGloss in txt.tcl. -->
+  <xsl:template name="units-gloss">
+    <xsl:param name="expr"/>
+    <xsl:param name="kind" select="'dim'"/>
+    <!-- collapse surrounding/internal whitespace for a robust lookup -->
+    <xsl:variable name="u" select="normalize-space($expr)"/>
+    <xsl:choose>
+      <xsl:when test="$kind = 'units'">
+        <xsl:choose>
+          <!-- atomic-unit-system composites: name the unit system only -->
+          <xsl:when test="$u = 'bohr electron_mass^1/2 Ry^-1/2'">Rydberg atomic units</xsl:when>
+          <xsl:when test="$u = 'bohr electron_mass^1/2 Hartree^-1/2'">Hartree atomic units</xsl:when>
+          <xsl:when test="$u = 'Ry e^-1 bohr^-1'">Rydberg atomic units</xsl:when>
+          <xsl:when test="$u = 'Hartree e^-1 bohr^-1'">Hartree atomic units</xsl:when>
+          <!-- everything else: conventional unit notation -->
+          <xsl:otherwise>
+            <xsl:call-template name="units-notation">
+              <xsl:with-param name="expr" select="$u"/>
+            </xsl:call-template>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:when>
+      <!-- $kind='dim': name the physical quantity -->
+      <xsl:otherwise>
+        <xsl:choose>
+          <xsl:when test="$u = 'Ry bohr^-1'">force (Ry/bohr)</xsl:when>
+          <xsl:when test="$u = 'Hartree bohr^-1'">force (Hartree/bohr)</xsl:when>
+          <xsl:when test="$u = 'Ry bohr^-3'">pressure (Ry/bohr^3)</xsl:when>
+          <xsl:when test="$u = 'states eV^-1'">states/eV</xsl:when>
+          <xsl:when test="$u = 'energy length^-1'">force</xsl:when>
+          <xsl:when test="$u = 'energy length^-3'">pressure</xsl:when>
+          <xsl:when test="$u = 'time^-1'">frequency</xsl:when>
+          <xsl:when test="$u = 'length time^-1'">velocity</xsl:when>
+          <xsl:when test="$u = 'energy charge^-1'">electric potential</xsl:when>
+          <xsl:when test="$u = 'energy charge^-1 length^-1'">electric field</xsl:when>
+          <xsl:when test="$u = 'charge length^-3'">charge density</xsl:when>
+          <!-- single-token value or unrecognized composite: raw expression -->
+          <xsl:otherwise><xsl:value-of select="$u"/></xsl:otherwise>
+        </xsl:choose>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- render a <units>/<dimensionality> value that may be a keyed comma-list;
+       keyed entries gloss to "<value> for index <i>". Keep in sync with
+       ::helpdoc::unitsGlossClist in txt.tcl. -->
+  <xsl:template name="units-gloss-clist">
+    <xsl:param name="expr"/>
+    <xsl:param name="kind" select="'dim'"/>
+    <xsl:variable name="c" select="normalize-space($expr)"/>
+    <xsl:choose>
+      <!-- not a comma-list and not keyed: a single plain expression -->
+      <xsl:when test="not(contains($c, ',')) and not(contains($c, ':'))">
+        <xsl:call-template name="units-gloss">
+          <xsl:with-param name="expr" select="$c"/>
+          <xsl:with-param name="kind" select="$kind"/>
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+        <!-- Two passes: keyed overrides first (in listed order), then the
+             single unkeyed default rendered as "... otherwise" last. -->
+        <xsl:variable name="keyed">
+          <xsl:call-template name="units-gloss-clist-rec">
+            <xsl:with-param name="rest" select="$c"/>
+            <xsl:with-param name="mode" select="'keyed'"/>
+            <xsl:with-param name="kind" select="$kind"/>
+            <xsl:with-param name="first" select="'yes'"/>
+          </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="unkeyed">
+          <xsl:call-template name="units-gloss-clist-rec">
+            <xsl:with-param name="rest" select="$c"/>
+            <xsl:with-param name="mode" select="'unkeyed'"/>
+            <xsl:with-param name="kind" select="$kind"/>
+            <xsl:with-param name="first" select="'yes'"/>
+          </xsl:call-template>
+        </xsl:variable>
+        <xsl:value-of select="$keyed"/>
+        <xsl:if test="$keyed != '' and $unkeyed != ''">, </xsl:if>
+        <xsl:value-of select="$unkeyed"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- recursive helper: consume the comma-list one token at a time, emitting
+       only the entries matching $mode ('keyed' or 'unkeyed') -->
+  <xsl:template name="units-gloss-clist-rec">
+    <xsl:param name="rest"/>
+    <xsl:param name="mode"/>
+    <xsl:param name="kind" select="'dim'"/>
+    <xsl:param name="first"/>
+    <xsl:variable name="tok">
+      <xsl:choose>
+        <xsl:when test="contains($rest, ',')">
+          <xsl:value-of select="normalize-space(substring-before($rest, ','))"/>
+        </xsl:when>
+        <xsl:otherwise><xsl:value-of select="normalize-space($rest)"/></xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:variable name="tok-is-keyed" select="contains($tok, ':')"/>
+    <!-- 'yes' if this token should be emitted in the current pass -->
+    <xsl:variable name="emit">
+      <xsl:choose>
+        <xsl:when test="$tok = ''">no</xsl:when>
+        <xsl:when test="$mode = 'keyed' and $tok-is-keyed">yes</xsl:when>
+        <xsl:when test="$mode = 'unkeyed' and not($tok-is-keyed)">yes</xsl:when>
+        <xsl:otherwise>no</xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:if test="$emit = 'yes'">
+      <xsl:if test="$first != 'yes'">, </xsl:if>
+      <xsl:choose>
+        <!-- keyed entry: "<i>:term" or "<lo>-<hi>:term" -->
+        <xsl:when test="$tok-is-keyed">
+          <xsl:variable name="key" select="normalize-space(substring-before($tok, ':'))"/>
+          <xsl:variable name="val" select="normalize-space(substring-after($tok, ':'))"/>
+          <xsl:call-template name="units-gloss">
+            <xsl:with-param name="expr" select="$val"/>
+            <xsl:with-param name="kind" select="$kind"/>
+          </xsl:call-template>
+          <xsl:choose>
+            <xsl:when test="contains($key, '-')"> for indices <xsl:value-of select="$key"/></xsl:when>
+            <xsl:otherwise> for index <xsl:value-of select="$key"/></xsl:otherwise>
+          </xsl:choose>
+        </xsl:when>
+        <!-- unkeyed token: the default for all other indices -->
+        <xsl:otherwise>
+          <xsl:call-template name="units-gloss">
+            <xsl:with-param name="expr" select="$tok"/>
+            <xsl:with-param name="kind" select="$kind"/>
+          </xsl:call-template>
+          <xsl:text> otherwise</xsl:text>
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:if>
+    <xsl:if test="contains($rest, ',')">
+      <xsl:call-template name="units-gloss-clist-rec">
+        <xsl:with-param name="rest" select="substring-after($rest, ',')"/>
+        <xsl:with-param name="mode" select="$mode"/>
+        <xsl:with-param name="kind" select="$kind"/>
+        <xsl:with-param name="first">
+          <xsl:choose>
+            <xsl:when test="$first = 'yes' and $emit != 'yes'">yes</xsl:when>
+            <xsl:otherwise>no</xsl:otherwise>
+          </xsl:choose>
+        </xsl:with-param>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
+  <xsl:template match="units">
+    <tr>
+      <td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "> <i>Units:</i> </td>
+      <td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+	<xsl:choose>
+	  <!-- conditional: render each "case" as header line + indented value -->
+	  <xsl:when test="case">
+	    <xsl:for-each select="case">
+	      <xsl:choose>
+		<xsl:when test="@test">
+		  <i>if </i><xsl:call-template name="linkify-refs"><xsl:with-param name="text" select="@test"/></xsl:call-template><i>:</i>
+		</xsl:when>
+		<xsl:otherwise>
+		  <i>otherwise:</i>
+		</xsl:otherwise>
+	      </xsl:choose>
+	      <br/>
+	      <xsl:text>&#160;&#160;&#160;</xsl:text>
+	      <xsl:call-template name="units-gloss">
+		<xsl:with-param name="expr" select="."/>
+		<xsl:with-param name="kind" select="'units'"/>
+	      </xsl:call-template>
+	      <br/>
+	    </xsl:for-each>
+	  </xsl:when>
+	  <!-- plain units: render the text body (may be a keyed clist) -->
+	  <xsl:otherwise>
+	    <xsl:call-template name="units-gloss-clist">
+	      <xsl:with-param name="expr" select="."/>
+	      <xsl:with-param name="kind" select="'units'"/>
+	    </xsl:call-template>
+	  </xsl:otherwise>
+	</xsl:choose>
       </td>
     </tr>
   </xsl:template>
@@ -1026,7 +1367,7 @@
   <xsl:template match="opt" mode="options">
     <!--<span class="flag"><xsl:value-of select="@val"/></span><xsl:text> :</xsl:text>-->
     <dl style="margin-left: 1.5em;">
-      <dt><tt><xsl:call-template name="tokenize_clist"><xsl:with-param name="clist" select="@val"/></xsl:call-template><xsl:if test="normalize-space(.) != ''"> :</xsl:if></tt></dt>
+      <dt><tt><xsl:call-template name="tokenize_clist"><xsl:with-param name="clist" select="@val"/></xsl:call-template><xsl:if test="@alias != ''"><xsl:text>  (synonyms: </xsl:text><xsl:call-template name="tokenize_clist"><xsl:with-param name="clist" select="@alias"/></xsl:call-template><xsl:text>)</xsl:text></xsl:if><xsl:if test="normalize-space(.) != ''"> :</xsl:if></tt></dt>
       <dd><pre style="margin-top: 0em; margin-bottom: -1em;"><xsl:apply-templates/></pre></dd>
     </dl>
   </xsl:template>
@@ -1075,6 +1416,8 @@
 	  </td>
 	</tr>
 	<xsl:apply-templates select="default"/> 
+	<xsl:apply-templates select="dimensionality"/>
+	<xsl:apply-templates select="units"/>
 	<xsl:apply-templates select="status"/>
 	<xsl:apply-templates select="see"/>
 	<xsl:apply-templates select="info | options"/>
@@ -1098,6 +1441,8 @@
 	  </td>
 	</tr>
 	<xsl:apply-templates select="default"/> 
+	<xsl:apply-templates select="dimensionality"/>
+	<xsl:apply-templates select="units"/>
 	<xsl:apply-templates select="status"/>
 	<xsl:apply-templates select="see"/>
 	<xsl:apply-templates select="info | options"/>
@@ -1159,6 +1504,46 @@
     <a href="#{.}">
       <xsl:value-of select="."/>
     </a>
+  </xsl:template>
+
+  <!-- linkify-refs: expand "@ref name" markup inside a plain string (e.g. a
+       conditional <case> "test" attribute) into hyperlinks, leaving the rest
+       of the string verbatim. -->
+  <xsl:template name="linkify-refs">
+    <xsl:param name="text"/>
+    <xsl:choose>
+      <xsl:when test="contains($text, '@ref ')">
+	<xsl:value-of select="substring-before($text, '@ref ')"/>
+	<xsl:variable name="after" select="substring-after($text, '@ref ')"/>
+	<xsl:variable name="word">
+	  <xsl:call-template name="leading-word">
+	    <xsl:with-param name="s" select="$after"/>
+	  </xsl:call-template>
+	</xsl:variable>
+	<a href="#{$word}"><xsl:value-of select="$word"/></a>
+	<xsl:call-template name="linkify-refs">
+	  <xsl:with-param name="text" select="substring($after, string-length($word) + 1)"/>
+	</xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+	<xsl:value-of select="$text"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- leading-word: maximal prefix of $s made of identifier characters
+       (letters, digits, "_", "%" for Fortran struct%member references). -->
+  <xsl:template name="leading-word">
+    <xsl:param name="s"/>
+    <xsl:if test="string-length($s) &gt; 0">
+      <xsl:variable name="c" select="substring($s, 1, 1)"/>
+      <xsl:if test="contains('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_%', $c)">
+	<xsl:value-of select="$c"/>
+	<xsl:call-template name="leading-word">
+	  <xsl:with-param name="s" select="substring($s, 2)"/>
+	</xsl:call-template>
+      </xsl:if>
+    </xsl:if>
   </xsl:template>
   
   <xsl:template match="a">

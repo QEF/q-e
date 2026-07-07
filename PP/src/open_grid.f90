@@ -240,7 +240,7 @@ PROGRAM open_grid
   ENDDO
   DEALLOCATE(yk)
   !
-  CALL environment_end ( 'OPEN_GRID' )
+  CALL environment_end( )
   WRITE( stdout, *  )
   CALL stop_pp
   !

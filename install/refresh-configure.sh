@@ -15,6 +15,8 @@
 # - aclocal (GNU automake) 1.11.1
 # - m4 (GNU M4) 1.4.13
 
-aclocal -I m4 --install
+#aclocal -I m4 --install
 
-autoconf -f -v --output=configure configure.ac
+#autoconf -f -v --output=configure configure.ac
+
+autoreconf -fi && cp configure ../

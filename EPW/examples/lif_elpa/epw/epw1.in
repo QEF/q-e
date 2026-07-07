@@ -1,0 +1,34 @@
+--
+&inputepw
+  prefix      = 'lif'
+  outdir      = './tmp'
+  dvscf_dir   = '../ph/save'
+
+  elph        = .true.
+  epwwrite    = .true.
+  lpolar      = .true.
+  use_ws      = .true.
+  nbndsub     =  3
+
+  wannierize   = .true.
+  bands_skipped = 'exclude_bands = 1-2'
+  num_iter     = 200
+  !proj(1)      = 'Li:l=-3, mr=1'
+  proj(1)      = 'F:p'
+  wannier_plot = .true.
+
+  nqf1       = 1
+  nqf2       = 1
+  nqf3       = 1
+  nkf1       = 1
+  nkf2       = 1
+  nkf3       = 1
+
+  nk1        = 4
+  nk2        = 4
+  nk3        = 4
+  nq1        = 4
+  nq2        = 4
+  nq3        = 4
+/
+

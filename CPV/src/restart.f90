@@ -26,7 +26,7 @@
       USE electrons_module, ONLY: ei
       USE ensemble_dft,     ONLY: tens
       USE mp,               ONLY: mp_bcast
-      USE control_flags,    ONLY: tksw, ndw
+      USE cp_control,       ONLY: ndw, tksw
       USE gvecw,            ONLY: ngw
       USE wannier_module,   ONLY : wfc ! BS
 
@@ -125,7 +125,7 @@
       USE ensemble_dft,   ONLY : tens
       USE autopilot,      ONLY : event_step, event_index, max_event_step
       USE cp_autopilot,   ONLY : employ_rules
-      USE control_flags,  ONLY : ndr
+      USE cp_control,     ONLY : ndr
       USE cp_interfaces,  ONLY : c_bgrp_pack
       USE wannier_module,   ONLY : wfc ! BS
 !

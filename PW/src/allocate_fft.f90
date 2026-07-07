@@ -20,7 +20,7 @@ SUBROUTINE allocate_fft
   USE fft_base,         ONLY : dfftp, dffts
   USE ions_base,        ONLY : nat
   USE lsda_mod,         ONLY : nspin
-  USE scf,              ONLY : rho, v, vnew, vltot, vrs, rho_core, rhog_core, &
+  USE scf,              ONLY : rho, v, vnew, vltot, vrs, rho_core, rhog_core, tau_core, taug_core, &
                                kedtau, create_scf_type
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : pointlist, factlist, report, noncolin, npol
@@ -58,11 +58,20 @@ SUBROUTINE allocate_fft
   !
   ALLOCATE( vltot(dfftp%nnr) )
   ALLOCATE( rho_core(dfftp%nnr) )
+  !$acc enter data create(rho_core)
   IF ( xclib_dft_is('meta') ) THEN
      ALLOCATE( kedtau(dffts%nnr,nspin) )
   ELSE
      ALLOCATE( kedtau(1,nspin) )
   ENDIF
+  IF ( xclib_dft_is('meta') ) THEN
+     ALLOCATE( tau_core(dfftp%nnr) )
+     ALLOCATE( taug_core(ngm) )
+  ELSE
+     ALLOCATE( tau_core(1) )
+     ALLOCATE( taug_core(1) )
+  ENDIF
+  !$acc enter data create(tau_core)
   ALLOCATE( rhog_core(ngm)  )
   ALLOCATE( psic(dfftp%nnr) )
   ALLOCATE( vrs(dfftp%nnr,nspin) )

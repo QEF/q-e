@@ -48,7 +48,7 @@ subroutine addcore (uact, drhoc)
   nlp_d  = dfftp%nl
 #endif
   !
-  CALL start_clock_gpu('addcore')
+  CALL start_clock('addcore')
   !
   ! compute the derivative of the core charge  along the given mode
   !
@@ -96,6 +96,6 @@ subroutine addcore (uact, drhoc)
   !$acc end data
   !$acc end data
   !
-  CALL stop_clock_gpu('addcore')
+  CALL stop_clock('addcore')
   !
 end subroutine addcore

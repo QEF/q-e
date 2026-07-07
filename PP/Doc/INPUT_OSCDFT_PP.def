@@ -21,13 +21,13 @@ input_description -distribution {Quantum ESPRESSO} -package {PWscf} -program  {o
     namelist OSCDFT_PP_NAMELIST {
         var prefix -type CHARACTER {
             status { REQUIRED }
-            info { 
+            info {
                 prefix of the pw.x calculation.
             }
         }
         var outdir -type CHARACTER {
             status { REQUIRED }
-            info { 
+            info {
                 directory containing the input data, i.e. the same as in pw.x
             }
         }

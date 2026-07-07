@@ -23,6 +23,7 @@ MODULE solute
   USE mp,             ONLY : mp_bcast
   USE mp_images,      ONLY : intra_image_comm
   USE rism,           ONLY : rism_type, ITYPE_LAUERISM
+  USE upf_utils,      ONLY : capital
   !
   IMPLICIT NONE
   SAVE
@@ -262,14 +263,10 @@ CONTAINS
     LOGICAL,  ALLOCATABLE   :: loxy(:)
     REAL(DP), ALLOCATABLE   :: tau_uni(:,:)
     !
-    CHARACTER(LEN=1), EXTERNAL :: capital
     INTEGER,          EXTERNAL :: atomic_number
     !
     ! ... to upper case
-    ffname_ = ADJUSTL(ffname)
-    DO i = 1, LEN_TRIM(ffname_)
-      ffname_(i:i) = capital(ffname_(i:i))
-    END DO
+    ffname_ = capital(TRIM(ADJUSTL(ffname)))
     !
     IF (TRIM(ffname_) == 'CLAYFF') THEN
       ! ... index of oxygen

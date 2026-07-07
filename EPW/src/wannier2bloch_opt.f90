@@ -1,4 +1,5 @@
-!
+  !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
 ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
 !
 ! This file is distributed under the terms of the GNU General Public
@@ -237,7 +238,6 @@ CONTAINS
   USE ep_constants,     ONLY : twopi, ci, czero
   USE parallelism,      ONLY : para_bounds
   USE io,               ONLY : rwepmatw
-  USE input,            ONLY : epw_memdist
   !
   IMPLICIT NONE
   !
@@ -267,10 +267,12 @@ CONTAINS
   !! Real space WS index
   INTEGER :: irn
   !! Combined WS and atom index
-  INTEGER :: ir_start
-  !! Starting ir for this cores
-  INTEGER :: ir_stop
-  !! Ending ir for this pool
+  INTEGER :: irn_start
+  !! Starting irn for this core
+  INTEGER :: irn_stop
+  !! Ending irn for this pool
+  INTEGER :: ir_offset
+  !! Offset of ir for this core
   INTEGER :: na
   !! Atom index
   INTEGER :: imode
@@ -336,9 +338,11 @@ CONTAINS
   ! Because nrr_g_23 can be quite small, we do a combined parallelization
   ! on WS vectors and modes.
   !
-  CALL para_bounds(ir_start, ir_stop, nrr_g * nmodes)
+  CALL para_bounds(irn_start, irn_stop, nrr_g * nmodes)
   !
-  DO irn = ir_start, ir_stop
+  ir_offset = (irn_start - 1) / nmodes
+  !
+  DO irn = irn_start, irn_stop
     !
     ir = (irn - 1) / nmodes + 1
     imode = MOD(irn - 1, nmodes) + 1
@@ -366,11 +370,7 @@ CONTAINS
     !
     ! Fourier transform epmatwp along the third direction to get epmatwp_23
     !
-    IF (epw_memdist) THEN
-      CALL ZAXPY(nbnd * nbnd * nrr_k, phase, epmatwp_dist(:, :, :, irn - ir_start + 1), 1, epmatwp_23(:, :, :, imode, ir_23), 1)
-    ELSE
-      CALL ZAXPY(nbnd * nbnd * nrr_k, phase, epmatwp(:, :, :, imode, ir), 1, epmatwp_23(:, :, :, imode, ir_23), 1)
-    ENDIF
+    CALL ZAXPY(nbnd * nbnd * nrr_k, phase, epmatwp(:, :, :, imode, ir - ir_offset), 1, epmatwp_23(:, :, :, imode, ir_23), 1)
     !
   ENDDO ! irn
   !

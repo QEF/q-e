@@ -235,7 +235,7 @@ PROGRAM do_projwfc
      ENDIF
   ENDIF
   !
-  CALL environment_end ( 'PROJWFC' )
+  CALL environment_end( )
   !
   CALL stop_pp
   !

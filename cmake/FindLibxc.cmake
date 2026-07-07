@@ -1,7 +1,11 @@
 include(FindPackageHandleStandardArgs)
 find_package(PkgConfig REQUIRED)
 
-pkg_search_module(_LIBXC libxc>=${Libxc_FIND_VERSION})
+if(Libxc_FIND_VERSION)
+  pkg_search_module(_LIBXC libxc>=${Libxc_FIND_VERSION})
+else()
+  pkg_search_module(_LIBXC libxc)
+endif()
 
 find_library(LIBXC_LIBRARIES NAMES libxc.a
   PATH_SUFFIXES lib

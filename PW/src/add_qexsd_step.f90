@@ -28,7 +28,7 @@ SUBROUTINE add_qexsd_step(i_step)
   USE control_flags,ONLY: nstep, n_scf_steps, scf_error, conv_elec
   USE fcp_module,   ONLY: fcp_mu, lfcp
   USE extfield,     ONLY: gate, etotgatefield, tefield, etotefield   
-  USE control_flags,ONLY: max_xml_steps 
+  USE control_flags,ONLY: tstress, max_xml_steps 
   !-----------------------------------------------------------------------------
   !   END_GLOBAL_VARIABLES
   !-----------------------------------------------------------------------------
@@ -100,7 +100,7 @@ SUBROUTINE add_qexsd_step(i_step)
   CALL qexsd_step_addstep ( i_step, max_xml_steps_, nsp, atm, ityp, nat, &
        alat*tau, alat, alat*at(:,1), alat*at(:,2), alat*at(:,3), etot/e2,&
        eband/e2, ehart/e2, vtxc/e2, etxc/e2, ewld/e2, degauss_ptr, demet_ptr,&
-       force/e2, sigma/e2, conv_elec, n_scf_steps, scf_error, &
+       force/e2, tstress, sigma/e2, conv_elec, n_scf_steps, scf_error, &
        FCP_FORCE  = fcp_force_ptr , FCP_TOT_CHARGE = fcp_tot_charge_ptr,&
        GATEFIELD_EN = gatefield_en_ptr) 
   !

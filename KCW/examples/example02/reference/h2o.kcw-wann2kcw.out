@@ -19,11 +19,11 @@
         A. Marrazzo and N. Colonna, Phys. Rev. Research 6, 033085 (2024)  
      =--------------------------------------------------------------------------------=
 
-     Program KCW v.7.3.1 starts on 26Sep2024 at 13:25:18 
-        Git branch: Bugfix_KCW_GGA
-        Last git commit: 75ec5c1ab7190a1d47d8f63bd021011583b45e86-dirty
-        Last git commit date: Wed Sep 25 16:48:17 2024 +0200
-        Last git commit subject: Update exmaple02. Use LDA pseudos and functional. 
+     Program KCW v.7.5 starts on 16Sep2025 at 20:35:23 
+        Git branch: develop
+        Last git commit: 7e86c4d7f8b367fcfbff0156d653f13ca55b1b03-dirty
+        Last git commit date: Tue Sep 16 17:33:36 2025 +0000
+        Last git commit subject: Merge branch 'vhpsi' into 'develop'
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -38,7 +38,7 @@
 
      MPI processes distributed on     1 nodes
      R & G space division:  proc/nbgrp/npool/nimage =       4
-     3230 MiB available memory on the printing compute node when the environment starts
+     4928 MiB available memory on the printing compute node when the environment starts
 
 
      KCW INPUT SUMMARY 
@@ -60,6 +60,8 @@
        # assume_isolated     =              none
        # io_sp               =                 F
        # io_real_space       =                 F
+       # irr_bz              =                 F
+           # use_wct         =                 F
      ============================================
 
      INFO: Reading pwscf data
@@ -90,6 +92,8 @@
 
      WARNING: assume_isolated from input differs from value read from file
      WARNING: Going to overwrite value from file
+
+     INFO: total number of primitive cell    1
 
      REPORT # of electrons
      nelec=      8.00000000
@@ -160,11 +164,11 @@
 
 
 
-     KCW          :      0.74s CPU      0.80s WALL
+     KCW          :      0.90s CPU      1.02s WALL
 
      INITIALIZATION: 
      map          :      0.00s CPU      0.00s WALL (       1 calls)
-     rho_of_q     :      0.02s CPU      0.02s WALL (       1 calls)
+     rho_of_q     :      0.02s CPU      0.04s WALL (       1 calls)
 
      init_vloc    :      0.02s CPU      0.02s WALL (       1 calls)
      init_us_1    :      0.00s CPU      0.00s WALL (       1 calls)
@@ -173,25 +177,25 @@
 
 
 
-     h_psi        :      0.02s CPU      0.02s WALL (       1 calls)
+     h_psi        :      0.02s CPU      0.03s WALL (       1 calls)
 
-     h_psi        :      0.02s CPU      0.02s WALL (       1 calls)
+     h_psi        :      0.02s CPU      0.03s WALL (       1 calls)
      add_vuspsi   :      0.00s CPU      0.00s WALL (       1 calls)
 
 
 
       General routines
      calbec       :      0.00s CPU      0.00s WALL (       1 calls)
-     fft          :      0.38s CPU      0.39s WALL (       6 calls)
-     ffts         :      0.07s CPU      0.08s WALL (      56 calls)
-     fftw         :      0.02s CPU      0.02s WALL (      32 calls)
+     fft          :      0.41s CPU      0.41s WALL (       6 calls)
+     ffts         :      0.17s CPU      0.18s WALL (      56 calls)
+     fftw         :      0.03s CPU      0.04s WALL (      32 calls)
      davcio       :      0.00s CPU      0.00s WALL (       9 calls)
 
 
-     KCW          :      0.74s CPU      0.85s WALL
+     KCW          :      0.90s CPU      1.06s WALL
 
 
-   This run was terminated on:  13:25:19  26Sep2024            
+   This run was terminated on:  20:35:24  16Sep2025            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

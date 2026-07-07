@@ -21,7 +21,7 @@ SUBROUTINE lr_read_wf()
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : ngm, g
   USE io_files,             ONLY : nwordwfc, iunwfc, prefix, diropn,&
-                                 & tmp_dir, wfc_dir 
+                                 & tmp_dir, wfc_dir
   USE lr_variables,         ONLY : evc0, sevc0, evc0_virt,        &
                                  & sevc0_virt, nbnd_total, becp1_virt,   &
                                  & becp1_c_virt, no_hxc, becp_1, becp1_c, &
@@ -89,10 +89,8 @@ SUBROUTINE lr_read_wf()
      !
      CALL open_buffer ( iunwfc, 'wfc', nwordwfc, io_level, exst ) 
      !
-     ! set_ace=.false. disables Lin Lin's ACE for TD-DFPT 
-     !
      CALL mp_start_exx (nband_, ntg_, intra_pool_comm)
-     CALL lr_exx_restart( set_ace=.false.)
+     CALL lr_exx_restart( )
      !
      IF (.NOT. no_hxc) THEN
         !

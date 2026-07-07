@@ -1,4 +1,4 @@
- 
+
              +---------------------------------------------------+
              |                                                   |
              |                   WANNIER90                       |
@@ -70,7 +70,7 @@
              | 675 Mass Ave, Cambridge, MA 02139, USA.           |
              |                                                   |
              +---------------------------------------------------+
-             |    Execution started on 25Jul2024 at 12:38:59     |
+             |    Execution started on 16Sep2025 at 20:36:35     |
              +---------------------------------------------------+
  
  ******************************************************************************
@@ -81,18 +81,18 @@
  
 
  Running in serial (with serial executable)
- 
+
                                     ------
                                     SYSTEM
                                     ------
- 
+
                               Lattice Vectors (Ang)
                     a_1     0.000000   2.826000   2.826000
                     a_2     2.826000   0.000000   2.826000
                     a_3     2.826000   2.826000   0.000000
- 
+
                    Unit Cell Volume:      45.13843  (Ang^3)
- 
+
                         Reciprocal-Space Vectors (Ang^-1)
                     b_1    -1.111675   1.111675   1.111675
                     b_2     1.111675  -1.111675   1.111675
@@ -151,7 +151,7 @@
  |    From: L       0.500  0.500  0.500     To: W       0.500  0.250  0.750   |
  |    From: W       0.500  0.250  0.750     To: X       0.500  0.000  0.500   |
  *----------------------------------------------------------------------------*
- Time to read parameters        0.003 (sec)
+ Time to read parameters        0.004 (sec)
 
  *---------------------------------- K-MESH ----------------------------------*
  +----------------------------------------------------------------------------+
@@ -228,7 +228,7 @@
  |             4         0.555837    0.555837    0.555837                     |
  +----------------------------------------------------------------------------+
   
- Time to get kmesh              0.007 (sec)
+ Time to get kmesh              0.010 (sec)
  *============================================================================*
  |                              MEMORY ESTIMATE                               |
  |         Maximum RAM allocated during each phase of the calculation         |
@@ -240,44 +240,44 @@
  Starting a new Wannier90 calculation ...
 
 
- Reading overlaps from wann.mmn    :  Created on 25Jul2024 at 12:38:59
+ Reading overlaps from wann.mmn    :  Created on 16Sep2025 at 20:36:35
 
- Reading projections from wann.amn :  Created on 25Jul2024 at 12:38:58
+ Reading projections from wann.amn :  Created on 16Sep2025 at 20:36:34
 
- Time to read overlaps          0.002 (sec)
+ Time to read overlaps          0.003 (sec)
 
  Writing checkpoint file wann.chk... done
 
- 
+
  *------------------------------- WANNIERISE ---------------------------------*
  +--------------------------------------------------------------------+<-- CONV
  | Iter  Delta Spread     RMS Gradient      Spread (Ang^2)      Time  |<-- CONV
  +--------------------------------------------------------------------+<-- CONV
- 
+
  ------------------------------------------------------------------------------
  Initial State
-  WF centre and spread    1  ( -0.000000, -0.000000,  0.000000 )     0.30674596
-  WF centre and spread    2  (  0.000000, -0.000000,  0.000000 )     0.34321580
-  WF centre and spread    3  ( -0.000000,  0.000000,  0.000000 )     0.34321580
-  WF centre and spread    4  ( -0.000000, -0.000000, -0.000000 )     0.30674596
-  WF centre and spread    5  (  0.000000,  0.000000,  0.000000 )     0.34321580
-  Sum of centres and spreads ( -0.000000, -0.000000,  0.000000 )     1.64313932
- 
-      0     0.164E+01     0.0000000000        1.6431393225       0.00  <-- CONV
-        O_D=      0.0003072 O_OD=      0.0128202 O_TOT=      1.6431393 <-- SPRD
+  WF centre and spread    1  ( -0.000000,  0.000000,  0.000000 )     0.30674612
+  WF centre and spread    2  (  0.000000,  0.000000, -0.000000 )     0.34321718
+  WF centre and spread    3  ( -0.000000,  0.000000,  0.000000 )     0.34321718
+  WF centre and spread    4  (  0.000000, -0.000000,  0.000000 )     0.30674612
+  WF centre and spread    5  (  0.000000, -0.000000, -0.000000 )     0.34321718
+  Sum of centres and spreads (  0.000000,  0.000000, -0.000000 )     1.64314378
+
+      0     0.164E+01     0.0000000000        1.6431437771       0.00  <-- CONV
+        O_D=      0.0003072 O_OD=      0.0128204 O_TOT=      1.6431438 <-- SPRD
  ------------------------------------------------------------------------------
  Final State
-  WF centre and spread    1  ( -0.000000, -0.000000,  0.000000 )     0.30674596
-  WF centre and spread    2  (  0.000000, -0.000000,  0.000000 )     0.34321580
-  WF centre and spread    3  ( -0.000000,  0.000000,  0.000000 )     0.34321580
-  WF centre and spread    4  ( -0.000000, -0.000000, -0.000000 )     0.30674596
-  WF centre and spread    5  (  0.000000,  0.000000,  0.000000 )     0.34321580
-  Sum of centres and spreads ( -0.000000, -0.000000,  0.000000 )     1.64313932
- 
-         Spreads (Ang^2)       Omega I      =     1.630011992
-        ================       Omega D      =     0.000307162
-                               Omega OD     =     0.012820169
-    Final Spread (Ang^2)       Omega Total  =     1.643139322
+  WF centre and spread    1  ( -0.000000,  0.000000,  0.000000 )     0.30674612
+  WF centre and spread    2  (  0.000000,  0.000000, -0.000000 )     0.34321718
+  WF centre and spread    3  ( -0.000000,  0.000000,  0.000000 )     0.34321718
+  WF centre and spread    4  (  0.000000, -0.000000,  0.000000 )     0.30674612
+  WF centre and spread    5  (  0.000000, -0.000000, -0.000000 )     0.34321718
+  Sum of centres and spreads (  0.000000,  0.000000, -0.000000 )     1.64314378
+
+         Spreads (Ang^2)       Omega I      =     1.630016222
+        ================       Omega D      =     0.000307183
+                               Omega OD     =     0.012820372
+    Final Spread (Ang^2)       Omega Total  =     1.643143777
  ------------------------------------------------------------------------------
 
  Wannier centres written to file wann_centres.xyz
@@ -288,25 +288,25 @@
  *---------------------------------------------------------------------------*
  |                               PLOTTING                                    |
  *---------------------------------------------------------------------------*
- 
- 
+
+
  Calculating interpolated band-structure
- 
- Time to calculate interpolated band structure       0.023 (sec)
- 
- Time for plotting              0.025 (sec)
- Total Execution Time           0.037 (sec)
+
+ Time to calculate interpolated band structure       0.028 (sec)
+
+ Time for plotting              0.031 (sec)
+ Total Execution Time           0.049 (sec)
 
  *===========================================================================*
  |                             TIMING INFORMATION                            |
  *===========================================================================*
  |    Tag                                                Ncalls      Time (s)|
  |---------------------------------------------------------------------------|
- |kmesh: get                                        :         1         0.007|
+ |kmesh: get                                        :         1         0.010|
  |overlap: allocate                                 :         1         0.000|
- |overlap: read                                     :         1         0.002|
+ |overlap: read                                     :         1         0.003|
  |wann: main                                        :         1         0.000|
- |plot: main                                        :         1         0.025|
+ |plot: main                                        :         1         0.031|
  *---------------------------------------------------------------------------*
- 
+
  All done: wannier90 exiting

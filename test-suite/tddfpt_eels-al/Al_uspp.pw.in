@@ -1,0 +1,27 @@
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='Al_uspp'
+ /
+ &system
+    ibrav=  2,
+    celldm(1) =7.60,
+    nat=  1,
+    ntyp= 1,
+    smearing='mp'
+    degauss=0.02,
+    occupations='smearing'
+    ecutwfc = 16.0
+    ecutrho = 128.0
+    noncolin = .true.
+    lspinorb = .true.
+ /
+ &electrons
+    conv_thr =  1.0d-10
+ /
+ATOMIC_SPECIES
+ Al  0.0  Al.rel-pbe-nl-rrkjus_psl.1.0.0.UPF
+ATOMIC_POSITIONS (alat)
+ Al 0.00 0.00 0.00
+K_POINTS AUTOMATIC
+3 3 3 1 1 1

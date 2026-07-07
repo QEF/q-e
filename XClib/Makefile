@@ -2,6 +2,8 @@
 
 include ../make.inc
 
+VPATH = @srcdir@
+
 MODFLAGS= $(MOD_FLAG)$(TOPDIR)/upflib/
 
 XCL = \
@@ -37,8 +39,11 @@ beefun.o
 XCT = \
 qe_dft_refs.o
 
-TLDEPS = libupf
+# see comments in file tldeps for explanations
+TLDEPS= libupf
+include ../install/tldeps
 
+# "make all" is called from Makefile in the root directory
 all: xc_lib.a
 
 xc_lib.a: $(XCL) $(BEEF)
@@ -57,15 +62,9 @@ xclib_test.x : xclib_test.o $(XCT) xc_lib.a
 
 infos : xc_infos.x
 
-tldeps :
-	if test -n "$(TLDEPS)" ; then \
-	( cd .. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
-
-test : tldeps xclib_test.x
+test : xclib_test.x
 
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L *.x
 
 include make.depend
-
-# DO NOT DELETE

@@ -16,7 +16,7 @@ MODULE environ_pw_module
     USE io_global, ONLY: stdout, ionode_id
     USE kinds, ONLY: DP
     !
-    USE control_flags, ONLY: lscf, lbfgs, conv_ions, istep, nstep, lforce => tprnfor
+    USE control_flags, ONLY: lscf, lbfgs, conv_ions, istep, nstep, lforce
     !
     USE fft_base, ONLY: dfftp
     !

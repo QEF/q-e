@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Roxana Margine
@@ -281,7 +282,7 @@
     USE global_var,    ONLY : gtemp
     USE mp_global,     ONLY : inter_image_comm, my_image_id
     USE mp,            ONLY : mp_sum
-    USE supercond_common,     ONLY : nsiw, gap0, wsi, wsn, keri, muintr, &
+    USE supercond_common,     ONLY : nsiw, gap0, wsi, wsn, dwsi, keri, muintr, &
                               deltai, deltaip, znormi, nznormi, &
                               znormip, shifti, shiftip, ef0, &
                               en, dosen, ndos, dosef
@@ -333,11 +334,11 @@
     REAL(KIND = DP), ALLOCATABLE, SAVE :: deltaold(:)
     !! supercond. gap from previous iteration
     !
-    ! SM: added image parallelization for distributing freq. points into images
+    ! SM: Distribute frequency points into images
     CALL divide(inter_image_comm, nsiw(itemp), startiw, lastiw) 
     !
     IF (iter == 1) THEN
-      ! Print for user information
+      ! 
       WRITE(stdout, '(5x, "   startiw = ", i0, ", lastiw = ", i0, ", nsiw(itemp) = ", i0)') &
       startiw, lastiw, nsiw(itemp)
       !
@@ -409,12 +410,11 @@
           desqrt = desqrt + dosen(ie) * esqrt * deltaip(iwp) * znormip(iwp)
           sesqrt = sesqrt + dosen(ie) * esqrt * (en(ie)- muintr + shiftip(iwp))
         ENDDO
-        zesqrt = zesqrt * inv_dos
-        desqrt = desqrt * inv_dos
-        sesqrt = sesqrt * inv_dos
+        ! Include frequency weight dwsi(iwp) for sparse sampling
+        zesqrt = zesqrt * inv_dos * dwsi(iwp)
+        desqrt = desqrt * inv_dos * dwsi(iwp)
+        sesqrt = sesqrt * inv_dos * dwsi(iwp)
         !
-        !DO iw = 1, nsiw(itemp) ! loop over omega
-        ! SM: distribute into images
         DO iw = startiw, lastiw
           ! SH: For general case (including sparse sampling)
           !       "actual" matsubara indices n1/n2 are needed instead of iw/iwp
@@ -423,7 +423,8 @@
           ! Eq. (4.4) in Picket, PRB 26, 1186 (1982)
           kernelm = lambdam - lambdap
           kernelp = lambdam + lambdap
-          nznormi(iw) = nznormi(iw) + kernelm
+          ! Include frequency weight dwsi(iwp) for sparse sampling
+          nznormi(iw) = nznormi(iw) + dwsi(iwp) * kernelm
           ! Eqs. (4.1-4.3) in Picket, PRB 26, 1186 (1982) for FBW
           ! using kernelm and kernelp the sum over |wp| < wscut
           ! is rewritten as a sum over iwp = 1, nsiw(itemp)
@@ -457,8 +458,9 @@
       nznormi(:) = zero
       DO iwp = 1, nsiw(itemp) ! loop over omega_prime
         esqrt = 1.d0 / DSQRT(wsi(iwp)**2.d0 + deltaip(iwp)**2.d0)
-        zesqrt = wsi(iwp) * esqrt
-        desqrt = deltaip(iwp) * esqrt
+        ! Include frequency weight dwsi(iwp) for sparse sampling
+        zesqrt = wsi(iwp) * esqrt * dwsi(iwp)
+        desqrt = deltaip(iwp) * esqrt * dwsi(iwp)
         !
         DO iw = 1, nsiw(itemp) ! loop over omega
           ! SH: For general case (including sparse sampling)
@@ -468,7 +470,8 @@
           ! Eq. (4.4) in Picket, PRB 26, 1186 (1982)
           kernelm = lambdam - lambdap
           kernelp = lambdam + lambdap
-          nznormi(iw) = nznormi(iw) + kernelm
+          ! Include frequency weight dwsi(iwp) for sparse sampling
+          nznormi(iw) = nznormi(iw) + dwsi(iwp) * kernelm
           ! Eqs.(34)-(35) in Margine and Giustino, PRB 87, 024505 (2013)
           ! using kernelm and kernelp the sum over |wp| < wscut in Eqs. (34)-(35)
           ! is rewritten as a sum over iwp = 1, nsiw(itemp)
@@ -479,8 +482,7 @@
       !
       absdelta = zero
       reldelta = zero
-      !DO iw = 1, nsiw(itemp) ! loop over omega
-      !SM: distribute into images
+      !
       DO iw = startiw, lastiw
         znormi(iw)  = 1.d0 + pi * gtemp(itemp) * znormi(iw) * inv_wsi(iw)
         ! Eqs.(34)-(35) in Margine and Giustino, PRB 87, 024505 (2013)
@@ -1537,7 +1539,7 @@
     USE io_global,         ONLY : stdout
     USE input,             ONLY : nstemp, muc, tc_linear_solver
     USE global_var,        ONLY : gtemp
-    USE supercond_common,         ONLY : nsiw, wsi, wsn
+    USE supercond_common,         ONLY : nsiw, wsi, wsn, dwsi
     USE ep_constants,      ONLY : Kelvin2eV, zero, pi
     USE supercond,         ONLY : gen_freqgrid_iaxis, eliashberg_grid, crit_temp_solver
     !
@@ -1663,6 +1665,8 @@
       IF (ierr /= 0) CALL errore('crit_temp_iso', 'Error deallocating wsi', 1)
       DEALLOCATE(wsn, STAT = ierr)
       IF (ierr /= 0) CALL errore('crit_temp_iso', 'Error deallocating wsn', 1)
+      DEALLOCATE(dwsi, STAT = ierr)
+      IF (ierr /= 0) CALL errore('crit_temp_iso', 'Error deallocating dwsi', 1)
       !
     ENDDO ! itemp
     !
@@ -1684,9 +1688,10 @@
     !!       using the Newton-Raphson method (Nov 2021).
     !!
     !! HP: updated for the isotropic calculation (Jan 2022)
+    !! SM: updated for the sparse sampling (gridsamp=1) (Apr 2026)
     !!
     USE kinds,          ONLY : DP
-    USE supercond_common,      ONLY : wsi, nsiw, deltaip, znormip, shiftip, &
+    USE supercond_common,      ONLY : wsi, dwsi, nsiw, deltaip, znormip, shiftip, &
                                en, ndos, dosen, dosef
     USE global_var,     ONLY : gtemp
     USE input,          ONLY : dos_del, broyden_beta, nsiter
@@ -1747,8 +1752,9 @@
           theta = (wsi(iw) * znormip(iw))**2.d0 + &
                   (en(ie) - muin + shiftip(iw))**2.d0 + &
                   (znormip(iw) * deltaip(iw))**2.d0
-          fmu = fmu + 2.d0 * dos_del * dosen(ie) * delta / theta
-          dmu = dmu + 2.d0 * dos_del * dosen(ie) * (2.d0 * delta**2.d0 - theta) / (theta**2.d0)
+          ! SM: dwsi(iw) is the frequency weight for sparse sampling (gridsamp=1);
+          fmu = fmu + 2.d0 * dos_del * dosen(ie) * dwsi(iw) * delta / theta
+          dmu = dmu + 2.d0 * dos_del * dosen(ie) * dwsi(iw) * (2.d0 * delta**2.d0 - theta) / (theta**2.d0)
         ENDDO ! iw
       ENDDO ! ie
       !
@@ -1786,7 +1792,7 @@
     !----------------------------------------------------------------------
     !
     USE input,            ONLY : fbw
-    USE supercond_common, ONLY : wsi, wsn, deltai, deltaip, znormi, nznormi, &
+    USE supercond_common, ONLY : wsi, wsn, dwsi, deltai, deltaip, znormi, nznormi, &
                                  znormip, shifti, shiftip
     !
     IMPLICIT NONE
@@ -1799,6 +1805,8 @@
     IF (ierr /= 0) CALL errore('deallocate_iso_iaxis', 'Error deallocating wsi', 1)
     DEALLOCATE(wsn, STAT = ierr)
     IF (ierr /= 0) CALL errore('deallocate_iso_iaxis', 'Error deallocating wsn', 1)
+    DEALLOCATE(dwsi, STAT = ierr)
+    IF (ierr /= 0) CALL errore('deallocate_iso_iaxis', 'Error deallocating dwsi', 1)
     ! sum_eliashberg_iso_iaxis
     DEALLOCATE(deltai, STAT = ierr)
     IF (ierr /= 0) CALL errore('deallocate_iso_iaxis', 'Error deallocating deltai', 1)

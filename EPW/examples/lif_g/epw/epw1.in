@@ -1,0 +1,34 @@
+--
+&inputepw
+  prefix      = 'lif'
+  outdir      = './tmp'
+  dvscf_dir   = './save'
+
+  elph        = .true.
+  epwwrite    = .true.
+  lpolar      = .true.
+  use_ws      = .true.
+  nbndsub     =  5
+
+  wannierize   = .true.
+  num_iter     = 200
+  !bands_skipped = 'exclude_bands = 1-2'
+  !proj(1)      = 'F:p'
+  auto_projections = .true. 
+  scdm_proj    = .true.
+  wannier_plot = .true.
+
+  prtgkk     = .true.
+  prtuf      = .true.
+  !asr_typ    = 'no'
+  filkf      = './kpoints.dat'
+  filqf      = './qpoints.dat'
+
+  nk1        = 4
+  nk2        = 4
+  nk3        = 4
+  nq1        = 4
+  nq2        = 4
+  nq3        = 4
+/
+

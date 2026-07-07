@@ -5,8 +5,9 @@ AC_DEFUN([X_AC_QE_DEFAULT_ENV], [
 # Non-standard precious variables
 AC_ARG_VAR(EXTLIB_FLAGS, This variable controls the flags passed to internal BLAS and LAPACK libraries)
 
-# store variables from the environment, if set (may be or not be set)
+# store variables from the environment, if set (may or may not be set)
 # If set, they take precedence over configure internal choice.
+# Exception: IFLAGS is prepended to internally found value
 # Flags and libraries are accepted without further testing;
 # compilers are tested. Specify compiler name only, not the full path
 # (i.e. F90=/usr/local/bin/f90 may not work, use F90=f90)
@@ -18,7 +19,7 @@ cpp=$CPP           # C preprocessor (as above)
 cflags=$CFLAGS     # Flags for C compiler
 cppflags=$CPPFLAGS # Flags for C preprocessor
 dflags=$DFLAGS     # Fortran file preprocessing options, e.g. -D__DEFINE_THIS
-iflags=$IFLAGS     # Location of include files - shouldn't be needed
+iflags=$IFLAGS     # Location of include files, may be needed by some libraries
 f90=$F90           # Fortran 90 serial compiler (must be in execution path)
 mpif90=$MPIF90     # Fortran 90 parallel compiler (must be in execution path)
 fflags=$FFLAGS     # Flags for Fortran 77 and 90 compilers

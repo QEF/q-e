@@ -28,7 +28,7 @@ PROGRAM lr_main
                                   & evc1, evc1_old,norm0, charge_response, n_ipol, &
                                   & d0psi, LR_iteration, LR_polarization, &
                                   & plot_type, no_hxc, nbnd_total, project, F,R, &
-                                  & itermax_int, lr_io_level, code1
+                                  & itermax_int, lr_io_level
   USE charg_resp,            ONLY : lr_calc_w_T, read_wT_beta_gamma_z, lr_project_init,&
                                   & lr_dump_rho_tot_compat1, lr_dump_rho_tot_cube,&
                                   & lr_dump_rho_tot_xyzd,lr_dump_rho_tot_xcrys,&
@@ -71,7 +71,7 @@ PROGRAM lr_main
   CALL mp_startup ( )
 #endif
   !
-  CALL environment_start ( code1 )
+  CALL environment_start ( 'turboTDDFT' )
   !
   CALL start_clock('lr_main')
   !

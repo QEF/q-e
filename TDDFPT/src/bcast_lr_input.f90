@@ -78,6 +78,7 @@ SUBROUTINE bcast_lr_input
   CALL mp_bcast (davidson, ionode_id, world_comm )
   CALL mp_bcast (num_eign, ionode_id, world_comm )
   CALL mp_bcast (num_init, ionode_id, world_comm )
+  CALL mp_bcast (ace, ionode_id, world_comm )
   CALL mp_bcast (num_basis_max, ionode_id, world_comm )
   CALL mp_bcast (residue_conv_thr, ionode_id, world_comm )
   CALL mp_bcast (precondition, ionode_id, world_comm )

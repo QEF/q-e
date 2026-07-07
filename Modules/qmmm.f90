@@ -459,8 +459,6 @@ END SUBROUTINE qmmm_minimum_image
     USE fft_types,          ONLY : fft_index_to_3d
     USE kinds,              ONLY : DP
     !
-    USE constraints_module, ONLY : pbc
-    !
     IMPLICIT NONE
     !
     REAL(DP) :: vltot(:)

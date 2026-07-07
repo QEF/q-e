@@ -1,0 +1,12 @@
+# BAD: a non-REAL var carrying a <dimensionality> (rule A violation under
+# --strict: <dimensionality> is REAL-only -- an INTEGER/CHARACTER/LOGICAL
+# entry must NOT declare one).
+input_description -distribution {Quantum ESPRESSO} -package TEST -program test.x {
+    namelist TEST {
+        var nbnd -type INTEGER {
+            default { 0 }
+            dimensionality { dimensionless }
+            info { number of electronic states }
+        }
+    }
+}

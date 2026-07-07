@@ -1,4 +1,5 @@
-!
+  !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
 ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
 ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
 !
@@ -570,8 +571,6 @@ MODULE expolaron
       CALL fkbounds(nktotf, lower_bnd, upper_bnd)
       nqloc = upper_bnd - lower_bnd + 1
       DO iq=1,nqloc 
-        !$omp parallel default(shared) private(imode, iexq, iexqplusq, sbnd, s1bnd)
-        !$omp do schedule(dynamic)
         DO imode=1,nmodes
           DO iexq=1,nktotf
             CALL indexing_q2(iq+lower_bnd-1, iexq, &
@@ -602,8 +601,6 @@ MODULE expolaron
           ! 
           ENDIF
         ENDDO
-        !$omp end do
-        !$omp end parallel
       ENDDO
       !
       CALL mp_barrier(inter_pool_comm)
@@ -650,8 +647,6 @@ MODULE expolaron
     nqloc = upper_bnd - lower_bnd + 1
     !
     DO iq2=1,nqloc
-      !$omp parallel default(shared) private(imode, iq, iq1, sbnd, s1bnd, idx1, idx2)
-      !$omp do schedule(dynamic)
       DO iq1=1,nktotf
         !iq and iq1 correspond to Q and Q' in the long paper Eq.(24), iq2=iq-iq1
         CALL indexing_q2(iq1, iq2+lower_bnd-1, &
@@ -668,8 +663,6 @@ MODULE expolaron
           ENDDO
         ENDDO
       ENDDO
-      !$omp end do
-      !$omp end parallel
     ENDDO
     !
     CALL mp_barrier(inter_pool_comm)
@@ -711,8 +704,6 @@ MODULE expolaron
       ALLOCATE(Hamil(negnv_explrn*nktotf,negnv_explrn*nktotf), STAT=ierr)
       IF(ierr/=0) CALL errore('prepare_ex_hamil','Error in allocating Hamil', 1)
       Hamil = 0.d0
-      !$omp parallel default(shared) private(iq, iq1, sbnd, s1bnd, idx1, idx2)
-      !$omp do schedule(dynamic)
       DO iq=1,nktotf
         DO sbnd=1,negnv_explrn
           idx1 = (iq - 1) * negnv_explrn + sbnd
@@ -725,8 +716,6 @@ MODULE expolaron
           ENDDO
         ENDDO
       ENDDO
-      !$omp end do
-      !$omp end parallel
     ENDIF
     !
     CALL mp_barrier(inter_pool_comm)
@@ -1720,12 +1709,12 @@ MODULE expolaron
   SUBROUTINE plot_explrn_densities()
   !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
-    USE io_global,     ONLY : stdout, ionode_id
+    USE io_global,     ONLY : stdout, ionode_id, meta_ionode_id
     USE io_var,        ONLY : iuindabs, iuexphg, iunukk
     USE ions_base,     ONLY : amass, ityp, atm, nsp
     USE modes,         ONLY : nmodes
     USE input,         ONLY : nbndsub, nqc1, nqc2 ,nqc3, step_k1_explrn, step_k2_explrn, step_k3_explrn
-    USE global_var,    ONLY : wf, nktotf, ph_eig, Asq, nktotf, A_cv_all, A_cvq
+    USE global_var,    ONLY : wf, nktotf, ph_eig, Asq, nktotf, A_cv_all, A_cvq, eigval_ex
     USE ep_constants,  ONLY : ryd2ev, eps6, twopi, ci, cone, two, czero
     USE input,         ONLY : nqc1, nqc2, nqc3, nbndc_explrn, nbndv_explrn, negnv_explrn, filukk
     USE mp,            ONLY : mp_barrier, mp_sum, mp_gather, mp_bcast
@@ -1816,9 +1805,11 @@ MODULE expolaron
     nktotf_f = nqc1 * nqc2 * nqc3
     !
     WRITE(stdout, '(5x, a)') 'Reading all BSE eigenvectors.'
-    IF(my_pool_id == ionode_id) THEN
+    IF(mpime == meta_ionode_id) THEN
       ALLOCATE(A_cv_all(nbndv_explrn,nbndc_explrn,nktotf_f,negnv_explrn,nktotf_f),STAT=ierr)
+      ALLOCATE(eigval_ex(negnv_explrn, nktotf_f), STAT=ierr)
       A_cv_all = 0.d0
+      eigval_ex = 0.d0
       CALL read_Acv_all()
     ENDIF
     CALL mp_barrier(inter_pool_comm)
@@ -1986,6 +1977,7 @@ MODULE expolaron
     DEALLOCATE(Rp)
     DEALLOCATE(cu_big)
     IF(my_pool_id == ionode_id) DEALLOCATE(A_cv_all)
+    IF(my_pool_id == ionode_id) DEALLOCATE(eigval_ex)
     !
     CALL mp_barrier(inter_pool_comm)
     !

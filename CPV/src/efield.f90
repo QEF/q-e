@@ -212,7 +212,7 @@ CONTAINS
   SUBROUTINE berry_energy( enb, enbi, bec, cm, fion )
     !! Calculates the Berry energy
     USE ions_positions, ONLY: tau0
-    USE control_flags, ONLY: tfor, tprnfor
+    USE cp_control, ONLY: tfor
     IMPLICIT NONE
     real(DP), intent(out) :: enb, enbi
     real(DP) :: bec(:,:)
@@ -222,7 +222,7 @@ CONTAINS
 
     call qmatrixd(cm,bec,ctable(1,1,ipolp),gqq,qmat,detq,ipolp)
     enb =  enberry( detq, ipolp )
-    call berryion(tau0,fion,tfor.or.tprnfor,ipolp,evalue,enbi)
+    call berryion(tau0,fion,tfor,ipolp,evalue,enbi)
     pberryel=enb
     pberryion=enbi
     enb=enb*evalue
@@ -337,7 +337,7 @@ CONTAINS
   SUBROUTINE berry_energy2( enb, enbi, bec, cm, fion )
     !! Calculates the Berry energy 2.
     USE ions_positions, ONLY: tau0
-    USE control_flags, ONLY: tfor, tprnfor
+    USE cp_control, ONLY: tfor
     IMPLICIT NONE
     real(DP), intent(out) :: enb, enbi
     real(DP) :: bec(:,:)
@@ -347,7 +347,7 @@ CONTAINS
 
     call qmatrixd(cm,bec,ctable2(1,1,ipolp2),gqq2,qmat2,detq2,ipolp2)
     enb =  enberry( detq2, ipolp2 )
-    call berryion(tau0,fion,tfor.or.tprnfor,ipolp2,evalue2,enbi)
+    call berryion(tau0,fion,tfor,ipolp2,evalue2,enbi)
     pberryel2=enb
     pberryion2=enbi
     enb=enb*evalue2

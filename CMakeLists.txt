@@ -9,11 +9,12 @@ cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 # CMake < 3.20 does not support NVHPC compiler id
 # https://cmake.org/cmake/help/latest/release/3.20.html#compilers
 
-# Policy CMP0048: The project() command manages VERSION variables
-set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
+if(POLICY CMP0144)
+  cmake_policy(SET CMP0144 NEW) # v3.27+ find_package() uses upper-case <PACKAGENAME>_ROOT variables.
+endif()
 
 project(qe
-    VERSION 7.5
+    VERSION 7.6
     DESCRIPTION "ESPRESSO: opEn-Source Package for Research in Electronic Structure, Simulation, and Optimization"
     LANGUAGES Fortran C)
 
@@ -38,6 +39,11 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 include(cmake/qeHelpers.cmake)
 
+# add the automatically determined parts of the RPATH
+# which point to directories outside the build tree to the install RPATH
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+include(AddRPATH)
+
 ###########################################################
 # Build Type
 # Ensure that a specific, default build type is set when
@@ -49,6 +55,7 @@ qe_ensure_build_type("Release")
 # Modules
 ###########################################################
 include(CheckFunctionExists)
+include(CheckFortranFunctionExists)
 # Must use GNUInstallDirs to install libraries into correct
 # locations on all platforms.
 include(GNUInstallDirs)
@@ -56,26 +63,28 @@ include(GNUInstallDirs)
 ###########################################################
 # Build Options
 ###########################################################
-include(CMakeDependentOption)
-option(QE_ENABLE_CUDA
-    "enable CUDA acceleration on NVIDIA GPUs" OFF)
-if(QE_ENABLE_CUDA)
-    option(QE_ENABLE_OPENACC "enable OpenACC acceleration" ON)
-    # OpenMP enabled by default if CUDA is enable
-    option(QE_ENABLE_OPENMP
-        "enable distributed execution support via OpenMP" ON)
-else()
-    option(QE_ENABLE_OPENACC "enable OpenACC acceleration" OFF)
-    option(QE_ENABLE_OPENMP
-        "enable distributed execution support via OpenMP" OFF)
+if(DEFINED QE_ENABLE_CUDA OR DEFINED QE_ENABLE_ROCM OR DEFINED QE_ENABLE_ONEAPI OR DEFINED QE_ENABLE_OFFLOAD OR DEFINED QE_ENABLE_OPENACC)
+    message(
+        FATAL_ERROR "QE_ENABLE_CUDA, QE_ENABLE_ROCM, QE_ENABLE_ONEAPI, QE_ENABLE_OFFLOAD and QE_ENABLE_OPENACC CMake options are removed. "
+                    "Use QE_GPU and/or QE_GPU_ARCHS instead. See details of this option explained in the user guide. "
+                    "When not building from scratch, their cached entries in CMakeCache.txt needs to be removed.")
 endif()
-cmake_dependent_option(QE_ENABLE_OFFLOAD
-    "enable OpenMP offload"
-    OFF "QE_ENABLE_OPENMP" OFF)
+include(DetermineGPUFeatures)
+include(DetermineDeviceArchitectures)
+
+include(CMakeDependentOption)
 option(QE_ENABLE_MPI
     "enable distributed execution support via MPI" ON)
 option(QE_ENABLE_MPI_GPU_AWARE
     "enable GPU aware MPI operations" OFF)
+if(QE_ENABLE_CUDA OR QE_ENABLE_ROCM OR ENABLE_ONEAPI OR QE_ENABLE_OFFLOAD OR QE_ENABLE_OPENACC)
+    # OpenMP threading enabled by default if any GPU feature is enabled
+    set(QE_ENABLE_OPENMP_DEFAULT ON)
+else()
+    set(QE_ENABLE_OPENMP_DEFAULT OFF)
+endif()
+option(QE_ENABLE_OPENMP
+    "enable distributed execution support via OpenMP" ${QE_ENABLE_OPENMP_DEFAULT})
 option(QE_ENABLE_TEST
     "enable unit and system tests" ON)
 cmake_dependent_option(QE_ENABLE_BENCHMARK
@@ -108,7 +117,7 @@ option(QE_ENABLE_DOC
 option(QE_CLOCK_SECONDS
     "print program time in seconds" OFF)
 set(QE_FFTW_VENDOR "AUTO" CACHE
-    STRING "select a specific FFTW library [Intel_DFTI, Intel_FFTW3, ArmPL, IBMESSL, FFTW3, Internal]")
+    STRING "select a specific FFTW library [Intel_DFTI, Intel_FFTW3, ArmPL, IBMESSL, FFTW3, NVPL, Internal]")
 set(QE_ENABLE_SANITIZER "none" CACHE STRING "none,asan,ubsan,tsan,msan")
 set(QE_ENABLE_PLUGINS "" CACHE STRING "Semicolon-separated list of plugins")
 set (QE_EXTRA_DEFINITIONS "" CACHE STRING "Semicolon-separated list of extra global definitions")
@@ -164,9 +173,6 @@ endif()
 # least in C, not sure about Fortran), change all feature
 # macros to avoid weird behaviors
 
-if(QE_ENABLE_CUDA)
-    qe_add_global_compile_definitions(__CUDA)
-endif()
 if(QE_ENABLE_TRACE)
     qe_add_global_compile_definitions(__TRACE)
 endif()
@@ -222,6 +228,9 @@ if(QE_ENABLE_CUDA AND NOT (CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fort
 endif()
 if(QE_ENABLE_OPENACC AND NOT (CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATCHES "NVHPC"))
     message(FATAL_ERROR "NVHPC compiler is mandatory when OpenACC is enabled")
+endif()
+if(QE_ENABLE_OFFLOAD AND NOT QE_ENABLE_OPENMP)
+    message(FATAL_ERROR "QE_ENABLE_OPENMP=ON required when OpenMP offload is enabled!")
 endif()
 if(QE_ENABLE_MPI_GPU_AWARE AND NOT (QE_ENABLE_CUDA AND QE_ENABLE_MPI))
     message(FATAL_ERROR "GPU aware MPI requires both MPI and CUDA features enabled")
@@ -303,6 +312,7 @@ qe_install_targets(qe_openmp_fortran)
 if(QE_ENABLE_OPENMP)
     find_package(OpenMP REQUIRED Fortran)
     target_link_libraries(qe_openmp_fortran INTERFACE OpenMP::OpenMP_Fortran)
+    AddRPATH("OpenMP" ${OpenMP_Fortran_LIBRARIES})
 endif(QE_ENABLE_OPENMP)
 if(QE_ENABLE_OFFLOAD)
     target_compile_definitions(qe_openmp_fortran INTERFACE "$<$<COMPILE_LANGUAGE:Fortran>:__OPENMP_GPU>")
@@ -326,6 +336,8 @@ endif(QE_ENABLE_OPENACC)
 ############################################################
 if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
     include(GNUFortranCompiler)
+elseif(CMAKE_Fortran_COMPILER_ID MATCHES "LLVMFlang")
+    include(LLVMFlangCompiler)
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES "PGI" OR CMAKE_Fortran_COMPILER_ID MATCHES "NVHPC")
     include(NVFortranCompiler)
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES "Cray")
@@ -334,6 +346,8 @@ elseif(CMAKE_Fortran_COMPILER_ID MATCHES "Intel")
     include(IntelFortranCompiler)
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES "XL")
     include(IBMFortranCompiler)
+elseif(CMAKE_Fortran_COMPILER_ID MATCHES "Fujitsu")
+    include(FujitsuFortranCompiler)
 endif()
 
 if(QE_ENABLE_STATIC_BUILD)
@@ -367,7 +381,69 @@ if(QE_ENABLE_CUDA OR QE_ENABLE_PROFILE_NVTX)
     else()
         find_package(CUDAToolkit REQUIRED)
     endif()
+    qe_add_global_compile_definitions(__CUDA)
 endif(QE_ENABLE_CUDA OR QE_ENABLE_PROFILE_NVTX)
+
+###########################################################
+# ROCM
+###########################################################
+if(QE_ENABLE_ROCM)
+  if(NOT QE_ENABLE_OFFLOAD)
+    message(FATAL_ERROR "QE_ENABLE_ROCM=ON requires QE_ENABLE_OFFLOAD=ON")
+  endif()
+  if(CMAKE_VERSION VERSION_LESS 3.21.0)
+    message(FATAL_ERROR "QE_ENABLE_ROCM=ON require CMake 3.21.0 or later")
+  endif()
+  enable_language(HIP)
+  set(CMAKE_HIP_LINKER_PREFERENCE_PROPAGATES 0)
+  if(DEFINED ROCM_ROOT)
+    message(STATUS "Using ROCM_ROOT: ${ROCM_ROOT}")
+    # explicit ROCM_ROOT takes precedence
+    list(PREPEND CMAKE_PREFIX_PATH ${ROCM_ROOT})
+  elseif(CMAKE_HIP_COMPILER_ROCM_ROOT)
+    list(PREPEND CMAKE_PREFIX_PATH ${CMAKE_HIP_COMPILER_ROCM_ROOT})
+  endif()
+
+  # use hip package to supply the hip runtime for CXX source code.
+  find_package(hip CONFIG)
+  if(NOT hip_FOUND)
+    message(
+      FATAL_ERROR
+        "The HIP runtime library cmake configure file hip-config.cmake cannot be found! "
+        "This happens when the ROCm installation cannot be found by CMake. "
+        "Rerun cmake with -DROCM_ROOT=<your ROCm installation root directory> added.")
+  endif()
+  find_package(hipfft CONFIG REQUIRED)
+  find_package(rocblas CONFIG REQUIRED)
+  qe_add_global_compile_definitions(__HIP)
+  qe_add_global_compile_definitions(__ROCBLAS)
+endif()
+
+###########################################################
+# OneAPI
+###########################################################
+if(QE_ENABLE_ONEAPI)
+  if(NOT QE_ENABLE_OFFLOAD)
+    message(FATAL_ERROR "QE_ENABLE_ONEAPI=ON requires QE_ENABLE_OFFLOAD=ON")
+  endif()
+  add_library(MKL::sycl INTERFACE IMPORTED)
+  find_path(MKL_OMP_OFFLOAD_INCLUDE mkl_omp_offload.f90
+    HINTS ${MKL_ROOT} $ENV{MKLROOT} $ENV{MKL_ROOT} $ENV{MKL_HOME}
+    PATH_SUFFIXES include
+    REQUIRED
+  )
+  target_include_directories(MKL::sycl INTERFACE "${MKL_OMP_OFFLOAD_INCLUDE}")
+
+  find_library(MKL_SYCL mkl_sycl
+    HINTS ${MKL_ROOT} $ENV{MKLROOT} $ENV{MKL_ROOT} $ENV{MKL_HOME}
+    PATH_SUFFIXES lib/intel64 lib
+    REQUIRED
+  )
+  target_link_libraries(MKL::sycl INTERFACE ${MKL_SYCL})
+  #qe_add_global_compile_definitions(__SYCL) # for SYCL kernels
+  qe_add_global_compile_definitions(__ONEMKL) # for OneAPI MKL OpenMP offload fortran interfaces
+  qe_add_global_compile_definitions(__NO_HIPKERN)
+endif()
 
 ###########################################################
 # MPI
@@ -462,6 +538,19 @@ if(NOT QE_LAPACK_INTERNAL)
             find_package(LAPACK)
             unset(CMAKE_REQUIRED_LINK_OPTIONS)
         endif()
+    elseif(BLA_VENDOR STREQUAL "NVPL")
+        find_package(nvpl REQUIRED COMPONENTS blas lapack)
+        if(QE_ENABLE_OPENMP)
+            set(QE_NVPL_LAPACK_TARGET nvpl::lapack_lp64_omp)
+        else()
+            set(QE_NVPL_LAPACK_TARGET nvpl::lapack_lp64_seq)
+        endif()
+        get_target_property(_nvpl_real ${QE_NVPL_LAPACK_TARGET} ALIASED_TARGET)
+        set_target_properties(${_nvpl_real} PROPERTIES IMPORTED_GLOBAL TRUE)
+        add_library(LAPACK::LAPACK INTERFACE IMPORTED GLOBAL)
+        set_target_properties(LAPACK::LAPACK PROPERTIES
+            INTERFACE_LINK_LIBRARIES ${_nvpl_real})
+        set(LAPACK_FOUND TRUE)
     else()
         if(QE_ENABLE_OPENMP)
             set(CMAKE_REQUIRED_LINK_OPTIONS ${OpenMP_Fortran_FLAGS})
@@ -517,7 +606,6 @@ if(QE_ENABLE_SCALAPACK)
             ${SCALAPACK_LIBRARIES}
             ${SCALAPACK_LINKER_FLAGS})
     if(QE_ENABLE_SCALAPACK_QRCP)
-        include(CheckFortranFunctionExists)
         set(CMAKE_REQUIRED_LIBRARIES "${SCALAPACK_LIBRARIES}")
         check_fortran_function_exists("pzgeqpf" SCALAPACK_PZGEQPF_WORKS)
         unset(CMAKE_REQUIRED_LIBRARIES)
@@ -578,11 +666,11 @@ if(QE_ENABLE_LIBXC)
     find_package(Libxc 5.1.2 COMPONENTS Fortran)
     if (NOT Libxc_FOUND)
         message(STATUS "Libxc searching failed in CMake Module mode, trying Config mode")
-        find_package(Libxc 5.1.2 COMPONENTS Fortran CONFIG)
+        find_package(Libxc COMPONENTS Fortran CONFIG)
     endif()
 
-    if(${Libxc_FOUND})
-        if (${Libxc_VERSION} VERSION_GREATER_EQUAL "5.1.2" )
+    if(Libxc_FOUND)
+        if (Libxc_VERSION VERSION_GREATER_EQUAL "5.1.2" )
             message(STATUS "Libxc version ${Libxc_VERSION} found.")
         else()
             message(FATAL_ERROR "Libxc version ${Libxc_VERSION} found. "
@@ -660,10 +748,9 @@ endif(QE_ENABLE_TEST)
 add_library(qe_ext_prof_tool INTERFACE)
 qe_install_targets(qe_ext_prof_tool)
 ###########################################################
-# this should work with nvfortran
 if(QE_ENABLE_PROFILE_NVTX)
-   target_link_libraries(qe_ext_prof_tool
-	INTERFACE
+    target_link_libraries(qe_ext_prof_tool
+        INTERFACE
         CUDA::nvToolsExt)
 endif(QE_ENABLE_PROFILE_NVTX)
 

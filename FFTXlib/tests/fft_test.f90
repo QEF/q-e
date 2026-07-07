@@ -1295,18 +1295,6 @@ subroutine print_clock(mype, npes, ncount)
 1022  FORMAT(' |fft_scatt_many_xy   | ',    D14.5, ' | ',   D14.5,  '  | ', D14.5 ,  ' |')
 
 end subroutine
-
-subroutine start_clock_gpu(label)
-  implicit none
-  character(len=*) :: label
-  call start_clock(label)
-end subroutine
-
-subroutine stop_clock_gpu(label)
-  implicit none
-  character(len=*) :: label
-  call stop_clock(label)
-end subroutine
 !
 ! Copyright (C) 2001 PWSCF group
 ! This file is distributed under the terms of the

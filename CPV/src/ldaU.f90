@@ -105,7 +105,7 @@
       !! electronic potential and to the forces acting on ions.
 
       use kinds,              ONLY: DP        
-      use control_flags,      ONLY: tfor, tprnfor
+      use cp_control,         ONLY: tfor
       use ions_base,          only: nat, nsp, ityp
       use gvecw,              only: ngw
       use gvect,              only: gstart
@@ -236,7 +236,7 @@
 !
       forceh=0.d0
 
-      if ( tfor .or. tprnfor ) then
+      if ( tfor ) then
         call start_clock('new_ns:forc')
         allocate (bp(nkb,n), dbp(nkb,nx,3), wdb(nkb,nwfcU,3))
         allocate(dns(ldmx,ldmx,nspin,nat))

@@ -96,13 +96,9 @@ SUBROUTINE ch_psi_all_complex (n, h, ah, e, ik, m)
   hpsi (:,:) = (0.d0, 0.d0)
   spsi (:,:) = (0.d0, 0.d0)
   !$acc end kernels
-#if defined(__CUDA)
-  CALL h_psi_gpu (npwx, n, m, h, hpsi)
-  CALL s_psi_acc (npwx, n, m, h, spsi)
-#else
+  !
   CALL h_psi (npwx, n, m, h, hpsi)
   CALL s_psi (npwx, n, m, h, spsi)
-#endif
   !
   CALL start_clock ('last')
   !
@@ -167,7 +163,7 @@ CONTAINS
     INTEGER :: ibnd, ig
 
     k = nbnd_occ (ikqs(ik))
-    CALL start_clock_gpu ('ch_psi_all_k_complex')
+    CALL start_clock ('ch_psi_all_k_complex')
     !$acc data present(evq, ps, hpsi, spsi)
     !
     !   Here we compute the projector in the valence band
@@ -211,7 +207,7 @@ CONTAINS
     !
     !    And apply S again
     !
-    CALL start_clock_gpu ('ch_psi_calbec')
+    CALL start_clock ('ch_psi_calbec')
     if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) then
        call divide (inter_bgrp_comm, m, m_start, m_end)
        if (m_end >= m_start) then
@@ -220,8 +216,9 @@ CONTAINS
     else
        CALL calbec (offload_type, n, vkb, hpsi, becp, m)
     endif
-    CALL stop_clock_gpu ('ch_psi_calbec')
-    CALL s_psi_acc (npwx, n, m, hpsi, spsi)
+    CALL stop_clock ('ch_psi_calbec')
+    !$acc wait
+    CALL s_psi (npwx, n, m, hpsi, spsi)
     !$acc parallel loop collapse(2) present(ah, spsi)
     DO ibnd = 1, m
        DO ig = 1, n
@@ -238,7 +235,7 @@ CONTAINS
        ENDDO
        !$acc end parallel loop
     END IF
-    CALL stop_clock_gpu ('ch_psi_all_k_complex')
+    CALL stop_clock ('ch_psi_all_k_complex')
     return
   END SUBROUTINE ch_psi_all_k_complex
 
@@ -287,9 +284,9 @@ CONTAINS
     ELSE
        if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) then
           call divide( inter_bgrp_comm, m, m_start, m_end)
-          if (m_end >= m_start) CALL calbec (n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)
+          if (m_end >= m_start) CALL calbec (offload_type, n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)
        else
-          CALL calbec (n, vkb, hpsi, becp, m)
+          CALL calbec (offload_type, n, vkb, hpsi, becp, m)
        end if
        CALL s_psi (npwx, n, m, hpsi, spsi)
     ENDIF

@@ -185,7 +185,7 @@ SUBROUTINE d2ionq_dispd3_debug( alat, nat, ityp, at, tau )
   USE symme,            ONLY: symvector
   USE mp,               ONLY: mp_stop
   USE funct,            ONLY: get_dft_short
-  USE dftd3_api,        ONLY: dftd3_init, dftd3_set_functional, dftd3_pbc_dispersion, get_atomic_number
+  USE dftd3_api,        ONLY: dftd3_pbc_dispersion, get_atomic_number
   USE dftd3_qe,         ONLY: dftd3, dftd3_pbc_gdisp_new, print_dftd3_hessian
   USE ions_base,        ONLY: atm
   USE ener,             ONLY: edftd3
@@ -299,7 +299,7 @@ SUBROUTINE d2ionq_dispd3_debug( alat, nat, ityp, at, tau )
 
   mat(:,:,:,:) = cmplx( der2disp_frc(:,:,:,:), kind=dp )
 
-  CALL print_dftd3_hessian( mat, nat, 'debug' )
+  CALL print_dftd3_hessian( stdout, mat, nat, 'debug' )
 
   deallocate( mat )
  

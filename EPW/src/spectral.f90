@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
@@ -38,7 +39,7 @@
     USE io_global,     ONLY : stdout, ionode
     USE io_var,        ONLY : iospectral_sup, iospectral
     USE input,         ONLY : nbndsub, wmin_specfun, wmax_specfun, nw_specfun, &
-                              efermi_read, fermi_energy, nstemp
+                              efermi_read, fermi_energy, nstemp, lsda
     USE global_var,    ONLY : gtemp, etf, ibndmin, nkqf, nktotf, efnew, &
                               xkf, nkqtotf, esigmar_all, esigmai_all, a_all, nbndfst
     USE ep_constants,  ONLY : kelvin2eV, ryd2mev, one, ryd2ev, two, zero, pi
@@ -55,6 +56,8 @@
     !! File name for spectral function
     CHARACTER(LEN = 256) :: filespecsup
     !! File name for supporting information
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer file name
     INTEGER :: iw
     !! Counter on the frequency
     INTEGER :: ik
@@ -137,11 +140,13 @@
       ! and constant matrix elements for dipole transitions)
       !
       IF (ionode) THEN
+        fnm = ''
+        IF (TRIM(lsda) == 'down') fnm = '.down'
         WRITE(tp, "(f8.3)") gtemp(itemp) * ryd2ev / kelvin2eV
-        filespec = 'specfun.elself.' // trim(adjustl(tp)) // 'K'
-        filespecsup = 'specfun_sup.elself.' // trim(adjustl(tp)) // 'K'
-        OPEN(UNIT = iospectral, FILE = filespec )
-        OPEN(UNIT = iospectral_sup, FILE = filespecsup )
+        filespec = 'specfun.elself.' // trim(adjustl(tp)) // 'K' // TRIM(fnm)
+        filespecsup = 'specfun_sup.elself.' // trim(adjustl(tp)) // 'K' // TRIM(fnm)
+        OPEN(UNIT = iospectral, FILE = TRIM(filespec) )
+        OPEN(UNIT = iospectral_sup, FILE = TRIM(filespecsup) )
         WRITE(iospectral, '(/2x, a/)') '#Electronic spectral function (meV)'
         WRITE(iospectral_sup, '(/2x, a/)') '#KS eigenenergies + real and im part of electronic self-energy (meV)'
         WRITE(iospectral, '(/2x, a/)') '#K-point     Energy[eV]     A(k,w)[meV^-1]'
@@ -244,7 +249,7 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE spectral_func_ph_q(iqq, iq, totq)
+    SUBROUTINE spectral_func_ph_q(iqq, iq, totq, nbndsub_tot, wkf_tot, etf_tot)
     !-----------------------------------------------------------------------
     !!
     !! Compute the imaginary part of the phonon self energy due to electron-
@@ -267,9 +272,9 @@
                           wmin_specfun, wmax_specfun, nw_specfun, &
                           phonselfen
     USE pwcom,     ONLY : nelec, ef
-    USE input,     ONLY : isk_dummy
-    USE global_var,ONLY : gtemp, epf17, ibndmin, etf, nbndfst, &
-                          wkf, xqf, nkqf, nkf, wf, a_all_ph, efnew, pi_0, &
+    USE input,     ONLY : isk_dummy, lsda
+    USE global_var,ONLY : gtemp, epf17, ibndmin, nbndfst, &
+                          nkqf, wf, a_all_ph, pi_0, &
                           pir_all, gammai_all
     USE ep_constants,  ONLY : kelvin2eV, ryd2mev, ryd2ev, one, two, zero, cone, ci, eps8
     USE constants,     ONLY : pi
@@ -279,12 +284,6 @@
     !
     IMPLICIT NONE
     !
-    CHARACTER(LEN = 20) :: tp
-    !! String for temperatures
-    CHARACTER(LEN = 256) :: filespec
-    !! File name for spectral function
-    CHARACTER(LEN = 256) :: filespecsup
-    !! File name for supporting information
     !
     INTEGER, INTENT(in) :: iqq
     !! Current q-point index from selecq
@@ -292,10 +291,16 @@
     !! Current q-point index
     INTEGER, INTENT(in) :: totq
     !! Total q-points in selecq window
-    INTEGER :: ismear
-    !! Number of smearing values for the Gaussian function
+    INTEGER, INTENT(in) :: nbndsub_tot
+    !! Total number of bands 
+    REAL(KIND = DP), INTENT(in) :: wkf_tot(nkqf)
+    !! Integration weights
+    REAL(KIND = DP), INTENT(in) :: etf_tot(nbndsub_tot,nkqf)
+    !! Interpolated eigenvalues
     !
     ! Local variables
+    INTEGER :: ismear
+    !! Number of smearing values for the Gaussian function
     INTEGER :: imode
     !! Counter on mode
     INTEGER :: iw
@@ -325,7 +330,17 @@
     !! degaussw0 = (ismear-1) * delta_smear + degaussw
     REAL(KIND = DP) :: eta
     !! artificial broadening of 0.1 meV for the visualization of the spectral function
+    CHARACTER(LEN = 20) :: tp
+    !! String for temperatures
+    CHARACTER(LEN = 256) :: filespec
+    !! File name for spectral function
+    CHARACTER(LEN = 256) :: filespecsup
+    !! File name for supporting information
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer file name
     !
+    fnm = ''
+    IF (TRIM(lsda) == 'down') fnm = '.down'
     !
     dw = (wmax_specfun - wmin_specfun) / DBLE(nw_specfun - 1)
     DO iw = 1, nw_specfun
@@ -351,7 +366,7 @@
     !
     !
     IF (.NOT. phonselfen) THEN
-      CALL selfen_phon_q(iqq, iq, totq)
+      CALL selfen_phon_q(iqq, iq, totq, nbndsub_tot, wkf_tot, etf_tot)
     ENDIF
     !
     ! collect contributions from all pools (sum over k-points) this finishes the integral over the BZ  (k)
@@ -392,8 +407,8 @@
         IF (iqq == 1 .and. itemp == 1) THEN
           IF (ionode) THEN
             WRITE(tp, "(f8.1)") gtemp(itemp) * ryd2ev / kelvin2eV
-            filespecsup = 'specfun_sup.phon'! // trim(adjustl(tp)) // 'K'
-            OPEN(UNIT = iospectral_sup, FILE = filespecsup)
+            filespecsup = 'specfun_sup.phon' // TRIM(fnm) ! // trim(adjustl(tp)) // 'K'
+            OPEN(UNIT = iospectral_sup, FILE = TRIM(filespecsup))
             WRITE(iospectral_sup, '(2x, a)') '#Phonon eigenenergies + real and im part of phonon self-energy (meV)'
             WRITE(iospectral_sup, '(2x, a)') '#Q-point    Mode      Temp.[K]       smearing[eV]       w_q[eV]    &    
                                           &w[eV]     Real Pi(w, T_low)[meV]   Real Pi(w=0,T_high)[meV]     Im Pi(w, T_low)[meV]'
@@ -444,8 +459,8 @@
       IF (ionode) THEN
         DO itemp = 1, nstemp
           WRITE(tp, "(f8.3)") gtemp(itemp) * ryd2ev / kelvin2eV
-          filespec = 'specfun.phon.' // trim(adjustl(tp)) // 'K'
-          OPEN(UNIT = iospectral, FILE = filespec)                
+          filespec = 'specfun.phon.' // trim(adjustl(tp)) // 'K'//TRIM(fnm)
+          OPEN(UNIT = iospectral, FILE = TRIM(filespec))                
           WRITE(iospectral, '(/2x, a)') '#Phonon spectral function (meV)'
           WRITE(iospectral, '(/2x, a)') '#Q-point    Energy[eV]      smearing[eV]     A(q,w)[meV^-1]'
           DO ismear = 1, nsmear
@@ -497,7 +512,7 @@
     USE io_var,        ONLY : iospectral_sup, iospectral
     USE input,         ONLY : nbndsub, fsthick, ngaussw, degaussw, nw_specfun, &
                               wmin_specfun, wmax_specfun, efermi_read, fermi_energy, &
-                              nstemp, nel, meff, epsiheg, restart, restart_step
+                              nstemp, nel, meff, epsiheg, restart, restart_step, lsda
     USE pwcom,         ONLY : ef
     USE global_var,    ONLY : etf, ibndmin, nkqf, nbndfst, nkf, wqf, xkf, &
                               nkqtotf, xqf, vmef, esigmar_all, esigmai_all, a_all, &
@@ -529,6 +544,8 @@
     !! File name for spectral function
     CHARACTER(LEN = 256) :: filespecsup
     !! File name for supporting information
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer file name
     INTEGER :: iw
     !! Counter on the frequency
     INTEGER :: ik
@@ -639,6 +656,9 @@
     !! SE factor
     !
     ! loop over temperatures can be introduced
+    !
+    fnm = ''
+    IF (TRIM(lsda) == 'down') fnm = '.down'
     !
     inv_degaussw = one / degaussw
     sq_degaussw = degaussw * degaussw
@@ -900,10 +920,10 @@
         !
         IF (ionode) then
           WRITE(tp, "(f8.3)") gtemp(itemp) * ryd2ev / kelvin2eV
-          filespec = 'specfun.plself.' // trim(adjustl(tp)) // 'K'
-          filespecsup = 'specfun_sup.plself.' // trim(adjustl(tp)) // 'K'
-          OPEN(UNIT = iospectral, FILE = filespec )
-          OPEN(UNIT = iospectral_sup, FILE = filespecsup )
+          filespec = 'specfun.plself.' // trim(adjustl(tp)) // 'K'// TRIM(fnm)
+          filespecsup = 'specfun_sup.plself.' // trim(adjustl(tp)) // 'K' // TRIM(fnm)
+          OPEN(UNIT = iospectral, FILE = TRIM(filespec) )
+          OPEN(UNIT = iospectral_sup, FILE = TRIM(filespecsup) )
           WRITE(iospectral, '(/2x, a/)') '#Electron-plasmon spectral function (meV)'
           WRITE(iospectral_sup, '(/2x, a/)') '#KS eigenenergies + real and im part of electron-plasmon self-energy (meV)'
           WRITE(iospectral, '(/2x, a/)') '#K-point    Energy[meV]     A(k,w)[meV^-1]'
@@ -1028,7 +1048,7 @@
     USE modes,         ONLY : nmodes
     USE cell_base,     ONLY : omega
     USE input,         ONLY : degaussq, delta_qsmear, nqsmear, nqstep, nsmear, eps_acoustic, &
-                          nstemp, delta_smear, degaussw, fsthick, nc
+                          nstemp, delta_smear, degaussw, fsthick, nc, lsda
     USE global_var,    ONLY : gtemp, nqtotf, wf, wqf, lambda_all, lambda_v_all
     USE ep_constants,  ONLY : ryd2mev, ryd2ev, kelvin2eV, one, two, zero, kelvin2Ry
     USE constants,     ONLY : pi
@@ -1049,6 +1069,8 @@
     !! File name for phonon density of states
     CHARACTER(LEN = 256) :: filres
     !! File name for resistivity
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer file name
     !
     INTEGER :: imode
     !! Counter on mode
@@ -1125,6 +1147,9 @@
     !! Resistivity for different for different ismear
     !
     CALL start_clock('a2F')
+    !
+    fnm = ''
+    IF (TRIM(lsda) == 'down') fnm = '.down'
     IF (ionode) THEN
       !
       ALLOCATE(a2f_(nqstep, nqsmear), STAT = ierr)
@@ -1149,15 +1174,15 @@
           !
           WRITE(tp, "(f8.3)") gtemp(itemp) * ryd2ev / kelvin2eV
           IF (isig < 10) THEN
-            WRITE(fila2f,   '(a, a6, i1, a, a)') TRIM(prefix), '.a2f.0', isig, '.', trim(adjustl(tp))
-            WRITE(fila2ftr, '(a, a9, i1, a, a)') TRIM(prefix), '.a2f_tr.0', isig, '.', trim(adjustl(tp))
-            WRITE(filres,   '(a, a6, i1, a, a)') TRIM(prefix), '.res.0', isig, '.', trim(adjustl(tp))
-            WRITE(fildos,   '(a, a8, i1, a, a)') TRIM(prefix), '.phdos.0', isig, '.', trim(adjustl(tp))
+            WRITE(fila2f,   '(a, a6, i1, a, a)') TRIM(prefix) // TRIM(fnm), '.a2f.0', isig, '.', trim(adjustl(tp))
+            WRITE(fila2ftr, '(a, a9, i1, a, a)') TRIM(prefix) // TRIM(fnm), '.a2f_tr.0', isig, '.', trim(adjustl(tp))
+            WRITE(filres,   '(a, a6, i1, a, a)') TRIM(prefix) // TRIM(fnm), '.res.0', isig, '.', trim(adjustl(tp))
+            WRITE(fildos,   '(a, a8, i1, a, a)') TRIM(prefix) // TRIM(fnm), '.phdos.0', isig, '.', trim(adjustl(tp))
           ELSE
-            WRITE(fila2f,   '(a, a5, i2, a, a)') TRIM(prefix), '.a2f.', isig, '.', trim(adjustl(tp))
-            WRITE(fila2ftr, '(a, a8, i2, a, a)') TRIM(prefix), '.a2f_tr.', isig, '.', trim(adjustl(tp))
-            WRITE(filres,   '(a, a5, i2, a, a)') TRIM(prefix), '.res.', isig, '.', trim(adjustl(tp))
-            WRITE(fildos,   '(a, a7, i2, a ,a)') TRIM(prefix), '.phdos.', isig, '.', trim(adjustl(tp))
+            WRITE(fila2f,   '(a, a5, i2, a, a)') TRIM(prefix) // TRIM(fnm), '.a2f.', isig, '.', trim(adjustl(tp))
+            WRITE(fila2ftr, '(a, a8, i2, a, a)') TRIM(prefix) // TRIM(fnm), '.a2f_tr.', isig, '.', trim(adjustl(tp))
+            WRITE(filres,   '(a, a5, i2, a, a)') TRIM(prefix) // TRIM(fnm), '.res.', isig, '.', trim(adjustl(tp))
+            WRITE(fildos,   '(a, a7, i2, a ,a)') TRIM(prefix) // TRIM(fnm), '.phdos.', isig, '.', trim(adjustl(tp))
           ENDIF
           OPEN(UNIT = iua2ffil, FILE = fila2f, FORM = 'formatted')
           OPEN(UNIT = iua2ftrfil, FILE = fila2ftr, FORM = 'formatted')

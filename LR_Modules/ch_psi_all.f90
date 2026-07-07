@@ -98,14 +98,10 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   spsi (:,:) = (0.d0, 0.d0)
   ah (:,:) = (0.d0, 0.d0)
   !$acc end kernels
-#if defined(__CUDA)
-  CALL h_psi_gpu (npwx, n, m, h, hpsi)
-  CALL s_psi_acc (npwx, n, m, h, spsi)
-#else
+  !
   CALL h_psi (npwx, n, m, h, hpsi)
   CALL s_psi (npwx, n, m, h, spsi)
-#endif
-
+  !
   CALL start_clock ('last')
   !
   !   then we compute ( H - \epsilon S ) * h
@@ -157,7 +153,6 @@ CONTAINS
     !
     USE becmod, ONLY : becp, calbec
     USE control_lr,  ONLY : alpha_pv
-    
     IMPLICIT NONE
     INTEGER :: m_start, m_end
     INTEGER :: k
@@ -167,7 +162,7 @@ CONTAINS
 
     ALLOCATE (ps  ( nbnd , m))
     k = nbnd_occ (ikqs(ik))
-    CALL start_clock_gpu ('ch_psi_all_k')
+    CALL start_clock ('ch_psi_all_k')
     !
     !$acc data create( ps(1:nbnd, 1:m) ) present(evq, hpsi, spsi)
     !
@@ -213,7 +208,7 @@ CONTAINS
     !    And apply S again
     !
     IF (okvan) THEN
-       CALL start_clock_gpu ('ch_psi_calbec')
+       CALL start_clock ('ch_psi_calbec')
        if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) then
           call divide (inter_bgrp_comm, m, m_start, m_end)
           if (m_end >= m_start) then
@@ -222,9 +217,10 @@ CONTAINS
        else
           CALL calbec (offload_type, n, vkb, hpsi, becp, m)
        endif
-       CALL stop_clock_gpu ('ch_psi_calbec')
+       CALL stop_clock ('ch_psi_calbec')
+       !$acc wait
     ENDIF ! okvan
-    CALL s_psi_acc (npwx, n, m, hpsi, spsi)
+    CALL s_psi (npwx, n, m, hpsi, spsi)
     !$acc parallel loop collapse(2)
     DO ibnd = 1, m
        DO ig = 1, n
@@ -243,7 +239,7 @@ CONTAINS
     END IF
 
     DEALLOCATE( ps)
-    CALL stop_clock_gpu ('ch_psi_all_k')
+    CALL stop_clock ('ch_psi_all_k')
     return
   END SUBROUTINE ch_psi_all_k
 
@@ -255,7 +251,6 @@ CONTAINS
     USE realus, ONLY : real_space, invfft_orbital_gamma, &
                        fwfft_orbital_gamma, calbec_rs_gamma,  s_psir_gamma
     use gvect,  only : gstart
-
     IMPLICIT NONE
     INTEGER :: m_start, m_end ,ntemp
     INTEGER :: ibnd, ig
@@ -264,7 +259,7 @@ CONTAINS
 
     ALLOCATE (ps  ( nbnd , m))
     ntemp = nbnd_occ (ik)
-    CALL start_clock_gpu ('ch_psi_all_gamma')
+    CALL start_clock ('ch_psi_all_gamma')
 
     !$acc data create( ps(1:nbnd, 1:m) ) present(evc)
 
@@ -307,16 +302,17 @@ CONTAINS
        !$acc update device(hpsi, spsi)
     ELSE
        IF (okvan) THEN
-          CALL start_clock_gpu ('ch_psi_calbec')
+          CALL start_clock ('ch_psi_calbec')
           if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) then
              call divide( inter_bgrp_comm, m, m_start, m_end)
              if (m_end >= m_start) CALL calbec (offload_type, n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)
           else
              CALL calbec (offload_type, n, vkb, hpsi, becp, m)
           end if
-          CALL stop_clock_gpu ('ch_psi_calbec')
+          CALL stop_clock ('ch_psi_calbec')
+          !$acc wait
        ENDIF ! okvan
-       CALL s_psi_acc (npwx, n, m, hpsi, spsi)
+       CALL s_psi (npwx, n, m, hpsi, spsi)
     ENDIF
     !$acc parallel loop collapse(2)
     DO ibnd = 1, m
@@ -325,7 +321,7 @@ CONTAINS
        ENDDO
     ENDDO
     !$acc end parallel loop
-    CALL stop_clock_gpu ('ch_psi_all_gamma')
+    CALL stop_clock ('ch_psi_all_gamma')
 
     DEALLOCATE( ps )
     return

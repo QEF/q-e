@@ -73,7 +73,7 @@
       !! Calculates the kinetic energy density (metaGGA case).
       !
       use kinds, only: dp
-      use control_flags, only: tpre
+      use cp_control, only: tpre
       use gvecw, only: ngw
       use gvect, only: g
       use cell_base, only : omega, tpiba, ainv
@@ -217,7 +217,7 @@
       !! rhos output: total potential on smooth real space grid.
       !
       use kinds, only: dp
-      use control_flags, only: thdyn, tpre, tfor, tprnfor
+      use cp_control, only: tpre
       use io_global, only: stdout
       use ions_base, only: nsp, na, nat
       use cell_base, only: omega

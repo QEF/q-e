@@ -22,6 +22,7 @@ subroutine solve_e2
   USE fft_base,              ONLY : dfftp, dffts
   USE fft_interfaces,        ONLY : fft_interpolate
   USE wvfct,                 ONLY : npwx, nbnd, et
+  USE noncollin_module,      ONLY : nspin_mag
   USE buffers,   ONLY: get_buffer
   USE ions_base, ONLY: nat
   USE uspp,      ONLY: okvan, nkb, vkb
@@ -42,6 +43,9 @@ subroutine solve_e2
                          rec_code, rec_code_read, flmixdpot
   USE dv_of_drho_lr
   USE uspp_init,        ONLY : init_us_2
+  USE dfpt_type,        ONLY : dfpt_data_type, allocate_dfpt_data, deallocate_dfpt_data, &
+                               dfpt_dvscfp_to_dvscfs
+  USE incdrhoscf_mod,   ONLY : incdrhoscf
 
   implicit none
 
@@ -51,16 +55,12 @@ subroutine solve_e2
   ! used for summation over k points
   ! average number of iterations
   ! convergence limit
-
-  complex(DP) , pointer :: dvscfin (:,:,:), dvscfins (:,:,:)
-  ! change of the scf potential (input)
-  ! change of the scf potential (smooth)
-
-  complex(DP) , allocatable :: dvscfout (:,:,:), dbecsum (:,:), &
-                                    aux1 (:)
-  ! change of the scf potential (output)
+  complex(DP) , allocatable :: aux1 (:)
   ! auxiliary space
-  ! auxiliary space
+  COMPLEX(DP), ALLOCATABLE :: dvscftmp(:, :, :)
+   !! change of scf potential (output before mixing)
+  TYPE(dfpt_data_type) :: dfpt_data
+  !! Data that describes linear response quantities
 
   logical :: exst
   ! used to open the recover file
@@ -82,20 +82,13 @@ subroutine solve_e2
   if (okvan) call errore ('solve_e2', ' Ultrasoft PP not implemented', 1)
 
   call start_clock('solve_e2')
-  allocate (dvscfin( dfftp%nnr, nspin, 6))
-  dvscfin=(0.0_DP,0.0_DP)
-  if (doublegrid) then
-     allocate (dvscfins(dffts%nnr, nspin, 6))
-  else
-     dvscfins => dvscfin
-  endif
-  allocate (dvscfout( dfftp%nnr , nspin, 6))
-  allocate (dbecsum( nhm*(nhm+1)/2, nat))
+  CALL allocate_dfpt_data(dfpt_data, 6)
+  ALLOCATE(dvscftmp(dfftp%nnr, nspin_mag, 6))
   allocate (aux1(dffts%nnr))
   convt=.FALSE.
   if (rec_code_read == -10) then
      ! restarting in Raman
-     CALL read_rec(dr2, iter0, 6, dvscfin, dvscfins)
+     CALL read_rec(dr2, iter0, dfpt_data)
   else
      iter0 = 0
   end if
@@ -112,8 +105,9 @@ subroutine solve_e2
      iter = kter + iter0
      avg_iter = 0.d0
 
-     dvscfout (:,:,:) = (0.d0, 0.d0)
-     dbecsum (:,:) = (0.d0, 0.d0)
+     dfpt_data%drhop = (0.d0, 0.d0)
+     dfpt_data%drhos = (0.d0, 0.d0)
+     dfpt_data%dbecsum = (0.d0, 0.d0)
 
      do ik = 1, nksq
         ! in this routine, ikk=ikq=ik always (q=0)
@@ -148,7 +142,7 @@ subroutine solve_e2
            endif
 
            if (iter.eq.1) then
-              dvscfin (:,:,:) = (0.d0, 0.d0)
+              dfpt_data%dvscfs (:,:,:) = (0.d0, 0.d0)
               call davcio (dvpsi, lrba2, iuba2, nrec, -1)
               thresh = 1.0d-2
            else
@@ -156,7 +150,7 @@ subroutine solve_e2
               do ibnd = 1, nbnd_occ (ik)
                  call cft_wave (ik, evc (1, ibnd), aux1, +1)
                  do ir = 1, dffts%nnr
-                    aux1 (ir) = aux1 (ir) * dvscfins (ir, 1, ipol)
+                    aux1 (ir) = aux1 (ir) * dfpt_data%dvscfs(ir, 1, ipol)
                  enddo
                  call cft_wave (ik, dvpsi (1, ibnd), aux1, -1)
               enddo
@@ -169,42 +163,39 @@ subroutine solve_e2
            ! calculates dvscf, sum over k => dvscf_q_ipert
            !
            weight = wk (ik)
-           call incdrhoscf (dvscfout (1,1,ipol), weight, ik, &
-                            dbecsum (1, 1), dpsi)
+           call incdrhoscf (dfpt_data%drhos(:,1,ipol), weight, ik, &
+                            dfpt_data%dbecsum (1,1,1,ipol), dpsi)
            enddo   ! on perturbations
         enddo      ! on k points
-     call mp_sum ( dbecsum, intra_bgrp_comm )
+     call mp_sum ( dfpt_data%dbecsum, intra_bgrp_comm )
      if (doublegrid) then
         do is = 1, nspin
            do ipol = 1, 6
-              call fft_interpolate (dffts, dvscfout (:, is, ipol), dfftp, dvscfout (:, is, ipol))
+              call fft_interpolate (dffts, dfpt_data%drhos(:, is, ipol), dfftp, dfpt_data%drhop(:, is, ipol))
            enddo
         enddo
+     else
+        CALL zcopy(dffts%nnr*nspin_mag*6, dfpt_data%drhos, 1, dfpt_data%drhop, 1)
      endif
      !
      !   After the loop over the perturbations we have the change of the pote
      !   for all the modes, and we symmetrize this potential
      !
-     call mp_sum ( dvscfout, inter_pool_comm )
+     call mp_sum ( dfpt_data%drhop, inter_pool_comm )
      do ipol = 1, 6
-        call dv_of_drho (dvscfout (1, 1, ipol))
+        CALL zcopy(dfftp%nnr*nspin_mag, dfpt_data%drhop(1, 1, ipol), 1, dvscftmp(1, 1, ipol), 1)
+        call dv_of_drho(dvscftmp(1, 1, ipol))
      enddo
 
-     call psyme2(dvscfout)
+     call psyme2(dvscftmp)
      !
      ! Mixing with the old potential
      !
-     call mix_potential (2 * 6 * dfftp%nnr* nspin, dvscfout, dvscfin,  &
+     call mix_potential (2 * 6 * dfftp%nnr* nspin, dvscftmp, dfpt_data%dvscfp,  &
                          alpha_mix (kter), dr2, 6 * tr2_ph, iter,  &
                          nmix_ph, flmixdpot, convt)
-
-     if (doublegrid) then
-        do is = 1, nspin
-           do ipol = 1, 6
-              call fft_interpolate (dfftp,dvscfin (:, is, ipol), dffts, dvscfins (:, is, ipol))
-           enddo
-        enddo
-     end if
+     !
+     CALL dfpt_dvscfp_to_dvscfs(dfpt_data)
 
      write (6, "(//,5x,' iter # ',i3, &
           &      '   av.it.: ',f5.1)") iter, avg_iter / (6.d0 * nksq)
@@ -217,17 +208,14 @@ subroutine solve_e2
      ! rec_code: state of the calculation
      ! rec_code=-10  to -19 Raman
      rec_code=-10
-     CALL write_rec('solve_e2..', irr, dr2, iter, convt, 6, dvscfin)
+     CALL write_rec('solve_e2..', irr, dr2, iter, convt, dfpt_data)
 
      if ( check_stop_now() ) call stop_smoothly_ph (.false.)
      if ( convt ) goto 155
 
   enddo
 155 continue
-  deallocate (dvscfin )
-  if (doublegrid) deallocate (dvscfins )
-  deallocate (dvscfout )
-  deallocate (dbecsum )
+  CALL deallocate_dfpt_data(dfpt_data)
   deallocate (aux1 )
 
   call stop_clock('solve_e2')

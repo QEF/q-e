@@ -1,7 +1,9 @@
 # Makefile for TDDFPT
 include ../make.inc
 
-default: all
+# see comments in file tldeps for explanations
+include ../install/tldeps
+TLDEPS=lrmods
 
 all: bindir tddfpt
 

@@ -1,0 +1,14 @@
+# BAD: a var whose <status> is "required" but which also carries a
+# <default> (rule B violation under --strict: a required entry has no
+# default -- the user must supply the value).
+input_description -distribution {Quantum ESPRESSO} -package TEST -program test.x {
+    namelist TEST {
+        var ecutwfc -type REAL {
+            status { REQUIRED }
+            default { 25.0 }
+            dimensionality { energy }
+            units { Ry }
+            info { kinetic energy cutoff for wavefunctions }
+        }
+    }
+}

@@ -25,9 +25,7 @@
        USE xc_lib,   ONLY : exx_is_active, xclib_dft_is, start_exx, stop_exx
        USE wvfct,    ONLY : current_k, et
        USE gvecw,    ONLY : ecutwfc
-       USE scf,                  ONLY : scf_type, scf_type_COPY, &
-                                   create_scf_type, destroy_scf_type, &
-                                   rho, rho_core, rhog_core, &
+       USE scf,      ONLY : rho, rho_core, rhog_core, &
                                    v, vltot, vrs, kedtau, vnew
        USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet, epaw, &

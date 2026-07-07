@@ -1,0 +1,12 @@
+# BAD: a single <dimensionality> base token that is not in vocab(dim_base)
+#      (product-of-powers base-membership violation under --strict).
+input_description -distribution {Quantum ESPRESSO} -package TEST -program test.x {
+    namelist TEST {
+        var ecutwfc -type REAL {
+            default { 25.0 }
+            dimensionality { frobnication }
+            units { Ry }
+            info { kinetic energy cutoff }
+        }
+    }
+}

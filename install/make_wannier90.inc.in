@@ -3,6 +3,7 @@
 #=======================================
 
 TOPDIR = @topdir@
+BUILDDIR = @topbuilddir@
 
 F90=@mpif90@
 FCOPTS=@f90flags@ 

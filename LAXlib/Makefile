@@ -2,6 +2,7 @@
 
 include ../make.inc
 
+VPATH = @srcdir@
 
 EXTLIBS=$(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(BLAS_LIBS) $(MPI_LIBS)
 
@@ -12,6 +13,8 @@ la_module.o \
 la_helper.o \
 cdiaghg.o \
 rdiaghg.o \
+cdiagh.o \
+rdiagh.o \
 dspev_drv.o \
 ptoolkit.o \
 transto.o \
@@ -38,4 +41,7 @@ clean :
 
 $(LAX) : laxlib.fh  laxlib_hi.fh  laxlib_kinds.fh  laxlib_low.fh  laxlib_mid.fh  laxlib_param.fh
 
+
 include make.depend
+
+

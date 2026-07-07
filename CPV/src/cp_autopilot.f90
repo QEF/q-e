@@ -125,10 +125,9 @@ CONTAINS
          & ion_temperature, fnosep, nhpcl, nhptyp, nhgrp, fnhscl, ndega, nat, &
          & orthogonalization
     use ions_nose, ONLY: tempw
-    USE control_flags, only: tsde, tsdp, tfor, tcp, tnosep, isave,iprint,&
-                             tconvthrs, tolp, &
-                             ekin_conv_thr, forc_conv_thr, etot_conv_thr,&
-                             tortho, tfirst, tlast, tprint
+    USE control_flags, only: tnosep, iprint, &
+                             tolp, ekin_conv_thr, forc_conv_thr, etot_conv_thr
+    use cp_control, only:    tfor, tsde, tsdp, tprint, tconvthrs, tcp, tortho, isave
     use wave_base, only: frice
     use ions_base, only: fricp
     USE ions_nose, ONLY: ions_nose_init,xnhp0, xnhpm, ions_nose_deallocate
@@ -239,7 +238,6 @@ CONTAINS
        ! c0old, so now I have to copy it into cm
        if ( tcg ) then
            cm_bgrp=c0old
-           ! tfirst=.true.   !check if this is needed (I don't think so)
            ! the conjugate gradient method modifies the electron mass mu(k),
            ! by calling the routine
            ! emass_precond_tpa( ema0bg, tpiba2, emass_cutoff )
@@ -449,7 +447,7 @@ CONTAINS
 #endif
     USE ensemble_dft,             ONLY : tens
     USE cg_module, ONLY : tcg
-    USE control_flags , only : tprint
+    USE cp_control , only : tprint
 
     IMPLICIT NONE
     INTEGER :: nfi

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2017 Quantum ESPRESSO Foundation
+! Copyright (C) 2017-2026 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -239,17 +239,10 @@ CONTAINS
     CALL invfft( 'Rho', psi, desc )
     !$acc end host_data
     !
-#if defined(_OPENACC)
-!$acc parallel loop
-#else
-!$omp parallel do
-#endif
+    !$acc parallel loop
     DO ir = 1, desc%nnr
        rhor(ir) = DBLE(psi(ir))
     ENDDO
-#if !defined(_OPENACC)
-!$omp end parallel do
-#endif
     !
     !$acc end data
     DEALLOCATE( psi )
@@ -291,17 +284,10 @@ CONTAINS
           CALL invfft( 'Rho', psi, desc )
           !$acc end host_data
           !
-#if defined(_OPENACC)
-!$acc parallel loop
-#else
-!$omp parallel do
-#endif
+          !$acc parallel loop
           DO ir = 1, desc%nnr
              rhor(ir,iss) = DBLE(psi(ir))
           ENDDO
-#if !defined(_OPENACC)
-!$omp end parallel do
-#endif
        ELSE
           ! nspin/2 = 1 for LSDA, = 2 for noncolinear
           DO iss = 1, nspin/2
@@ -314,18 +300,11 @@ CONTAINS
              CALL invfft( 'Rho', psi, desc )
              !$acc end host_data
              !
-#if defined(_OPENACC)
-!$acc parallel loop
-#else
-!$omp parallel do
-#endif
+             !$acc parallel loop
              DO ir = 1, desc%nnr
                 rhor(ir,isup) = DBLE(psi(ir))
                 rhor(ir,isdw) = AIMAG(psi(ir))
              ENDDO
-#if !defined(_OPENACC)
-!$omp end parallel do
-#endif
           ENDDO
        ENDIF
        !
@@ -339,17 +318,10 @@ CONTAINS
           CALL invfft( 'Rho', psi, desc )
           !$acc end host_data
           !
-#if defined(_OPENACC)
-!$acc parallel loop
-#else
-!$omp parallel do
-#endif
+          !$acc parallel loop
           DO ir = 1, desc%nnr
              rhor(ir,iss) = DBLE(psi(ir))
           ENDDO
-#if !defined(_OPENACC)
-!$omp end parallel do
-#endif
        ENDDO
     ENDIF
     !
@@ -394,17 +366,10 @@ CONTAINS
           CALL invfft( 'Rho', psi, desc )
           !$acc end host_data
           !
-#if defined(_OPENACC)
-!$acc parallel loop
-#else
-!$omp parallel do
-#endif
+          !$acc parallel loop
           DO ir = 1, desc%nnr
              rhor(ir) = DBLE(psi(ir))
           ENDDO
-#if !defined(_OPENACC)
-!$omp end parallel do
-#endif
           !
        ELSEIF ( nspin == 2) THEN
           !
@@ -417,17 +382,10 @@ CONTAINS
           CALL invfft( 'Rho', psi, desc )
           !$acc end host_data
           !
-#if defined(_OPENACC)
-!$acc parallel loop
-#else
-!$omp parallel do
-#endif
+          !$acc parallel loop
           DO ir = 1, desc%nnr
              rhor(ir) = DBLE(psi(ir)) + AIMAG(psi(ir))
           ENDDO
-#if !defined(_OPENACC)
-!$omp end parallel do
-#endif
           !
        ELSE
           CALL errore( 'rho_g2r_sum_components', 'noncolinear case?', nspin )
@@ -444,29 +402,15 @@ CONTAINS
           !$acc end host_data
           !
           IF( iss == 1 ) THEN
-#if defined(_OPENACC)
-!$acc parallel loop
-#else
-!$omp parallel do
-#endif
+             !$acc parallel loop
              DO ir = 1, desc%nnr
                 rhor(ir) = DBLE(psi(ir))
              ENDDO
-#if !defined(_OPENACC)
-!$omp end parallel do
-#endif
           ELSE
-#if defined(_OPENACC)
-!$acc parallel loop
-#else
-!$omp parallel do
-#endif
+             !$acc parallel loop
              DO ir = 1, desc%nnr
                 rhor(ir) = rhor(ir) + DBLE(psi(ir))
              ENDDO
-#if !defined(_OPENACC)
-!$omp end parallel do
-#endif
           ENDIF
        ENDDO
     ENDIF
@@ -476,6 +420,5 @@ CONTAINS
     DEALLOCATE( psi )
     !
   END SUBROUTINE rho_g2r_sum_spin
-  !
   !
 END MODULE fft_rho

@@ -1,0 +1,14 @@
+&lr_input
+  outdir='./out' 
+/
+&lr_dav
+  num_eign = 5,
+  num_init = 20,
+  num_basis_max = 80,
+  residue_conv_thr = 1.0D-5,
+  poor_of_ram  = .false.
+  poor_of_ram2 = .false.
+  ltammd = .true.
+  d0psi_rs = .true.
+  ace = .true.
+/

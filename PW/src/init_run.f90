@@ -15,7 +15,7 @@ SUBROUTINE init_run()
   USE symme,              ONLY : sym_rho_init
   USE wvfct,              ONLY : nbnd, et, wg, btype
   USE control_flags,      ONLY : lmd, gamma_only, smallmem, ts_vdw, mbd_vdw, &
-                                 lforce => tprnfor, tstress, tqr, use_gpu
+                                 lforce, tstress, tqr, use_gpu
   USE gvect,              ONLY : g, gg, mill, gcutm, ig_l2g, ngm, ngm_g, &
                                  gshells, gstart ! to be communicated to the Solvers if gamma_only
   USE gvecs,              ONLY : gcutms, ngms
@@ -165,7 +165,7 @@ SUBROUTINE init_run()
   IF ( xclib_dft_is('hybrid') ) THEN
      IF ( lmovecell ) CALL infomsg('iosys', &
           'Variable cell and hybrid XC little tested')
-     CALL aceinit0()
+     CALL aceinit0( nbnd )
   END IF
   !
   CALL hinit0()

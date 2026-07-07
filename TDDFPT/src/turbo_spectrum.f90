@@ -196,7 +196,7 @@ PROGRAM lr_calculate_spectrum
        !
      ENDIF
      !
-     CALL environment_end( 'TDDFPT_PP' )
+     CALL environment_end( )
      !
   ENDIF
   !

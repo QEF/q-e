@@ -165,8 +165,36 @@ proc ::helpdoc::elementTag_ {args} {
 
     # we have a leaf or a complex-element ?
     
+    set isLeaf 0
     if { [info exists elemArr(WORD,$tag)] || [info exists elemArr(STRING,$tag)] ||
 	 [info exists elemArr(TEXT,$tag)] || [info exists elemArr(CLIST,$tag)] || [info exists elemArr(PLIST,$tag)] } {
+	set isLeaf 1
+    }
+
+    # a "mixed" element may carry EITHER a literal text body OR child tags
+    # (e.g. "default" with a literal value XOR "case" children); decide at
+    # parse time which form the body takes.
+    set isMixed 0
+    if { $isLeaf && ( [info exists elemArr(REFLIST,$tag)] || [info exists elemArr(ELEMLIST,$tag)] ) } {
+	set isMixed 1
+    }
+
+    if { $isMixed } {
+	# decide: literal-text body vs. structured (child-tag) body
+	if { [::helpdoc::bodyHasChildTags_ $tag $code] } {
+	    # structured body: parse as a complex element
+	    puts ""
+	    $stack push $node
+	    namespace eval tag $code
+	    $stack pop
+	    parseTagMsgOK_
+	} else {
+	    # literal-text body: treat as a leaf
+	    $tree set $node text [lindex $args 0]
+	    puts ok
+	}
+
+    } elseif { $isLeaf } {
 
 	# we have a simple-element (leaf)
 	$tree set $node text [lindex $args 0]
@@ -185,6 +213,58 @@ proc ::helpdoc::elementTag_ {args} {
 
 	parseTagMsgOK_;
     }
+}
+
+
+proc ::helpdoc::bodyHasChildTags_ {tag code} {
+    # Return 1 if the body ($code) of a "mixed" element begins with a
+    # child-tag invocation (its first brace-balanced top-level token is one
+    # of the element's known child-tag names), 0 otherwise.
+    variable elemArr
+
+    set childTags {}
+    foreach key {REFLIST ELEMLIST} {
+	if { [info exists elemArr($key,$tag)] } {
+	    foreach c $elemArr($key,$tag) { lappend childTags $c }
+	}
+    }
+    if { $childTags eq {} } { return 0 }
+
+    set body [string trim $code]
+    if { $body eq {} } { return 0 }
+
+    # Scan the body skipping leading whitespace and "#" comment lines, then
+    # extract the very first top-level word token (brace-balanced).
+    set len [string length $body]
+    set i 0
+    set first {}
+    while { $i < $len } {
+	set ch [string index $body $i]
+	if { [string is space $ch] } { incr i; continue }
+	if { $ch eq "#" } {
+	    # skip the rest of the comment line
+	    set nl [string first "\n" $body $i]
+	    if { $nl < 0 } { set i $len } else { set i [expr {$nl + 1}] }
+	    continue
+	}
+	# start of the first real token: read up to the next top-level
+	# whitespace, tracking brace depth so braced groups stay together
+	set depth 0
+	while { $i < $len } {
+	    set ch [string index $body $i]
+	    if { $depth == 0 && [string is space $ch] } { break }
+	    if { $ch eq "\{" } { incr depth }
+	    if { $ch eq "\}" } { incr depth -1 }
+	    append first $ch
+	    incr i
+	}
+	break
+    }
+
+    if { [lsearch -exact $childTags $first] >= 0 } {
+	return 1
+    }
+    return 0
 }
 
 

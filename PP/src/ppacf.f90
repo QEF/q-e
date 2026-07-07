@@ -41,7 +41,7 @@ PROGRAM do_ppacf
   USE mp_images,            ONLY : intra_image_comm
   USE mp_global,            ONLY : mp_startup
   USE mp_bands,             ONLY : intra_bgrp_comm
-  USE exx,                  ONLY : exxinit, exxenergy2, fock2, ecutfock, & 
+  USE exx,                  ONLY : exxinit, exxenergy2, exxenergyace, fock2, ecutfock, & 
                                    use_ace, aceinit, local_thr, nbndproj
   USE exx_base,             ONLY : exx_grid_init, exx_mp_init, exx_div_check, &
                                    exxdiv_treatment
@@ -49,8 +49,6 @@ PROGRAM do_ppacf
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : invfft
   USE lsda_mod,             ONLY : nspin
-  USE scf,                  ONLY : scf_type, create_scf_type, destroy_scf_type
-  USE scf,                  ONLY : scf_type_COPY
   USE scf,                  ONLY : rho, rho_core, rhog_core, vltot
   USE funct,                ONLY : dft_is_nonlocc, nlc, enforce_input_dft   
   USE xc_lib,               ONLY : xclib_get_id, xclib_set_auxiliary_flags,    &
@@ -92,7 +90,6 @@ PROGRAM do_ppacf
               ttcnl_check, tcnl_int
   REAL(DP), ALLOCATABLE :: Ec_nl_ngamma(:)
   REAL(DP) :: etc, etclda, etcgc,etcnl,etcnlncc
-  REAL(DP), EXTERNAL :: exxenergyace
   !
   INTEGER :: is, ir, iq, ig, icar, nnrtot
   ! counter on mesh points
@@ -174,11 +171,15 @@ PROGRAM do_ppacf
 
   REAL(DP), ALLOCATABLE    :: kin_r(:,:) ! the kinetic energy density in R-space
   !
-  TYPE(scf_type) :: exlda, eclda
-  TYPE(scf_type) :: tclda  ! the LDA kinetic-correlation energy per particle
-  TYPE(scf_type) :: ecnl   ! the nonlocal correlation energy per particle
-  TYPE(scf_type) :: tcnl   ! the Ecnl kinetic-correlation energy per particle
-  TYPE(scf_type) :: exgc, ecgc, tcgc
+  REAL(DP), ALLOCATABLE    :: exlda(:), eclda(:)
+  ! separate LDA exchange and correlation contribution (?)
+  REAL(DP), ALLOCATABLE    :: tclda(:) 
+  ! the LDA kinetic-correlation energy per particle
+  REAL(DP), ALLOCATABLE    :: ecnl (:) 
+  ! the nonlocal correlation energy per particle
+  REAL(DP), ALLOCATABLE    :: tcnl (:) 
+  ! the Ecnl kinetic-correlation energy per particle
+  REAL(DP), ALLOCATABLE    :: exgc (:), ecgc(:), tcgc(:)
   !
   NAMELIST / ppacf / code_num,outdir, prefix, n_lambda, vdW_analysis, lplot, ltks, lfock, use_ace
   !
@@ -343,26 +344,26 @@ PROGRAM do_ppacf
   !
   tot_rho (:) = rho_core(:)  + rho%of_r(:,1) 
   !
-  CALL create_scf_type(exlda)
-  exlda%of_r(:,:)=0._DP
-  CALL create_scf_type(eclda)
-  eclda%of_r(:,:)=0._DP
-  CALL create_scf_type(tclda)
-  tclda%of_r(:,:)=0._DP
-  CALL create_scf_type(exgc)
-  exgc%of_r(:,:)=0._DP
+  ALLOCATE(exlda(dfftp%nnr))
+  exlda(:)=0._DP
+  ALLOCATE(eclda(dfftp%nnr))
+  eclda(:)=0._DP
+  ALLOCATE(tclda(dfftp%nnr))
+  tclda(:)=0._DP
+  ALLOCATE(exgc(dfftp%nnr))
+  exgc(:)=0._DP
   IF (dft_is_nonlocc()) THEN
-     CALL create_scf_type( ecnl )
-     CALL create_scf_type( tcnl )
-     ecnl%of_r(:,:) = 0._DP
-     tcnl%of_r(:,:) = 0._DP
+     ALLOCATE( ecnl(dfftp%nnr) )
+     ALLOCATE( tcnl(dfftp%nnr) )
+     ecnl(:) = 0._DP
+     tcnl(:) = 0._DP
      ALLOCATE( Ec_nl_ngamma(1:ncc) )
      Ec_nl_ngamma = 0._DP
   ELSEIF(igcc /= 0) THEN
-     CALL create_scf_type( ecgc )
-     CALL create_scf_type( tcgc )
-     ecgc%of_r(:,:) = 0._DP
-     tcgc%of_r(:,:) = 0._DP
+     ALLOCATE(ecgc(dfftp%nnr))
+     ALLOCATE(tcgc(dfftp%nnr))
+     ecgc(:) = 0._DP
+     tcgc(:) = 0._DP
   ENDIF
   ttclda = 0._DP
   ttcgc = 0._DP
@@ -458,10 +459,10 @@ PROGRAM do_ppacf
                 !
                 IF(icc == ncc) THEN
                    IF (icorr /= 4 .OR. is_libxc(2)) THEN
-                     tclda%of_r(ir,1) = e2*(ec(ir)-ec_l)*rhox
+                     tclda(ir) = e2*(ec(ir)-ec_l)*rhox
                      ttclda = ttclda + e2*(ec(ir)-ec_l)*rhox
                    ELSE
-                     tclda%of_r(ir,1) = e2*(ec_cc-ec_l)*rhox
+                     tclda(ir) = e2*(ec_cc-ec_l)*rhox
                      ttclda = ttclda + e2*(ec_cc-ec_l)*rhox
                    ENDIF
                 ENDIF
@@ -477,8 +478,8 @@ PROGRAM do_ppacf
              etc = etc + e2*ec(ir)*rhox
              !
              IF (icc == ncc) THEN
-                exlda%of_r(ir,1) = e2*ex(ir)*rhox
-                eclda%of_r(ir,1) = e2*ec(ir)*rhox
+                exlda(ir) = e2*ex(ir)*rhox
+                eclda(ir) = e2*ec(ir)*rhox
              ENDIF
              !
              IF ( grho2 > epsg ) THEN
@@ -489,10 +490,10 @@ PROGRAM do_ppacf
                 etc = etc + e2*sc(ir)*segno
                 etcgc = etcgc + e2*sc(ir)*segno
                 IF (icc == ncc) THEN
-                   exgc%of_r(ir,1) = e2*sx(ir)*segno
+                   exgc(ir) = e2*sx(ir)*segno
                    IF (igcc /= 0) THEN
-                      ecgc%of_r(ir,1) = e2*sc(ir)*segno
-                      tcgc%of_r(ir,1) = e2*(sc(ir)-ecgc_l)*segno 
+                      ecgc(ir) = e2*sc(ir)*segno
+                      tcgc(ir) = e2*(sc(ir)-ecgc_l)*segno 
                       ttcgc=ttcgc+e2*(sc(ir)-ecgc_l)*segno
                    ENDIF
                 ENDIF
@@ -527,10 +528,10 @@ PROGRAM do_ppacf
                 etcldalambda = etcldalambda+e2*ec_l*rhox
                 IF (icc == ncc) THEN
                    IF (icorr /= 4 .OR. is_libxc(2) ) THEN
-                     tclda%of_r(ir,1) = e2*(ec(ir)-ec_l)*rhox
+                     tclda(ir) = e2*(ec(ir)-ec_l)*rhox
                      ttclda = ttclda + e2*(ec(ir)-ec_l)*rhox
                    ELSE
-                     tclda%of_r(ir,1) = e2*(ec_cc-ec_l)*rhox
+                     tclda(ir) = e2*(ec_cc-ec_l)*rhox
                      ttclda = ttclda + e2*(ec_cc-ec_l)*rhox
                    ENDIF
                 ENDIF
@@ -545,8 +546,8 @@ PROGRAM do_ppacf
              etc = etc + e2*ec(ir)*rhox
              !
              IF (icc == ncc) THEN
-                exlda%of_r(ir,1) = e2*ex(ir)*rhox
-                eclda%of_r(ir,1) = e2*ec(ir)*rhox
+                exlda(ir) = e2*ex(ir)*rhox
+                eclda(ir) = e2*ec(ir)*rhox
              ENDIF
              !
              etx = etx + e2*sx(ir)
@@ -555,10 +556,10 @@ PROGRAM do_ppacf
              etcgc = etcgc + e2*sc(ir)
              etc = etc + e2*sc(ir)
              IF ( icc == ncc ) THEN
-                exgc%of_r(ir,1)=e2*sx(ir)
+                exgc(ir)=e2*sx(ir)
                 IF(igcc /= 0) THEN
-                   ecgc%of_r(ir,1)=e2*sc(ir)
-                   tcgc%of_r(ir,1)=e2*(sc(ir)-ecgc_l)
+                   ecgc(ir)=e2*sc(ir)
+                   tcgc(ir)=e2*(sc(ir)-ecgc_l)
                    ttcgc=ttcgc+e2*(sc(ir)-ecgc_l)
                 ENDIF
              ENDIF
@@ -755,8 +756,8 @@ PROGRAM do_ppacf
                                                         u_vdW, potential_vdW(:,2) )
      ENDIF
      !
-     ecnl%of_r(:,1) = 0._DP
-     tcnl%of_r(:,1) = 0._DP
+     ecnl(:) = 0._DP
+     tcnl(:) = 0._DP
      !
      ALLOCATE( ecnl_c(dfftp%nnr) )
      ALLOCATE( tcnl_c(dfftp%nnr) )
@@ -793,8 +794,8 @@ PROGRAM do_ppacf
      DEALLOCATE( u_vdW )
      DEALLOCATE( thetasp, thetasm, up_vdW, um_vdW )
      !
-     ecnl%of_r(:,1) = e2*0.5_DP*DBLE(ecnl_c(:))
-     tcnl%of_r(:,1) = e2*0.5_DP*DBLE(tcnl_c(:))
+     ecnl(:) = e2*0.5_DP*DBLE(ecnl_c(:))
+     tcnl(:) = e2*0.5_DP*DBLE(tcnl_c(:))
      !
      DEALLOCATE( ecnl_c, tcnl_c )
      WRITE(stdout,*) '     Summation of ecnl: ', etcnl_check
@@ -896,39 +897,39 @@ PROGRAM do_ppacf
      !
      filplot = TRIM(prefix)//'.exlda'
      plot_num = 2
-     CALL dcopy( dfftp%nnr, exlda%of_r(:,1), 1, vltot, 1 )
+     CALL dcopy( dfftp%nnr, exlda, 1, vltot, 1 )
      CALL punch_plot( filplot, plot_num, 0., 0., 0., 0., 0., 0, 0, 0, .FALSE. )
      !
      filplot = TRIM(prefix)//'.eclda'
      plot_num = 2
-     CALL dcopy( dfftp%nnr, eclda%of_r(:,1), 1, vltot, 1 )
+     CALL dcopy( dfftp%nnr, eclda, 1, vltot, 1 )
      CALL punch_plot( filplot, plot_num, 0., 0., 0., 0., 0., 0, 0, 0, .FALSE. )
      !
      filplot = TRIM(prefix)//'.tclda'
      plot_num = 2
-     CALL dcopy( dfftp%nnr, tclda%of_r(:,1), 1, vltot, 1 )
+     CALL dcopy( dfftp%nnr, tclda, 1, vltot, 1 )
      CALL punch_plot( filplot, plot_num, 0., 0., 0., 0., 0., 0, 0, 0, .FALSE. )
      !
      IF (igcx /= 0) THEN
         filplot = TRIM(prefix)//'.exgc'
         plot_num = 2
-        CALL dcopy( dfftp%nnr, exgc%of_r(:,1), 1, vltot, 1 )
+        CALL dcopy( dfftp%nnr, exgc, 1, vltot, 1 )
         CALL punch_plot( filplot, plot_num, 0., 0., 0., 0., 0., 0, 0, 0, .FALSE.)
-        CALL destroy_scf_type( exgc )
+        DEALLOCATE( exgc )
      ENDIF
      IF (dft_is_nonlocc()) THEN
         IF (vdW_analysis==0) filplot = TRIM(prefix)//'.ecnl'
         IF (vdW_analysis==1) filplot = TRIM(prefix)//'.ecnl_Alpha'
         IF (vdW_analysis==2) filplot = TRIM(prefix)//'.ecnl_vdW'
         plot_num = 2
-        CALL dcopy( dfftp%nnr, ecnl%of_r(:,1), 1, vltot, 1 )
+        CALL dcopy( dfftp%nnr, ecnl, 1, vltot, 1 )
         CALL punch_plot( filplot, plot_num, 0., 0., 0., 0., 0., 0, 0, 0, .FALSE. )
         !
         IF (vdW_analysis==0) filplot = TRIM(prefix)//'.tcnl'
         IF (vdW_analysis==1) filplot = TRIM(prefix)//'.tcnl_Alpha'
         IF (vdW_analysis==2) filplot = TRIM(prefix)//'.tcnl_vdW'
         plot_num = 2
-        CALL dcopy( dfftp%nnr, tcnl%of_r(:,1), 1, vltot, 1 )
+        CALL dcopy( dfftp%nnr, tcnl, 1, vltot, 1 )
         CALL punch_plot( filplot, plot_num, 0., 0., 0., 0., 0., 0, 0, 0, .FALSE. )
         !
         IF (nspin == 1) THEN
@@ -955,21 +956,21 @@ PROGRAM do_ppacf
         !
         DEALLOCATE( potential_vdW )
         !
-        CALL destroy_scf_type( ecnl )
-        CALL destroy_scf_type( tcnl )
+        DEALLOCATE ( tcnl )
+        DEALLOCATE ( ecnl )
         !
      ELSEIF (igcc /= 0) THEN
         !
         filplot = TRIM(prefix)//'.ecgc'
         plot_num = 2
-        CALL dcopy( dfftp%nnr, ecgc%of_r(:,1), 1, vltot, 1 )
+        CALL dcopy( dfftp%nnr, ecgc, 1, vltot, 1 )
         CALL punch_plot( filplot, plot_num, 0., 0., 0., 0., 0., 0, 0, 0, .FALSE. )
         filplot = TRIM(prefix)//'.tcgc'
         plot_num = 2
-        CALL dcopy( dfftp%nnr, tcgc%of_r(:,1), 1, vltot, 1 )
+        CALL dcopy( dfftp%nnr, tcgc, 1, vltot, 1 )
         CALL punch_plot( filplot, plot_num, 0., 0., 0., 0., 0., 0, 0, 0, .FALSE. )
-        CALL destroy_scf_type( ecgc )
-        CALL destroy_scf_type( tcgc )
+        DEALLOCATE( ecgc )
+        DEALLOCATE( ecgc )
         !
      ENDIF
      !
@@ -977,9 +978,9 @@ PROGRAM do_ppacf
      WRITE( stdout, '(//5x,"exiting subroutine acf ..."/)')
   ENDIF
   !
-  CALL destroy_scf_type( exlda )
-  CALL destroy_scf_type( eclda )
-  CALL destroy_scf_type( tclda )
+  DEALLOCATE ( tclda )
+  DEALLOCATE ( eclda )
+  DEALLOCATE ( exlda )
   !
 9091 FORMAT( 0PF17.8,0PF17.8,0PF17.8,0PF17.8,0PF17.8,0PF17.8 )
 9092 FORMAT( 0PF17.8,0PF17.8,0PF17.8,0PF17.8 )
@@ -988,7 +989,7 @@ PROGRAM do_ppacf
 !            /'     Exc_lambda                =',0PF17.8,' Ry' )
 !9091 FORMAT(/'     Non-local contribution    =',0PF17.8,' Ry' )
 9093 FORMAT(/' delta coupling constant        =',0PE17.4E3,' ')
-  CALL environment_end('ppacf')
+  CALL environment_end( )
   CALL stop_pp
 !
 END PROGRAM do_ppacf

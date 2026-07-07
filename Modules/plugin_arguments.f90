@@ -14,15 +14,14 @@ SUBROUTINE plugin_arguments()
   !! Currently implemented: "plumed", "pw2casino" (both case-sensitive).
   !
   USE kinds,         ONLY : DP
-  !
   USE io_global,     ONLY : stdout
+  USE upf_utils,     ONLY : lowercase
   !
   USE plugin_flags
   !
   IMPLICIT NONE
   !
   INTEGER  :: iiarg, nargs, i, i0
-  CHARACTER (len=1), EXTERNAL ::  lowercase
   CHARACTER (len=256) :: arg
   !
   nargs = command_argument_count()

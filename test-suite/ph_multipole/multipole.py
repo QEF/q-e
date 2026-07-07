@@ -1,6 +1,6 @@
 """Modules and functions for extracting mutipolar and dielectric tensors."""
 # -*- coding: utf-8 -*-
-# Copyright (C) 2021-2025 Changpeng Lin
+# Copyright (C) 2021-2026 Changpeng Lin
 # All rights reserved.
 
 import argparse
@@ -10,6 +10,7 @@ import math
 import numbers
 import os
 import pickle
+import sys
 import warnings
 from collections import Counter, OrderedDict, deque
 from copy import deepcopy
@@ -498,11 +499,12 @@ def get_irreducible_qpoints(qpts, symops, is_time_reversal=True, eps=1e-5):
     q_ir = []
     inds_eq = set()
     nqts = qpts.shape[0]
+    rotations = np.array(symops["rotations"]).transpose(0, 2, 1)
     for iq in range(nqts):
         if iq in inds_eq:
             continue
         q = qpts[iq]
-        qs_rot = np.dot(symops["rotations"], q)
+        qs_rot = np.dot(rotations, q)
         if is_time_reversal:
             qs_rot = np.vstack((qs_rot, -qs_rot))
         qs_rot = np.unique(qs_rot, axis=0)
@@ -1323,9 +1325,7 @@ class Atoms(baseAtoms):
                 try:
                     cell
                 except NameError or UnboundLocalError:
-                    raise ValueError(
-                        "CELL_PARAMETERS must be set before ATOMIC_POSITIONS."
-                    )
+                    sys.exit("CELL_PARAMETERS must be set before ATOMIC_POSITIONS.")
                 atom_pos = np.zeros((nat, 3))
                 symbols = []
                 for i in range(nat):
@@ -2552,7 +2552,7 @@ class MultipoleSymmetry(object):
             elif order == 6:
                 print("Symmetry constraints on triacontadipoles tensors.")
             else:
-                print("Symmetry constraints on {order}-order multipole tensors.")
+                print(f"Symmetry constraints on {order}-order multipole tensors.")
             cons_mat_dict[order] = deque()
             null_space[order] = deque()
             ncomp_free_tensor[order] = deque()
@@ -2764,12 +2764,8 @@ class MultipoleSymmetry(object):
             size = np.power(3, order)
             cons_mat_list = deque()
 
-            """Space group or point group symmetry"""
+            """Space group symmetry"""
             for s in range(nsym):
-                # TODO: skip those operations with fractional translation?
-                trans = symops["translations"][s]
-                if np.linalg.norm(trans) > self._eps:
-                    continue
                 rotmat = symops["rotations"][s]
                 if not self._cry_basis:
                     rotmat = get_rotation_cartesian(rotmat, cell)
@@ -3036,6 +3032,8 @@ class MultipoleConstructor(object):
                         symops = self.pcell.get_symmetry()
                         q_vecs = get_irreducible_qpoints(q_vecs, symops)
                     q_vecs = q_vecs.dot(rcell) * alat_ang
+                    qnorms = np.linalg.norm(q_vecs, axis=1)
+                    q_vecs = q_vecs[np.argsort(qnorms)]
                 else:
                     if settings.Q_DIR is not None:
                         print("Creating q perturbations along a specific direction.")

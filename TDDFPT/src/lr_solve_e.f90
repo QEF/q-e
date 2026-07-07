@@ -138,13 +138,13 @@ SUBROUTINE lr_solve_e
            !
            ! Compute d0psi = P_c^+ r psi_k 
            !
-           IF ( n_ipol==3 ) THEN
+!           IF ( n_ipol==3 ) THEN
               DO ip=1,3
                  CALL lr_dvpsi_e(ik,ip,d0psi(:,:,ik,ip))
               ENDDO
-           ELSEIF ( n_ipol==1 ) THEN
-              CALL lr_dvpsi_e(ik,LR_polarization,d0psi(:,:,ik,1))
-           ENDIF
+!           ELSEIF ( n_ipol==1 ) THEN
+!              CALL lr_dvpsi_e(ik,LR_polarization,d0psi(:,:,ik,1))
+!           ENDIF
            !
         ENDDO
         !
@@ -182,7 +182,7 @@ SUBROUTINE lr_solve_e
   !
   IF ( wfc_dir /= 'undefined' ) tmp_dir = wfc_dir
   !
-  IF (.not. magnons) THEN
+  IF (eels) THEN
      !
      DO ip = 1, n_ipol
         !
@@ -195,9 +195,9 @@ SUBROUTINE lr_solve_e
         !
         CLOSE( UNIT = iund0psi)
         !
-     ENDDO
+     ENDDO   
      !
-  ELSE
+  ELSEIF(magnons) THEN
      !
      ! MAGNONS: Writing of V0psi and O_psi to the files
      !
@@ -224,6 +224,19 @@ SUBROUTINE lr_solve_e
         !
      ENDDO
      !
+  ELSE
+     !
+     DO ip = 1, 3
+        !
+        CALL diropn ( iund0psi, 'd0psi.'// &
+                    & trim(int_to_char(ip)), nwordd0psi, exst)
+        !
+        CALL davcio(d0psi(1,1,1,ip),nwordd0psi,iund0psi,1,1)
+        !
+        CLOSE( UNIT = iund0psi)
+        !
+     ENDDO
+     !                
   ENDIF
   !
   ! EELS: Writing of d0psi2 to the file.

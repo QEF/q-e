@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
@@ -34,7 +35,7 @@
   USE phcom,            ONLY : vlocq
   USE qpoint,           ONLY : xq, eigqts
   USE nlcc_ph,          ONLY : drc
-  USE global_var,       ONLY : igk_k_all, ngk_all, ngxx, veff, ig_s, ig_e
+  USE global_var,       ONLY : igk_k_all, ngk_all, ngxx, veff, ig_s, ig_e, nkpts, nk_loc
   USE mp,               ONLY : mp_barrier
   USE lsda_mod,         ONLY : nspin
   USE phus,             ONLY : int1, int1_nc, int2, int2_so, alphap
@@ -44,6 +45,8 @@
   USE fft_base,         ONLY : dfftp
   USE fft_interfaces,   ONLY : fwfft
   USE mp_images,        ONLY : nproc_image, me_image
+  USE input,            ONLY : lsda, igk_k_loc, ngk_loc
+  USE mp_global,        ONLY : my_pool_id, kunit, npool, inter_pool_comm
   ! --------------------------------------------------------------------------------
   ! Added for polaron calculations. Originally by Danny Sio, modified by Chao Lian.
   ! Shell implementation for future use.
@@ -69,11 +72,27 @@
   !! Error status
   INTEGER :: itmp
   !! Temporary variable
+  INTEGER :: kshift
+  !! Shift in the k point index to deal with the k point doubling of QE in the LSDA case.
+  !! For the nonmagnetic case, always 0.
+  !! For LSDA, 0 for spin up, nkpts for spin down.
+  INTEGER :: rest
+  !! the rest of the INTEGER division nkpts/npool
+  INTEGER :: nbase
+  !! the positon in the original list
   INTEGER, EXTERNAL :: ldim_block, gind_block
+  !!
+  INTEGER, ALLOCATABLE :: igk_k_tmp(:,:)
+  !! Temporary igk_k (needed for lsda case)
+  INTEGER, ALLOCATABLE :: ngk_tmp(:)
+  !! Temporary ngk_tmp (needed for lsda case)
   REAL(KIND = DP) :: arg
   !! the argument of the phase
   !
   CALL start_clock('init')
+  !
+  kshift = 0
+  IF (TRIM(lsda) == 'down') kshift = nkpts
   !
   IF (first_run) THEN
     ALLOCATE(vlocq(ngm, ntyp), STAT = ierr)
@@ -114,12 +133,12 @@
       ENDIF ! noncolin
     ENDIF ! okvan
     !
-    ALLOCATE(becp1(nks), STAT = ierr)
+    ALLOCATE(becp1(nk_loc), STAT = ierr)
     IF (ierr /= 0) CALL errore('init', 'Error allocating becp1', 1)
-    ALLOCATE(alphap(3, nks), STAT = ierr)
+    ALLOCATE(alphap(3, nk_loc), STAT = ierr)
     IF (ierr /= 0) CALL errore('init', 'Error allocating alphap', 1)
     !
-    DO ik = 1, nks
+    DO ik = 1, nk_loc
       CALL allocate_bec_type(nkb, nbnd, becp1(ik))
       DO ipol = 1, 3
         CALL allocate_bec_type(nkb, nbnd, alphap(ipol,ik))
@@ -148,21 +167,45 @@
   CALL init_vlocq ( xq )
   !
   IF (first_run) THEN
-    ALLOCATE(igk_k_all(npwx, nkstot), STAT = ierr)
+    ALLOCATE(igk_k_all(npwx, nkpts), STAT = ierr)
     IF (ierr /= 0) CALL errore('init', 'Error allocating igk_k_all', 1)
-    ALLOCATE(ngk_all(nkstot), STAT = ierr)
+    ALLOCATE(ngk_all(nkpts), STAT = ierr)
     IF (ierr /= 0) CALL errore('init', 'Error allocating ngk_all', 1)
+    ALLOCATE(igk_k_tmp(npwx, nkstot), STAT = ierr)
+    IF (ierr /= 0) CALL errore('init', 'Error allocating igk_k_tmp', 1)
+    ALLOCATE(ngk_tmp(nkstot), STAT = ierr)
+    IF (ierr /= 0) CALL errore('init', 'Error allocating ngk_tmp', 1)
+    ALLOCATE(igk_k_loc(npwx, nk_loc), STAT = ierr)
+    IF (ierr /= 0) CALL errore('init', 'Error allocating igk_k_loc', 1)
+    ALLOCATE(ngk_loc(nk_loc), STAT = ierr)
+    IF (ierr /= 0) CALL errore('init', 'Error allocating ngk_loc', 1)
     !
 #if defined(__MPI)
     !
-    CALL poolgather_int(npwx, nkstot, nks, igk_k(:, 1:nks), igk_k_all)
-    CALL poolgather_int1(nkstot, nks, ngk(1:nks), ngk_all)
+    CALL poolgather_int(npwx, nkstot, nks, igk_k(:, 1:nks), igk_k_tmp)
+    CALL poolgather_int1(nkstot, nks, ngk(1:nks), ngk_tmp)
+    igk_k_all(:,:) = igk_k_tmp(:,1 + kshift:nkpts+kshift)
+    ngk_all(:) = ngk_tmp(1+kshift:nkpts+kshift)
+    !
+    rest = nkpts / kunit - (nkpts / kunit / npool) * npool
+    !   
+    nbase = nk_loc * my_pool_id
+    !
+    IF ((my_pool_id + 1) > rest) nbase = nbase + rest * kunit
+    !
+    igk_k_loc(:,1:nk_loc) = igk_k_all(:,1+nbase:nk_loc+nbase)
+    ngk_loc(1:nk_loc) = ngk_all(1+nbase:nk_loc+nbase)
+    !
     !CALL mp_barrier(inter_pool_comm)
     !
 #else
     !
-    igk_k_all = igk_k
-    ngk_all = ngk
+    igk_k_tmp = igk_k
+    igk_k_all = igk_k_tmp(:,1+kshift:kshift+nkpts)
+    igk_k_loc = igk_k_all
+    ngk_tmp = ngk
+    ngk_all = ngk_tmp(1+kshift:nkpts+kshift)
+    ngk_loc = ngk_all
     !
 #endif
     !
@@ -180,8 +223,13 @@
     ! k+q, but since we only need to take the max over k and k+q this
     ! does not matter
     !
+    DEALLOCATE(igk_k_tmp, STAT = ierr)
+    IF (ierr /= 0) CALL errore('init','Error deallocating igk_k_tmp', 1)
+    DEALLOCATE(ngk_tmp, STAT = ierr)
+    IF (ierr /= 0) CALL errore('init','Error deallocating ngk_tmp', 1)
+    !
     ngxx = 0
-    DO ik = 1, nkstot
+    DO ik = 1, nkpts
       !
       itmp = MAXVAL(igk_k_all(1:ngk_all(ik), ik))
       IF (itmp > ngxx) THEN
@@ -194,8 +242,8 @@
 #if defined(__MPI)
       !
       itmp = ldim_block(ngm, nproc_image, me_image)
-      ig_s = gind_block(1, ngm, nproc_image, me_image)
-      ig_e = ig_s + itmp - 1
+      ig_s = 1 !gind_block(1, ngm, nproc_image, me_image)
+      ig_e = ngm  !ig_s + itmp - 1
       !
 #else
       !

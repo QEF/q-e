@@ -1,0 +1,35 @@
+&CONTROL
+    calculation     = 'scf'
+    prefix          = 'TaS2'
+    restart_mode    = 'from_scratch'
+    tprnfor         = .true.
+    tstress         = .true.
+/
+&SYSTEM
+    ibrav       = 4
+    ntyp        = 2
+    nat         = 3
+    a           = 3.34
+    c           = 15.0
+    ecutwfc     = 40.0
+    ecutrho     = 320.0
+    occupations = 'smearing'
+    smearing    = 'mv'
+    degauss     = 0.05
+    assume_isolated = '2D'
+/
+&ELECTRONS
+    conv_thr = 1e-12
+/
+
+ATOMIC_SPECIES
+Ta   180.95   Ta.pbesol-spn-rrkjus_psl.1.0.0.UPF
+S     32.06    S.pbesol-nl-rrkjus_psl.1.0.0.UPF
+
+ATOMIC_POSITIONS crystal
+S   0.3333333333 -0.3333333333  0.1041893571
+Ta  0.0000000000  0.0000000000  0.0000000000
+S   0.3333333333 -0.3333333333 -0.1041893571
+
+K_POINTS automatic
+4 4 1 0 0 0

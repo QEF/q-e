@@ -88,6 +88,7 @@ namespace eval ::helpdoc {
 namespace eval ::helpdoc::tag {}
 namespace eval ::helpdoc::schema {}
 source [file join $::helpdoc::dir readSchema.tcl]
+source [file join $::helpdoc::dir validate.tcl]
 
 proc ::helpdoc::openOutputs {file} {
     variable fid 
@@ -254,6 +255,12 @@ proc ::helpdoc::process {fileList} {
 	    namespace eval tag [list source $file]	    
 	    
 	    set mode default
+
+	    # --strict validation pass (runs before rendering so that
+	    # a non-conforming .def file aborts with a clear diagnostic)
+	    if { [info exists ::opt(strict)] && $::opt(strict) } {
+		::helpdoc::strictValidate $file
+	    }
 
 	    $tree walkproc root -order both print_xml
 	    $tree walkproc root -order both print_txt

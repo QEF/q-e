@@ -18,6 +18,14 @@ MODULE LAXlib
 #endif
   END INTERFACE
   !
+  INTERFACE diagh
+     MODULE PROCEDURE cdiagh_cpu_, rdiagh_cpu_
+  END INTERFACE
+  !
+  INTERFACE pdiagh
+     MODULE PROCEDURE pcdiagh_, prdiagh_
+  END INTERFACE
+  !
   CONTAINS
   !
   !----------------------------------------------------------------------------
@@ -496,4 +504,145 @@ MODULE LAXlib
     !
   END SUBROUTINE
 #endif
+  !
+  !----------------------------------------------------------------------------
+  SUBROUTINE cdiagh_cpu_( n, m, h, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
+    !----------------------------------------------------------------------------
+    !
+    !! Called by diagh interface.
+    !! Calculates eigenvalues and eigenvectors of the standard problem.
+    !! Solve Hv = ev, with H Hermitian matrix.
+    !! complex matrices version.
+    !! On output H matrix is unchanged.
+    !!
+    !! LAPACK version - uses both ZHEEVD and ZHEEVX
+    !
+    IMPLICIT NONE
+    include 'laxlib_kinds.fh'
+    !
+    INTEGER, INTENT(IN) :: n
+    !! dimension of the matrix to be diagonalized
+    INTEGER, INTENT(IN) :: m
+    !! number of eigenstates to be calculated (m <= n)
+    COMPLEX(DP), INTENT(INOUT) :: h(n,n)
+    !! matrix to be diagonalized
+    REAL(DP), INTENT(OUT) :: e(n)
+    !! eigenvalues (only the first m entries are written when m < n)
+    COMPLEX(DP), INTENT(OUT) :: v(n,m)
+    !! eigenvectors (column-wise)
+    INTEGER,  INTENT(IN)  :: me_bgrp
+    !! index of the processor within a band group
+    INTEGER,  INTENT(IN)  :: root_bgrp
+    !! index of the root processor within a band group
+    INTEGER,  INTENT(IN)  :: intra_bgrp_comm
+    !! intra band group communicator
+    !
+    CALL laxlib_cdiagh( n, m, h, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
+    !
+    RETURN
+    !
+  END SUBROUTINE cdiagh_cpu_
+  !
+  !----------------------------------------------------------------------------
+  SUBROUTINE rdiagh_cpu_( n, m, h, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
+    !----------------------------------------------------------------------------
+    !
+    !! Called by diagh interface.
+    !! Calculates eigenvalues and eigenvectors of the standard problem.
+    !! Solve Hv = ev, with H symmetric matrix.
+    !! real matrices version.
+    !! On output H matrix is unchanged.
+    !!
+    !! LAPACK version - uses both DSYEVD and DSYEVX
+    !
+    IMPLICIT NONE
+    include 'laxlib_kinds.fh'
+    !
+    INTEGER, INTENT(IN) :: n
+    !! dimension of the matrix to be diagonalized
+    INTEGER, INTENT(IN) :: m
+    !! number of eigenstates to be calculated (m <= n)
+    REAL(DP), INTENT(INOUT) :: h(n,n)
+    !! matrix to be diagonalized
+    REAL(DP), INTENT(OUT) :: e(n)
+    !! eigenvalues (only the first m entries are written when m < n)
+    REAL(DP), INTENT(OUT) :: v(n,m)
+    !! eigenvectors (column-wise)
+    INTEGER,  INTENT(IN)  :: me_bgrp
+    !! index of the processor within a band group
+    INTEGER,  INTENT(IN)  :: root_bgrp
+    !! index of the root processor within a band group
+    INTEGER,  INTENT(IN)  :: intra_bgrp_comm
+    !! intra band group communicator
+    !
+    CALL laxlib_rdiagh( n, m, h, e, v, me_bgrp, root_bgrp, intra_bgrp_comm )
+    !
+    RETURN
+    !
+  END SUBROUTINE rdiagh_cpu_
+  !
+  !----------------------------------------------------------------------------
+  SUBROUTINE pcdiagh_( n, h, e, v, idesc )
+    !----------------------------------------------------------------------------
+    !
+    !! Called by pdiagh interface.
+    !! Calculates eigenvalues and eigenvectors of the standard problem.
+    !! Solve Hv = ev, with H Hermitian matrix.
+    !! complex matrices version.
+    !! On output H matrix is unchanged.
+    !!
+    !! Parallel version with full data distribution
+    !!
+    !
+    IMPLICIT NONE
+    include 'laxlib_kinds.fh'
+    include 'laxlib_param.fh'
+    !
+    INTEGER, INTENT(IN) :: n
+    !! dimension of the matrix to be diagonalized and number of eigenstates to be calculated
+    COMPLEX(DP), INTENT(INOUT) :: h(n,n)
+    !! matrix to be diagonalized
+    REAL(DP), INTENT(OUT) :: e(n)
+    !! eigenvalues
+    COMPLEX(DP), INTENT(OUT) :: v(n,n)
+    !! eigenvectors (column-wise)
+    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+    !! laxlib descriptor
+    !
+    CALL laxlib_pcdiagh( n, h, e, v, idesc )
+    !
+  END SUBROUTINE pcdiagh_
+  !
+  !----------------------------------------------------------------------------
+  SUBROUTINE prdiagh_( n, h, e, v, idesc )
+    !----------------------------------------------------------------------------
+    !
+    !! Called by pdiagh interface.
+    !! Calculates eigenvalues and eigenvectors of the standard problem.
+    !! Solve Hv = ev, with H symmetric matrix.
+    !! real matrices version.
+    !! On output H matrix is unchanged.
+    !!
+    !! Parallel version with full data distribution
+    !!
+    !
+    IMPLICIT NONE
+    include 'laxlib_kinds.fh'
+    include 'laxlib_param.fh'
+    !
+    INTEGER, INTENT(IN) :: n
+    !! dimension of the matrix to be diagonalized and number of eigenstates to be calculated
+    REAL(DP), INTENT(INOUT) :: h(n,n)
+    !! matrix to be diagonalized
+    REAL(DP), INTENT(OUT) :: e(n)
+    !! eigenvalues
+    REAL(DP), INTENT(OUT) :: v(n,n)
+    !! eigenvectors (column-wise)
+    INTEGER, INTENT(IN) :: idesc(LAX_DESC_SIZE)
+    !! laxlib descriptor
+    !
+    CALL laxlib_prdiagh( n, h, e, v, idesc )
+    !
+  END SUBROUTINE prdiagh_
+  !
 END MODULE LAXlib

@@ -2,6 +2,8 @@
 
 include	../../make.inc
 
+VPATH = @srcdir@
+
 # location of needed modules and included files (if any)
 MODFLAGS= $(BASEMOD_FLAGS) 
 
@@ -12,6 +14,7 @@ cg.o \
 cg_sub.o \
 chargedensity.o \
 cp_autopilot.o \
+cp_control.o \
 cp_emass.o \
 cp_interfaces.o \
 cp_restart_new.o \
@@ -113,9 +116,11 @@ entropy.o
 
 QEMODS=$(BASEMODS)
 
-TLDEPS= bindir mods
+# see comments in file tldeps for explanations
+TLDEPS=bindir mods
+include ../../install/tldeps
 
-all : tldeps libcp.a manycp.x cp.x wfdd.x cppp.x
+all : libcp.a manycp.x cp.x wfdd.x cppp.x
 
 manycp.x : manycp.o libcp.a $(QEMODS)
 	$(LD) $(LDFLAGS) -o manycp.x manycp.o \
@@ -140,13 +145,12 @@ wfdd.x : wfdd.o
 	$(LD) $(LDFLAGS) -o $@ wfdd.o $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../CPV/src/$@ . )
 
-tldeps :
-	if test -n "$(TLDEPS)" ; then \
-	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
-
 clean :
 	- /bin/rm -f cppp.x *.o *.mod *.i core* *_tmp.f90 fort* \
 		*.cpp *.d *.L *.a *.s cp.x manycp.x wfdd.x
 	-/bin/rm -rf ../../bin/manycp.x ../../bin/cppp.x ../../bin/cp.x ../../bin/wfdd.x
 
+
 include make.depend
+
+

@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2020 Quantum ESPRESSO group
+# Copyright (C) 2001-2025 Quantum ESPRESSO Foundation
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -6,104 +6,106 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 #
-# Makefile for fundamental math and utility libraries
+# Makefile for fundamental math and utility libraries: devXlib, MBD, W90
 
-include ../make.inc
+sinclude ../make.inc
 include install_utils
 
-# MAIN target
-
-all: libcuda
+all: libdevx libmbd libw90
 
 ###################################
-# LAPACK (includes BLAS)
+# devxlib
 ###################################
 
-liblapack:
-	$(call update_submodule,external,lapack)
-	if test ! -e $(TOPDIR)/external/lapack/liblapack.a && test -e make_lapack.inc; then \
-	  (cp make_lapack.inc $(TOPDIR)/external/lapack/make.inc; \
-	  cd $(TOPDIR)/external/lapack; $(MAKE) blaslib lapacklib); else \
-        (echo "no configuration file found for lapack"; \
-         echo "run configure from main QE dir"; exit); fi 
-lapack_clean:
-	if test -d $(TOPDIR)/external/lapack; then cd $(TOPDIR)/external/lapack; \
-          (if test -f make.inc; then $(MAKE) clean; fi); fi
+libdevx : git_devx make_devx
 
-###################################
-# FoX
-###################################
-
-libfox:
-	$(call update_submodule,external,fox)
-	if test ! -d ../FoX ; then \
-  cd $(TOPDIR)/external/fox; \
-    ./configure --prefix=$(TOPDIR)/FoX FC=$(F90) FCFLAGS="$(FOX_FLAGS)"; \
-    touch cp_test; \
-    if cp -p cp_test cp_test_1; then \
-        rm cp_test_1; \
-        echo "cp -p works"; \
-    else \
-        find -type f | xargs sed -i 's/cp -p/cp/g'; \
-    fi; \
-    rm cp_test; \
-    $(MAKE) install && make clean; \
- cd -; \
-fi
-fox_clean:
-	if test -d ../FoX; then (rm -R -f ../FoX); fi
-	if test -d $(TOPDIR)/external/fox; then cd $(TOPDIR)/external/fox; \
-          (if test -f FoX-config; then $(MAKE) clean; fi); fi
-
-###################################
-# CUDA
-###################################
-
-libcuda : $(addprefix libcuda_,$(CUDA_EXTLIBS))
-
-CUDA_PATH := $(if $(GPU_ARCH),$(CUDA_PATH),no)
-libcuda_devxlib :
+git_devx :
 	$(call update_submodule,external,devxlib)
-	cd $(TOPDIR)/external/devxlib/src; \
-	ln -fs $(TOPDIR)/make.inc ../; \
-	$(MAKE) all; \
-	touch $(TOPDIR)/install/libcuda_devxlib # do not download and configure again
+	touch git_devx
 
-libcuda_devxlib_clean:
-	if test -f libcuda_devxlib; then rm libcuda_devxlib; fi
-	if test -d ../external/devxlib; then \
-	   (cd ../external/devxlib; if test -f make.inc; then $(MAKE) clean; fi); fi
-libcuda_devxlib_veryclean:
-	if test -d ../external/devxlib; then \
-	   (cd ../external/devxlib; if test -f make.inc; then \
-	      ($(MAKE) distclean && rm -f make.inc); fi); fi
+make_devx : git_devx
+	if test ! -f $(BUILDDIR)/devxlib/make_devx; then \
+	mkdir -p $(BUILDDIR)/devxlib/src ; \
+	cd $(TOPDIR)/external/devxlib/src; \
+	ln -fs $(BUILDDIR)/make.inc ../; \
+	( $(MAKE) all && touch $(BUILDDIR)/devxlib/make_devx ) ; \
+	mv *.o *.mod *.a $(BUILDDIR)/devxlib/src/ ; fi
+
+clean_devx:
+	if test -d $(BUILDDIR)/devxlib/src; then \
+		rm -f -R $(BUILDDIR)/devxlib/*; fi
+	if test -f $(TOPDIR)/external/devxlib/make.inc; then \
+	   cd $(TOPDIR)/external/devxlib; \
+	   ( $(MAKE) clean && rm -f make.inc) ; fi
+
+distclean_devx:
+	if test ! -f git_devx; then rm git_devx ; fi
 
 ###################################
 # LIBMBD
 ###################################
 
-libmbd:
-	$(call update_submodule,external,mbd)
-	if test ! -d ../MBD; then \
-        mkdir ../MBD; \
-        cd $(TOPDIR)/external/mbd/src; \
-	export FXX=$(F90); export FXXOPT="$(F90FLAGS)"; \
-	$(MAKE) -f ../../mbd.make; cp *.mod *.a $(TOPDIR)/MBD; cd ../../.. ;fi
+libmbd: git_mbd make_mbd
 
-libmbd_clean:
-	if test -d ../MBD; then (rm -R -f ../MBD); fi
-	if test -d $(TOPDIR)/external/mbd/src; then cd $(TOPDIR)/external/mbd/src; \
+git_mbd:
+	$(call update_submodule,external,mbd)
+	touch git_mbd
+
+make_mbd: git_mbd
+	if test ! -f $(BUILDDIR)/MBD/make_mbd; then \
+        mkdir $(BUILDDIR)/MBD; \
+        cd $(TOPDIR)/external/mbd/src; \
+        export FXX=$(F90); export FXXOPT="$(F90FLAGS)"; \
+        ($(MAKE) -f ../../mbd.make && touch $(BUILDDIR)/MBD/make_mbd); \
+	mv *.o *.mod *.a $(BUILDDIR)/MBD; fi
+
+clean_mbd:
+	if test -d $(BUILDDIR)/MBD; then (rm -R -f $(BUILDDIR)/MBD); fi
+	if test -d $(TOPDIR)/external/mbd/src; then \
+		cd $(TOPDIR)/external/mbd/src; \
           $(MAKE) -f ../../mbd.make clean; fi
 
-libmbd_distclean:
-	if test -d ../MBD; then (rm -R -f ../MBD); fi
-	if test -d $(TOPDIR)/external/mbd/src; then cd $(TOPDIR)/external/mbd/src; \
-          $(MAKE) -f ../../mbd.make distclean; fi
+distclean_mbd:
+	if test ! -f git_mbd; then rm git_mbd ; fi
+
+###########################################################
+# wannier90
+###########################################################
+
+libw90: git_w90 make_w90
+
+git_w90:
+	$(call update_submodule,external,wannier90)
+	touch git_w90
+
+# compile W90 sources, install library, executables, sources,
+# respectively in lib/, bin/, obj/ under $(BUILDDIR)/wannier90
+make_w90: git_w90
+	if test ! -f $(BUILDDIR)/wannier90/make_w90; then \
+	cp $(BUILDDIR)/install/make_wannier90.inc \
+	   $(TOPDIR)/external/wannier90/make.inc ; \
+	cd $(TOPDIR)/external/wannier90 ; \
+	( $(MAKE) lib || exit 1) ; \
+	( $(MAKE) PREFIX=$(BUILDDIR)/wannier90 install && \
+	  touch $(BUILDDIR)/wannier90/make_w90 && \
+	  ln -fs $(BUILDDIR)/wannier90/bin/*.x  $(BUILDDIR)/bin/ ) ; \
+	mkdir $(BUILDDIR)/wannier90/obj ; \
+	cp src/obj/*.o src/obj/*mod $(BUILDDIR)/wannier90/obj ; fi
+
+clean_w90:
+	if test -d $(BUILDDIR)/wannier90 ; then \
+	   rm -f -R $(BUILDDIR)/wannier90/* ; fi
+	if test -d $(TOPDIR)/external/wannier90; then \
+	   cd $(TOPDIR)/external/wannier90; \
+	   ( $(MAKE) veryclean && rm make.inc ) ; fi
+
+distclean_w90:
+	if test ! -f git_w90; then rm git_w90 ; fi
 
 ###################################
 # cleaning
 ###################################
 
-clean: lapack_clean fox_clean libcuda_devxlib_clean libmbd_clean
-
-veryclean: fox_clean libcuda_devxlib_veryclean libmbd_distclean
+clean: clean_devx clean_mbd clean_w90
+veryclean: clean
+distclean: distclean_devx distclean_mbd distclean_w90

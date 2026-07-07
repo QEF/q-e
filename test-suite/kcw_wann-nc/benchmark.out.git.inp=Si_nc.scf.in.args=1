@@ -1,5 +1,9 @@
 
-     Program PWSCF v.7.1 starts on 16Feb2024 at 15:21:56 
+     Program PWSCF v.7.5 starts on 17Sep2025 at 13:45: 3 
+        Git branch: develop
+        Last git commit: 7e86c4d7f8b367fcfbff0156d653f13ca55b1b03-dirty
+        Last git commit date: Tue Sep 16 17:33:36 2025 +0000
+        Last git commit subject: Merge branch 'vhpsi' into 'develop'
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -13,8 +17,8 @@
      Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     5114 MiB available memory on the printing compute node when the environment starts
- 
+     742 MiB available memory on the printing compute node when the environment starts
+
      Waiting for input...
      Reading input from standard input
      Message from routine read_cards :
@@ -26,18 +30,18 @@
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  4
- 
+
      Subspace diagonalization in iterative solution of the eigenvalue problem:
      a serial algorithm will be used
 
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         295     295     91                 3287     3287     609
- 
+
      Using Slab Decomposition
- 
+
 
 
      bravais-lattice index     =            2
@@ -72,7 +76,7 @@
 
 
      PseudoPot. # 1 for Si read from file:
-     ../../pseudo/Si_Dojo_LDA_FR.upf
+     ../../pseudo/Si_Dojo_LDA_FR.UPF
      MD5 check sum: fa6905a911cf8388f5aa69a93393adea
      Pseudo is Norm-conserving + core correction, Zval =  4.0
      Generated using ONCVPSP code by D. R. Hamann
@@ -89,7 +93,7 @@
                l(10) =   2
 
      atomic species   valence    mass     pseudopotential
-        Si             4.00    28.08500     Si( 1.00)
+     Si                4.00    28.08500     Si( 1.00)
 
      No symmetry found
 
@@ -98,8 +102,8 @@
    Cartesian axes
 
      site n.     atom                  positions (alat units)
-         1           Si  tau(   1) = (   0.0000000   0.0000000   0.0000000  )
-         2           Si  tau(   2) = (   0.2500000   0.2500000   0.2500000  )
+         1        Si     tau(   1) = (   0.0000000   0.0000000   0.0000000  )
+         2        Si     tau(   2) = (   0.2500000   0.2500000   0.2500000  )
 
      number of k points=     8
                        cart. coord. in units 2pi/alat
@@ -143,16 +147,18 @@
 
      total cpu time spent up to now is        0.3 secs
 
+     per-process dynamical memory:    12.3 Mb
+
      Self-consistent Calculation
 
      iteration #  1     ecut=    20.00 Ry     beta= 0.70
      Davidson diagonalization with overlap
      ethr =  1.00E-02,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.7 secs
+     total cpu time spent up to now is        0.4 secs
 
-     total energy              =     -16.84950030 Ry
-     estimated scf accuracy    <       0.09401933 Ry
+     total energy              =     -16.84950016 Ry
+     estimated scf accuracy    <       0.09401930 Ry
 
      total magnetization       =    -0.00    -0.00     0.00 Bohr mag/cell
      absolute magnetization    =     0.01 Bohr mag/cell
@@ -161,10 +167,10 @@
      Davidson diagonalization with overlap
      ethr =  1.18E-03,  avg # of iterations =  1.5
 
-     total cpu time spent up to now is        1.0 secs
+     total cpu time spent up to now is        0.5 secs
 
-     total energy              =     -16.85307722 Ry
-     estimated scf accuracy    <       0.00606735 Ry
+     total energy              =     -16.85307708 Ry
+     estimated scf accuracy    <       0.00606734 Ry
 
      total magnetization       =    -0.00     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     0.01 Bohr mag/cell
@@ -173,9 +179,9 @@
      Davidson diagonalization with overlap
      ethr =  7.58E-05,  avg # of iterations =  3.2
 
-     total cpu time spent up to now is        1.3 secs
+     total cpu time spent up to now is        0.6 secs
 
-     total energy              =     -16.85468581 Ry
+     total energy              =     -16.85468567 Ry
      estimated scf accuracy    <       0.00020282 Ry
 
      total magnetization       =    -0.00    -0.00     0.00 Bohr mag/cell
@@ -185,9 +191,9 @@
      Davidson diagonalization with overlap
      ethr =  2.54E-06,  avg # of iterations =  3.6
 
-     total cpu time spent up to now is        1.5 secs
+     total cpu time spent up to now is        0.7 secs
 
-     total energy              =     -16.85476992 Ry
+     total energy              =     -16.85476978 Ry
      estimated scf accuracy    <       0.00005611 Ry
 
      total magnetization       =    -0.00    -0.00     0.00 Bohr mag/cell
@@ -197,9 +203,9 @@
      Davidson diagonalization with overlap
      ethr =  7.01E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        1.7 secs
+     total cpu time spent up to now is        0.8 secs
 
-     total energy              =     -16.85477874 Ry
+     total energy              =     -16.85477860 Ry
      estimated scf accuracy    <       0.00000126 Ry
 
      total magnetization       =    -0.00    -0.00     0.00 Bohr mag/cell
@@ -209,9 +215,9 @@
      Davidson diagonalization with overlap
      ethr =  1.57E-08,  avg # of iterations =  4.1
 
-     total cpu time spent up to now is        2.0 secs
+     total cpu time spent up to now is        0.9 secs
 
-     total energy              =     -16.85477954 Ry
+     total energy              =     -16.85477940 Ry
      estimated scf accuracy    <       0.00000005 Ry
 
      total magnetization       =     0.00    -0.00     0.00 Bohr mag/cell
@@ -221,9 +227,9 @@
      Davidson diagonalization with overlap
      ethr =  6.35E-10,  avg # of iterations =  6.6
 
-     total cpu time spent up to now is        2.3 secs
+     total cpu time spent up to now is        1.0 secs
 
-     total energy              =     -16.85477963 Ry
+     total energy              =     -16.85477949 Ry
      estimated scf accuracy    <          4.4E-09 Ry
 
      total magnetization       =     0.00    -0.00     0.00 Bohr mag/cell
@@ -233,9 +239,9 @@
      Davidson diagonalization with overlap
      ethr =  5.49E-11,  avg # of iterations =  3.5
 
-     total cpu time spent up to now is        2.5 secs
+     total cpu time spent up to now is        1.1 secs
 
-     total energy              =     -16.85477963 Ry
+     total energy              =     -16.85477949 Ry
      estimated scf accuracy    <          2.7E-09 Ry
 
      total magnetization       =     0.00    -0.00     0.00 Bohr mag/cell
@@ -250,7 +256,7 @@
      charge :     1.874649  (integrated on a sphere of radius 0.179)
      magnetization :         -0.000001   -0.000000   -0.000010
      magnetization/charge:   -0.000000   -0.000000   -0.000006
-     polar coord.: r, theta, phi [deg] :     0.000010  176.953299 -157.037019
+     polar coord.: r, theta, phi [deg] :     0.000010  176.953227 -157.037049
 
  ==============================================================================
 
@@ -259,11 +265,11 @@
      charge :     1.874650  (integrated on a sphere of radius 0.179)
      magnetization :          0.000001    0.000000    0.000009
      magnetization/charge:    0.000000    0.000000    0.000005
-     polar coord.: r, theta, phi [deg] :     0.000009    3.923280   23.072907
+     polar coord.: r, theta, phi [deg] :     0.000009    3.923366   23.072793
 
  ==============================================================================
 
-     total cpu time spent up to now is        2.7 secs
+     total cpu time spent up to now is        1.2 secs
 
      End of self-consistent calculation
 
@@ -301,13 +307,13 @@
 
      highest occupied level (ev):     6.3611
 
-!    total energy              =     -16.85477963 Ry
+!    total energy              =     -16.85477949 Ry
      estimated scf accuracy    <          2.2E-11 Ry
 
      The total energy is the sum of the following terms:
-     one-electron contribution =       4.94922252 Ry
-     hartree contribution      =       1.25613437 Ry
-     xc contribution           =      -6.26428471 Ry
+     one-electron contribution =       4.94922271 Ry
+     hartree contribution      =       1.25613428 Ry
+     xc contribution           =      -6.26428468 Ry
      ewald contribution        =     -16.79585180 Ry
 
      total magnetization       =     0.00    -0.00     0.00 Bohr mag/cell
@@ -315,49 +321,50 @@
 
      convergence has been achieved in   9 iterations
 
-     Writing all to output data dir ./out/Si_nc.save/
- 
-     init_run     :      0.18s CPU      0.23s WALL (       1 calls)
-     electrons    :      2.40s CPU      2.43s WALL (       1 calls)
+     Writing all to output data dir ./out/Si_nc.save/ :
+     XML data file, charge density, pseudopotentials, collected wavefunctions
+
+     init_run     :      0.29s CPU      0.30s WALL (       1 calls)
+     electrons    :      0.91s CPU      0.92s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :      0.14s CPU      0.16s WALL (       1 calls)
+     wfcinit      :      0.13s CPU      0.13s WALL (       1 calls)
      potinit      :      0.01s CPU      0.01s WALL (       1 calls)
-     hinit0       :      0.03s CPU      0.07s WALL (       1 calls)
+     hinit0       :      0.16s CPU      0.16s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      2.10s CPU      2.13s WALL (       9 calls)
-     sum_band     :      0.23s CPU      0.23s WALL (       9 calls)
-     v_of_rho     :      0.04s CPU      0.04s WALL (      10 calls)
-     mix_rho      :      0.02s CPU      0.02s WALL (       9 calls)
+     c_bands      :      0.82s CPU      0.82s WALL (       9 calls)
+     sum_band     :      0.07s CPU      0.07s WALL (       9 calls)
+     v_of_rho     :      0.01s CPU      0.01s WALL (      10 calls)
+     mix_rho      :      0.01s CPU      0.01s WALL (       9 calls)
 
      Called by c_bands:
-     init_us_2    :      0.03s CPU      0.03s WALL (     152 calls)
-     init_us_2:cp :      0.03s CPU      0.03s WALL (     152 calls)
-     cegterg      :      1.48s CPU      1.50s WALL (      72 calls)
+     init_us_2    :      0.01s CPU      0.01s WALL (     152 calls)
+     cegterg      :      0.64s CPU      0.65s WALL (      72 calls)
 
      Called by *egterg:
-     cdiaghg      :      0.03s CPU      0.03s WALL (     302 calls)
-     h_psi        :      1.51s CPU      1.54s WALL (     310 calls)
-     g_psi        :      0.01s CPU      0.01s WALL (     230 calls)
+     cdiaghg      :      0.01s CPU      0.01s WALL (     302 calls)
+     h_psi        :      0.68s CPU      0.68s WALL (     310 calls)
+     g_psi        :      0.00s CPU      0.00s WALL (     230 calls)
 
      Called by h_psi:
-     h_psi:calbec :      0.04s CPU      0.04s WALL (     310 calls)
-     vloc_psi     :      1.40s CPU      1.43s WALL (     310 calls)
-     add_vuspsi   :      0.06s CPU      0.06s WALL (     310 calls)
+     h_psi:calbec :      0.08s CPU      0.08s WALL (     310 calls)
+     vloc_psi     :      0.50s CPU      0.50s WALL (     310 calls)
+                                        0.00s GPU  (     310 calls)
+     add_vuspsi   :      0.10s CPU      0.10s WALL (     310 calls)
 
      General routines
-     calbec       :      0.04s CPU      0.04s WALL (     310 calls)
-     fft          :      0.01s CPU      0.05s WALL (      84 calls)
+     calbec       :      0.08s CPU      0.08s WALL (     310 calls)
+     fft          :      0.12s CPU      0.13s WALL (      84 calls)
      ffts         :      0.00s CPU      0.00s WALL (      36 calls)
-     fftw         :      1.25s CPU      1.28s WALL (    9264 calls)
- 
-     Parallel routines
- 
-     PWSCF        :      2.64s CPU      2.73s WALL
+     fftw         :      0.41s CPU      0.42s WALL (    9264 calls)
 
- 
-   This run was terminated on:  15:21:59  16Feb2024            
+     Parallel routines
+
+     PWSCF        :      1.23s CPU      1.24s WALL
+
+
+   This run was terminated on:  13:45: 4  17Sep2025            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

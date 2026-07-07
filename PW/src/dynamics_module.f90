@@ -39,7 +39,7 @@ MODULE dynamics_module
              get_ndof
    PUBLIC :: velocity_verlet 
    PUBLIC :: temperature, refold_pos, vel
-   PUBLIC :: dt, delta_t, nraise, control_temp, thermostat, elapsed_time
+   PUBLIC :: dt, delta_t, nraise, control_temp, thermostat, simulation_time
    ! FIRE parameters
    PUBLIC :: fire_nmin, fire_f_inc, fire_f_dec, fire_alpha_init, fire_falpha, fire_dtmax
    !
@@ -107,7 +107,7 @@ MODULE dynamics_module
    REAL(DP), ALLOCATABLE :: radial_distr(:,:)
    !! radial distribution
    !
-   REAL(DP)  :: elapsed_time
+   REAL(DP)  :: simulation_time
    !! elapsed time in ps (picoseconds)
    REAL(DP), PARAMETER, PUBLIC  :: RyDt_to_HaDt = RYDBERG_SI/HARTREE_SI, HaddT_to_RyddT = HARTREE_SI/RYDBERG_SI,& 
                            Ha_to_Ry = HARTREE_SI/RYDBERG_SI
@@ -238,7 +238,7 @@ CONTAINS
             !
             READ( UNIT = 4, FMT = * ) istep, etotold, tau_tmp(:,:), &
                tau_old(:,:), temp_new, temp_av, mass(:), total_mass, &
-               elapsed_time, tau_ref(:,:)
+               simulation_time, tau_ref(:,:)
             !
             CLOSE( UNIT = 4, STATUS = 'KEEP' )
             !
@@ -257,16 +257,16 @@ CONTAINS
          !
       ENDIF
       !
-      ! ... elapsed_time is in picoseconds
+      ! ... simulation_time is in picoseconds
       !
-      elapsed_time = elapsed_time + dt*2.D0*au_ps
+      simulation_time = simulation_time + dt*2.D0*au_ps
       !
       istep = istep + 1
       !
       WRITE( UNIT = stdout, &
              FMT = '(/,5X,"Entering Dynamics:",T28,"iteration",T37," = ", &
                     &I5,/,T28,"time",T37," = ",F8.4," pico-seconds",/)' ) &
-          istep, elapsed_time
+          istep, simulation_time
       !
       IF ( control_temp ) CALL apply_thermostat(temp_new, temp_av)
       !
@@ -417,11 +417,11 @@ CONTAINS
       !
       WRITE( UNIT = 4, FMT = * ) restart_verlet
       WRITE( UNIT = 4, FMT = * ) istep, etot, tau_new(:,:), tau(:,:), &
-         temp_new, temp_av, mass(:), total_mass, elapsed_time, tau_ref(:,:)
+         temp_new, temp_av, mass(:), total_mass, simulation_time, tau_ref(:,:)
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
       !
-      CALL dump_trajectory_frame( elapsed_time, temperature )
+      CALL dump_trajectory_frame( simulation_time, temperature )
       !
       ! ... here the tau are shifted
       !
@@ -441,7 +441,7 @@ CONTAINS
              ekin, temp_new, ( ekin  + etot )
       IF (tnosep) THEN  
         WRITE (stdout, '(5X,"Ions Nose Energy   = ",    F20.8," Ry",/,  & 
-                     &   5X,"Ekin + Etot + Ions Nose =",F20.8," Ry")'), &
+                     &   5X,"Ekin + Etot + Ions Nose =",F20.8," Ry")')  &
                      & Ha_to_Ry *ions_nose_energy, (ekin + etot + Ha_to_Ry * ions_nose_energy)
       END IF  
       !
@@ -546,7 +546,7 @@ CONTAINS
             !
             READ( UNIT = 4, FMT = * ) istep, etotold, tau_tmp(:,:), &
                vel(:,:), temp_new, temp_av, mass(:), total_mass, &
-               elapsed_time, tau_ref(:,:)
+               simulation_time, tau_ref(:,:)
             !
             CLOSE( UNIT = 4, STATUS = 'KEEP' )
             ! for velocity verlet velocity is always defined 
@@ -573,16 +573,16 @@ CONTAINS
          nose_energy = Ha_to_Ry * ions_nose_nrg(xnhp0, vnhp, qnp, gkbt2nhp, kbt, nhpcl, nhpdim) 
       END IF
       !
-      ! ... elapsed_time is in picoseconds
+      ! ... simulation_time is in picoseconds
       !
-      elapsed_time = elapsed_time + dt*2.D0*au_ps
+      simulation_time = simulation_time + dt*2.D0*au_ps
       !
       istep = istep + 1
       !
       WRITE( UNIT = stdout, &
              FMT = '(/,5X,"Entering Dynamics:",T28,"iteration",T37," = ", &
                     &I5,/,T28,"time",T37," = ",F8.4," pico-seconds",/)' ) &
-          istep, elapsed_time
+          istep, simulation_time
       !
       ! thermostat applied to v(t-dt/2) here    
       IF ( control_temp ) CALL apply_thermostat(temp_new, temp_av)
@@ -713,11 +713,11 @@ CONTAINS
       !
       WRITE( UNIT = 4, FMT = * ) restart_velverlet
       WRITE( UNIT = 4, FMT = * ) istep, etot, tau_new(:,:), vel_tmp(:,:), &
-         temp_new, temp_av, mass(:), total_mass, elapsed_time, tau_ref(:,:)
+         temp_new, temp_av, mass(:), total_mass, simulation_time, tau_ref(:,:)
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
       !
-      CALL dump_trajectory_frame( elapsed_time, temperature )
+      CALL dump_trajectory_frame( simulation_time, temperature )
       !
       ! ... here the tau are shifted
       !
@@ -739,7 +739,7 @@ CONTAINS
              ekin, temp_new, ( ekin  + etot )
       IF (tnosep) THEN  
         WRITE (stdout, '(5X,"Ions Nose Energy   = ",    F20.8," Ry",/,  & 
-                     &   5X,"Ekin + Etot + Ions Nose =",F20.8," Ry")'), &
+                     &   5X,"Ekin + Etot + Ions Nose =",F20.8," Ry")')  &
                      & Ha_to_Ry * nose_energy, (ekin + etot + Ha_to_Ry * nose_energy)
       END IF  
       !
@@ -903,7 +903,7 @@ CONTAINS
          !
       ENDIF
       !
-      elapsed_time = 0.D0
+      simulation_time = 0.D0
       !
    END SUBROUTINE md_init
 
@@ -1873,8 +1873,7 @@ CONTAINS
       !! Refold atomic positions.
       !
       USE ions_base,          ONLY : nat, tau
-      USE cell_base,          ONLY : alat
-      USE constraints_module, ONLY : pbc
+      USE cell_base,          ONLY : alat, pbc
       !
       IMPLICIT NONE
       !
@@ -1896,8 +1895,7 @@ CONTAINS
       !! Molecular dynamics - compute averages.
       !
       USE ions_base,          ONLY : nat, tau, fixatom
-      USE cell_base,          ONLY : alat, at
-      USE constraints_module, ONLY : pbc
+      USE cell_base,          ONLY : alat, at, pbc
       USE io_files,           ONLY : delete_if_present
       !
       IMPLICIT NONE

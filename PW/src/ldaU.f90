@@ -15,7 +15,6 @@ MODULE ldaU
   ! FIXME: lqmax should not be used (see starting_ns* below)
   USE parameters,    ONLY : ntypx, natx, sc_size
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp
-  USE control_flags, ONLY : dfpt_hub
 #if defined (__OSCDFT)
   USE plugin_flags,      ONLY : use_oscdft
   USE oscdft_base,       ONLY : oscdft_ctx
@@ -74,6 +73,9 @@ MODULE ldaU
   !! 0 --> Simplified rotationally-invariant formulation of DFT+U
   !! 1 --> Full formulation of DFT+U
   !! 2 --> Simplified rotationally-invariant formulation of DFT+U+V
+  LOGICAL :: dfpt_hub  = .FALSE.
+  !! Workaround for HP with U+V: if .true. do not deallocate arrays
+  !! dist_s and ityp_s. Also reduces the amount of printout in some routines
   INTEGER :: Hubbard_n(ntypx)
   !! the principal quantum number of the first Hubbard manifold
   INTEGER :: Hubbard_l(ntypx)
@@ -186,12 +188,6 @@ MODULE ldaU
   !! Distance between atoms in the 3x3x3 supercell (if sc_size = 1)
   INTEGER,  ALLOCATABLE :: ityp_s(:)
   !! Type of atoms in the 3x3x3 supercell (if sc_size = 1)
-  REAL(DP), ALLOCATABLE :: nsnew(:,:,:,:)
-  COMPLEX(DP), ALLOCATABLE :: nsg(:,:,:,:,:), nsgnew(:,:,:,:,:)
-  !! Generalized occupation matrices, which depend on two atomic sites.
-  !! These matrices nsg(at1,m1,viz,m2,sp) store the expectation value:
-  !! <C^\dagger_{at1,m1,sp}C_{viz,m2,sp}>, where sp = spin and
-  !! viz identifies the atom in the neighborhood of at1.
   COMPLEX(DP), ALLOCATABLE :: v_nsg(:,:,:,:,:)
   !! The kernel of the Hubbard potential (see above for the meaning of the
   !! size of the array)
@@ -510,8 +506,6 @@ CONTAINS
        ! The allocation should be moved into scf_mod ?
        !
        IF (.NOT.ALLOCATED(v_nsg))     ALLOCATE ( v_nsg ( ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin ) )
-       IF (.NOT.ALLOCATED(nsg))       ALLOCATE ( nsg   ( ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin ) )
-       IF (.NOT.ALLOCATED(nsgnew))    ALLOCATE ( nsgnew( ldmx_tot, ldmx_tot, max_num_neighbors, nat, nspin ) )
        IF (.NOT.ALLOCATED(phase_fac)) ALLOCATE ( phase_fac(nat*num_uc))
        IF (.NOT.ALLOCATED(ll))        ALLOCATE ( ll(ldmx_tot, ntyp))
        !
@@ -618,8 +612,6 @@ CONTAINS
      IF ( ALLOCATED( d_spin_ldau ))    DEALLOCATE( d_spin_ldau )
      IF ( ALLOCATED( ll ) )            DEALLOCATE( ll )
      IF ( ALLOCATED( v_nsg ) )         DEALLOCATE( v_nsg )
-     IF ( ALLOCATED( nsg ) )           DEALLOCATE( nsg )
-     IF ( ALLOCATED( nsgnew ) )        DEALLOCATE( nsgnew )
      IF ( ALLOCATED( phase_fac ) )     DEALLOCATE( phase_fac )
      IF ( ALLOCATED( atom_pos ) )      DEALLOCATE( atom_pos )
      IF ( ALLOCATED( at_sc ) )         DEALLOCATE( at_sc )

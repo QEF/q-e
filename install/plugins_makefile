@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2020 Quantum ESPRESSO group
+# Copyright (C) 2001-2025 Quantum ESPRESSO Foundation
 # 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -62,7 +62,7 @@ uncompress-gipaw:
 
 configure-gipaw: 
 	cd ../GIPAW ; \
-	./configure --with-qe-source=${TOPDIR}
+	./configure --with-qe-source=$(BUILDDIR)
 	touch ./configure-gipaw
 
 gipaw_clean:
@@ -79,31 +79,6 @@ gipaw_distclean:
 	#if test -d ../GIPAW; then (rm -R -f ../GIPAW ); fi
 	#if test -d ../$(GIPAW); then (rm -R -f ../$(GIPAW) ); fi
 	rm -f ../archive/$(GIPAW).tar.gz
-
-###########################################################
-# wannier90
-###########################################################
-
-w90:
-	cd ../external/wannier90; $(MAKE) || exit 1
-	-(cd ../bin; ln -fs ../external/wannier90/*.x .)
-
-w90lib:
-	$(call update_submodule,external,wannier90)
-	if test -e make_wannier90.inc; then \
-	(cp make_wannier90.inc \
-	    ../external/wannier90/make.inc ); else \
-	(echo "no make.inc file found for Wannier90"); fi
-	cd ../external/wannier90; $(MAKE) lib || exit 1
-
-w90_clean:
-	if test -d $(TOPDIR)/external/wannier90; then \
-	(cd $(TOPDIR)/external/wannier90; \
-	$(MAKE) veryclean); fi
-	rm -f $(TOPDIR)/bin/wannier90.x
-
-w90_veryclean: w90_clean
-	rm $(TOPDIR)/external/wannier90/make.inc
 
 ###########################################################
 # WANT
@@ -193,11 +168,9 @@ yambo_distclean:
 # cleaning
 ###########################################################
 
-clean: w90_clean want_clean yambo_clean gipaw_clean d3q_clean
+clean: want_clean yambo_clean gipaw_clean d3q_clean
 
-veryclean: w90_veryclean want_veryclean yambo_veryclean \
-	gipaw_veryclean d3q_veryclean
+veryclean: want_veryclean yambo_veryclean gipaw_veryclean d3q_veryclean
 
-distclean: w90_distclean want_distclean yambo_distclean \
-	gipaw_distclean d3q_distclean
+distclean: want_distclean yambo_distclean gipaw_distclean d3q_distclean
 

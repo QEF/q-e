@@ -6,7 +6,7 @@ input_description -distribution {Quantum ESPRESSO} -package {PWscf} -program  {p
         text {
             OS-CDFT allows control of the oxidation state of a transition metal element by
             constraining the occupation numbers.
-            For information on the method, see @link http://doi.org/10.1021/acs.jctc.9b00281 
+            For information on the method, see @link http://doi.org/10.1021/acs.jctc.9b00281
             C. Ku, P. H. L. Sit, J. Chem. Theory Comput. 2019, 15, 9, 4781-4789
         }
     }
@@ -54,12 +54,21 @@ input_description -distribution {Quantum ESPRESSO} -package {PWscf} -program  {p
 
         var oscdft_type -type INTEGER {
             default { 1 }
-            info {
-                1 : C. Ku, P. H. L. Sit, J. Chem. Theory Comput. 15, 4781 (2019).
-                2 : L. Ponet, E. Di Lucente, N. Marzari, npj Comput. Mater. 10, 151 (2024). 
-                
-                Note: For oscdft_type=2, only the keyword "occupation" and the keywords
-                      constraint_* can be used (see below). 
+            options {
+                info {
+                    OS-CDFT method to use.
+
+                    Note: For oscdft_type=2, only the keyword "occupation" and
+                    the keywords constraint_* can be used (see below).
+                }
+
+                opt -val 1 {
+                    C. Ku, P. H. L. Sit, J. Chem. Theory Comput. 15, 4781 (2019).
+                }
+
+                opt -val 2 {
+                    L. Ponet, E. Di Lucente, N. Marzari, npj Comput. Mater. 10, 151 (2024).
+                }
             }
         }
 
@@ -287,7 +296,7 @@ input_description -distribution {Quantum ESPRESSO} -package {PWscf} -program  {p
         }
 
         var maxiter -type INTEGER {
-            default { 0 }
+            default { 99999 }
             info {
                 Maximum OS-CDFT iterations.
             }
@@ -337,26 +346,26 @@ input_description -distribution {Quantum ESPRESSO} -package {PWscf} -program  {p
 
         var constraint_strength -type DOUBLE {
             default { 1.0D0 }
-            info { 
-                Multiplicative factor in front of the constraint term in 
+            info {
+                Multiplicative factor in front of the constraint term in
                 the potential (and energy).
             }
         }
 
         var constraint_conv_thr -type DOUBLE {
             default { 5.0D-3 }
-            info { 
+            info {
                 Convergence threshold for the mean absolute error (MAE) computed
-                by averaging the absolute difference between the current and 
+                by averaging the absolute difference between the current and
                 target occupation matrices. When this threshold is reached,
-                the constarined is released. 
+                the constarined is released.
             }
         }
 
         var constraint_maxstep -type INTEGER {
             default { 200 }
-            info { 
-                When the number of SCF iterations is larger than this number, 
+            info {
+                When the number of SCF iterations is larger than this number,
                 the constraint is not updated.
             }
         }
@@ -371,14 +380,14 @@ input_description -distribution {Quantum ESPRESSO} -package {PWscf} -program  {p
         var constraint_diag -type LOGICAL {
             default { .FALSE. }
             info {
-                If .TRUE., TARGET_OCCUPATION_NUMBERS must contain the 
-                eigenvalues of the occupation matrix instead of the full 
-                (generally) nondiagonal target occupation matrix. 
-                The code will read these eigenvalues and reconstruct the 
-                nondiagonal target occupation matrix that will be used 
+                If .TRUE., TARGET_OCCUPATION_NUMBERS must contain the
+                eigenvalues of the occupation matrix instead of the full
+                (generally) nondiagonal target occupation matrix.
+                The code will read these eigenvalues and reconstruct the
+                nondiagonal target occupation matrix that will be used
                 for constrained calculations. This should behave similarly
-                to the starting_ns_eigenvalue keyword, but better since the 
-                constraint is applied until the constraint_conv_thr is 
+                to the starting_ns_eigenvalue keyword, but better since the
+                constraint is applied until the constraint_conv_thr is
                 reached (contrary to a simple reinitialization of starting
                 occupations that is done using starting_ns_eigenvalue).
             }
@@ -414,11 +423,11 @@ input_description -distribution {Quantum ESPRESSO} -package {PWscf} -program  {p
                     col spin -type CHARACTER {
                         status { REQUIRED }
                         options {
-                            opt -val { 1, UP } {
-                                Spin up channel
+                            opt -val 'UP' -alias {'1'} {
+                                Spin up channel.
                             }
-                            opt -val { 2, DOWN } {
-                                Spin down channel
+                            opt -val 'DOWN' -alias {'DW', '2'} {
+                                Spin down channel.
                             }
                         }
                     }
@@ -563,7 +572,7 @@ input_description -distribution {Quantum ESPRESSO} -package {PWscf} -program  {p
         }
     }
     card GAMMA_VAL {
-        label { Conditional card, used only if @ref optimization_method == 'gradient descent2', ignored otherwise !  
+        label { Conditional card, used only if @ref optimization_method == 'gradient descent2', ignored otherwise !
                 This card can be used only with oscdft_type = 1.}
         syntax {
             table gamma_val {

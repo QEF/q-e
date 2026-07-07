@@ -22,6 +22,7 @@ MODULE funct
   USE kinds,          ONLY: DP
   USE beef_interface, ONLY: beef_set_type
   USE xc_lib
+  USE upf_utils,      ONLY: matches, capital
   !
   IMPLICIT NONE
   !
@@ -95,8 +96,9 @@ MODULE funct
   !              "vdw-df-c090"  ="sla+pw+c09x+vdw1+HF/4" = vdW-DF-C09-0
   !              "vdw-df3-opt1" ="sla+pw+w31x+w31c"      = vdW-DF3-opt1
   !              "vdw-df3-opt2" ="sla+pw+w32x+w32c"      = vdW-DF3-opt2
+  !              "vdw-df3-mc"   ="sla+pw+w3mx+w3mc"      = vdW-DF3-mc
   !              "vdw-df-C6"    ="sla+pw+b86r+wc6"       = vdW-DF-C6
-  !              "rvv10" = "sla+pw+rw86+pbc+vv10"        = rVV10
+  !              "rvv10"        ="sla+pw+rw86+pbc+vv10"  = rVV10
   !
   ! Any nonconflicting combination of the following keywords is acceptable:
   !
@@ -179,6 +181,7 @@ MODULE funct
   !              "ehpb"   HSE variant                    igcx =48 ! Reserved PH
   !              "hjpb"   HJS-type PBE cross check       igcx =49 ! Reserved PH
   !              "hjps"   HJS-type PBEsol crosscheck     igcx =50 ! Reserved PH
+  !              "w3mx"   vdW-DF3-mc exchange            igcx =51
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
@@ -211,11 +214,13 @@ MODULE funct
   !              "w31c"   vdW-DF3-opt1                   inlc =3
   !              "w32c"   vdW-DF3-opt2                   inlc =4
   !              "wc6"    vdW-DF-C6                      inlc =5
+  !              "w3mc"   vdW-DF3-mc                     inlc =6
   !---------------------------------------------------------------------
   !              "vv10"   rVV10                          inlc =26
   !
   ! Meta-GGA with van der Waals
-  !              "rvv10-scan" rVV10 (with b=15.7) and scan inlc=26 (PRX 6, 041005 (2016))
+  !              all MGGA functionals with rVV10 are currently set to inlc=26 and applies b=15.7.
+  !              Except for rvv10-r2scan which uses b=11.95
   !
   ! Note: as a rule, all keywords should be unique, and should be different
   ! from the short name, but there are a few exceptions.
@@ -268,6 +273,7 @@ MODULE funct
   !              vdW-DF-ob86  Klimes et al, Phys. Rev. B, 83, 195131 (2011)
   !              vdW-DF3-opt1 D. Chakraborty, K. Berland, and T. Thonhauser, JCTC 16, 5893 (2020)
   !              vdW-DF3-opt2 D. Chakraborty, K. Berland, and T. Thonhauser, JCTC 16, 5893 (2020)
+  !              vdW-DF3-mc   T. Jenkins, K. Berland, and T. Thonhauser, PRB 112, 235121 (2025)
   !              vdW-DF-C6    K. Berland, D. Chakraborty, and T. Thonhauser, PRB 99, 195418 (2019)
   !              c09x    V. R. Cooper, Phys. Rev. B 81, 161104(R) (2010)
   !              tpss    J.Tao, J.P.Perdew, V.N.Staroverov, G.E. Scuseria,
@@ -327,7 +333,7 @@ MODULE funct
   CHARACTER(LEN=4) :: nonlocc
   DIMENSION :: nonlocc(0:ncnl)
   !
-  DATA nonlocc/ 'NONE', 'VDW1', 'VDW2', 'W31C', 'W32C', 'WC6', 20*'NONE', 'VV10' /
+  DATA nonlocc/ 'NONE', 'VDW1', 'VDW2', 'W31C', 'W32C', 'WC6', 'W3MC', 19*'NONE', 'VV10' /
   !
   !
 CONTAINS
@@ -345,12 +351,11 @@ CONTAINS
     !
     ! ... local variables
     !
-    INTEGER :: len, l, i
+    INTEGER :: l, i
     CHARACTER(len=150) :: dftout, dftout_loc
     LOGICAL :: dft_defined
     LOGICAL :: check_libxc
     !
-    CHARACTER(LEN=1), EXTERNAL :: capital
     CHARACTER(LEN=4) :: lda_exch, lda_corr, gga_exch, gga_corr
     !
     INTEGER :: save_inlc, lnt, ln_nlc
@@ -368,12 +373,7 @@ CONTAINS
     !
     ! convert to uppercase
     !
-    len = LEN_TRIM(dft_)
-    dftout = ' '
-    !
-    DO l = 1, len
-       dftout(l:l) = capital( dft_(l:l) )
-    ENDDO
+    dftout = capital( TRIM(dft_) )
     !
     !
     ! ----------------------------------------------
@@ -405,6 +405,12 @@ CONTAINS
        END SELECT
        dft_defined = xclib_set_dft_IDs(1,4,43,14,0,0)
        inlc = beefvdw
+    ! Special case BEEF_LXC: BEEF-vdW via LibXC (XC_GGA_XC_BEEFVDW, ID 286)
+    ! + vdW-DF2 non-local correlation (inlc=2), same as native BEEF-vdW.
+    CASE( 'BEEF_LXC' )
+       CALL xclib_set_dft_from_name( 'BEEF_LXC' )
+       dft_defined = .TRUE.
+       inlc = 2
     ! Special case vdW-DF
     CASE( 'VDW-DF' )
        dft_defined = xclib_set_dft_IDs(1,4,4,0,0,0)
@@ -425,6 +431,10 @@ CONTAINS
     CASE( 'VDW-DF-C6' )
        dft_defined = xclib_set_dft_IDs(1,4,26,0,0,0)
        inlc = 5
+    ! Special case vdW-DF3-mc
+    CASE( 'VDW-DF3-MC' )
+       dft_defined = xclib_set_dft_IDs(1,4,51,0,0,0)
+       inlc = 6
     ! Special case vdW-DF with C09 exchange
     CASE( 'VDW-DF-C09' )
        dft_defined = xclib_set_dft_IDs(1,4,16,0,0,0)
@@ -600,7 +610,6 @@ CONTAINS
     CHARACTER(LEN=*), INTENT(IN):: name(0:n)
     CHARACTER(LEN=*), INTENT(IN):: dft
     INTEGER :: i
-    LOGICAL, EXTERNAL :: matches
     !
     matching = notset
     !
@@ -835,6 +844,11 @@ CONTAINS
       ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==26 .AND. igcc==0 .AND. inlc==5) THEN
         shortname = 'VDW-DF-C6'
       !
+      ! ... inlc==6
+      !
+      ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==51 .AND. igcc==0 .AND. inlc==6) THEN
+        shortname = 'VDW-DF3-MC'
+      !
       ! ... inlc==26
       !
       ELSEIF (iexch==1 .AND. icorr==4 .AND. igcx==13 .AND. igcc==4 .AND. inlc==26) THEN
@@ -940,9 +954,15 @@ CONTAINS
     ELSE IF ( inlc == 26 ) THEN
       !
       IF ( xclib_get_id('MGGA','EXCH') == 0 ) THEN
-        CALL xc_rVV10 (rho_valence(:,1), rho_core, nspin, enl, vnl, v)
+         ! no MetaGGA, rVV10 with default b=6.3 as in Phys. Rev. B 87, 041108(R) (2013)
+        CALL xc_rVV10  (rho_valence(:,1), rho_core, nspin, enl, vnl, v)  ! default b=6.3
+      ELSE IF (xclib_dft_is_libxc('MGGA','EXCH') .AND. xclib_get_id('MGGA','EXCH')==497 ) THEN
+         ! rVV10-R2SCAN, with b=11.95, read Phys. Rev. B 106, 075422 (2022)
+         CALL xc_rVV10 (rho_valence(:,1), rho_core, nspin, enl, vnl, v, 11.95_dp)
       ELSE
-        CALL xc_rVV10 (rho_valence(:,1), rho_core, nspin, enl, vnl, v, 15.7_dp)
+         ! All other metaGGA exchange functionals b=15.7.
+         ! as found for rvv10+scan in Phys. Rev. B 106, 075422 (2022)
+        CALL xc_rVV10  (rho_valence(:,1), rho_core, nspin, enl, vnl, v, 15.7_dp)
       END IF
       !
     ELSE

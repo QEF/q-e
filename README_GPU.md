@@ -15,17 +15,18 @@ You are advised to use the most recent version of NVidia software you can find.
 
 For compilation using CMake, see GitLab.com/QEF/q-e/-/wikis/Developers/CMake-build-system. For compilation using `configure`, see the User Guide in Doc/.
 The `configure` script checks for the presence of the nvfortran compiler and 
-of a few cuda libraries. For this reason the path pointing to the cuda toolkit
-must be present in `LD_LIBRARY_PATH`. A template for the configure command is:
+of a few cuda libraries. The NVidia SDK (standard development kit) must be
+properly installed under `$NVHPC_CUDA_HOME` and the path pointing to the cuda 
+libraries must be present in `LD_LIBRARY_PATH`. A template for the configure 
+command is:
 
 ```
-./configure --with-cuda=XX --with-cuda-runtime=YY --with-cuda-cc=ZZ --enable-openmp [ --with-scalapack=no ][ --with-cuda-mpi=yes ]
+./configure --with-gpu=cuda --with-cuda-runtime=YY --with-cuda-cc=ZZ --enable-openmp [ --with-scalapack=no ][ --with-cuda-mpi=yes ]
 ```
 
-where `XX` is the location of the CUDA Toolkit (in HPC environments is 
-typically `$NVHPC_CUDA_HOME` or `$CUDA_HOME`), `YY` is the version of 
-the cuda toolkit and `ZZ` is the compute capability of the card. You can get 
-those numbers from command `nvaccelinfo`, if you have a properly configured HPC SDK:
+where `YY` is the version of the cuda toolkit and `ZZ` is the compute capability
+of the card. You can get those numbers from command `nvaccelinfo`, if you have a
+properly configured HPC SDK:
 ```
 $ nvaccelinfo | grep -e 'Target' -e 'Driver'
 CUDA Driver Version:           11000
@@ -50,14 +51,11 @@ CUDA-aware, then enable `--with-cuda-mpi=yes` (default: no).
 
 Serial (no MPI) compilation is also supported: use `--disable-parallel`.
 
-Option --with-openacc is no longer honored: OpenACC is always needed.
+Options --with-cuda=XX and --with-openacc are no longer honored (OpenACC is 
+always needed).
 It is generally a good idea to disable Scalapack when running small test
 cases since the serial GPU eigensolver outperforms the parallel CPU
 eigensolver in many circumstances.
-
-From time to time PGI links to the wrong CUDA libraries and fails reporting a 
-problem in `cusolver` missing `GOmp` (GNU Openmp). This problem can be solved
-by removing the cuda toolkit from the `LD_LIBRARY_PATH` before compiling.
 
 Execution
 =========

@@ -2,6 +2,8 @@
 
 include ../../make.inc
 
+VPATH = @srcdir@
+
 FFTX = \
 scatter_mod.o  \
 fft_scatter_2d.o  \
@@ -58,4 +60,7 @@ fftw_dp.o : fftw_dp.c fftw_dp.h fftw.h konst.h
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L 
 
+
 include make.depend
+
+

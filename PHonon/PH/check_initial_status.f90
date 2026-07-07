@@ -136,9 +136,9 @@ SUBROUTINE check_initial_status(auxdyn)
         !
         nqs = 1
         last_q = 1
-        ALLOCATE(x_q(3,1))
-        ALLOCATE(wq(1))
-        ALLOCATE(lgamma_iq(1))
+        IF (.NOT. ALLOCATED(x_q)) ALLOCATE(x_q(3,1))
+        IF (.NOT. ALLOCATED(wq) ) ALLOCATE(wq(1))
+        IF (.NOT. ALLOCATED(lgamma_iq) ) ALLOCATE(lgamma_iq(1))
         x_q(:,1)=xq(:)
         wq(1)=1.0d0
         lgamma_iq(1)=lgamma
@@ -489,7 +489,7 @@ SUBROUTINE check_initial_status(auxdyn)
      ENDDO
      total_work = SUM(work_iq)
      total_nq = last_q - start_q + 1
-     IF (nimage > total_nq) CALL errore('image_q_irr','some images have no rapp', 1)
+     IF (nimage > total_nq) CALL errore('image_q_irr','some images have no q points', 1)
 
      work_per_image = total_work / nimage
   !

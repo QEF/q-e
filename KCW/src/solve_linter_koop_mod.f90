@@ -1,10 +1,9 @@
-! Copyright (C) 2003-2021 Quantum ESPRESSO group
+! Copyright (C) 2003-2026 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!#include "f_defs.h"
 
 MODULE solve_linter_koop_mod
 
@@ -61,8 +60,12 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
   USE qpoint,                ONLY : xq
   USE symm_base,             ONLY : ft
   USE cell_base,             ONLY : at
-  !
-  !USE cell_base,            ONLY : omega
+  ! For LDOS at q=0 - apparently unused
+  USE dfpt_type,             ONLY : dfpt_ldos_type, allocate_dfpt_ldos, &
+                                    deallocate_dfpt_ldos
+  USE localdos_mod,          ONLY : localdos_new
+  USE ener,                  ONLY : ef
+  ! end LDOS at q=0 
   !
   IMPLICIT NONE
   !
@@ -70,17 +73,17 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
   COMPLEX(DP), INTENT(out) ::  drhog_scf (ngms, nspin_mag)
   COMPLEX(DP), INTENT(out), optional :: drhor_scf(dffts%nnr,nspin_mag)
   !
+  ! For LDOS at q=0 - apparently unused
+  TYPE(dfpt_ldos_type) :: ldos_data
+  ! end LDOS at q=0 
   REAL(DP) :: averlt, &
               thresh, & ! convergence threshold
-              dr2,    & ! self-consistency error
-              dos_ef    ! DOS at Fermi energy (in calculation for a metal)
+              dr2       ! self-consistency error
   !
   COMPLEX(DP), ALLOCATABLE :: & 
               drhoscf (:,:),    & !
               drhoscfh (:,:),   & !
               dvscfout (:,:),   & !
-              ldos (:,:),       & !
-              ldoss (:,:),      & !
               dbecsum(:,:,:,:), & !
               dbecsum_nc (:,:,:,:,:,:), & !
               aux(:),           & !
@@ -90,8 +93,6 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
   COMPLEX(DP), ALLOCATABLE, target :: dvscfin(:,:)
   ! change of the scf potential 
   COMPLEX(DP), pointer :: dvscfins (:,:,:)
-  ! change of the scf potential (smooth part only)
-  REAL(DP), ALLOCATABLE :: becsum1(:,:,:)
   !
   LOGICAL :: lmetq0,     & ! true if xq=(0,0,0) in a metal
              all_conv,   & ! true if the Linear system converged for all the bands and k-points
@@ -171,14 +172,12 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
   ENDIF 
   IF (kcw_at_ks .AND. fix_orb) WRITE (stdout, '("FREEZING ORBITAL #", i4, 3x , "spin", i4)') i_ref, spin_ref
   !
-  ! if q=0 for a metal: ALLOCATE and compute local DOS at Ef
-  !
+  ! if q=0 for a metal: ALLOCATE and compute local DOS at Ef (unused?)
+  ! 
   lmetq0 = lgauss .AND. lgamma
   IF (lmetq0) THEN
-     ALLOCATE ( ldos ( dfftp%nnr, nspin_mag) )    
-     ALLOCATE ( ldoss( dffts%nnr, nspin_mag) )    
-     ALLOCATE (becsum1 ( (nhm * (nhm + 1))/2 , nat , nspin_mag))
-     CALL localdos ( ldos , ldoss , becsum1, dos_ef )
+     CALL allocate_dfpt_ldos(ldos_data)
+     CALL localdos_new(ldos_data, ef)
   ENDIF
   !
   DO ik = 1, nksq 
@@ -287,7 +286,7 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
      !
      ! Symmetrization of the response charge density.
      !
-     IF (irr_bz) CALL psymdvscf (drhoscfh)
+     IF (irr_bz) CALL psymdvscf (drhoscfh, dfftp)
      !
 
      !
@@ -355,8 +354,7 @@ subroutine solve_linter_koop ( spin_ref, i_ref, delta_vr, drhog_scf, delta_vg, d
   !
   ! The induced density in G space
   !
-  if (lmetq0) DEALLOCATE (ldoss)
-  if (lmetq0) DEALLOCATE (ldos)
+  if (lmetq0) CALL deallocate_dfpt_ldos(ldos_data)
   DEALLOCATE (aux)
   DEALLOCATE (drhoc)
   DEALLOCATE (dbecsum)
@@ -513,6 +511,7 @@ SUBROUTINE sternheimer_kernel_old(first_iter, npert, i_ref, lrdvpsi, iudvpsi, &
   USE io_global,             ONLY : stdout
   USE mp_global,             ONLY : inter_pool_comm 
   USE gvecs,                 ONLY : ngms
+  USE incdrhoscf_mod,        ONLY : incdrhoscf
   !
   LOGICAL, INTENT (IN) :: first_iter
   INTEGER, INTENT (IN) :: i_ref
@@ -645,7 +644,7 @@ SUBROUTINE sternheimer_kernel_old(first_iter, npert, i_ref, lrdvpsi, iudvpsi, &
        ENDIF
      ENDIF
      !
-     CALL incdrhoscf (drhoscf(1,current_spin,1), weight, ik, &
+     CALL incdrhoscf (drhoscf(:,current_spin,1), weight, ik, &
                       dbecsum(1,1,current_spin,1), DPsi)
     !
 !!## DEBUG 

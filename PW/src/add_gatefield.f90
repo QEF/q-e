@@ -34,7 +34,7 @@ SUBROUTINE add_gatefield( vpoten,etotgatefield,linear,quadratic )
   USE fft_base,      ONLY : dfftp
   USE fft_types,     ONLY : fft_index_to_3d
   USE mp,            ONLY : mp_bcast, mp_sum
-  USE control_flags, ONLY : iverbosity, lforce => tprnfor
+  USE control_flags, ONLY : iverbosity, lforce
   
   IMPLICIT NONE
   !

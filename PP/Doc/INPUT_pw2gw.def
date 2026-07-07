@@ -8,12 +8,12 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw2gw
            Optical properties in single-particle approach (Fermi Golden Rule).
            Interface with GW and excitonic codes.
 
-           The code computes and writes ("matrixelements" file) the optical matrix elemenents in the 
+           The code computes and writes ("matrixelements" file) the optical matrix elemenents in the
            dipole approximation.
 
            The code computes the imaginary part of the dielectric tensor xx, yy and zz ("epsX.dat", "epsY.dat",
            "epsZ.dat") and the average ("epsTOT.dat")
-          
+
         @b {Structure of the input data:}
         ============================
 
@@ -25,7 +25,7 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw2gw
     namelist INPUTPP {
 
         var prefix  -type        STRING {
-            status { MANDATORY }
+            status { REQUIRED }
             info {
                 the first part of the name of all the file written by the code
                 should be equal to the value given in the main calculations.
@@ -34,7 +34,10 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw2gw
 
 
         var outdir  -type        STRING {
-            default { "./" }
+            default -kind conditional {
+                case -test "ESPRESSO_TMPDIR environment variable is set and non-blank" { value of the ESPRESSO_TMPDIR environment variable }
+                case { "./" }
+            }
             info {
                 the scratch directory where the massive data-files are written
             }
@@ -76,22 +79,28 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw2gw
 
         var Emin  -type         REAL {
             default { 0.0 }
+            dimensionality { energy }
+            units { eV }
             info {
-                Starting photon energy for which the dielectric function is calculated (in eV)
+                Starting photon energy for which the dielectric function is calculated
             }
         }
 
         var Emax  -type         REAL {
             default { 30.0 }
+            dimensionality { energy }
+            units { eV }
             info {
-                 Highest photon energy for which the dielectric function is calculated (in eV)
+                 Highest photon energy for which the dielectric function is calculated
             }
         }
 
         var DeltaE  -type         REAL {
             default { 0.05 }
+            dimensionality { energy }
+            units { eV }
             info {
-                Energy step with which the dielectric function is calculated (in eV)
+                Energy step with which the dielectric function is calculated
             }
         }
 

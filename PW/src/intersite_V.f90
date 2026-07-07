@@ -19,8 +19,7 @@ SUBROUTINE alloc_neighborhood()
   USE kinds,           ONLY : DP
   USE constants,       ONLY : rytoev
   USE parameters,      ONLY : sc_size
-  USE control_flags,   ONLY : dfpt_hub
-  USE ldaU,            ONLY : num_uc, max_num_neighbors, neighood, &
+  USE ldaU,            ONLY : num_uc, max_num_neighbors, neighood, dfpt_hub, &
                               at_sc, sc_at, Hubbard_V, is_hubbard, is_hubbard_back, &
                               dist_s, ityp_s, deallocate_at_center_type, eps_dist
   !

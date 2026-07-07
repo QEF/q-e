@@ -39,7 +39,7 @@ subroutine g_psi (lda, n, m, npol, psi, e)
   integer :: k, i, ipol
   ! do loop counters
   !
-  call start_clock_gpu ('g_psi')
+  call start_clock ('g_psi')
   !
   !$acc parallel loop collapse(3) present(h_diag, s_diag, psi, e)
   do ipol=1,npol

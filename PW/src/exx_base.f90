@@ -26,6 +26,20 @@ MODULE exx_base
   !
   SAVE
   !
+  ! ... general purpose vars
+  !
+  COMPLEX(DP) :: d_spin(2,2,48)
+  !! spin matrices for non collinear calculations
+  !
+  REAL(DP), ALLOCATABLE :: locbuff(:,:,:)
+  !! temporary (real) buffer for wfc storage
+  REAL(DP), ALLOCATABLE :: locmat(:,:,:)
+  !! buffer for matrix of localization integrals
+  REAL(DP), ALLOCATABLE :: exxmat(:,:,:,:)
+  !! buffer for matrix of localization integrals (K)
+  COMPLEX(DP), ALLOCATABLE :: evc0(:,:,:)
+  !! old wfc (G-space) needed to compute fock3
+  !
   ! ... variables defining the auxiliary k-point grid
   !     used in X BZ integration
   !
@@ -57,6 +71,9 @@ MODULE exx_base
   !
   ! ... Internal:
   LOGICAL :: exx_grid_initialized = .FALSE.
+  !
+  REAL(DP):: exxalfa=0._DP
+  !! the parameter multiplying the exact-exchange part
   !
   ! ... variables to deal with Coulomb divergence
   !     and related issues
@@ -91,11 +108,71 @@ MODULE exx_base
   REAL(DP) :: ecutvcut
   TYPE(vcut_type) :: vcut
   !
-  REAL(DP), ALLOCATABLE :: coulomb_fac(:,:,:)
-  !! the Coulomb factor is reused between iterations
+  ! ... band parallelism types
+  enum, bind(c)
+    enumerator :: EXX_BGRP_TYP   = 0 ! unset value
+    enumerator :: EXX_BGRP_BANDS = 1 ! distribute bands over band groups
+    enumerator :: EXX_BGRP_PAIRS = 2 ! distribute band pairs over band groups 
+                                     ! (see Barnes et al., Comput. Phys. Comm., Volume 214, 2017, Pages 52-58)
+  end enum
+  !! allowed values for exx_bgrp_type
+  integer(kind(EXX_BGRP_TYP)) :: exx_bgrp_type ! (initialized in read_namelist)
   !
-  LOGICAL, ALLOCATABLE :: coulomb_done(:,:)
-  !! list of which Coulomb factors have been calculated already
+  TYPE(fft_type_descriptor) :: dfftt 
+  !
+  COMPLEX(DP), ALLOCATABLE :: exxbuff(:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: exxbuff_d(:,:,:)
+  !! Buffers: temporary (complex) buffer for wfc storage
+#if defined(__CUDA)
+  attributes(DEVICE) :: exxbuff_d
+#endif
+  !
+#if defined(__USE_INTEL_HBM_DIRECTIVES)
+!DIR$ ATTRIBUTES FASTMEM :: exxbuff
+#elif defined(__USE_CRAY_HBM_DIRECTIVES)
+!DIR$ memory(bandwidth) exxbuff
+#endif
+  !
+  INTEGER :: npwt
+  !! number of plane waves in custom grid (Gamma-only)
+  !
+  REAL(DP), ALLOCATABLE :: x_occupation(:,:)
+  !! the weights of auxiliary functions in the density matrix
+  !! GPU duplicated data
+  REAL(DP), ALLOCATABLE :: x_occupation_d(:,:)
+#if defined(__CUDA)
+  attributes(DEVICE) :: x_occupation_d
+#endif
+  INTEGER :: x_nbnd_occ
+  !! number of bands of auxiliary functions with at least 
+  !! some x_occupation > eps_occ
+  REAL(DP), PARAMETER :: eps_occ = 1.d-8
+  !! occupation threshold
+  !
+  REAL(kind=DP), DIMENSION(:,:),POINTER :: gt => null()
+  !! G-vectors in custom grid
+  REAL(kind=DP), DIMENSION(:), POINTER :: ggt => null()
+  !! G-vectors in custom gri
+  REAL(DP) :: gcutmt, gkcut
+  INTEGER :: gstart_t
+  !! gstart_t=2 if ggt(1)=0, =1 otherwise
+  INTEGER :: ngmt_g
+  !! Total number of G-vectors in custom grid
+  !
+  INTEGER :: nbndproj
+  REAL(DP)::  local_thr 
+  !! threshold for Lin Lin's SCDM localized orbitals: discard 
+  !! contribution to V_x if overlap between localized orbitals
+  !! is smaller than "local_thr".
+  !! 
+  INTEGER :: ibnd_start = 0
+  !! starting band index used in bgrp parallelization
+  INTEGER :: ibnd_end = 0
+  !! ending band index used in bgrp parallelization
+  INTEGER :: ibnd_buff_start
+  !! starting buffer index used in bgrp parallelization
+  INTEGER :: ibnd_buff_end
+  !! ending buffer index used in bgrp parallelization
   !
  CONTAINS
   !
@@ -666,49 +743,6 @@ MODULE exx_base
     DEALLOCATE ( s_scaled, ftau )
     !
   END SUBROUTINE exx_set_symm
-  !
-  !
-  !-----------------------------------------------------------------------
-  SUBROUTINE g2_convolution_all( ngm, g, xk, xkq, iq, current_k )
-    !-----------------------------------------------------------------------
-    !! Wrapper for g2_convolution.
-    !
-    USE kinds,     ONLY : DP
-    USE klist,     ONLY : nks
-    !
-    IMPLICIT NONE
-    !
-    INTEGER,  INTENT(IN) :: ngm
-    !! Number of G vectors
-    REAL(DP), INTENT(IN) :: g(3,ngm)
-    !! Cartesian components of G vectors
-    REAL(DP), INTENT(IN) :: xk(3)
-    !! current k vector
-    REAL(DP), INTENT(IN) :: xkq(3)
-    !! current q vector
-    INTEGER, INTENT(IN) :: current_k
-    !! current k-point index
-    INTEGER, INTENT(IN) :: iq
-    !! q-grid point index
-    !
-    ! ... Check if coulomb_fac has been allocated
-    IF( .NOT. ALLOCATED( coulomb_fac ) ) ALLOCATE( coulomb_fac(ngm,nqs,nks) )
-    !
-    ! ... Check if coulomb_done has been allocated
-    IF( .NOT. ALLOCATED( coulomb_done) ) THEN
-       ALLOCATE( coulomb_done(nqs,nks) )
-       coulomb_done = .FALSE.
-    ENDIF
-    !
-    ! ... return if this k and k' already computed, otherwise compute it
-    IF ( coulomb_done(iq,current_k) ) RETURN
-    !
-    CALL g2_convolution( ngm, g, xk, xkq, coulomb_fac(:,iq,current_k) )
-    !
-    coulomb_done(iq,current_k) = .TRUE.
-    !
-  END SUBROUTINE g2_convolution_all
-  !
   !
   !-----------------------------------------------------------------------
   SUBROUTINE g2_convolution( ngm, g, xk, xkq, fac )

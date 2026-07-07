@@ -4,6 +4,8 @@
 
 include ../../make.inc
 
+VPATH = @srcdir@
+
 # location of needed modules and included files (if any)
 MODFLAGS= $(BASEMOD_FLAGS)
 
@@ -109,21 +111,22 @@ parameters.o
 
 QEMODS=$(BASEMODS)
 
-TLDEPS= bindir mods
+# see comments in file tldeps for explanations
+TLDEPS=mods
+include ../../install/tldeps
 
-all: tldeps ld1.x
+all: ld1.x
 
 ld1.x: $(LD1OBJS) ld1.o $(LD1MODS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o ld1.x \
 		ld1.o $(LD1OBJS) $(LD1MODS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../atomic/src/ld1.x . )
 
-tldeps :
-	if test -n "$(TLDEPS)" ; then \
-	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
-
 clean:
 	- /bin/rm -f *.o *_tmp.f90 *.x *~ *.d *.mod *.tmp.* *.L
 	- /bin/rm -f ../../bin/ld1.x
 
+
 include make.depend
+
+

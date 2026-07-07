@@ -13,7 +13,7 @@ SUBROUTINE stress( sigma )
   !
   USE io_global,        ONLY : stdout
   USE kinds,            ONLY : DP
-  USE cell_base,        ONLY : omega, alat, at, bg
+  USE cell_base,        ONLY : omega, alat, at, bg, pbc
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
   USE constants,        ONLY : ry_kbar
   USE ener,             ONLY : etxc, vtxc
@@ -133,12 +133,11 @@ SUBROUTINE stress( sigma )
     force_d3( : , : ) = 0.0_DP
     ! taupbc are atomic positions in alat units, centered around r=0
     ALLOCATE ( taupbc(3,nat) )
-    taupbc(:,:) = tau(:,:)
-    CALL cryst_to_cart( nat, taupbc, bg, -1 ) 
-    taupbc(:,:) = taupbc(:,:) - NINT(taupbc(:,:))
-    CALL cryst_to_cart( nat, taupbc, at,  1 ) 
-    atnum(:) = get_atomic_number(atm(ityp(:)))
-    CALL dftd3_pbc_gdisp( dftd3, alat*taupbc, atnum, alat*at, &
+    DO l = 1, nat
+       taupbc(:,l) = pbc( tau(:,l)*alat )
+       atnum(l) = get_atomic_number(atm(ityp(l)))
+    END DO
+    CALL dftd3_pbc_gdisp( dftd3, taupbc, atnum, alat*at, &
                          force_d3, sigmad23 )
     sigmad23 = 2.d0*sigmad23
     DEALLOCATE( taupbc )
@@ -166,9 +165,13 @@ SUBROUTINE stress( sigma )
   !
   sigmael(:,:)=0.d0
   sigmaion(:,:)=0.d0
-  !the following is for calculating the improper stress tensor
-!  call stress_bp_efield (sigmael )
-!  call stress_ion_efield (sigmaion )
+  !
+  ! ... The following calls compute macroscopic electric-field 
+  ! ... contributions, disabled for reasons explained here at the end:
+  ! ... https://gitlab.com/QEF/q-e/-/work_items/856
+  !
+  !  call stress_bp_efield (sigmael )
+  !  call stress_ion_efield (sigmaion )
   !
   ! ... vdW dispersion contribution: xdm
   !

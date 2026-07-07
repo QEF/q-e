@@ -769,18 +769,12 @@ program test_fwinv_gpu
 end program test_fwinv_gpu
 !
 ! Dummy
-SUBROUTINE stop_clock(label)
-CHARACTER(*) :: label
-END SUBROUTINE stop_clock
 !
 SUBROUTINE start_clock(label)
 CHARACTER(*) :: label
 END SUBROUTINE start_clock
 !
-SUBROUTINE stop_clock_gpu(label)
+SUBROUTINE stop_clock(label)
 CHARACTER(*) :: label
-END SUBROUTINE stop_clock_gpu
+END SUBROUTINE stop_clock
 !
-SUBROUTINE start_clock_gpu(label)
-CHARACTER(*) :: label
-END SUBROUTINE start_clock_gpu

@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
@@ -36,12 +37,11 @@
     USE io_global,     ONLY : ionode
     USE io_files,      ONLY : prefix, diropn
     USE symm_base,     ONLY : nsym, time_reversal
-    USE pwcom,         ONLY : nks, nkstot
     USE modes,         ONLY : nmodes
     USE ep_constants,  ONLY : czero
-    USE input,         ONLY : nbndsub
+    USE input,         ONLY : nbndsub, lsda
     USE global_var,    ONLY : nbndep, dw_mat, dwmatwe, cpmew, sthmatq, dgmatwe, &
-                              sthmatwe
+                              sthmatwe, nkpts, nk_loc
     USE io_var,        ONLY : iusthwe, iudgwe
     USE symmetry,      ONLY : read_sym_ktok, sthmatq_save
     !
@@ -52,6 +52,10 @@
     !
     CHARACTER(LEN = 256) :: filint
     !! Name of the file to write/read
+    CHARACTER(LEN = 256) :: fnm1
+    !! Buffer file name
+    CHARACTER(LEN = 256) :: fnm2
+    !! Buffer file name 
     INTEGER :: lrsthmatw
     !! record length for sthmatwe
     INTEGER :: lrdgmatw
@@ -61,7 +65,7 @@
     INTEGER :: ierr
     !! Error status
     !
-    ALLOCATE(dw_mat(nbndep, nbndep, nks, 3, nmodes), STAT = ierr)
+    ALLOCATE(dw_mat(nbndep, nbndep, nk_loc, 3, nmodes), STAT = ierr)
     IF (ierr /= 0) CALL errore('wfpt_bloch2wan_setup', 'Error allocating dw_mat', 1)
     dw_mat(:, :, :, :, :) = czero
     !
@@ -73,11 +77,11 @@
     IF (ierr /= 0) CALL errore('wfpt_bloch2wan_setup', 'Error allocating cpmew', 1)
     cpmew(:, :, :, :) = czero
     !
-    ALLOCATE(sthmatq(nbndep, nbndep, nks, nmodes, nmodes), STAT = ierr)
+    ALLOCATE(sthmatq(nbndep, nbndep, nk_loc, nmodes, nmodes), STAT = ierr)
     IF (ierr /= 0) CALL errore('wfpt_bloch2wan_setup', 'Error allocating sthmatq', 1)
     sthmatq(:, :, :, :, :) = czero
     !
-    ALLOCATE(sthmatq_save(nbndep, nbndep, nks, nmodes, nmodes), STAT = ierr)
+    ALLOCATE(sthmatq_save(nbndep, nbndep, nk_loc, nmodes, nmodes), STAT = ierr)
     IF (ierr /= 0) CALL errore('wfpt_bloch2wan_setup', 'Error allocating sthmatq_save', 1)
     sthmatq_save(:, :, :, :, :) = czero
     !
@@ -89,17 +93,21 @@
     IF (ierr /= 0) CALL errore('wfpt_bloch2wan_setup', 'Error allocating sthmatwe', 1)
     sthmatwe(:, :, :, :, :) = czero
     !
-    CALL read_sym_ktok(time_reversal, nsym, nkstot)
+    CALL read_sym_ktok(time_reversal, nsym, nkpts)
     !
     ! Open the prefix.sthmatwe file
+    fnm1 = ''
+    IF (TRIM(lsda) == 'down') fnm1 = '.down'
+    fnm2 = ''
+    IF (TRIM(lsda) == 'down') fnm2 = 'down.'
     IF (ionode) THEN
       lrsthmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
-      filint = TRIM(prefix)//'.sthmatwe'
-      CALL diropn(iusthwe, 'sthmatwe', lrsthmatw, exst)
+      filint = TRIM(prefix)// TRIM(fnm1)//'.sthmatwe'
+      CALL diropn(iusthwe, TRIM(fnm2)//'sthmatwe', lrsthmatw, exst)
       !
       lrdgmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
-      filint = TRIM(prefix)//'.dgmatwe'
-      CALL diropn(iudgwe, 'dgmatwe', lrdgmatw, exst)
+      filint = TRIM(prefix)// TRIM(fnm1)//'.dgmatwe'
+      CALL diropn(iudgwe, TRIM(fnm2)//'dgmatwe', lrdgmatw, exst)
     ENDIF
     !
     !------------------------------------------------------------------------------
@@ -118,17 +126,19 @@
     !------------------------------------------------------------------------------
     !
     USE io_global,     ONLY : ionode
-    USE pwcom,         ONLY : nbnd, nks, nkstot
+    USE pwcom,         ONLY : nbnd
     USE modes,         ONLY : nmodes
     USE ep_constants,  ONLY : eps8, zero
-    USE input,         ONLY : et_loc, xk_loc, et_all, nbndsub, ahc_win_min, ahc_win_max
+    USE input,         ONLY : et_loc, xk_loc, et_all, nbndsub, ahc_win_min, ahc_win_max, &
+                              lsda
     USE global_var,    ONLY : pmec, exband, nbndep, cu, cuq, lwin, lwinq, dwmatwe, &
-                              dw_mat, cpmew, epmatq, dgmatwe, sthmatwe, sthmatq
+                              dw_mat, cpmew, epmatq, dgmatwe, sthmatwe, sthmatq, nkpts, nk_loc
     USE io_var,        ONLY : iusthwe, iudgwe
     USE bloch2wannier, ONLY : dmebloch2wan, ephbloch2wane, dgbloch2wane, sthbloch2wane
     USE io_ahc,        ONLY : read_dwmat
     USE kfold,         ONLY : ktokpmq
     USE symmetry,      ONLY : unfold_sthmat
+    USE lsda_mod,      ONLY : current_spin
     !
     IMPLICIT NONE
     !
@@ -172,11 +182,13 @@
     REAL(KIND = DP), ALLOCATABLE :: etq_opt(:, :)
     !! Hamiltonian eigenvalues at k+q within the outer window
     !
-    ALLOCATE(etk_opt(nbndep, nks), STAT = ierr)
+    ALLOCATE(etk_opt(nbndep, nk_loc), STAT = ierr)
     IF (ierr /= 0) CALL errore('wfpt_bloch2wan_iq', 'Error allocating etk_opt', 1)
-    ALLOCATE(etq_opt(nbndep, nks), STAT = ierr)
+    ALLOCATE(etq_opt(nbndep, nk_loc), STAT = ierr)
     IF (ierr /= 0) CALL errore('wfpt_bloch2wan_iq', 'Error allocating etq_opt', 1)
     !
+    current_spin = 1
+    IF (TRIM(lsda) == 'down') current_spin = 2
     xq = xqc(:, iq)
     lrsthmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
     lrdgmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
@@ -186,11 +198,11 @@
     IF (ALL(ABS(xq) < eps8)) THEN
       !
       ! Compute momentum matrix elements
-      CALL dmebloch2wan(nbnd, nbndsub, nks, nkstot, pmec, xk_loc, cu, nrr_k, irvec_k, wslen_k, lwin, exband, cpmew)
+      CALL dmebloch2wan(nbnd, nbndsub, nk_loc, nkpts, pmec, xk_loc, cu, nrr_k, irvec_k, wslen_k, lwin, exband, cpmew)
       !
       CALL read_dwmat(lwin)
       !
-      CALL ephbloch2wane(iq, xq, nbndep, nbndsub, 3 * nmodes, nks, nkstot, &
+      CALL ephbloch2wane(iq, xq, nbndep, nbndsub, 3 * nmodes, nk_loc, nkpts, &
         xk_loc, cu, cuq, dw_mat, nrr_k, irvec_k, wslen_k, dwmatwe, is_dw = .TRUE.)
       !
     ENDIF
@@ -200,7 +212,7 @@
     etk_opt = zero
     etq_opt = zero
     !
-    DO ik = 1, nks
+    DO ik = 1, nk_loc
       !
       ! slim down etk
       !
@@ -229,7 +241,7 @@
         ibnd1 = ibnd1 + 1
         IF (lwinq(ibnd1, ik)) THEN
           ibnd = ibnd + 1
-          etq_opt(ibnd, ik) = et_all(jbnd, nkq_abs)
+          etq_opt(ibnd, ik) = et_all(jbnd, nkq_abs - (current_spin - 1) * nkpts)
         ENDIF
         !
       ENDDO
@@ -239,7 +251,7 @@
     ! Compute the correction to the change of the hopping parameter
     !
     DO imode = 1, nmodes
-      CALL dgbloch2wane(nbndep, nbndsub, nks, nkstot, etk_opt, etq_opt, &
+      CALL dgbloch2wane(nbndep, nbndsub, nk_loc, nkpts, etk_opt, etq_opt, &
           ahc_win_min, ahc_win_max, xk_loc, xq, cu, cuq, &
           epmatq(:, :, :, imode, iq), nrr_k, irvec_k, wslen_k, &
           dgmatwe(:, :, :, imode))
@@ -259,7 +271,7 @@
     !
     DO imode = 1, nmodes
       DO jmode = 1, nmodes
-        CALL sthbloch2wane(nbndep, nbndsub, nks, nkstot, etk_opt, etq_opt, &
+        CALL sthbloch2wane(nbndep, nbndsub, nk_loc, nkpts, etk_opt, etq_opt, &
             ahc_win_min, ahc_win_max, xk_loc, cu, cuq, &
             epmatq(:, :, :, imode, iq), epmatq(:, :, :, jmode, iq), &
             sthmatq(:, :, :, imode, jmode), &
@@ -468,6 +480,8 @@
     !
     ALLOCATE(epmatwef(nbndsub, nbndsub, nrr_k, nmodes), STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_dw_truncated', 'Error allocating epmatwef', 1)
+    !$acc enter data create(epmatwef)
+    !$omp target enter data map(alloc:epmatwef)
     !
     ! Debye-Waller matrix element in phonon Cartesian basis is q-independent
     ! and is defined in terms of the e-ph matrix elements at q=0.
@@ -518,6 +532,8 @@
       ENDDO ! pb
     ENDDO ! ik
     !
+    !$acc exit data delete(epmatwef)
+    !$omp target exit data map(delete:epmatwef)
     DEALLOCATE(epmatwef, STAT = ierr)
     IF (ierr /= 0) CALL errore('compute_dw_truncated', 'Error deallocating epmatwef', 1)
     !
@@ -784,7 +800,7 @@
     USE modes,            ONLY : nmodes
     USE ep_constants,     ONLY : eps8, czero, twopi, ci, cone, zero
     USE input,            ONLY : nbndsub, lifc, nqc1, nqc2, nqc3, eig_read, nw_specfun, &
-                                 nstemp, specfun_el, ahc_win_min, ahc_win_max
+                                 nstemp, specfun_el, ahc_win_min, ahc_win_max, lsda
     USE io_var,           ONLY : iusthwe, iudgwe, iuxqc
     USE global_var,       ONLY : dwmatwe, dgmatwe, sthmatwe, dwf17, sthf17, dgf17,   &
                                  epf17, nkf, nbndfst, xkf,etf, etf_ks, chw_ks, chw,  &
@@ -829,6 +845,10 @@
     !
     CHARACTER(LEN = 256) :: filint
     !! Name of the file to write/read
+    CHARACTER(LEN = 256) :: fnm1
+    !! Buffer file name
+    CHARACTER(LEN = 256) :: fnm2
+    !! Buffer file name
     LOGICAL :: exst
     !! If the file exist
     INTEGER :: imode, nu, mu
@@ -936,6 +956,8 @@
     !
     ALLOCATE(epmatwef(nbndsub, nbndsub, nrr_k, nmodes), STAT = ierr)
     IF (ierr /= 0) CALL errore('ahc_run_static_wfpt', 'Error allocating epmatwef', 1)
+    !$acc enter data create(epmatwef)
+    !$omp target enter data map(alloc:epmatwef)
     ALLOCATE(w2(nmodes), STAT = ierr)
     IF (ierr /= 0) CALL errore('ahc_run_static_wfpt', 'Error allocating w2', 1)
     ALLOCATE(cufkk(nbndsub, nbndsub), STAT = ierr)
@@ -971,6 +993,10 @@
     !
     ! Read xqc from file
     !
+    fnm1 = ''
+    IF (TRIM(lsda) == 'down') fnm1 = '.down'
+    fnm2 = ''
+    IF (TRIM(lsda) == 'down') fnm2 = 'down.'
     IF (ionode) THEN
       CALL diropn(iuxqc, 'xqc', 3 * nqc_ahc, exst)
       CALL davcio(xqc_loc, 3 * nqc_ahc, iuxqc, 1, -1)
@@ -983,12 +1009,12 @@
     ! Open the prefix.sthmatwe file
     IF (ionode) THEN
       lrsthmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
-      filint = TRIM(prefix)//'.sthmatwe'
-      CALL diropn(iusthwe, 'sthmatwe', lrsthmatw, exst)
+      filint = TRIM(prefix)// TRIM(fnm1) //'.sthmatwe'
+      CALL diropn(iusthwe, TRIM(fnm2) //'sthmatwe', lrsthmatw, exst)
       !
       lrdgmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
-      filint = TRIM(prefix)//'.dgmatwe'
-      CALL diropn(iudgwe, 'dgmatwe', lrdgmatw, exst)
+      filint = TRIM(prefix)// TRIM(fnm1) //'.dgmatwe'
+      CALL diropn(iudgwe, TRIM(fnm2) //'dgmatwe', lrdgmatw, exst)
     ENDIF
     !
     CALL wigner_divide_ndegen(dwmatwe, 1, nbndsub, nrr_k, 3 * nmodes, ndegen_k, dims)
@@ -1248,6 +1274,10 @@
     IF (ierr /= 0) CALL errore('ahc_run_static_wfpt', 'Error deallocating sthf17', 1)
     DEALLOCATE(dgf17, STAT = ierr)
     IF (ierr /= 0) CALL errore('ahc_run_static_wfpt', 'Error deallocating dgf17', 1)
+    !$acc exit data delete(epmatwef)
+    !$omp target exit data map(delete:epmatwef)
+    DEALLOCATE(epmatwef, STAT = ierr)
+    IF (ierr /= 0) CALL errore('ahc_run_static_wfpt', 'Error deallocating epmatwef', 1)
     !
     CALL stop_clock('ep-int-ahc')
     !

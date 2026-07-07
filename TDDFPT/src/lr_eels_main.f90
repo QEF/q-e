@@ -23,7 +23,7 @@ PROGRAM lr_eels_main
                                   & evc1, evc1_old, norm0, n_ipol, &
                                   & d0psi, d0psi2, LR_iteration, LR_polarization, &
                                   & plot_type, nbnd_total, pseudo_hermitian, &
-                                  & itermax_int, lr_io_level, code2, &
+                                  & itermax_int, lr_io_level, &
                                   & eels, approximation, calculator, fru, fiu, &
                                   & current_w, nfs, start_freq, last_freq, chirr, &
                                   & chirz, chizz, chizr, epsm1 
@@ -62,7 +62,7 @@ PROGRAM lr_eels_main
   !
   CALL mp_startup ( )
   !
-  CALL environment_start ( code2 )
+  CALL environment_start ( 'turboEELS' )
   !
   CALL start_clock('lr_eels_main')
   !

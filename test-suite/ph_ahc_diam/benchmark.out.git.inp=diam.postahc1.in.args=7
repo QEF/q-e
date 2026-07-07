@@ -1,5 +1,5 @@
 
-     Program POSTAHC v.7.2 starts on 12Mar2024 at 19: 9: 9 
+     Program POSTAHC v.7.6-dev starts on  6Jul2026 at 10:27:41 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -10,10 +10,11 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     1 processors
+     Parallel version (MPI), running on     4 processors
 
      MPI processes distributed on     1 nodes
-     4799 MiB available memory on the printing compute node when the environment starts
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+     8189 MiB available memory on the printing compute node when the environment starts
 
      Waiting for input...
      Reading input from standard input
@@ -31,19 +32,21 @@
      Please, verify this is what you really want
 
 
-     G-vector sticks info
+     Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min          30      30     10                  222      222      45
+     Max          31      31     11                  225      225      46
      Sum         121     121     43                  893      893     181
 
      Using Slab Decomposition
 
      There are          4 q points in total.
-     Calculating        4 q points in the root core.
+     Calculating        1 q points in the root core.
      Total number of bands :        9
      Bands to calculate the self-energy :       1 to        8
 
-     Calculating electron self-energy. Loop over        4 q points
+     Calculating electron self-energy. Loop over        1 q points
 
 
 
@@ -77,7 +80,7 @@
           3     4   1.0222E-01   4.7455E-01   1.1041E-01  -5.0439E-01   2.1654E-02   5.7175E-03
           3     5   2.8338E-02   4.2935E-01  -3.4922E-02  -4.0152E-01   3.5436E-02  -1.4884E-01
           3     6   2.6748E-01   5.7422E-01  -4.1525E-02  -5.3834E-01   2.7313E-01  -1.1484E-01
-          3     7   3.7692E-01   6.6854E-01   8.9651E-05  -6.2829E-01   3.3659E-01  -3.2722E-01
+          3     7   3.7692E-01   6.6854E-01   8.9655E-05  -6.2829E-01   3.3659E-01  -3.2722E-01
           3     8  -1.0763E-01   2.1907E-01  -6.4140E-02  -2.5096E-01  -1.1593E-02  -1.3404E-01
           4     1  -1.2259E-02   1.0331E-01   2.1826E-02  -1.0809E-01  -2.9304E-02   1.3599E-02
           4     2  -5.5210E-02   2.0423E-01   2.5774E-02  -2.1219E-01  -7.3023E-02   2.5868E-02
@@ -91,7 +94,7 @@
           5     2  -5.7206E-02   2.5426E-01   4.2594E-02  -2.8055E-01  -7.3511E-02   1.3690E-01
           5     3   2.5499E-02   3.6457E-01   7.2036E-02  -3.8414E-01  -2.6973E-02   1.1127E-02
           5     4   1.6296E-01   4.0760E-01   1.1499E-01  -4.5800E-01   9.8374E-02   2.5735E-02
-          5     5   9.3209E-02   3.8266E-01  -3.3836E-02  -3.7078E-01   1.1517E-01  -2.5517E-01
+          5     5   9.3210E-02   3.8266E-01  -3.3836E-02  -3.7078E-01   1.1517E-01  -2.5517E-01
           5     6   2.3415E-02   4.2791E-01  -5.0363E-02  -4.1152E-01   5.7389E-02  -4.3583E-02
           5     7   5.0518E-02   4.7182E-01  -2.5823E-02  -4.7427E-01   7.8792E-02  -1.1686E-02
           5     8   3.4039E-02   4.0200E-01  -3.2099E-02  -4.1020E-01   7.4343E-02  -9.6803E-03
@@ -103,14 +106,14 @@
      NOT averaged in the selfen_*.dat output.
 
 
-     debye_waller :      0.00s CPU      0.00s WALL (       8 calls)
-     lower_fan    :      0.00s CPU      0.00s WALL (       4 calls)
-     upper_fan    :      0.01s CPU      0.01s WALL (       4 calls)
+     debye_waller :      0.00s CPU      0.00s WALL (       2 calls)
+     lower_fan    :      0.00s CPU      0.00s WALL (       1 calls)
+     upper_fan    :      0.00s CPU      0.00s WALL (       1 calls)
 
      POSTAHC      :      0.04s CPU      0.05s WALL
 
 
-   This run was terminated on:  19: 9: 9  12Mar2024            
+   This run was terminated on:  10:27:41   6Jul2026            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

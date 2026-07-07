@@ -1,0 +1,53 @@
+&inputepw
+prefix = 'fe',
+amass(1) = 55.8457
+dvscf_dir = 'save'
+
+etf_mem = 0
+lopt_w2b = .true.
+
+elph = .true.
+epwwrite = .false.
+epwread = .true.
+
+lsda = 'up'
+interpolate = .true.
+
+wannierize = .false.
+use_ws = .false.
+nbndsub = 9
+
+fsthick = 0.3
+degaussw = 0.005
+assume_metal = .true.
+ngaussw = -99
+
+int_mob = .false.
+iterative_bte = .true.
+scattering = .true.
+carrier = .false.
+mp_mesh_k = .true.
+epmatkqread = .false
+mob_maxiter = 200
+restart_step = 100
+selecqread = .false.
+nstemp = 2
+temps = 200 300
+
+
+nkf1 = 21
+nkf2 = 21
+nkf3 = 21
+ 
+nqf1 = 21
+nqf2 = 21
+nqf3 = 21
+
+nq1 = 3
+nq2 = 3
+nq3 = 3
+
+nk1 = 3
+nk2 = 3
+nk3 = 3
+/

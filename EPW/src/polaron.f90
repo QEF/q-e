@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
@@ -18,6 +19,9 @@
   !! Partial cleaning by JLB (Aug 2024)
   !! Adding variables by KL (Oct 2024)
   !! Optimization by DK, TYK, JLB (May 2025)
+  !! Implemention of ELPA by STiwari and KL (Aug 2025)
+  !! Supporting q-parallelism by KL and STiwari (Sep 2025)
+  !! Supporting excited states by KL (Oct 2025)
   !!
   USE kinds,     ONLY : DP
   USE buffers,   ONLY : open_buffer, get_buffer, save_buffer, close_buffer
@@ -760,14 +764,18 @@
                               nkf1, nkf2, nkf3, nqf1, nqf2, nqf3, r0_plrn,      &
                               init_ntau_plrn, nbndsub, as, time_rev_A_plrn,     &
                               model_phfreq_plrn, omega_LO_plrn, scell_mat_plrn, &
-                              acoustic_plrn, cal_acous_plrn, dtau_max_plrn
-    USE io_global,     ONLY : stdout, ionode, meta_ionode_id
+                              acoustic_plrn, cal_acous_plrn, dtau_max_plrn,     &
+                              eigen_solver_plrn, istate_relax_plrn
+    USE io_global,     ONLY : stdout, ionode, meta_ionode_id, ionode_id
+    USE io_var,        ONLY : iufileigplrn
     USE global_var,    ONLY : nqtotf, nktotf, wf
     USE cell_base,     ONLY : alat
     USE mp,            ONLY : mp_sum, mp_bcast
+    USE mp_global,     ONLY : my_pool_id
     USE parallelism,   ONLY : poolgather2
     USE mp_world,      ONLY : world_comm
     USE input,         ONLY : ethrdg_plrn
+    USE control_flags, ONLY : use_gpu
     !
     IMPLICIT NONE
     !
@@ -809,6 +817,8 @@
     !! Error status
     INTEGER :: itau
     !! Atom index
+    INTEGER :: iplrn
+    !! Polaron index
     INTEGER :: iter
     !! Iteration counter
     INTEGER :: indexkn1
@@ -823,9 +833,10 @@
     !! Number of bands in polaron calculation
     INTEGER :: nktotf_p
     !! Number of k-points in the fine grid
-    REAL(KIND = DP) :: estmteRt(nstate_plrn)
+    !REAL(KIND = DP) :: estmteRt(nstate_plrn)
     !! Polaron eigenvalue in diagonalization
-    REAL(KIND = DP) :: eigval(nstate_plrn)
+    !REAL(KIND = DP) :: eigval(nstate_plrn)
+    REAL(KIND = DP), ALLOCATABLE :: eigval(:)
     !! Polaron eigenvalue
     REAL(KIND = DP) :: esterr
     !! Difference of displacements between scf loops
@@ -941,6 +952,10 @@
     ENDIF
     CALL stop_clock('init_Ank')
     !
+    IF ( istate_relax_plrn .NE. 1 ) THEN
+      WRITE(stdout, '(5x, "Warning: the relaxed polaron is an excited state since istate_relax_plrn != 1")')
+      WRITE(stdout, '(5x, a, i8)') 'istate_relax_plrn = ', istate_relax_plrn
+    ENDIF
     WRITE(stdout, '(5x, "Starting the SCF cycles")')
     IF (full_diagon_plrn) THEN
       WRITE(stdout, '(5x, a)') "Using serial direct diagonalization"
@@ -949,6 +964,19 @@
       WRITE(stdout, '(5x, "Diagonalizing polaron Hamiltonian with a threshold of ", ES18.6)') ethrdg_plrn
       WRITE(stdout, '(5x, "Please check the results are convergent with this value")')
     ENDIF
+    !
+#if defined(__ELPA)
+    WRITE(stdout,'(/5x,a)') '************************************************************************ '
+    WRITE(stdout,'(5x,a)')  'Full diagonalization can be accelerated with ELPA Library                '
+    WRITE(stdout,'(5x,a)')  'Refer: https://elpa.mpcdf.mpg.de/ELPA_PUBLICATIONS.html for citation     '
+    WRITE(stdout,'(/5x,a)') '************************************************************************ '
+#else
+    WRITE(stdout,'(/5x,a)') '************************************************************************ '
+    WRITE(stdout,'(5x,a)')  'ELPA Library not found                                                   '
+    WRITE(stdout,'(5x,a)')  'Please install EPW with ELPA for faster and denser calculations          '
+    WRITE(stdout,'(5x,a)')  'Visit: https://elpa.mpcdf.mpg.de for installing ELPA                     '
+    WRITE(stdout,'(/5x,a)') '************************************************************************ '
+#endif
     !
     WRITE(stdout, '(/5x, a)') "Starting the self-consistent process"
     WRITE(stdout, '( 5x, a)') REPEAT('-',80)
@@ -961,13 +989,16 @@
       CALL read_Rp_in_S()
     ENDIF
     !
+    ALLOCATE(eigval(nktotf*nbnd_plrn), STAT = ierr)
+    IF (ierr /= 0) CALL errore('polaron_scf', 'Error allocating eigval', 1)
     !JLB: possibility of multiple displacements read from file, to calculate polaron energy landscape.
     !     Calculate and print the energies; .plrn files written to disk for last calculation only.
     DO itau = 1, init_ntau_plrn ! ntau_plrn=1 by default
       !
       IF (init_plrn == 6) dtau(:, :) = dtau_list(itau, :, :)
       !
-      estmteRt = 1E3
+      !estmteRt = 1E3
+      eigval(:) = 1E3
       esterr = 1E5
       DO iter = 1, niter_plrn
         ! Enforce the relation A_k = A*_{G-k} and normalize |A| = 1
@@ -1020,22 +1051,34 @@
         ! we need the highest eigenvalues instead of the lowest eigenvalues
         ! To use KS_solver, which only gives the lowest eigenvalues,
         ! we multiply -1 to the Hamiltonian to get the lowest eigenvalues
-        IF (full_diagon_plrn) THEN
-          ! Diagonalize Hamiltonian with Serial LAPACK subroutine
-          ! Used for testing or robust benchmark
-          CALL diag_serial(estmteRt, eigvec)
+        IF (full_diagon_plrn .OR. use_gpu) THEN
+          IF (eigen_solver_plrn == 'lapack') THEN
+            ! Diagonalize Hamiltonian with Serial LAPACK subroutine
+            ! Used for testing or robust benchmark
+            !CALL diag_serial(estmteRt, eigvec)
+            CALL diag_serial(eigval, eigvec)
+#if defined(__ELPA) 
+          ELSEIF (eigen_solver_plrn == 'elpa') THEN
+            !CALL diag_elpa(estmteRt, eigvec)
+            CALL diag_elpa(eigval, eigvec)
+#endif
+          ENDIF
           !
-          CALL mp_bcast(estmteRt, meta_ionode_id, world_comm)
+          !CALL mp_bcast(estmteRt, meta_ionode_id, world_comm)
+          CALL mp_bcast(eigval, meta_ionode_id, world_comm)
           CALL mp_bcast(eigvec, meta_ionode_id, world_comm)
         ELSE
           ! Diagonalize Hamiltonian with Davidson Solver
-          CALL diag_parallel(estmteRt, eigvec)
+          !CALL diag_parallel(estmteRt, eigvec)
+          CALL diag_parallel(eigval, eigvec)
         ENDIF
+        !
         CALL stop_clock('DiagonH')
         !
         ! Reverse the eigenvalues if it is the hole polaron
-        estmteRt(1:nstate_plrn) = (-type_plrn) * estmteRt(1:nstate_plrn)
-
+        !estmteRt(1:nstate_plrn) = (-type_plrn) * estmteRt(1:nstate_plrn)
+        eigval(:) = (-type_plrn) * eigval(:)
+        !
         ! impose the time-reversal symmetry: A^T_k = A_k + A^*_{-k}
         IF (time_rev_A_plrn) CALL check_time_rev_sym(eigvec)
         CALL norm_plrn_wf(eigvec, REAL(nktotf, dp))
@@ -1049,21 +1092,47 @@
         ! TODO : use exact number instead of 20 in 20e15.7
         r_cry(1:3) = IMAG(LOG(berry_phase(1:3) * EXP(- twopi * ci * r0_plrn(1:3)))) / twopi
         r_cry(1:3) = r_cry(1:3) - NINT(r_cry(1:3))
-        WRITE(stdout, '(5x, i5, 60e15.4)') iter, estmteRt(1:nstate_plrn) * ryd2ev, eplrnphon * ryd2ev, &
+        !WRITE(stdout, '(5x, i5, 60e15.4)') iter, estmteRt(1:nstate_plrn) * ryd2ev, eplrnphon * ryd2ev, &
+        !   - eplrnelec * ryd2ev, (eplrnelec + eplrnphon) * ryd2ev, esterr
+        !! We only print the first eigenvalue during the iteration
+        !WRITE(stdout, '(5x, i5, 60e15.4)') iter, eigval(1) * ryd2ev, eplrnphon * ryd2ev, &
+        !   - eplrnelec * ryd2ev, (eplrnelec + eplrnphon) * ryd2ev, esterr
+        !! the selected excited-state polron eigenvalue is printed
+        WRITE(stdout, '(5x, i5, 60e15.4)') iter, eigval(istate_relax_plrn) * ryd2ev, eplrnphon * ryd2ev, &
            - eplrnelec * ryd2ev, (eplrnelec + eplrnphon) * ryd2ev, esterr
-        eigval = estmteRt
+        !eigval = estmteRt(1:nstate_plrn)
       ENDDO
       !
       ! Calculate and write the energies
-      WRITE(stdout, '(5x, a, 50f16.7)') '      Eigenvalue (eV): ', eigval * ryd2ev
+      IF (nstate_plrn .EQ. 1) THEN
+          !WRITE(stdout, '(5x, a, 50f16.7)') '      Eigenvalue (eV): ', eigval(1) * ryd2ev
+          WRITE(stdout, '(5x, a, 50f16.7)') '      Eigenvalue (eV): ', eigval(istate_relax_plrn) * ryd2ev
+      ELSE
+          WRITE(stdout, '(5x, a)') '      Eigenvalue (eV): '
+          DO iplrn = 1, nstate_plrn, 5
+              WRITE(stdout, '(5x, a, 5f16.7)') '      ', eigval(iplrn: MIN(iplrn+4, nstate_plrn)) * ryd2ev
+          ENDDO
+      ENDIF
       WRITE(stdout, '(5x, a, f16.7)')   '     Phonon part (eV): ', eplrnphon * ryd2ev
       WRITE(stdout, '(5x, a, f16.7)')   '   Electron part (eV): ', eplrnelec * ryd2ev
       IF (init_plrn == 6) THEN
-        WRITE(stdout, '(5x, a, f16.7)') 'Formation Energy at this \dtau (eV): ', ((-type_plrn) * eigval - eplrnphon) * ryd2ev
+        !WRITE(stdout, '(5x, a, f16.7)') 'Formation Energy at this \dtau (eV): ', ((-type_plrn) * eigval - eplrnphon) * ryd2ev
+        !WRITE(stdout, '(5x, a, f16.7)') 'Formation Energy at this \dtau (eV): ', ((-type_plrn) * eigval(1) - eplrnphon) * ryd2ev
+        WRITE(stdout, '(5x, a, f16.7)') 'Formation Energy at this \dtau (eV): ', &
+                ((-type_plrn) * eigval(istate_relax_plrn) - eplrnphon) * ryd2ev
       ELSE
         WRITE(stdout, '(5x, a, f16.7)')   'Formation Energy (eV): ', (eplrnelec + eplrnphon) * ryd2ev
       ENDIF
     ENDDO ! init_ntau_plrn
+    !
+    ! Save all eigenvalues
+    IF ((full_diagon_plrn) .AND. (eigen_solver_plrn == 'elpa') .AND. (my_pool_id == ionode_id)) THEN 
+      OPEN(UNIT = iufileigplrn, FILE = 'eigenvalues.elpa.plrn')
+      WRITE(iufileigplrn, '(5x, a, 2i12)') 'polaron eigenvalues (eV). ', nktotf, nbnd_plrn
+      DO iplrn = 1, nktotf*nbnd_plrn, 5
+        WRITE(iufileigplrn, '(5x, 5f16.7)') eigval(iplrn:MIN(iplrn+4, nktotf*nbnd_plrn)) * ryd2ev
+      ENDDO
+    ENDIF
     !
     ! Calculate and write Density of State of Bqnu and Ank
     WRITE(stdout, '(5x, a)') "Calculating density of states to save in dos.plrn"
@@ -1139,6 +1208,8 @@
       DEALLOCATE(dtau_acoustic, STAT = ierr)
       IF (ierr /= 0) CALL errore('polaron_scf', 'Error deallocating dtau_acoustic', 1)
     ENDIF
+    DEALLOCATE(eigval, STAT = ierr)
+    IF (ierr /= 0) CALL errore('polaron_scf', 'Error deallocating eigval', 1)
     !
     CALL stop_clock('main_prln')
     !
@@ -1156,9 +1227,11 @@
     USE ep_constants,    ONLY : zero, czero, twopi, ci, two
     USE modes,           ONLY : nmodes
     USE global_var,      ONLY : xqf, wf, nqtotf, nktotf, nkf
-    USE input,           ONLY : type_plrn, nstate_plrn
+    USE input,           ONLY : type_plrn, nstate_plrn, istate_relax_plrn
     USE mp,              ONLY : mp_sum
     USE mp_global,       ONLY : inter_pool_comm
+    USE control_flags,   ONLY : iverbosity
+    USE io_global,       ONLY : stdout
     !
     IMPLICIT NONE
     !
@@ -1182,7 +1255,7 @@
     !! Phonon mode index
     INTEGER :: ibnd
     !! Electron band index
-    INTEGER :: iplrn
+    !INTEGER :: iplrn
     !! Polaron state index
     INTEGER :: indexkn1
     !! Combined k-point and band index
@@ -1212,18 +1285,22 @@
     ! indexkn1 -> nk, nktotf -> N_p
     ! eigvec(indexkn1, iplrn) -> A_{nk}
     ! etf_all(select_bands_plrn(ibnd), ik) - ef -> \epsilon_{nk}-\epsilon_{F}
+    IF (iverbosity == 5) WRITE(stdout, '(5x, a, i8)') 'istate_relax_plrn = ', istate_relax_plrn
     eplrnelec = zero
     ! TODO: what should we do in iplrn
-    DO iplrn = 1, nstate_plrn
+    !DO iplrn = 1, nstate_plrn
+    !iplrn = 1 !! KL: only the first (ground state) polaron is counted
       DO ik = 1, nkf
         ik_global = ikqLocal2Global(ik, nqtotf)
         DO ibnd = 1, nbnd_plrn
           indexkn1 = (ik_global - 1) * nbnd_plrn + ibnd
-          eplrnelec = eplrnelec - type_plrn * ABS(eigvec(indexkn1, iplrn))**2 / nktotf *&
-             etf_all(select_bands_plrn(ibnd), ik_global)
+          !eplrnelec = eplrnelec - type_plrn * ABS(eigvec(indexkn1, iplrn))**2 / nktotf *&
+          !   etf_all(select_bands_plrn(ibnd), ik_global)
+          eplrnelec = eplrnelec - type_plrn * ABS(eigvec(indexkn1, istate_relax_plrn))**2 &
+                 / nktotf * etf_all(select_bands_plrn(ibnd), ik_global)
         ENDDO
       ENDDO
-    ENDDO
+    !ENDDO
     CALL mp_sum(eplrnelec, inter_pool_comm)
     !
     !-----------------------------------------------------------------------
@@ -1858,8 +1935,9 @@
     SUBROUTINE cal_f_delta(energy, sigma, f_delta)
     !-----------------------------------------------------------------------
     !! Return EXP(-(energy/sigma)**2)
+    !! 07/24/25, KL: return normalized Gaussian distribution and clean up
     !-----------------------------------------------------------------------
-    USE ep_constants,  ONLY : ryd2mev, one, ryd2ev, two, zero
+    USE ep_constants,  ONLY : twopi
     !
     IMPLICIT NONE
     !
@@ -1870,7 +1948,8 @@
     REAL(KIND = DP), INTENT(out) :: f_delta(:)
     !! Gaussian function
     !
-    f_delta = EXP(-(energy / sigma)**2)
+    !f_delta = EXP(-(energy / sigma)**2)
+    f_delta = EXP(-energy**2 / (2*sigma**2))/SQRT(twopi*sigma**2)
     !
     !-----------------------------------------------------------------------
     END SUBROUTINE cal_f_delta
@@ -2051,7 +2130,7 @@
     !-----------------------------------------------------------------------
     USE global_var,    ONLY : nkf, nktotf, wf, nqtotf
     USE input,         ONLY : eps_acoustic, &
-                              g_start_band_plrn
+                              g_start_band_plrn, istate_relax_plrn
     USE ep_constants,  ONLY : czero, one, eps2, cone, eps8
     !
     IMPLICIT NONE
@@ -2070,8 +2149,8 @@
     !! Electron band index
     INTEGER :: jbnd
     !! Electron-band index
-    INTEGER :: iplrn
-    !! Polaron state index
+    !INTEGER :: iplrn
+    !!! Polaron state index
     INTEGER :: indexkn1
     !! Combined band and k-point index
     INTEGER :: indexkn2
@@ -2088,7 +2167,9 @@
       ikq = ikq_all(ik, iq)
       ik_global = ikqLocal2Global(ik, nktotf)
       ! TODO : what should do for iplrn?
-      DO iplrn = 1, 1
+      ! KL: we should not run the loop over iplrn and 
+      !     istate_relax_plrn is used to select an excited-state polaron 
+      !DO iplrn = 1, 1
         DO ibnd = 1, nbnd_plrn
           DO jbnd = 1, nbnd_plrn
             indexkn1 = (ikq - 1) * nbnd_plrn + ibnd
@@ -2099,12 +2180,13 @@
               prefac = czero
             ENDIF
             ! B_{q\nu} = \frac{1}{N_p}\sum_{nn'k}A^*_{n'k+q}\frac{g_{n'n\nu}(k, q)}{\hbar \omega_{q\nu}} A_{nk}
-            cal_Bmat = cal_Bmat + prefac * (eigvec(indexkn2, iplrn)) * CONJG(eigvec(indexkn1, iplrn)) * &
+            ! cal_Bmat = cal_Bmat + prefac * (eigvec(indexkn2, iplrn)) * CONJG(eigvec(indexkn1, iplrn)) * &
+            cal_Bmat = cal_Bmat + prefac * (eigvec(indexkn2, istate_relax_plrn)) * CONJG(eigvec(indexkn1, istate_relax_plrn)) * &
                (epf(select_bands_plrn(ibnd) - g_start_band_plrn + 1, &
                select_bands_plrn(jbnd) - g_start_band_plrn + 1, inu, ik)) !conjg
           ENDDO
         ENDDO
-      ENDDO
+      !ENDDO
     ENDDO
     ! JLB - discard zero or imaginary frequency modes
     IF (wf(inu, iq) < eps_acoustic) THEN
@@ -2218,6 +2300,7 @@
     !! Combined band and k-point index
     INTEGER :: indexkn2
     !! Combined band and k-point index
+    !! FIXME: nPlrn_l seems replicated with nstate_plrn
     INTEGER :: nPlrn_l
     !! Number of polaron states
     REAL(KIND = DP) :: norm
@@ -2254,6 +2337,327 @@
     !-----------------------------------------------------------------------
     END SUBROUTINE check_time_rev_sym
     !-----------------------------------------------------------------------
+#if defined(__ELPA)
+    !-----------------------------------------------------------------------
+    SUBROUTINE diag_elpa(estmteRt, eigvec_coef)
+    !-----------------------------------------------------------------------
+    !! This subroutine diagonalizes the full polaron Hamiltonian
+    !! using ELPA library
+    !! Implemented first version on 08/11/2025: S. Tiwari and K.F. Luo
+    !-----------------------------------------------------------------------
+    USE ep_constants,        ONLY : czero, twopi, ci, cone, zero, ryd2ev
+    USE global_var,          ONLY : nkf, nktotf, Hamil_save, index_save
+    USE input,               ONLY : nstate_plrn, &
+                                    type_plrn, nhblock_plrn
+    USE io_global,           ONLY : ionode, meta_ionode_id, stdout, ionode_id
+    USE mp_world,            ONLY : world_comm
+    USE mp_global,           ONLY : inter_pool_comm, my_pool_id, npool
+    USE mp,                  ONLY : mp_sum, mp_bcast, mp_barrier
+    USE control_flags,       ONLY : iverbosity
+    USE elpa
+    !
+    IMPLICIT NONE
+    !
+    class(elpa_t), pointer :: elp
+    !! Elpa API 
+    !
+    REAL(KIND = DP), INTENT(out) :: estmteRt(:)
+    !! Polaron eigenvalue
+    COMPLEX(KIND = DP), INTENT(out) :: eigvec_coef(:, :)
+    !! Polaron eigenvector coefficients
+    !
+    ! Local variable
+    INTEGER :: ierr
+    !! Error status
+    INTEGER :: ik
+    !! k-point counter
+    INTEGER :: ik_global
+    !! Global k-point index
+    INTEGER :: ibnd
+    !! Electron band counter
+    INTEGER :: indexkn1
+    !! Combined band and k-point index
+    INTEGER :: indexkn2
+    !! Combined band and k-point index
+    INTEGER :: info
+    !! FIXME
+    INTEGER :: mm
+    !! FIXME
+    INTEGER :: index_loc
+    !! FIXME
+    INTEGER :: index_blk
+    !! FIXME
+    INTEGER :: i, j, k, l, ipool
+    !! Counters
+    INTEGER :: tot, totx, toty, totn
+    !! Total number of matrix elements 
+    INTEGER, EXTERNAL                    :: numroc, INDXG2L, INDXG2P, INDXL2G
+    !! SCALAPACK variables
+    REAL(KIND = c_double), ALLOCATABLE   :: ev(:), RWORK(:)
+    !! Eigenvaues and RWORK for ZGEEV
+    COMPLEX(KIND = c_double) :: inter
+    !! Interaction strength e-p
+    COMPLEX(KIND = c_double),ALLOCATABLE :: al(:,:), zl(:,:), WORK(:), &
+                                            buff(:,:), H_f(:,:)
+    !! Hamiltonian distributed over processors, eigenvectors, ZGEEV Work,
+    !! Buffer array, full Hamiltonian
+    !
+    ! --------------------------------------------------------------------------------!!
+    !! All variables are for diagonalization
+    CHARACTER(len=8)                   :: task_suffix
+    !! ELPA related task 
+    INTEGER                            :: success
+    !! Success for ELPA diagonalization or not
+    INTEGER                            :: nblk
+    !! Block length for cyclic distribution
+    INTEGER                            :: np_rows, np_cols, na_rows, na_cols
+    !! Processor distribution in rows and columns
+    INTEGER                            :: my_prow, my_pcol, mpi_comm_rows, mpi_comm_cols
+    !! Present processor row and column, row/column communicators
+    INTEGER                            :: my_blacs_ctxt, sc_desc(9), nprow,npcol,mpierr
+    !! BLACS contexts, number of processor rows
+    INTEGER                            :: il, jl, kl, kp, jp, jg, kg
+    !! indices, l:local, g:global, p:processor
+    INTEGER, ALLOCATABLE               :: buff_ind(:,:)
+    !! BUffer array for redistribution
+    INTEGER, ALLOCATABLE               :: na_rows_max(:), na_cols_max(:)
+    !! maximum number of elements(row/column) in each processor
+    INTEGER, ALLOCATABLE               :: loc(:)
+    !! location in an array 
+    INTEGER                            :: STATUS
+    !! Status if diagonalization
+    INTEGER, PARAMETER                 :: error_units = 0
+    !! Error unit
+    INTEGER                            :: size_vec
+    !! Size of the leading dimension of the largest eigenvector
+    !!---------------------------------------------------------------------------------!!
+    nblk=8
+    tot = nktotf * nbnd_plrn
+    !
+    eigvec_coef = czero
+    estmteRt = zero
+    ! 
+    IF (iverbosity == 5) THEN
+       WRITE(stdout, '(/5x,a)'), '------------------------------'
+       WRITE(stdout, '(5x,a)'), 'iverbosity = 5, printing more info ...'
+       WRITE(stdout, '(5x,a)'), 'Using ELPA for diagonalization'
+       WRITE(stdout, '(5x, a, 3I10)'), 'nkf, nktotf, nbnd_plrn', nkf, nktotf, nbnd_plrn
+       WRITE(stdout, '(5x, a)'), 'WARNING: please ensure nkf (=nktotf/ncore) is integer'
+    ENDIF
+    !
+    ALLOCATE(Hamil_save(nkf * nbnd_plrn, nktotf * nbnd_plrn), STAT = ierr)
+    IF (ierr /= 0) CALL errore('diag_elpa', 'Error allocating Hamil_save', 1)
+    ALLOCATE(index_save(nkf * nbnd_plrn), STAT = ierr)
+    IF (ierr /= 0) CALL errore('diag_elpa', 'Error allocating index_save', 1)
+    !
+    ALLOCATE(na_rows_max(npool), STAT = ierr)
+    IF (ierr /= 0) CALL errore('diag_elpa', 'Error allocating na_rows_max(npool)', 1)
+    ALLOCATE(na_cols_max(npool), STAT = ierr)
+    IF (ierr /= 0) CALL errore('diag_elpa', 'Error allocating na_cols_max(npool)', 1)
+    !
+    DO np_cols = NINT(SQRT(REAL(npool))), 2, -1
+      IF (MOD(npool, np_cols) == 0 ) exit
+    ENDDO
+    ! at the end of the above loop, npools is always divisible by np_cols
+    np_rows = npool / np_cols
+    totn = tot
+    ! initialise BLACS
+    my_blacs_ctxt = inter_pool_comm
+    !
+    CALL BLACS_Gridinit(my_blacs_ctxt, 'C', np_rows, np_cols)
+    CALL BLACS_Gridinfo(my_blacs_ctxt, nprow, npcol, my_prow, my_pcol)
+    ! 
+    !
+    IF ((my_pool_id == ionode_id) .AND. (iverbosity == 5) ) THEN
+      WRITE(stdout,'(/5x,a)'),'| Past BLACS_Gridinfo.'
+    ENDIF
+    ! determine the neccessary size of the distributed matrices,
+    ! we use the scalapack tools routine NUMROC
+    !
+    na_rows = numroc(totn, nblk, my_prow, 0, np_rows)
+    na_cols = numroc(totn, nblk, my_pcol, 0, np_cols)
+    na_rows_max = 0
+    na_cols_max = 0
+    na_rows_max(my_pool_id + 1) = na_rows
+    IF (na_cols > 0) THEN
+      !
+      na_cols_max(my_pool_id + 1) = na_cols
+      !
+    ENDIF
+    CALL mp_barrier(inter_pool_comm)
+    CALL mp_sum(na_rows_max, inter_pool_comm)
+    CALL mp_sum(na_cols_max, inter_pool_comm)
+    CALL mp_barrier(inter_pool_comm)
+    totx = INT(maxval(na_rows_max))
+    toty = INT(maxval(na_cols_max))
+    !
+    IF ((my_pool_id == ionode_id) .AND. (iverbosity == 5))  THEN
+      WRITE(stdout, '(/5x,a,3I10)'), 'na_rows, na_cols, my_prow', na_rows, na_cols, my_prow
+      WRITE(stdout,'(5x,a,3I10)'), 'nprow, npcol, my_pcol', nprow, npcol, my_pcol
+    ENDIF
+    !  
+    ! set up the scalapack descriptor for the checks below
+    ! For ELPA the following restrictions hold:
+    ! - block sizes in both directions must be identical (args 4 a. 5)
+    ! - first row and column of the distributed matrix must be on
+    !   row/col 0/0 (arg 6 and 7)
+    !
+    CALL descinit(sc_desc, totn, totn, nblk, nblk, 0, 0, my_blacs_ctxt, na_rows, info)
+    !  
+    IF (info .NE. 0) THEN
+      WRITE(error_units,*) 'Error in BLACS descinit! info=',info
+      WRITE(error_units,*) 'Most likely this happend since you want to use'
+      WRITE(error_units,*) 'more MPI tasks than are possible for your'
+      WRITE(error_units,*) 'problem size (matrix size and blocksize)!'
+      WRITE(error_units,*) 'The blacsgrid can not be set up properly'
+      WRITE(error_units,*) 'Try reducing the number of MPI tasks...'
+     ! call MPI_ABORT(inter_pool_comm, 1, mpierr)
+    ENDIF
+    !  
+    ! Error is not assigned for these because there are some issus
+    ALLOCATE(al (na_rows, na_cols))
+    IF (ierr /= 0) CALL errore('diag_elpa', 'Error allocating al,', 1)
+    ALLOCATE(zl (na_rows, na_cols))
+    IF (ierr /= 0) CALL errore('diag_elpa', 'Error allocating zl,', 1)
+    ALLOCATE(ev (totn))
+    IF (ierr /= 0) CALL errore('diag_elpa', 'Error allocating ev,', 1)
+    al=(0.d0, 0.d0)
+    zl=(0.d0, 0.d0)
+    !
+    CALL mp_barrier(inter_pool_comm)
+    IF (iverbosity == 5) WRITE(stdout, '(/5x,a)') 'Passed initial array allocation'
+    !  
+    ! Distribute the Hamiltonian to different processors 
+    !
+    DO ipool = 1,npool 
+      Hamil_save(:, :) = czero
+      index_save(:) = 0  
+      l = 1
+      !WRITE(stdout,'(/5x,a,I90)') 'Finished core: ', ipool 
+      IF ((MOD(ipool, 20) == 0) .AND. (iverbosity == 5)) THEN
+        WRITE(stdout, '(5x, a, i10, a, i10)' ) 'Distributing Hamiltonian: ', ipool, '/', npool
+      ENDIF
+      !
+      DO ik = 1, nkf
+        ik_global = ikqLocal2Global(ik, nktotf)
+        DO ibnd = 1, nbnd_plrn
+          indexkn1 = (ik - 1) * nbnd_plrn + ibnd
+          !
+          index_loc = MOD(indexkn1 - 1, hblocksize) + 1
+          index_blk = INT((indexkn1 - 1) / hblocksize) + 1
+          IF (index_loc == 1 .AND. nhblock_plrn /= 1) CALL get_buffer(Hamil, lword_h, ihamil, index_blk)
+          !
+          indexkn2 = (ik_global - 1) * nbnd_plrn + ibnd
+          IF (my_pool_id + 1 == ipool) THEN
+            index_save(l) = indexkn2
+            Hamil_save(l, 1:nktotf * nbnd_plrn) = - type_plrn * Hamil(1:nktotf * nbnd_plrn, index_loc)
+            l = l+1
+          ENDIF
+        ENDDO
+      ENDDO
+      CALL mp_sum(Hamil_save,inter_pool_comm) 
+      CALL mp_sum(index_save,inter_pool_comm) 
+      DO i = 1, nkf * nbnd_plrn
+        DO j = 1, tot
+          !    
+          jg = index_save(i)
+          kg = j
+          !
+          inter = Hamil_save(i, j)
+          jl = INDXG2L(jg, nblk, 0, 0, nprow) !FLOOR((j-1)/REAL(nprow))!
+          jp = INDXG2P(jg, nblk, 0, 0, nprow)   !mod(j-1,nprow)
+          !
+          kl = INDXG2L(kg, nblk, 0, 0, npcol)!FLOOR((k-1)/REAL(npcol))
+          kp = INDXG2P(kg, nblk, 0, 0, npcol) !mod(k-1,npcol)
+          IF ((jp == my_prow) .AND. (kp == my_pcol)) THEN
+            !  
+            IF ((jl <= na_rows) .AND. (kl <= na_cols)) THEN
+              !
+              al(jl, kl) = inter
+              !
+            ENDIF
+          ENDIF
+        ENDDO
+      ENDDO
+    ENDDO
+    !
+    CALL mp_barrier(inter_pool_comm)
+    !
+    IF (iverbosity == 5) WRITE(stdout, '(5x,a)'),'Finished Hamiltonian setup for ELPA'
+    !  
+    ! Start ELPA diagonalization 
+    !  
+    IF (elpa_init(20180501) /= elpa_ok) THEN
+      WRITE(stdout, *), "ELPA API version not supported"
+      STOP
+    ENDIF
+    elp => elpa_allocate()    
+    !  
+    ! set parameters decribing the matrix and it's MPI distribution
+    CALL elp%set("na", totn, success)
+    CALL elp%set("nev", totn, success)
+    CALL elp%set("local_nrows", na_rows, success)
+    CALL elp%set("local_ncols", na_cols, success)
+    CALL elp%set("nblk", nblk, success)
+    CALL elp%set("mpi_comm_parent", inter_pool_comm, success)
+    CALL elp%set("process_row", my_prow, success)
+    CALL elp%set("process_col", my_pcol, success)
+    success = elp%setup()
+    CALL elp%set("solver", elpa_solver_2stage, success)
+    CALL elp%set("complex_kernel", elpa_solver_2stage, success)
+    ! Calculate eigenvalues/eigenvectors
+    !
+    IF (iverbosity == 5) WRITE(stdout, '(/5x,a)')'| Entering one-step ELPA solver ... '
+    !
+    CALL mp_barrier(inter_pool_comm) ! for correct timings only
+    CALL elp%eigenvectors(al, ev, zl, success)
+    CALL mp_barrier(inter_pool_comm) ! for correct timings only
+    !  
+    IF (iverbosity == 5) THEN
+      WRITE(stdout, '(5x,a)') '| One-step ELPA solver complete.'
+      WRITE(stdout, '(5x,a)'), 'The lowest 10 polaron eigenvalues (eV):'
+      DO i = 1, 10
+        WRITE(stdout,'(5x, i8, f12.6)') i, ev(i) * ryd2ev
+      ENDDO
+      WRITE(stdout, '(5x,a)'), '------------------------------'
+    ENDIF
+    !
+    estmteRt(:) = ev(:)
+    !
+    DO jl = 1, totx
+      IF ((MOD(jl, 500) == 0) .AND. (iverbosity == 5)) THEN
+        WRITE(stdout,'(5x, a, I10, a, I10)'),'Redistributing eigenvectors: ', jl, '/' , totx
+      ENDIF
+      DO kl = 1, toty
+        IF ((jl <= na_rows) .AND. (kl <= na_cols)) THEN
+          !
+          kg = INDXL2G(kl, nblk, my_pcol, 0, npcol)
+          jg = INDXL2G(jl, nblk, my_prow, 0, nprow)
+          IF ((kg > 0) .AND. (kg <= nstate_plrn)) THEN
+            eigvec_coef(jg, kg) = zl(jl, kl)
+          ENDIF
+          ! 
+        ENDIF
+      ENDDO
+    ENDDO
+    CALL mp_barrier(inter_pool_comm)
+    CALL mp_sum(eigvec_coef, inter_pool_comm)
+    ! 
+    DEALLOCATE(al, STAT = ierr)
+    IF (ierr /= 0) CALL errore('diag_elpa', 'Error deallocating al,', 1)
+    DEALLOCATE(ev, STAT = ierr)
+    IF (ierr /= 0) CALL errore('diag_elpa', 'Error deallocating ev,', 1)
+    DEALLOCATE(zl, STAT = ierr)
+    IF (ierr /= 0) CALL errore('diag_elpa', 'Error deallocating zl,', 1)
+    DEALLOCATE(Hamil_save, STAT = ierr)
+    IF (ierr /= 0) CALL errore('diag_elpa', 'Error deallocating Hamil_save,', 1)
+    DEALLOCATE(index_save, STAT = ierr)
+    IF (ierr /= 0) CALL errore('diag_elpa', 'Error deallocating index_save,', 1)
+    !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE diag_elpa
+    !-----------------------------------------------------------------------
+#endif
     !-----------------------------------------------------------------------
     SUBROUTINE diag_serial(estmteRt, eigvec_coef)
     !-----------------------------------------------------------------------
@@ -2350,6 +2754,7 @@
       eigvec_coef = czero
       estmteRt = zero
       !
+      ! TODO: check out what is mm
       CALL ZHEGVX( 1, 'V', 'I', 'U', nktotf * nbnd_plrn, Hamil_save, nktotf * nbnd_plrn, Identity,&
          nktotf * nbnd_plrn, zero, zero, 1, nstate_plrn, zero, mm, estmteRt(1:nstate_plrn), &
          eigvec_coef, nktotf * nbnd_plrn, work, lwork, rwork, iwork, ifail, info)
@@ -2481,10 +2886,11 @@
       !
       CALL start_clock('cegterg_prln')
       CALL cegterg( h_psi_plrn, s_psi_plrn, .FALSE., g_psi_plrn, &
-        npw, npwx, nstate_plrn, nstate_plrn * david_ndim_plrn, 1, psi, ethrdg, &
+        !npw, npwx, nstate_plrn, nstate_plrn * david_ndim_plrn, 1, psi, ethrdg, &
+        npw, npwx, nstate_plrn, david_ndim_plrn, 1, psi, ethrdg, &
         estmteRt, btype, notcnv, .FALSE., dav_iter, nhpsi)
       CALL start_clock('cegterg_prln')
-      IF(adapt_ethrdg_plrn .AND. ionode) WRITE(stdout, "(a, E14.6, I6, E14.6)") "   ", ethrdg, dav_iter, estmteRt
+      IF(adapt_ethrdg_plrn .AND. ionode) WRITE(stdout, "(a, E14.6, I6, E14.6)") "   ", ethrdg, dav_iter, estmteRt(1)
       IF(notcnv > 0 .AND. ionode) WRITE(stdout, "(a)") "   WARNING: Some eigenvalues not converged, &
       &check initialization, ethrdg_plrn or try adapt_ethrdg_plrn"
       !
@@ -2833,6 +3239,8 @@
     !! KS eigenvalues on global fine grid
     COMPLEX(KIND = DP), INTENT(in) :: eigvec_coef(:, :)
     !! Polaron wave function coefficients in Bloch (Ank) or Wannier (Amp) basis
+    COMPLEX(KIND = DP) :: phase
+    !! phase of the first element of the first polaron eigenvector
     !
     ! Local variables
     INTEGER :: indexkn1
@@ -2851,8 +3259,15 @@
     ELSE
       nbnd_out = nbndsub
     ENDIF
+    ! now rotate all the eigenvectors by a global phase
+    ! to ensure the first element of the first eigenvector
+    ! is pure real - KL
+    phase = EXP(-CMPLX(0.0_DP, ATAN2(AIMAG(eigvec_coef(1, 1)), REAL(eigvec_coef(1,1)))))
+    phase = phase / ABS(phase)
     !
     OPEN(UNIT = iwfplrn, FILE = TRIM(filename))
+    !
+    !WRITE(iwfplrn, '(a, 3f22.12)') 'The global phase', phase, ABS(phase)
     !
     IF (scell_mat_plrn) THEN
       WRITE(iwfplrn, '(a, 3I10)') 'Scell', nktotf, nbndsub, nstate_plrn
@@ -2865,10 +3280,13 @@
         DO iplrn = 1, nstate_plrn
           indexkn1 = (ik - 1) * nbnd_out + ibnd
           IF (PRESENT(enk_all)) THEN
-            WRITE(iwfplrn, '(2I5, 4f15.7)') ik, ibnd, enk_all(select_bands_plrn(ibnd), ik) * ryd2ev, &
-               eigvec_coef(indexkn1, iplrn), ABS(eigvec_coef(indexkn1, iplrn))
+            !WRITE(iwfplrn, '(2I5, 4f15.7)') ik, ibnd, enk_all(select_bands_plrn(ibnd), ik) * ryd2ev, &
+            WRITE(iwfplrn, '(I12, I5, 4f15.7)') ik, ibnd, enk_all(select_bands_plrn(ibnd), ik) * ryd2ev, &
+              ! eigvec_coef(indexkn1, iplrn), ABS(eigvec_coef(indexkn1, iplrn))
+               eigvec_coef(indexkn1, iplrn) * phase, ABS(eigvec_coef(indexkn1, iplrn))
           ELSE
-            WRITE(iwfplrn, '(2f15.7)') eigvec_coef(indexkn1, iplrn)
+            !WRITE(iwfplrn, '(2f15.7)') eigvec_coef(indexkn1, iplrn)
+            WRITE(iwfplrn, '(2f15.7)') eigvec_coef(indexkn1, iplrn) * phase
           ENDIF
         ENDDO
       ENDDO
@@ -2924,14 +3342,16 @@
     IF (PRESENT(scell)) scell_ = scell
     !
     IF (scell_) THEN
-      READ(iwfplrn, '(a, 3I10)') dmmy, nktotf_p, nbndsub_p, nPlrn_p
+      READ(iwfplrn, '(a, 3I10)') dmmy, nktotf_p, nbndsub_p, nplrn_p
+      !READ(iwfplrn, '(a, 3I10)') dmmy, nktotf_p, nbndsub_p, nPlrn_p
       ! nkf1_p, nkf2_p, nkf3_p should never be called if scell=.true.
       ! Just assigning an arbitrary value
       nkf1_p = 0
       nkf2_p = 0
       nkf3_p = 0
     ELSE
-      READ(iwfplrn, '(6I10)') nkf1_p, nkf2_p, nkf3_p, nktotf_p, nbndsub_p, nPlrn_p
+      READ(iwfplrn, '(6I10)') nkf1_p, nkf2_p, nkf3_p, nktotf_p, nbndsub_p, nplrn_p
+      !READ(iwfplrn, '(6I10)') nkf1_p, nkf2_p, nkf3_p, nktotf_p, nbndsub_p, nPlrn_p
       IF(nkf1_p * nkf2_p * nkf3_p /= nktotf_p) THEN
         CALL errore("read_plrn_wf_grid", 'Amp.plrn'//'Not generated from the uniform grid!', 1)
       ENDIF
@@ -3005,7 +3425,8 @@
         DO iplrn = 1, nplrn_p
           indexkn1 = (ik - 1) * nbndsub_p + ibnd
           IF(PRESENT(enk_all)) THEN ! Ank.plrn is read
-            READ(iwfplrn, '(2I5, 3f15.7)') i1, i2, r1, eigvec_coef(indexkn1, iplrn)
+            !READ(iwfplrn, '(2I5, 3f15.7)') i1, i2, r1, eigvec_coef(indexkn1, iplrn)
+            READ(iwfplrn, '(I12, I5, 3f15.7)') i1, i2, r1, eigvec_coef(indexkn1, iplrn)
           ELSE ! Amp.plrn is read
             READ(iwfplrn, '(2f15.7)') eigvec_coef(indexkn1, iplrn)
           ENDIF
@@ -3494,6 +3915,7 @@
     USE io_var,        ONLY : iwfplrn
     USE mp_world,      ONLY : world_comm
     USE mp,            ONLY : mp_bcast
+    USE input,         ONLY : nstate_plrn
     !
     IMPLICIT NONE
     !
@@ -3555,11 +3977,15 @@
     !
     ip_center = index_Rp(i_center(1) / nbndsub_p + 1, (/nkf1_p, nkf2_p, nkf3_p/))
     WRITE(stdout, '(5x, a, i8, 3i5)') "The largest Amp ", i_center(1), ip_center
+    WRITE(stdout, '(5x, a, i8)') "The number of polaron states in Amp.plrn: ", nplrn_p
+    WRITE(stdout, '(5x, a, i8)') "The number of polaron states to be interpolated: ", nstate_plrn
     !
     ! JLB: kpg_map cannot be generally defined in interpolation k-paths,
     !      thus t_rev set to .false.
     CALL plrn_eigvec_tran('Wan2Bloch', .FALSE., eigvec_wan, nkf1_p, nkf2_p, nkf3_p, nbndsub_p, &
        nrr_k, ndegen_k, irvec_r, dims, eigvec, ip_center)
+    !
+    WRITE(stdout, '(5x, a)') "Polaron states have been interpolated to Bloch basis."
     !
     CALL write_plrn_wf(eigvec, 'Ank.band.plrn', etf_all)
     !
@@ -4018,7 +4444,8 @@
     !! Compute the DOS for Ank and Bqv coefficients
     !-----------------------------------------------------------------------------------
     USE input,         ONLY : nDOS_plrn, edos_max_plrn, edos_min_plrn, edos_sigma_plrn,   &
-                              pdos_max_plrn, pdos_min_plrn, pdos_sigma_plrn
+                              pdos_max_plrn, pdos_min_plrn, pdos_sigma_plrn,              &
+                              istate_relax_plrn
     USE global_var,    ONLY : nqtotf, nktotf, wf
     USE io_var,        ONLY : idosplrn
     USE modes,         ONLY : nmodes
@@ -4043,8 +4470,8 @@
     !! Phonon mode counter
     INTEGER :: ik
     !! k-point counter
-    INTEGER :: iplrn
-    !! Polaron state counter
+    !INTEGER :: iplrn
+    !!! Polaron state counter
     INTEGER :: ibnd
     !! Electron band counter
     INTEGER :: indexkn1
@@ -4057,6 +4484,8 @@
     !! Ank DOS
     REAL(KIND = DP), ALLOCATABLE :: pdos(:)
     !! Bqv DOS
+    REAL(KIND = DP), ALLOCATABLE :: sdos(:)
+    !! Sqv=wqv|Bqv|^2/2 DOS: Huang-Rhys factor
     REAL(KIND = DP), ALLOCATABLE :: edos_all(:)
     !! Electron DOS
     REAL(KIND = DP), ALLOCATABLE :: pdos_all(:)
@@ -4090,13 +4519,15 @@
     DO ik = 1, nktotf
       DO ibnd = 1, nbnd_plrn
         ! TODO : iplrn
-        DO iplrn = 1, 1
+        !  KL: we should not run the loop over iplrn
+        !DO iplrn = 1, 1
           CALL cal_f_delta(e_grid - (etf_all(select_bands_plrn(ibnd), ik) * ryd2ev), &
              edos_sigma_plrn, f_tmp)
           indexkn1 = (ik - 1) * nbnd_plrn + ibnd
-          edos = edos + (ABS(eigvec_coef(indexkn1, iplrn))**2) * f_tmp
+          !edos = edos + (ABS(eigvec_coef(indexkn1, iplrn))**2) * f_tmp
+          edos = edos + (ABS(eigvec_coef(indexkn1, istate_relax_plrn))**2) * f_tmp
           edos_all = edos_all + f_tmp
-        ENDDO
+        !ENDDO
       ENDDO
     ENDDO
     !
@@ -4106,6 +4537,8 @@
     IF (ierr /= 0) CALL errore('calc_den_of_state', 'Error allocating pdos', 1)
     ALLOCATE(pdos_all(nDOS_plrn), STAT = ierr)
     IF (ierr /= 0) CALL errore('calc_den_of_state', 'Error allocating pdos_all', 1)
+    ALLOCATE(sdos(nDOS_plrn), STAT = ierr)
+    IF (ierr /= 0) CALL errore('calc_den_of_state', 'Error allocating sdos', 1)
     !
     temp = MAXVAL(wf) * ryd2mev + 10.0_dp
     IF (pdos_max_plrn < temp) pdos_max_plrn = temp
@@ -4123,15 +4556,17 @@
       DO inu = 1, nmodes
         CALL cal_f_delta(p_grid - wf(inu, iq) * ryd2mev, pdos_sigma_plrn, f_tmp)
         pdos = pdos + (ABS(bqv_coef(iq, inu))**2) * f_tmp
+        sdos = sdos + (wf(inu,iq)*ABS(bqv_coef(iq, inu))**2) * f_tmp
         pdos_all = pdos_all + f_tmp
       ENDDO
     ENDDO
     !
     OPEN(UNIT = idosplrn, FILE = 'dos.plrn')
-    WRITE(idosplrn, '(/2x, a/)') '#energy(ev)  A^2   edos  energy(mev)  B^2  pdos'
+    !WRITE(idosplrn, '(/2x, a/)') '#energy(ev)  A^2   edos  energy(mev)  B^2  pdos'
+    WRITE(idosplrn, '(/2x, a/)') '#energy(ev)  A^2   edos  energy(mev)  B^2  pdos  sdos'
     DO idos = 1, nDOS_plrn
-      WRITE(idosplrn, '(6f15.7)') e_grid(idos), edos(idos), &
-         edos_all(idos), p_grid(idos), pdos(idos), pdos_all(idos)
+      WRITE(idosplrn, '(7f15.7)') e_grid(idos), edos(idos), &
+         edos_all(idos), p_grid(idos), pdos(idos), pdos_all(idos), sdos(idos)
     ENDDO
     CLOSE(idosplrn)
     !
@@ -4149,6 +4584,8 @@
     IF (ierr /= 0) CALL errore('calc_den_of_state', 'Error allocating p_grid', 1)
     DEALLOCATE(pdos)
     IF (ierr /= 0) CALL errore('calc_den_of_state', 'Error allocating pdos', 1)
+    DEALLOCATE(sdos)
+    IF (ierr /= 0) CALL errore('calc_den_of_state', 'Error allocating sdos', 1)
     !-----------------------------------------------------------------------------------
     END SUBROUTINE calc_den_of_state
     !-----------------------------------------------------------------------------------
@@ -4158,7 +4595,8 @@
     !! Write polaron wave function in real space to file.
     !-----------------------------------------------------------------------------------
     USE ep_constants,  ONLY : zero, czero, cone, twopi, ci, bohr2ang
-    USE input,         ONLY : nbndsub, step_wf_grid_plrn
+    USE input,         ONLY : nbndsub, step_wf_grid_plrn, &
+                              plot_psir_plrn, lsign_psir_plrn
     USE io_global,     ONLY : stdout, ionode, meta_ionode_id
     USE io_var,        ONLY : ipsirplrn
     USE mp_world,      ONLY : world_comm
@@ -4247,6 +4685,16 @@
     !! Polaron displacements in real space
     COMPLEX(KIND = DP), ALLOCATABLE :: cvec(:)
     !! Polaron wave function magnitude squared at each grid point
+    REAL(KIND = DP), ALLOCATABLE :: sign_psir(:)
+    !! Sign of the polaron wave function at each grid point
+    REAL(DP)                        :: progress(11)
+    !! Array to store the progress of the calculation
+    REAL(DP)                        :: counter, counter_tot
+    !! Counters for computing current progress
+    INTEGER                         :: iprogress
+    !! Counters for computing current progress
+    CHARACTER(LEN = 256) :: tmpch
+    !! Temporary character to assign name to psir files
     !
     ! read Amp.plrn, save eigvec_wan for the latter use
     IF (ionode) THEN
@@ -4291,10 +4739,17 @@
     cell(1:3, 2) = at(1:3, 2) * nqf_p(2) * alat
     cell(1:3, 3) = at(1:3, 3) * nqf_p(3) * alat
     !
-    plrn_file = 'psir_plrn.xsf'
+    IF (plot_psir_plrn == 1) THEN
+      plrn_file = 'psir_plrn.xsf'
+    ELSE
+      WRITE(tmpch,'(I6)') plot_psir_plrn 
+      plrn_file = 'psir_plrn_' // TRIM(ADJUSTL(tmpch)) // '.xsf'
+    ENDIF
     ! Write the file head including information of structures
     IF (ionode) THEN
-      CALL write_plrn_dtau_xsf(dtau, nqf_p(1), nqf_p(2), nqf_p(3), plrn_file, species)
+      IF (plot_psir_plrn == 1) THEN
+        CALL write_plrn_dtau_xsf(dtau, nqf_p(1), nqf_p(2), nqf_p(3), plrn_file, species)
+      ENDIF
     END IF
     !
     orig(1:3) = zero
@@ -4315,13 +4770,32 @@
     !
     ALLOCATE(cvec(1:n_grid_super(1)), STAT = ierr)
     IF (ierr /= 0) CALL errore('write_real_space_wavefunction', 'Error allocating cvec', 1)
+    ALLOCATE(sign_psir(1:n_grid_super(1)), STAT = ierr)
+    IF (ierr /= 0) CALL errore('write_real_space_wavefunction', 'Error allocating sign_psir', 1)
     !
     CALL fkbounds(nqtotf_p, ip_min, ip_max)
     !
     ctemp = czero
+    progress = (/0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0/)
+    iprogress = 1
+    counter_tot = n_grid_super(2) * n_grid_super(3)
+    IF(lsign_psir_plrn) THEN
+        WRITE(stdout, "(5x, 'lsign_psir_plrn is turned on, ')")
+        WRITE(stdout, "(5x, 'the sign of polaron wavefunction is retained.')")
+    ENDIF
     DO nzz = 1, n_grid_super(3), step_wf_grid_plrn
       DO nyy = 1, n_grid_super(2), step_wf_grid_plrn
         cvec = czero
+        sign_psir = zero
+        !
+        ! report progress 
+        counter =  REAL(nzz, KIND=DP) * nyy
+        !
+        IF ( counter / counter_tot > progress(iprogress)) THEN
+          WRITE(stdout, '(5x, a, 1F5.2, a)') 'Current progress: ', &
+                counter / counter_tot * 100, '%'
+          iprogress = iprogress + 1
+        ENDIF
         DO nxx = 1, n_grid_super(1), step_wf_grid_plrn
           DO iRp = ip_min, ip_max !-nqf_p(3)/2, (nqf_p(3)+1)/2
             Rp_vec(1:3) = index_Rp(iRp, nqf_p)
@@ -4336,16 +4810,26 @@
                 DO ibnd = 1, nbndsub !TODO change to nbndsub
                   indexkn1 = (iRp - 1) * nbndsub + ibnd
                   !TODO eigvec_wan(indexkn1, 1) should be eigvec_wan(indexkn1, iplrn)
-                  cvec(nxx) = cvec(nxx)  +  eigvec_wan(indexkn1, 1) * wann_func(ig_vec(1), ig_vec(2), ig_vec(3), ibnd)
+                  !cvec(nxx) = cvec(nxx)  +  eigvec_wan(indexkn1, 1) * wann_func(ig_vec(1), ig_vec(2), ig_vec(3), ibnd)
+                  cvec(nxx) = cvec(nxx)  +  eigvec_wan(indexkn1, plot_psir_plrn) * &
+                              wann_func(ig_vec(1), ig_vec(2), ig_vec(3), ibnd)
                 ENDDO !ibnd
               ENDIF
             ENDDO ! iscx
           ENDDO ! ipx
         ENDDO ! nxx
         CALL mp_sum(cvec, inter_pool_comm)
-        IF(ionode) THEN
-          !JLB: Changed to |\Psi(r)|^{2}, I think it's physically more meaningful
-          WRITE (ipsirplrn, '(5e13.5)', ADVANCE='yes') ABS(cvec(::step_wf_grid_plrn))**2
+        IF (ionode) THEN
+          !KL: retain the sign of psir
+          IF(lsign_psir_plrn) THEN
+            sign_psir(:) = DBLE(cvec(:))
+            sign_psir(:) = SIGN(1.d0, sign_psir(:))
+            WRITE (ipsirplrn, '(5e13.5)', ADVANCE='yes') &
+              ABS(cvec(::step_wf_grid_plrn))**2 * sign_psir(::step_wf_grid_plrn)
+          ELSE
+            !JLB: Changed to |\Psi(r)|^{2}, I think it's physically more meaningful
+            WRITE (ipsirplrn, '(5e13.5)', ADVANCE='yes') ABS(cvec(::step_wf_grid_plrn))**2
+          ENDIF
         ENDIF
         ! Calculate the center of polaron
         ! TODO: not parallel, all the processors are doing the same calculations
@@ -4879,6 +5363,20 @@
     !
     !-----------------------------------------------------------------------------------    
     END SUBROUTINE plrn_close
+    !-----------------------------------------------------------------------------------
+    !-----------------------------------------------------------------------------------
+    SUBROUTINE plrn_collect_image()
+    !-----------------------------------------------------------------------------------
+    !! collect data from multiple images
+    !-----------------------------------------------------------------------------------
+    USE mp,            ONLY : mp_sum
+    USE mp_images,     ONLY : inter_image_comm
+    USE input,         ONLY : restart_plrn, io_lvl_plrn
+    IF ((.NOT. restart_plrn) .AND. (io_lvl_plrn == 0)) THEN
+      CALL mp_sum(epfall, inter_image_comm)
+    ENDIF
+    !-----------------------------------------------------------------------------------    
+    END SUBROUTINE plrn_collect_image
     !-----------------------------------------------------------------------------------
   !  
   !-----------------------------------------------------------------------------------

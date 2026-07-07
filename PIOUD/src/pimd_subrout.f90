@@ -1966,7 +1966,8 @@ subroutine pimd_read_input(unit)
 !!! *********************************************************************!!!
 
   use pimd_variables
-  USE ring_io_units_module,         ONLY : iunpath
+  USE ring_io_units_module, ONLY : iunpath
+  USE upf_utils,            ONLY : imatches
   implicit none   
   integer :: i,j,l,k,ii,jj,ind,ntest
   integer, intent(in) :: unit
@@ -1977,7 +1978,6 @@ subroutine pimd_read_input(unit)
   INTEGER, EXTERNAL :: myfind_free_unit
   INTEGER :: ios
   character(len=64) :: run
-  logical, external :: imatches
    
 
 ! Namelists for input file

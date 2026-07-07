@@ -293,7 +293,7 @@ subroutine kcw_setup
     WRITE( stdout, '(  8X, "The Wannier density at  q = ",3F12.7, "  [Cryst]")') xq(:)
     WRITE( stdout, '(  8X, 78("="),/)')
     !
-    CALL compute_map_ikq_single (iq)
+    CALL compute_map_ikq_single (iq, .false. )
     ! The map to identify which k point in the 1BZ corresponds to k+q and the G vector that produce the mapping
     ! The results are stored in the global variable map_ikq and shift_1bz (used inside rho_of_q) 
     ! can (should) be moved inside rho_of_q ( )

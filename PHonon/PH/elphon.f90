@@ -54,7 +54,7 @@ SUBROUTINE elphon()
 
   INTEGER :: ntyp_, nat_, ibrav_, nspin_mag_, mu, nu, na, nb, nta, ntb, nqs_
   REAL(DP) :: celldm_(6), w1
-  CHARACTER(LEN=3) :: atm(ntyp)
+  CHARACTER(LEN=6) :: atm(ntyp)
 
   CALL start_clock ('elphon')
 
@@ -129,16 +129,40 @@ SUBROUTINE elphon()
   !
   IF (ldvscf_interpolate) DEALLOCATE(dvscfin_all)
   !
-  ! In AHC calculation, we do not need the dynamical matrix. So return here.
-  IF (elph_ahc) THEN
-     CALL stop_clock('elphon')
-     RETURN
-  ENDIF
+  CALL stop_clock('elphon')
+  !  
+  RETURN
+  !  
+END SUBROUTINE elphon
+!
+SUBROUTINE rediagonalize_dyn( )
+  !
+  USE kinds, ONLY : DP
+  USE constants, ONLY : amu_ry, RY_TO_THZ, RY_TO_CMM1
+  USE cell_base, ONLY : celldm, omega, ibrav, at, bg
+  USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, amass
+  USE io_global, ONLY : stdout, ionode, ionode_id
+  USE noncollin_module, ONLY : nspin_mag, m_loc
+  !
+  USE control_ph,ONLY : xmldyn
+  USE dynmat,    ONLY : dyn, w2
+  USE io_dyn_mat,ONLY : read_dyn_mat_param, read_dyn_mat_header, &
+                         read_dyn_mat, read_dyn_mat_tail
+  USE output,    ONLY : fildyn
+  USE units_ph,  ONLY : iudyn
+  USE qpoint,    ONLY : xq
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: i,j, na, nb
+  INTEGER :: ntyp_, nat_, ibrav_, nspin_mag_, mu, nu, nta, ntb, nqs_
+  REAL(DP) :: celldm_(6), w1
+  CHARACTER(LEN=6) :: atm(ntyp)
+  COMPLEX(DP), allocatable :: phip (:, :, :, :)
   !
   ! now read the eigenvalues and eigenvectors of the dynamical matrix
   ! calculated in a previous run
   !
-  IF (.NOT.trans) THEN
      IF (.NOT. xmldyn) THEN
         WRITE (6, '(5x,a)') "Reading dynamics matrix from file "//trim(fildyn)
         CALL readmat (iudyn, ibrav, celldm, nat, ntyp, &
@@ -207,16 +231,14 @@ SUBROUTINE elphon()
      !
      WRITE( stdout, '(1x,74("*"))')
      !
-  ENDIF ! .NOT. trans
   !
-  CALL stop_clock ('elphon')
   !
 8000 FORMAT(/,5x,'Diagonalizing the dynamical matrix', &
        &       //,5x,'q = ( ',3f14.9,' ) ',//,1x,74('*'))
 8010 FORMAT   (5x,'freq (',i5,') =',f15.6,' [THz] =',f15.6,' [cm-1]')
   !
   RETURN
-END SUBROUTINE elphon
+END SUBROUTINE rediagonalize_dyn
 !
 !-----------------------------------------------------------------------
 SUBROUTINE readmat (iudyn, ibrav, celldm, nat, ntyp, ityp, omega, &
@@ -239,7 +261,7 @@ SUBROUTINE readmat (iudyn, ibrav, celldm, nat, ntyp, ityp, omega, &
   ! local
   REAL(DP) :: dynr (2, 3, nat, 3, nat)
   CHARACTER(len=80) :: line
-  CHARACTER(len=3)  :: atm
+  CHARACTER(len=6)  :: atm
   INTEGER :: nt, na, nb, naa, nbb, nu, mu, i, j
   !
   !
@@ -534,8 +556,8 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
                  IF (.NOT.trans) dnsscf(:,:,:,:,ipert) = dnsscf_all_modes(:,:,:,:,mode)
                  call adddvhubscf (ipert, ik)
               ENDIF
-           ELSE
-              call adddvscf_ph_mag (ipert, ik)
+           !ELSE
+            !  call adddvscf_ph_mag (ipert, ik)
            END IF
            !
            !  reset the original magnetic field if it was changed
@@ -1395,7 +1417,8 @@ SUBROUTINE elph_prt()
   !! 06/2018 - Written by S. Ponc\'e and C. Verdi based on elphsum subroutine
   !! 06/2021 - Rewritten by H. Lee based on the previous version
   !! 06/2023 - Merged to PH/ by S. Ponc\'e
-  !!
+  !! 01/2026 - Fixed an issue of printing complex elements by K. Luo
+  !! 04/2026 - Added LSDA case and small change in k point search by \'A. A. Carrasco \'Alvarez
   USE kinds,       ONLY : DP
   USE constants,   ONLY : rytoev
   USE ions_base,   ONLY : nat
@@ -1410,29 +1433,31 @@ SUBROUTINE elph_prt()
   USE mp_images,   ONLY : intra_image_comm, me_image, nproc_image, root_image
   USE mp_bands,    ONLY : root_bgrp, me_bgrp
   USE qpoint,      ONLY : nksq, ikks, ikqs, xq
+  USE noncollin_module,  ONLY : noncolin
+  USE lsda_mod,    ONLY : isk, current_spin, nspin 
   USE parallel_include
   !
   IMPLICIT NONE
   !
-  LOGICAL :: found
+  LOGICAL :: found(nspin)
   !
 #if defined(__MPI)
   INTEGER :: istatus(MPI_STATUS_SIZE)
 #endif
-  INTEGER :: ik, ikk, ikq, ibnd, jbnd, pbnd, nu, mu, vu, ierr
-  INTEGER :: nksq2, ikk2, ikq2, nkq2, ik1, ik2, ipert, jpert, n
+  INTEGER :: ik, ikk(nspin), ikq(nspin), ibnd, jbnd, pbnd, nu, mu, vu, ierr
+  INTEGER :: ik1(nspin), ipert, jpert, ispn, n, nspn
   !
   REAL(DP), PARAMETER :: ryd2mev  = rytoev * 1.0E3_DP
   REAL(DP), PARAMETER :: eps = 0.01/ryd2mev
   REAL(DP) :: gamma, g2, w, w_1, w_2
   COMPLEX(DP) :: gamma_cmplx
   REAL(DP) :: kpoint(3)
-  REAL(DP) :: epc(nbnd, nbnd, 3 * nat)
-  REAL(DP) :: epc_sym(nbnd, nbnd, 3 * nat)
-  REAL(DP) :: epc_unsym(nbnd, nbnd, 3 * nat)
-  REAL(DP) :: epc_real(nbnd, nbnd, 3 * nat)
-  REAL(DP) :: epc_imag(nbnd, nbnd, 3 * nat)
-  REAL(DP), ALLOCATABLE :: et2(:, :)
+  REAL(DP) :: epc(nbnd, nbnd, 3 * nat, nspin)
+  REAL(DP) :: epc_sym(nbnd, nbnd, 3 * nat, nspin)
+  REAL(DP) :: epc_unsym(nbnd, nbnd, 3 * nat, nspin)
+  REAL(DP) :: epc_real(nbnd, nbnd, 3 * nat, nspin)
+  REAL(DP) :: epc_imag(nbnd, nbnd, 3 * nat, nspin)
+  REAL(DP), ALLOCATABLE :: et2(:, :, :)
   !
   COMPLEX(DP) :: el_ph_sum(3 * nat, 3 * nat)
   COMPLEX(DP) :: el_ph_sum_aux(3 * nat, 3 * nat)
@@ -1446,154 +1471,127 @@ SUBROUTINE elph_prt()
   !
   WRITE(stdout, '(5x,/"electron-phonon interaction  ..."/)')
   !
-  found = .FALSE.
+  nspn = nspin
+  IF (noncolin) nspn = 1
+  found(:) = .FALSE.
   DO ik = 1, nksq
     IF (ANY(ABS(xk(:, ikks(ik))-kpoint(:)) > 1.0E-6_DP)) CYCLE
-    found = .TRUE.
-    ik1 = ik
-    ikk = ikks(ik)
-    ikq = ikqs(ik)
+    current_spin = isk(ikks(ik))
+    found(current_spin) = .TRUE.
+    ik1(current_spin) = ik
+    ikk(current_spin) = ikks(ik)
+    ikq(current_spin) = ikqs(ik)
   ENDDO
   !
   ierr = 0
-  IF (found) THEN
-    ierr = 1
-  ENDIF
+  DO ispn = 1, nspn
+    IF (found(ispn)) ierr = ierr + 1
+  ENDDO
   CALL mp_sum(ierr, intra_image_comm)
   IF (ierr == 0) CALL errore('elphsum2', 'kpoint not found', 1)
   !
 #if defined(__MPI)
-  IF ((npool == 1) .AND. ionode) THEN
-    ik2 = ik1
-    ikk2 = ikk
-    ikq2 = ikq
-    nksq2 = nksq
-    ALLOCATE(el_ph_mat2(nbnd, nbnd, nksq2, 3 * nat))
-    el_ph_mat2 = el_ph_mat
-    nkq2 = SIZE(et, 2)
-    ALLOCATE(et2(nbnd, nkq2))
-    et2 = et
-  ELSE
-    IF (found .AND. (me_bgrp == root_bgrp) .AND. (.NOT. ionode)) THEN
-      CALL MPI_SEND(ik1, 1, MPI_INTEGER, root_image, 0, intra_image_comm, ierr)
-      CALL MPI_SEND(ikk, 1, MPI_INTEGER, root_image, nproc_image, &
-                    intra_image_comm, ierr)
-      CALL MPI_SEND(ikq, 1, MPI_INTEGER, root_image, 2 * nproc_image, &
-                    intra_image_comm, ierr)
-      CALL MPI_SEND(nksq, 1, MPI_INTEGER, root_image, 3 * nproc_image, &
-                    intra_image_comm, ierr)
-      CALL MPI_SEND(el_ph_mat, nbnd * nbnd * nksq * 3 * nat, MPI_DOUBLE_COMPLEX, &
+  IF (ionode) THEN
+    ALLOCATE(el_ph_mat2(nbnd, nbnd, nspn, 3 * nat))
+    ALLOCATE(et2(nbnd, 2,  nspn))
+  ENDIF
+  DO ispn = 1, nspn
+    IF (found(ispn) .AND. (me_bgrp == root_bgrp) .AND. (.NOT. ionode)) THEN
+      CALL MPI_SEND(el_ph_mat(:, :, ik1(ispn), :), nbnd * nbnd * 3 * nat, MPI_DOUBLE_COMPLEX, &
                     root_image, 4 * nproc_image, intra_image_comm, ierr)
-      CALL MPI_SEND(SIZE(et, 2), 1, MPI_INTEGER, root_image, 5 * nproc_image, &
-                    intra_image_comm, ierr)
-      CALL MPI_SEND(et, nbnd * SIZE(et, 2), MPI_DOUBLE_PRECISION, root_image, &
+      CALL MPI_SEND(et(:, ikk(ispn)), nbnd, MPI_DOUBLE_PRECISION, root_image, &
+                    6 * nproc_image, intra_image_comm, ierr)
+      CALL MPI_SEND(et(:, ikq(ispn)), nbnd, MPI_DOUBLE_PRECISION, root_image, &
                     6 * nproc_image, intra_image_comm, ierr)
     ELSEIF (ionode) THEN
-      IF (.NOT. found) THEN
-        CALL MPI_RECV(ik2, 1, MPI_INTEGER, MPI_ANY_SOURCE, 0, intra_image_comm, &
-                      istatus, ierr )
-        CALL MPI_RECV(ikk2, 1, MPI_INTEGER, MPI_ANY_SOURCE, nproc_image, &
-                      intra_image_comm, istatus, ierr )
-        CALL MPI_RECV(ikq2, 1, MPI_INTEGER, MPI_ANY_SOURCE, 2 * nproc_image, &
-                      intra_image_comm, istatus, ierr )
-        CALL MPI_RECV(nksq2, 1, MPI_INTEGER, MPI_ANY_SOURCE, 3 * nproc_image, &
-                      intra_image_comm, istatus, ierr )
-        ALLOCATE(el_ph_mat2(nbnd, nbnd, nksq2, 3 * nat))
-        CALL MPI_RECV(el_ph_mat2, nbnd * nbnd * nksq2 * 3 * nat, MPI_DOUBLE_COMPLEX, &
+      IF (.NOT. found(ispn)) THEN
+        CALL MPI_RECV(el_ph_mat2(:, :, ispn, :), nbnd * nbnd * 3 * nat, MPI_DOUBLE_COMPLEX, &
                       MPI_ANY_SOURCE, 4 * nproc_image, intra_image_comm, istatus, ierr )
-        CALL MPI_RECV(nkq2, 1, MPI_INTEGER, MPI_ANY_SOURCE, 5 * nproc_image, &
-                      intra_image_comm, istatus, ierr )
-        ALLOCATE(et2(nbnd, nkq2))
-        CALL MPI_RECV(et2, nbnd * nkq2, MPI_DOUBLE_PRECISION, MPI_ANY_SOURCE, &
+        CALL MPI_RECV(et2(:, 1, ispn), nbnd, MPI_DOUBLE_PRECISION, MPI_ANY_SOURCE, &
+                      6 * nproc_image, intra_image_comm, istatus, ierr )
+        CALL MPI_RECV(et2(:, 2, ispn), nbnd, MPI_DOUBLE_PRECISION, MPI_ANY_SOURCE, &
                       6 * nproc_image, intra_image_comm, istatus, ierr )
       ELSE
-        ik2 = ik1
-        ikk2 = ikk
-        ikq2 = ikq
-        nksq2 = nksq
-        ALLOCATE(el_ph_mat2(nbnd, nbnd, nksq2, 3 * nat))
-        el_ph_mat2 = el_ph_mat
-        nkq2 = SIZE(et, 2)
-        ALLOCATE(et2(nbnd, nkq2))
-        et2 = et
+        el_ph_mat2(:, :, ispn, :) = el_ph_mat(:, :, ik1(ispn), :)
+        et2(:, 1, ispn) = et(:, ikk(ispn))
+        et2(:, 2, ispn) = et(:, ikq(ispn))
       ENDIF
     ENDIF
-  ENDIF
+  ENDDO
 #else
-  ik2 = ik1
-  ikk2 = ikk
-  ikq2 = ikq
-  nksq2 = nksq
-  ALLOCATE(el_ph_mat2(nbnd, nbnd, nksq2, 3 * nat))
-  el_ph_mat2 = el_ph_mat
-  nkq2 = SIZE(et, 2)
-  ALLOCATE(et2(nbnd, nkq2))
-  et2 = et
+  ALLOCATE(el_ph_mat2(nbnd, nbnd, nspn, 3 * nat))
+  ALLOCATE(et2(nbnd, 2, nspn))
+  DO ispn = 1, nspn
+    el_ph_mat2(:, :, ispn, :) = el_ph_mat(:, :, ik1(ispn), :)
+    et2(:, 1, ispn) = et(:, ikk(ispn))
+    et2(:, 2, ispn) = et(:, ikq(ispn))
+  ENDDO
 #endif
   !
   IF (ionode) THEN
     !
-    DO ibnd = 1, nbnd
-      DO jbnd = 1, nbnd
-        !
-        DO jpert = 1, 3 * nat
-          DO ipert = 1, 3 * nat
-            el_ph_sum(ipert, jpert) = CONJG(el_ph_mat2(jbnd, ibnd, ik2, ipert)) * &
-                                            el_ph_mat2(jbnd, ibnd, ik2, jpert)
-          ENDDO
-          el_ph_sum_cmplx(jpert, 1) = el_ph_mat2(jbnd, ibnd, ik2, jpert)
-        ENDDO
-        !
-        ! from pert to cart
-        !
-        CALL dyn_pattern_to_cart(nat, u, el_ph_sum, el_ph_sum_aux)
-        CALL compact_dyn(nat, el_ph_sum, el_ph_sum_aux)
-        CALL epf_pattern_to_cart(nat, u, el_ph_sum_cmplx, el_ph_sum_cmplx_aux)
-        CALL compact_epf(nat, el_ph_sum_cmplx, el_ph_sum_cmplx_aux)
-        !
-        DO nu = 1, nmodes
-          gamma = 0.d0
-          gamma_cmplx = 0.d0
-          DO vu = 1, 3 * nat
-            DO mu = 1, 3 * nat
-              gamma = gamma + REAL(CONJG(dyn(mu, nu)) * el_ph_sum(mu, vu) &
-                      * dyn(vu, nu))
+    DO ispn = 1, nspn
+      DO ibnd = 1, nbnd
+        DO jbnd = 1, nbnd
+          !
+          DO jpert = 1, 3 * nat
+            DO ipert = 1, 3 * nat
+              el_ph_sum(ipert, jpert) = CONJG(el_ph_mat2(jbnd, ibnd, ispn, ipert)) * &
+                                              el_ph_mat2(jbnd, ibnd, ispn, jpert)
             ENDDO
+            el_ph_sum_cmplx(jpert, 1) = el_ph_mat2(jbnd, ibnd, ispn, jpert)
           ENDDO
-          DO mu = 1, 3 * nat
-            gamma_cmplx = gamma_cmplx + CONJG(dyn(mu, nu)) * el_ph_sum_cmplx(mu, 1)
-          ENDDO
-          gamma = gamma / 2.d0
           !
-          ! the factor 2 comes from the factor sqrt(hbar/2/M/omega) that
-          ! appears
-          ! in the definition of the electron-phonon matrix element g
-          ! The sqrt(1/M) factor is actually hidden into the normal modes
-          ! we still need to divide by the phonon frequency in Ry
+          ! from pert to cart
           !
-          IF (w2(nu) .GT. 0.d0) THEN
-            w = DSQRT(w2(nu))
-            gamma = gamma / w
-            epc_real(ibnd, jbnd, nu) = REAL(gamma_cmplx) / (DSQRT(2.d0) * w)
-            epc_imag(ibnd, jbnd, nu) = IMAG(gamma_cmplx) / (DSQRT(2.d0) * w)
-          ELSE
-            w = -DSQRT(-w2(nu))
+          CALL dyn_pattern_to_cart(nat, u, el_ph_sum, el_ph_sum_aux)
+          CALL compact_dyn(nat, el_ph_sum, el_ph_sum_aux)
+          CALL epf_pattern_to_cart(nat, u, el_ph_sum_cmplx, el_ph_sum_cmplx_aux)
+          CALL compact_epf(nat, el_ph_sum_cmplx, el_ph_sum_cmplx_aux)
+          !
+          DO nu = 1, nmodes
             gamma = 0.d0
-            epc_real(ibnd, jbnd, nu) = 0.d0 
-            epc_imag(ibnd, jbnd, nu) = 0.d0
-          ENDIF
-          !
-          IF (gamma .LT. 0.d0) gamma = 0.d0
-          !
-          gamma = DSQRT(gamma)
-          !
-          ! gamma = |g| [Ry]
-          !
-          epc(ibnd, jbnd, nu) = gamma
-          epc_unsym(ibnd, jbnd, nu) = gamma
+            gamma_cmplx = 0.d0
+            DO vu = 1, 3 * nat
+              DO mu = 1, 3 * nat
+                gamma = gamma + REAL(CONJG(dyn(mu, nu)) * el_ph_sum(mu, vu) &
+                        * dyn(vu, nu))
+              ENDDO
+              gamma_cmplx = gamma_cmplx + el_ph_sum_cmplx(vu, 1) * dyn(vu, nu)
+            ENDDO
+            gamma = gamma / 2.d0
+            !
+            ! the factor 2 comes from the factor sqrt(hbar/2/M/omega) that
+            ! appears
+            ! in the definition of the electron-phonon matrix element g
+            ! The sqrt(1/M) factor is actually hidden into the normal modes
+            ! we still need to divide by the phonon frequency in Ry
+            !
+            IF (w2(nu) .GT. 0.d0) THEN
+              w = DSQRT(w2(nu))
+              gamma = gamma / w
+              epc_real(ibnd, jbnd, nu, ispn) = REAL(gamma_cmplx) / DSQRT(2.d0 * w)
+              epc_imag(ibnd, jbnd, nu, ispn) = IMAG(gamma_cmplx) / DSQRT(2.d0 * w)
+            ELSE
+              w = -DSQRT(-w2(nu))
+              gamma = 0.d0
+              epc_real(ibnd, jbnd, nu, ispn) = 0.d0 
+              epc_imag(ibnd, jbnd, nu, ispn) = 0.d0
+            ENDIF
+            !
+            IF (gamma .LT. 0.d0) gamma = 0.d0
+            !
+            gamma = DSQRT(gamma)
+            !
+            ! gamma = |g| [Ry]
+            ! gamma_cmplx = g [Ry]
+            !
+            epc(ibnd, jbnd, nu, ispn) = gamma
+            epc_unsym(ibnd, jbnd, nu, ispn) = gamma
+            !
+          ENDDO
           !
         ENDDO
-        !
       ENDDO
     ENDDO
     !
@@ -1602,93 +1600,99 @@ SUBROUTINE elph_prt()
     !
     ! first the phonons
     !
-    DO jbnd = 1, nbnd
-      DO ibnd = 1, nbnd
-        !
-        DO nu = 1, nmodes
+    DO ispn = 1, nspn
+      DO jbnd = 1, nbnd
+        DO ibnd = 1, nbnd
           !
-          w_1 = DSQRT(ABS(w2(nu)))
-          g2 = 0.d0
-          n = 0
-          !
-          DO mu = 1, nmodes
+          DO nu = 1, nmodes
             !
-            w_2 = DSQRT(ABS(w2(mu)))
+            w_1 = DSQRT(ABS(w2(nu)))
+            g2 = 0.d0
+            n = 0
             !
-            IF (ABS(w_2 - w_1) .LT. eps) THEN
-              n = n + 1
-              g2 = g2 + epc(ibnd, jbnd, mu) * epc(ibnd, jbnd, mu)
-            ENDIF
+            DO mu = 1, nmodes
+              !
+              w_2 = DSQRT(ABS(w2(mu)))
+              !
+              IF (ABS(w_2 - w_1) .LT. eps) THEN
+                n = n + 1
+                g2 = g2 + epc(ibnd, jbnd, mu, ispn) * epc(ibnd, jbnd, mu, ispn)
+              ENDIF
+              !
+            ENDDO
+            !
+            g2 = g2 / FLOAT(n)
+            epc_sym(ibnd, jbnd, nu, ispn) = DSQRT(g2)
             !
           ENDDO
           !
-          g2 = g2 / FLOAT(n)
-          epc_sym(ibnd, jbnd, nu) = DSQRT(g2)
-          !
         ENDDO
-        !
       ENDDO
     ENDDO
     epc = epc_sym
     !
     ! then the k electrons
     !
-    DO nu  = 1, nmodes
-      DO jbnd = 1, nbnd
-        !
-        DO ibnd = 1, nbnd
+    DO ispn = 1, nspn
+      DO nu  = 1, nmodes
+        DO jbnd = 1, nbnd
           !
-          w_1 = et2(ibnd, ikk2)
-          g2 = 0.d0
-          n  = 0
-          !
-          DO pbnd = 1, nbnd
+          DO ibnd = 1, nbnd
             !
-            w_2 = et2(pbnd, ikk2)
+            w_1 = et2(ibnd, 1, ispn)
+            g2 = 0.d0
+            n  = 0
             !
-            IF (ABS(w_2 - w_1) .LT. eps) THEN
-              n = n + 1
-              g2 = g2 + epc(pbnd, jbnd, nu) * epc(pbnd, jbnd, nu)
-            ENDIF
+            DO pbnd = 1, nbnd
+              !
+              w_2 = et2(pbnd, 1, ispn)
+              !
+              IF (ABS(w_2 - w_1) .LT. eps) THEN
+                n = n + 1
+                g2 = g2 + epc(pbnd, jbnd, nu, ispn) * epc(pbnd, jbnd, nu, ispn)
+              ENDIF
+              !
+            ENDDO
+            !
+            g2 = g2 / FLOAT(n)
+            epc_sym(ibnd, jbnd, nu, ispn) = DSQRT(g2)
             !
           ENDDO
           !
-          g2 = g2 / FLOAT(n)
-          epc_sym(ibnd, jbnd, nu) = DSQRT(g2)
-          !
         ENDDO
-        !
       ENDDO
     ENDDO
     epc = epc_sym
     !
     ! and finally the k+q electrons
     !
-    DO nu = 1, nmodes
-      DO ibnd = 1, nbnd
-        !
-        DO jbnd = 1, nbnd
+    DO ispn = 1, nspn
+      DO nu = 1, nmodes
+        DO ibnd = 1, nbnd
           !
-          w_1 = et2(jbnd, ikq2)
-          g2 = 0.d0
-          n  = 0
-          !
-          DO pbnd = 1, nbnd
+          DO jbnd = 1, nbnd
             !
-            w_2 = et2(pbnd, ikq2)
+            w_1 = et2(jbnd, 2, ispn)
+            g2 = 0.d0
+            n  = 0
             !
-            IF (ABS(w_2 - w_1) .LT. eps) THEN
-              n = n + 1
-              g2 = g2 + epc(ibnd, pbnd, nu) * epc(ibnd, pbnd, nu)
-            ENDIF
+            DO pbnd = 1, nbnd
+              !
+              w_2 = et2(pbnd, 2, ispn)
+              !
+              IF (ABS(w_2 - w_1) .LT. eps) THEN
+                n = n + 1
+                g2 = g2 + epc(ibnd, pbnd, nu, ispn) * epc(ibnd, pbnd, nu, ispn)
+              ENDIF
+              !
+            ENDDO
+            !
+            g2 = g2 / FLOAT(n)
+            epc_sym(ibnd, jbnd, nu, ispn) = DSQRT(g2)
             !
           ENDDO
           !
-          g2 = g2 / FLOAT(n)
-          epc_sym(ibnd, jbnd, nu) = DSQRT(g2)
-          !
         ENDDO
-        !
       ENDDO
     ENDDO
     epc = epc_sym
@@ -1697,27 +1701,29 @@ SUBROUTINE elph_prt()
     WRITE(stdout, '(/5x, "q coord.: ", 3f12.7)') xq
     WRITE(stdout, '(5x, "k coord.: ", 3f12.7)') kpoint
     !WRITE(stdout, '(5x, a)') ' ibnd     jbnd     imode   enk[eV]    enk+q[eV]  omega(q)[meV]   |g|[meV]'
-    WRITE(stdout, '(5x, a)') ' ibnd     jbnd     imode   enk[eV]    enk+q[eV]  omega(q)[meV]   &
+    WRITE(stdout, '(5x, a)') ' ibnd     jbnd     ispn     imode   enk[eV]    enk+q[eV]  omega(q)[meV]   &
                                |g_sym|[meV]   |g|[meV]   Re(g)[meV]   Im(g)[meV]'
     WRITE(stdout, '(5x, a)') REPEAT('-', 78)
     !
-    DO ibnd = 1, nbnd
-      DO jbnd = 1, nbnd
-        DO nu = 1, nmodes
-          !
-          IF (w2(nu) .GT. 0.d0) THEN
-            w = DSQRT(w2(nu))
-          ELSE
-            w = -DSQRT(-w2(nu))
-          ENDIF
-          !
-          WRITE(stdout, '(3i9, 2f12.4, 1f20.10, 1e20.10, 3e20.10)') ibnd, jbnd, nu, &
-                rytoev * et2(ibnd, ikk2), rytoev * et2(jbnd, ikq2), &
-                ryd2mev * w, ryd2mev * epc(ibnd, jbnd, nu), &
-                ryd2mev * epc_unsym(ibnd, jbnd, nu), &  
-                ryd2mev * epc_real(ibnd, jbnd, nu), &
-                ryd2mev * epc_imag(ibnd, jbnd, nu)
-          !
+    DO ispn = 1, nspn
+      DO ibnd = 1, nbnd
+        DO jbnd = 1, nbnd
+          DO nu = 1, nmodes
+            !
+            IF (w2(nu) .GT. 0.d0) THEN
+              w = DSQRT(w2(nu))
+            ELSE
+              w = -DSQRT(-w2(nu))
+            ENDIF
+            !
+            WRITE(stdout, '(4i9, 2f12.4, 1f20.10, 1e20.10, 3e20.10)') ibnd, jbnd, ispn, nu, &
+                  rytoev * et2(ibnd, 1, ispn), rytoev * et2(jbnd, 2, ispn), &
+                  ryd2mev * w, ryd2mev * epc(ibnd, jbnd, nu, ispn), &
+                  ryd2mev * epc_unsym(ibnd, jbnd, nu, ispn), &  
+                  ryd2mev * epc_real(ibnd, jbnd, nu, ispn), &
+                  ryd2mev * epc_imag(ibnd, jbnd, nu, ispn)
+            !
+          ENDDO
         ENDDO
       ENDDO
     ENDDO

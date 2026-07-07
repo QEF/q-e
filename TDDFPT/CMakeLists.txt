@@ -49,7 +49,6 @@ set(src_tddfpt
     src/paw_add_symmetry.f90
     src/dveqpsi_us.f90
     src/dveqpsi_us_only.f90
-    src/orthogonalize_omega.f90
     src/lr_mix_pot.f90
     src/lr_magnons_routines.f90
     src/lr_apply_liouvillian_magnons.f90

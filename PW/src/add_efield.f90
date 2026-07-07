@@ -48,7 +48,7 @@ SUBROUTINE add_efield( vpoten, etotefield, rho, iflag )
   USE extfield,      ONLY: tefield, dipfield, edir, eamp, emaxpos, saw, &
                            eopreg, forcefield, el_dipole, ion_dipole, tot_dipole
   USE io_global,     ONLY: stdout,ionode
-  USE control_flags, ONLY: mixing_beta, lforce => tprnfor
+  USE control_flags, ONLY: mixing_beta, lforce
   USE lsda_mod,      ONLY: nspin
   USE mp_images,     ONLY: intra_image_comm
   USE mp_bands,      ONLY: me_bgrp

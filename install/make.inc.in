@@ -23,12 +23,11 @@
 
 @SET_MAKE@
 
-# Top QE directory, useful for locating libraries,  linking QE with plugins
-# The following syntax should always point to TOPDIR:
-TOPDIR = $(dir $(abspath $(filter %make.inc,$(MAKEFILE_LIST))))
-# if it doesn't work, uncomment the following line (edit if needed):
+# Top QE source directory
+TOPDIR = @topdir@
 
-# TOPDIR = @topdir@
+# Top QE build directory
+BUILDDIR = @topbuilddir@
 
 # DFLAGS  = precompilation options (possible arguments to -D and -U)
 #           used by the C compiler and preprocessor
@@ -60,43 +59,43 @@ MOD_FLAG      = @imod@
 # More package-specific directories can be added in each Makefile
 # and stored into MODFLAGS, and the same for module libraries in QEMODS
 
-BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
-               $(MOD_FLAG)$(TOPDIR)/XClib \
-               $(MOD_FLAG)$(TOPDIR)/Modules \
-               $(MOD_FLAG)$(TOPDIR)/FFTXlib/src \
-	       $(MOD_FLAG)$(TOPDIR)/LAXlib \
-	       $(MOD_FLAG)$(TOPDIR)/UtilXlib \
-	       $(MOD_FLAG)$(TOPDIR)/MBD \
-	       $(MOD_FLAG)$(TOPDIR)/KS_Solvers $(FOX_MOD)
+BASEMOD_FLAGS= $(MOD_FLAG)$(BUILDDIR)/Modules \
+               $(MOD_FLAG)$(BUILDDIR)/upflib \
+               $(MOD_FLAG)$(BUILDDIR)/XClib \
+               $(MOD_FLAG)$(BUILDDIR)/FFTXlib/src \
+	       $(MOD_FLAG)$(BUILDDIR)/LAXlib \
+	       $(MOD_FLAG)$(BUILDDIR)/UtilXlib \
+	       $(MOD_FLAG)$(BUILDDIR)/MBD \
+	       $(MOD_FLAG)$(BUILDDIR)/KS_Solvers $(FOX_MOD)
 
 # If A depends upon B, A should come before B in the list below
 # (most compilers don't care but some don't resolve cross links)
-BASEMODS= $(TOPDIR)/Modules/libqemod.a \
-          $(TOPDIR)/upflib/libupf.a \
-          $(TOPDIR)/XClib/xc_lib.a \
-          $(TOPDIR)/FFTXlib/src/libqefft.a \
-          $(TOPDIR)/LAXlib/libqela.a \
-          $(TOPDIR)/UtilXlib/libutil.a \
-          $(TOPDIR)/MBD/libmbd.a
+BASEMODS= $(BUILDDIR)/Modules/libqemod.a \
+          $(BUILDDIR)/upflib/libupf.a \
+          $(BUILDDIR)/XClib/xc_lib.a \
+          $(BUILDDIR)/FFTXlib/src/libqefft.a \
+          $(BUILDDIR)/LAXlib/libqela.a \
+          $(BUILDDIR)/UtilXlib/libutil.a \
+          $(BUILDDIR)/MBD/libmbd.a
 
 # Compilers: fortran-90, fortran-77, C
 # If a parallel compilation is desired, MPIF90 should be a fortran-90
 # compiler that produces executables for parallel execution using MPI
-# (such as for instance mpif90, mpf90, mpxlf90,...);
-# otherwise, an ordinary fortran-90 compiler (f90, g95, xlf90, ifort,...)
+# (e.g. mpif90); otherwise, an ordinary fortran-90 compiler (e.g. gfortran)
 
 MPIF90         = @mpif90@
 F90           = @f90@
 CC             = @cc@
 
-# GPU architecture (Kepler: 35, Pascal: 60, Volta: 70, Turing: 75, Ampere: 80)
-GPU_ARCH=@gpu_arch@
+# NVidia GPU arch (Kepler: 35, Pascal: 60, Volta: 70, Turing: 75, Ampere: 80)
+CUDA_ARCH=@cuda_arch@
 
 # CUDA runtime (should be compatible with the CUDA driver)
 CUDA_RUNTIME=@cuda_runtime@
 
 # CUDA F90 Flags
-CUDA_F90FLAGS=@cuda_fflags@ $(MOD_FLAG)$(TOPDIR)/external/devxlib/src
+CUDA_F90FLAGS=@cuda_fflags@ $(MOD_FLAG)$(BUILDDIR)/devxlib/src \
+                            $(MOD_FLAG)$(TOPDIR)/external/devxlib/include
 
 # CUDA C Flags
 CUDA_CFLAGS=@cuda_cflags@
@@ -136,14 +135,14 @@ LD_LIBS        = @ld_libs@
 
 # External Libraries (if any) : blas, lapack, fft, MPI
 
-# If you have nothing better, use the local copy
-# BLAS_LIBS = $(TOPDIR)/external/lapack/libblas.a
+# If you have nothing better, use the local copy, e.g.:
+# BLAS_LIBS = $(BUILDDIR)/lapack/libblas.a
 
 BLAS_LIBS      = @blas_libs@
 
-# If you have nothing better, use the local copy
+# If you have nothing better, use the local copy, e.g.:
 # LAPACK = liblapack
-# LAPACK_LIBS = $(TOPDIR)/external/lapack/liblapack.a
+# LAPACK_LIBS = $(BUILDDIR)/lapack/liblapack.a
 
 LAPACK      = @lapack_target@
 LAPACK_LIBS = @lapack_libs@
@@ -176,8 +175,7 @@ MPI_LIBS       = @mpi_libs@
 MASS_LIBS      = @mass_libs@
 
 # CUDA libraries
-CUDA_LIBS=@cuda_libs@ -L$(TOPDIR)/external/devxlib/src -ldevXlib
-CUDA_EXTLIBS = @cuda_extlibs@
+CUDA_LIBS=@cuda_libs@ -L$(BUILDDIR)/devxlib/src -ldevXlib
 
 # ar command and flags - for most architectures: AR = ar, ARFLAGS = ruv
 

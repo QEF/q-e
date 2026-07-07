@@ -40,6 +40,7 @@ subroutine dvpsi_e (ik, ipol)
   USE qpoint,          ONLY : nksq, ikks
   USE eqv,             ONLY : dpsi, dvpsi
   USE control_lr,      ONLY : nbnd_occ
+  USE control_flags,   ONLY : offload_type
 
   implicit none
   !
@@ -129,16 +130,21 @@ subroutine dvpsi_e (ik, ipol)
      nrec = (ipol - 1) * nksq + ik
      call save_buffer(dvpsi, lrcom, iucom, nrec)
      !
+     !$acc data copyin(dvpsi)
+     !
      allocate (spsi ( npwx*npol, nbnd))
      if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .and. nbnd>1 ) then
         call divide(inter_bgrp_comm,nbnd,n_start,n_end)
         if (n_end >= n_start) then
-                CALL calbec (npw, vkb, dvpsi(:,n_start:n_end), becp , n_end-n_start+1 )
+                CALL calbec (offload_type, npw, vkb, dvpsi(:,n_start:n_end), becp , n_end-n_start+1 )
         endif
      else
-        CALL calbec (npw, vkb, dvpsi, becp )
+        CALL calbec (offload_type, npw, vkb, dvpsi, becp )
      end if
      CALL s_psi(npwx,npw,nbnd,dvpsi,spsi)
+     !
+     !$acc end data 
+     !
      call dcopy(2*npwx*npol*nbnd,spsi,1,dvpsi,1)
      deallocate (spsi)
      CALL adddvepsi_us(becp1(ik),becp2,ipol,ikk,dvpsi)

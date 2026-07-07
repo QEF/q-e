@@ -365,6 +365,10 @@ SUBROUTINE gcxc( length, rho_in, grho_in, sx_out, sc_out, v1x_out, &
         !
         CALL b86b( rho, grho, 4, sx, v1x, v2x )
         !
+     CASE( 51 ) ! 'W3MX'
+        !
+        CALL W3MX( rho, grho, sx, v1x, v2x )
+        !
      CASE DEFAULT
         !
         sx  = 0.0_DP
@@ -590,7 +594,7 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out, err_out
         ! igcx=3:  PBE,  igcx=4:  revised PBE, igcx=8:  PBE0, igcx=10: PBEsol
         ! igcx=12: HSE,  igcx=20: gau-pbe,     igcx=23: obk8, igcx=24: ob86,
         ! igcx=25: ev93, igcx=34: PBE-AH, igcx=35: PBESOL-AH,
-        ! igcx=44: RPBE,        igcx=45: W31X
+        ! igcx=44: RPBE, igcx=45: W31X
         !
         iflag = 1
         IF ( igcx== 4 ) iflag = 2
@@ -985,6 +989,18 @@ SUBROUTINE gcx_spin( length, rho_in, grho2_in, sx_tot, v1x_out, v2x_out, err_out
         CALL beefx( rho_dw, grho2_dw, sx_dw, v1x_dw, v2x_dw, 0 )
         !
         sx_tot(ir) = 0.5_DP * (sx_up*rnull_up + sx_dw*rnull_dw)
+        v2x_up = 2.0_DP * v2x_up
+        v2x_dw = 2.0_DP * v2x_dw
+        !
+      CASE( 51 )                  ! W3MX for vdW-DF3-mc
+        !
+        rho_up = 2.0_DP * rho_up     ; rho_dw = 2.0_DP * rho_dw
+        grho2_up = 4.0_DP * grho2_up ; grho2_dw = 4.0_DP * grho2_dw
+        !
+        CALL W3MX( rho_up, grho2_up, sx_up, v1x_up, v2x_up )
+        CALL W3MX( rho_dw, grho2_dw, sx_dw, v1x_dw, v2x_dw )
+        !
+        sx_tot(ir) = 0.5_DP * ( sx_up*rnull_up + sx_dw*rnull_dw )
         v2x_up = 2.0_DP * v2x_up
         v2x_dw = 2.0_DP * v2x_dw
         !

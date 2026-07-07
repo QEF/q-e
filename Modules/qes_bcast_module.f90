@@ -126,6 +126,7 @@ MODULE qes_bcast_module
     MODULE PROCEDURE qes_bcast_cp_cellNose
     MODULE PROCEDURE qes_bcast_scalmags
     MODULE PROCEDURE qes_bcast_d3mags
+    MODULE PROCEDURE qes_bcast_pseudoPath
     MODULE PROCEDURE qes_bcast_integerMatrix
     MODULE PROCEDURE qes_bcast_scalarQuantity
     MODULE PROCEDURE qes_bcast_rism3d
@@ -579,7 +580,7 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%mass_ispresent, ionode_id, comm)
     IF (obj%mass_ispresent) &
       CALL mp_bcast(obj%mass, ionode_id, comm)
-    CALL mp_bcast(obj%pseudo_file, ionode_id, comm)
+    CALL qes_bcast_pseudoPath(obj%pseudo_file, ionode_id, comm)
     CALL mp_bcast(obj%starting_magnetization_ispresent, ionode_id, comm)
     IF (obj%starting_magnetization_ispresent) &
       CALL mp_bcast(obj%starting_magnetization, ionode_id, comm)
@@ -784,6 +785,12 @@ MODULE qes_bcast_module
     CALL mp_bcast(obj%localization_threshold_ispresent, ionode_id, comm)
     IF (obj%localization_threshold_ispresent) &
       CALL mp_bcast(obj%localization_threshold, ionode_id, comm)
+    CALL mp_bcast(obj%use_ace_ispresent, ionode_id, comm)
+    IF (obj%use_ace_ispresent) &
+      CALL mp_bcast(obj%use_ace, ionode_id, comm)
+    CALL mp_bcast(obj%nbndproj_ispresent, ionode_id, comm)
+    IF (obj%nbndproj_ispresent) &
+      CALL mp_bcast(obj%nbndproj, ionode_id, comm)
     !
   END SUBROUTINE qes_bcast_hybrid
   !
@@ -3276,6 +3283,34 @@ MODULE qes_bcast_module
     ENDDO
     !
   END SUBROUTINE qes_bcast_d3mags
+  !
+  !
+  SUBROUTINE qes_bcast_pseudoPath(obj, ionode_id, comm )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(pseudoPath_type), INTENT(INOUT) :: obj
+    INTEGER, INTENT(IN) :: ionode_id, comm
+    !
+    CALL mp_bcast(obj%tagname, ionode_id, comm)
+    CALL mp_bcast(obj%lwrite, ionode_id, comm)
+    CALL mp_bcast(obj%lread, ionode_id, comm)
+    !
+    CALL mp_bcast(obj%Zval_ispresent, ionode_id, comm)
+    IF (obj%Zval_ispresent) &
+      CALL mp_bcast(obj%Zval, ionode_id, comm)
+    CALL mp_bcast(obj%mesh_ispresent, ionode_id, comm)
+    IF (obj%mesh_ispresent) &
+      CALL mp_bcast(obj%mesh, ionode_id, comm)
+    CALL mp_bcast(obj%nbeta_ispresent, ionode_id, comm)
+    IF (obj%nbeta_ispresent) &
+      CALL mp_bcast(obj%nbeta, ionode_id, comm)
+    CALL mp_bcast(obj%l_ispresent, ionode_id, comm)
+    IF (obj%l_ispresent) &
+      CALL mp_bcast(obj%l, ionode_id, comm)
+    CALL mp_bcast(obj%pseudoPath, ionode_id, comm)
+    !
+  END SUBROUTINE qes_bcast_pseudoPath
   !
   !
   SUBROUTINE qes_bcast_integerMatrix(obj, ionode_id, comm )

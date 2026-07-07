@@ -190,14 +190,14 @@ PROGRAM Q2QSTAR
   IF (xmldyn) THEN
      nqq=nqs
      IF (imq==0) nqq=2*nqs
-!      IF (lgamma.AND.done_epsil.AND.done_zeu) THEN
-!         CALL write_dyn_mat_header( fildyn, ntyp, nat, ibrav, nspin_mag, &
-!              celldm, at, bg, omega, atm, amass, tau, ityp, m_loc, &
-!              nqq, epsilon, zstareu, lraman, ramtns)
-!      ELSE
+     IF (lrigid) THEN
+         CALL write_dyn_mat_header( fildyn, ntyp, nat, ibrav, nspin_mag, &
+              celldm, at, bg, omega, atm, amass, tau, ityp, m_loc, &
+              nqq, epsilon, zeu)
+     ELSE
         CALL write_dyn_mat_header( filout, ntyp, nat, ibrav, nspin_mag, &
              celldm, at, bg, omega, atm, amass, tau,ityp,m_loc,nqq)
-!      ENDIF
+     ENDIF
   ELSE XML_FORMAT_WRITE
       OPEN (unit=1, file=filout,status='unknown',form='formatted',iostat=ierr)
       IF (ierr /= 0) CALL errore(CODE,'opening output file',1)

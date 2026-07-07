@@ -187,6 +187,7 @@ PROGRAM PAWplot
   USE gvect,      ONLY : ngm
   USE scf,        ONLY : rho
   USE io_files,   ONLY : tmp_dir, prefix
+  USE upf_utils,  ONLY : matches
   USE noncollin_module, ONLY : noncolin
   USE paw_variables,    ONLY : okpaw
   USE paw_postproc_,    ONLY : PAW_make_ae_charge_
@@ -194,7 +195,6 @@ PROGRAM PAWplot
   IMPLICIT NONE
   !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
-  LOGICAL, EXTERNAL :: matches
   !
   CHARACTER(len=256) :: outdir, filplot
   CHARACTER(len=16)  :: plot
@@ -337,7 +337,7 @@ PROGRAM PAWplot
   !
   DEALLOCATE (rhog)
   !
-  CALL environment_end ( 'PAW-plot' )
+  CALL environment_end( )
   !
   CALL stop_pp()
   STOP

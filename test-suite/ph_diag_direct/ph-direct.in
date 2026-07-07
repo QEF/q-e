@@ -1,0 +1,8 @@
+Phonons of Al at Gamma - Direct
+ &inputph
+  tr2_ph=1.0d-12
+  amass(1)=26.98
+  fildyn='al-direct.dyn'
+  diagonalization='direct'
+ /
+0.0 0.0 0.0

@@ -26,7 +26,8 @@
       USE small_box,        ONLY: omegab, tpibab
       USE qgb_mod,          ONLY: qgb
       USE electrons_base,   ONLY: nspin
-      USE control_flags,    ONLY: iprint, thdyn, tfor, tprnfor
+      USE control_flags,    ONLY: iprint
+      USE cp_control,       ONLY: thdyn, tfor
       USE mp,               ONLY: mp_sum
       USE mp_bands,         ONLY: intra_bgrp_comm, inter_bgrp_comm, &
                                   my_bgrp_id, nbgrp 
@@ -66,7 +67,7 @@
       fac=omegab/DBLE(dfftb%nr1*dfftb%nr2*dfftb%nr3)
 
 !$omp parallel default(none) &
-!$omp          shared(ngb, nh, qgb, eigrb, dfftb, irb, vr, deeq, tfor, thdyn, tprnfor, tprint, nabox, &
+!$omp          shared(ngb, nh, qgb, eigrb, dfftb, irb, vr, deeq, tfor, thdyn, tprint, nabox, &
 !$omp                 fac, nspin, my_bgrp_id, nbgrp, ityp, upf, nat, fvan, tpibab, gxb, rhovan, iabox ) &
 !$omp          private(mytid, ntids, is, ia, iia, nfft, iv, jv, ijv, ig, qv, fg1, fg2, res, &
 !$omp                 iss, isup, isdw, fac2, facg1, fac1 )
@@ -112,7 +113,7 @@
          END IF
       END DO
 
-      IF ( tfor .OR. thdyn .OR. (tprnfor.AND.tprint) ) THEN
+      IF ( tfor .OR. thdyn .OR. tprint ) THEN
          !
          ! calculation of fion_i = \int V_eff(r) \sum_lm rho_lm (dq_i,lm(r)/dR_i) dr
          !
@@ -199,7 +200,7 @@
 
 !$omp end parallel
 
-      IF ( tfor .OR. thdyn .OR. (tprnfor.AND.tprint) ) THEN
+      IF ( tfor .OR. thdyn .OR. tprint ) THEN
          CALL mp_sum( fvan, intra_bgrp_comm )
          CALL mp_sum( fvan, inter_bgrp_comm )
          fion(:,:) = fion(:,:) - fvan(:,:)

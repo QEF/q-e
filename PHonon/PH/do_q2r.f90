@@ -93,6 +93,7 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d, write_lr, &
   END IF
   CALL mp_bcast(fildyn, ionode_id, world_comm)
   ! 
+  alph = 0.0_dp
   IF (ionode) THEN
      OPEN (unit=1, file=TRIM(fildyn)//'0'//post, status='old', form='formatted', &
           iostat=ierr)

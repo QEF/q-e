@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
@@ -295,6 +296,7 @@
                                  eps2, eps4, eps20, eps80, eps160, hbar, cm2m, &
                                  electronvolt_si, ry2thz_sr
     USE mp,               ONLY : mp_barrier, mp_sum, mp_bcast
+    USE mp_world,         ONLY : world_comm
     USE mp_global,        ONLY : inter_pool_comm, inter_image_comm
     USE symmetry,         ONLY : s => s_k, nsym => nsym_k
     USE printing,         ONLY : print_mob, print_mob_sym, print_mob_b, print_hall, &
@@ -435,6 +437,8 @@
     !! In solution for iteration i
     REAL(KIND = DP) :: inv_tau_crta
     !! scattering rate for CRTA
+    REAL(KIND = DP) :: f_tmp(3)
+    !! Temporary variable for f_in and f_out
     !
     inv_tau_crta = sr_crta
     !
@@ -603,6 +607,8 @@
       !     However in the BTE, you need F_in to be $\partial_E f_{mk+q}$
       IF (mp_mesh_k) THEN
         ! Use k-point symmetry
+        !$omp parallel do reduction(+:f_out) &
+        !$omp private(f_rot,iq,ik,ibnd,jbnd,itemp,f_tmp)
         DO ind = 1, nind
           !
           f_rot(:) = zero
@@ -612,16 +618,19 @@
           jbnd  = sparse_j(ind)
           itemp = sparse_t(ind)
           !
-          CALL cryst_to_cart(1, f_in(:, jbnd, ixkqf_tr(ind), itemp), at, -1)
+          f_tmp = f_in(:, jbnd, ixkqf_tr(ind), itemp)
+          CALL cryst_to_cart(1, f_tmp, at, -1)
           CALL DGEMV('n', 3, 3, 1.d0, REAL(s(:, :, s_bztoibz_full(ind)), KIND = DP), &
-                     3, f_in(:, jbnd, ixkqf_tr(ind), itemp), 1, 0.d0, f_rot(:), 1)
-          CALL cryst_to_cart(1, f_in(:, jbnd, ixkqf_tr(ind), itemp), bg, 1)
+                     3, f_tmp(:), 1, 0.d0, f_rot(:), 1)
           CALL cryst_to_cart(1, F_rot, bg, 1)
           !
           f_out(:, ibnd, ik, itemp) = f_out(:, ibnd, ik, itemp) + trans_prob(ind) * f_rot(:)
           !
         ENDDO
+        !$omp end parallel do
       ELSE
+        !$omp parallel do reduction(+:f_out) &
+        !$omp private(iq,ik,ibnd,jbnd,itemp,nkq_abs)
         DO ind = 1, nind
           !
           iq    = sparse_q(ind)
@@ -635,11 +644,13 @@
           f_out(:, ibnd, ik, itemp) = f_out(:, ibnd, ik, itemp) + trans_prob(ind) * f_in(:, jbnd, nkq_abs, itemp)
           !
         ENDDO
+        !$omp end parallel do
       ENDIF
       !
       CALL mp_sum(f_out, inter_pool_comm)
       CALL mp_sum(f_out, inter_image_comm)
       !
+      !$omp parallel do collapse(3)
       DO itemp = 1, nstemp
         DO ik = 1, nktotf
           DO ibnd = 1, nbndfst
@@ -650,6 +661,7 @@
           ENDDO
         ENDDO
       ENDDO
+      !$omp end parallel do
       !
       IF (mp_mesh_k) THEN
         CALL k_avg(f_out, vkk_all, nb_sp, xkf_sp)
@@ -775,47 +787,55 @@
         !
         ! iter == 0 corresponds to SERTA with B-field
         IF (iter > 0) THEN
-          ikk = 0
-          DO ind = 1, nind
-            iq    = sparse_q(ind)
-            ik    = sparse_k(ind)
-            ibnd  = sparse_i(ind)
-            jbnd  = sparse_j(ind)
-            itemp = sparse_t(ind)
-            !
-            IF (mp_mesh_k) THEN
+          IF (mp_mesh_k) THEN
+            !$omp parallel do reduction(+:f_out_b) &
+            !$omp private(ind,iq,ik,ibnd,jbnd,itemp,ind1,ind2)
+            DO ikk = 1, nkpt_max
+              ind = ind_map(3, ikk)
+              !
+              iq    = sparse_q(ind)
+              ik    = sparse_k(ind)
+              ibnd  = sparse_i(ind)
+              jbnd  = sparse_j(ind)
+              itemp = sparse_t(ind)
+              !
               IF (lsp(ind)) THEN
                 ! The k-point is a special k-point for which some symmetries send it to himself
-                DO nb = 1, nsymk(ind)
-                  ikk = ikk + 1
-                  ind1 = ind_map(1, ikk)
-                  ind2 = ind_map(2, ikk)
-                  f_out_b(:, ibnd, ind1, itemp) = f_out_b(:, ibnd, ind1, itemp)  &
-                      + trans_prob(ind) * f_in_b(:, jbnd, ind2, itemp) / DBLE(nsym_sp(ikk))
+                ind1 = ind_map(1, ikk)
+                ind2 = ind_map(2, ikk)
+                f_out_b(:, ibnd, ind1, itemp) = f_out_b(:, ibnd, ind1, itemp)  &
+                    + trans_prob(ind) * f_in_b(:, jbnd, ind2, itemp) / DBLE(nsym_sp(ikk))
 
-                ENDDO ! nb
               ELSE ! not a special point
-                DO nb = 1, nsymk(ind)
-                  ikk = ikk + 1
-                  ind1 = ind_map(1, ikk)
-                  ind2 = ind_map(2, ikk)
-                  f_out_b(:, ibnd, ind1, itemp) = f_out_b(:, ibnd, ind1, itemp)  &
-                      + trans_prob(ind) * f_in_b(:, jbnd, ind2, itemp)
-
-                ENDDO ! nb
+                ind1 = ind_map(1, ikk)
+                ind2 = ind_map(2, ikk)
+                f_out_b(:, ibnd, ind1, itemp) = f_out_b(:, ibnd, ind1, itemp)  &
+                    + trans_prob(ind) * f_in_b(:, jbnd, ind2, itemp)
               ENDIF ! Logical special point
-            ELSE ! mp_mesh_k
+            ENDDO ! ikk
+          ELSE ! mp_mesh_k
+            !$omp parallel do reduction(+:f_out_b) &
+            !$omp private(iq,ik,ibnd,jbnd,itemp,nkq_abs)
+            DO ind = 1, nind
+              iq    = sparse_q(ind)
+              ik    = sparse_k(ind)
+              ibnd  = sparse_i(ind)
+              jbnd  = sparse_j(ind)
+              itemp = sparse_t(ind)
               !
               CALL kpmq_map(xkf_all(:, 2 * ik - 1), xqf(:, iq), +1, nkq_abs)
               f_out_b(:, ibnd, ik, itemp) = f_out_b(:, ibnd, ik, itemp)  &
                         + trans_prob(ind) * f_in_b(:, jbnd, nkq_abs, itemp)
-            ENDIF ! mp_mesh_k
-          ENDDO ! ind
-          CALL mp_sum(F_out_b, inter_pool_comm)
-          CALL mp_sum(F_out_b, inter_image_comm)
+            ENDDO ! ind
+            !$omp end parallel do
+          ENDIF ! mp_mesh_k
+
+          ! CALL mp_sum(F_out_b, inter_pool_comm)
+          CALL mp_sum(F_out_b, world_comm)
         ENDIF ! iter > 0
         !
         ! Multiply with the scattering rate inv_tau_b
+        !$omp parallel do collapse(3)
         DO itemp = 1, nstemp
           DO ik = 1, nkpt_bztau_max
             DO ibnd = 1, nbndfst
@@ -826,6 +846,7 @@
             ENDDO
           ENDDO
         ENDDO
+        !$omp end parallel do
         !
         IF (iter == 0) THEN
           ! Computing the derivative of the population takes time. Hence compute the mapping between neighbour k-points
@@ -956,7 +977,7 @@
     USE mp_global,        ONLY : my_pool_id, inter_pool_comm
     USE io_global,        ONLY : ionode_id, ionode, stdout
     USE io_files,         ONLY : tmp_dir, prefix
-    USE input,            ONLY : nstemp, ncarrier, assume_metal
+    USE input,            ONLY : nstemp, ncarrier, assume_metal, lsda
     USE ep_constants,     ONLY : zero
     USE io_var,           ONLY : iufilibtev_sup, iunepmat, iunsparseq, iunsparsek, &
                                  iunsparsei, iunsparsej, iunsparset, iunsparseqcb, &
@@ -999,6 +1020,8 @@
     ! Local variables
     CHARACTER(LEN = 256) :: filint
     !! Name of the file to write/read
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer file name
     INTEGER :: ierr
     !! Error status
     INTEGER :: ik
@@ -1078,11 +1101,14 @@
     wkf_all(:)       = zero
     vkk_all(:, :, :) = zero
     !
+    fnm = ''
+    IF (TRIM(lsda) == 'down') fnm = '.down'
     ! SP - The implementation only works with MPI so far
     ! Read velocities
     IF (ionode) THEN
       !
-      OPEN(UNIT = iufilibtev_sup, FILE = 'IBTEvel_sup' // '_' // TRIM(my_image_id_ch) // '.fmt', STATUS = 'old', IOSTAT = ios)
+      OPEN(UNIT = iufilibtev_sup, FILE = 'IBTEvel_sup'// TRIM(fnm) &
+                  // '_' // TRIM(my_image_id_ch) // '.fmt', STATUS = 'old', IOSTAT = ios)
       READ(iufilibtev_sup, '(a)')
       READ(iufilibtev_sup, *) ind_tot, ind_totcb
       READ(iufilibtev_sup, '(a)')
@@ -1108,7 +1134,8 @@
       CLOSE(iufilibtev_sup)
       !
       inv_tau_all(:, :, :) = zero
-      OPEN(UNIT = iufilibtev_sup, FILE = 'inv_tau' // '_' // TRIM(my_image_id_ch) // '.fmt', STATUS = 'old', IOSTAT = ios)
+      OPEN(UNIT = iufilibtev_sup, FILE = 'inv_tau'// TRIM(fnm) &
+                   // '_' // TRIM(my_image_id_ch) // '.fmt', STATUS = 'old', IOSTAT = ios)
       READ(iufilibtev_sup, '(a)')
       READ(iufilibtev_sup, '(a)')
       DO itemp = 1, nstemp
@@ -1121,7 +1148,8 @@
       CLOSE(iufilibtev_sup)
       !
       inv_tau_allcb(:, :, :) = zero
-      OPEN(UNIT = iufilibtev_sup, FILE = 'inv_taucb' // '_' // TRIM(my_image_id_ch) // '.fmt', STATUS = 'old', IOSTAT = ios)
+      OPEN(UNIT = iufilibtev_sup, FILE = 'inv_taucb'// TRIM(fnm) &
+                  // '_' // TRIM(my_image_id_ch) // '.fmt', STATUS = 'old', IOSTAT = ios)
       READ(iufilibtev_sup, '(a)')
       READ(iufilibtev_sup, '(a)')
       DO itemp = 1, nstemp
@@ -1164,7 +1192,7 @@
       trans_prob(:) = 0.0d0
       !
       ! Open file containing trans_prob
-      filint = TRIM(tmp_dir) // TRIM(prefix) // '.epmatkq1' // '_' // TRIM(my_image_id_ch)
+      filint = TRIM(tmp_dir) // TRIM(prefix)// TRIM(fnm) // '.epmatkq1' // '_' // TRIM(my_image_id_ch)
 #if defined(__MPI)
       CALL MPI_FILE_OPEN(inter_pool_comm, filint, MPI_MODE_RDONLY, MPI_INFO_NULL, iunepmat, ierr)
 #else
@@ -1191,19 +1219,19 @@
       IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_READ', 1)
       !
       ! Now open the sparse matrix mapping
-      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparseq' // '_' // TRIM(my_image_id_ch), &
+      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparseq'// TRIM(fnm) // '_' // TRIM(my_image_id_ch), &
         MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparseq, ierr)
       IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_OPEN sparseq', 1)
-      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparsek' // '_' // TRIM(my_image_id_ch), &
+      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparsek'// TRIM(fnm) // '_' // TRIM(my_image_id_ch), &
         MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsek, ierr)
       IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_OPEN sparsek', 1)
-      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparsei' // '_' // TRIM(my_image_id_ch), &
+      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparsei'// TRIM(fnm) // '_' // TRIM(my_image_id_ch), &
         MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsei, ierr)
       IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_OPEN sparsei', 1)
-      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparsej' // '_' // TRIM(my_image_id_ch), &
+      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparsej'// TRIM(fnm) // '_' // TRIM(my_image_id_ch), &
         MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsej, ierr)
       IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_OPEN sparsej', 1)
-      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparset' // '_' // TRIM(my_image_id_ch), &
+      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparset'// TRIM(fnm) // '_' // TRIM(my_image_id_ch), &
         MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparset, ierr)
       IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_OPEN sparset', 1)
 #else
@@ -1213,19 +1241,19 @@
       ! Now open the sparse matrix mapping
       INQUIRE(IOLENGTH = direct_io_factor) dum_int
       unf_recl = direct_io_factor * INT(nind, KIND = KIND(unf_recl))
-      OPEN(UNIT = iunsparseq, FILE = 'sparseq', IOSTAT = ierr, FORM = 'unformatted', &
+      OPEN(UNIT = iunsparseq, FILE = 'sparseq'// TRIM(fnm), IOSTAT = ierr, FORM = 'unformatted', &
            STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
       IF (ierr /= 0) CALL errore('transport_ibte', 'Error in reading sparseq', 1)
-      OPEN(UNIT = iunsparsek, FILE = 'sparsek', IOSTAT = ierr, FORM = 'unformatted', &
+      OPEN(UNIT = iunsparsek, FILE = 'sparsek'// TRIM(fnm), IOSTAT = ierr, FORM = 'unformatted', &
            STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
       IF (ierr /= 0) CALL errore('transport_ibte', 'Error in reading sparsek', 1)
-      OPEN(UNIT = iunsparsei, FILE = 'sparsei', IOSTAT = ierr, FORM = 'unformatted', &
+      OPEN(UNIT = iunsparsei, FILE = 'sparsei'// TRIM(fnm), IOSTAT = ierr, FORM = 'unformatted', &
            STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
       IF (ierr /= 0) CALL errore('transport_ibte', 'Error in reading sparsei', 1)
-      OPEN(UNIT = iunsparsej, FILE = 'sparsej', IOSTAT = ierr, FORM = 'unformatted', &
+      OPEN(UNIT = iunsparsej, FILE = 'sparsej'// TRIM(fnm), IOSTAT = ierr, FORM = 'unformatted', &
            STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
       IF (ierr /= 0) CALL errore('transport_ibte', 'Error in reading sparsej', 1)
-      OPEN(UNIT = iunsparset, FILE = 'sparset', IOSTAT = ierr, FORM = 'unformatted', &
+      OPEN(UNIT = iunsparset, FILE = 'sparset'// TRIM(fnm), IOSTAT = ierr, FORM = 'unformatted', &
            STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
       IF (ierr /= 0) CALL errore('transport_ibte', 'Error in reading sparset', 1)
 #endif
@@ -1341,7 +1369,7 @@
       trans_probcb(:) = 0.0d0
       !
       ! Open file containing trans_prob
-      filint = TRIM(tmp_dir) // TRIM(prefix) // '.epmatkqcb1' // '_' // TRIM(my_image_id_ch)
+      filint = TRIM(tmp_dir) // TRIM(prefix)// TRIM(fnm) // '.epmatkqcb1' // '_' // TRIM(my_image_id_ch)
 #if defined(__MPI)
       CALL MPI_FILE_OPEN(inter_pool_comm, filint, MPI_MODE_RDONLY, MPI_INFO_NULL, iunepmatcb, ierr)
 #else
@@ -1365,19 +1393,19 @@
       IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_READ iunepmatcb', 1)
       !
       ! Now read the sparse matrix mapping
-      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparseqcb' // '_' // TRIM(my_image_id_ch), &
+      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparseqcb'// TRIM(fnm) // '_' // TRIM(my_image_id_ch), &
         MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparseqcb, ierr)
       IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_OPEN sparseqcb', 1)
-      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparsekcb' // '_' // TRIM(my_image_id_ch), &
+      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparsekcb'// TRIM(fnm) // '_' // TRIM(my_image_id_ch), &
         MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsekcb, ierr)
       IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_OPEN sparsekcb', 1)
-      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparseicb' // '_' // TRIM(my_image_id_ch), &
+      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparseicb'// TRIM(fnm) // '_' // TRIM(my_image_id_ch), &
         MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparseicb, ierr)
       IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_OPEN sparseicb', 1)
-      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparsejcb' // '_' // TRIM(my_image_id_ch), &
+      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparsejcb'// TRIM(fnm) // '_' // TRIM(my_image_id_ch), &
         MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsejcb, ierr)
       IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_OPEN sparsejcb', 1)
-      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparsetcb' // '_' // TRIM(my_image_id_ch), &
+      CALL MPI_FILE_OPEN(inter_pool_comm, 'sparsetcb'// TRIM(fnm) // '_' // TRIM(my_image_id_ch), &
         MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsetcb, ierr)
       IF (ierr /= 0) CALL errore('transport_ibte', 'error in MPI_FILE_OPEN sparsetcb', 1)
 #else
@@ -1387,19 +1415,19 @@
       ! Now open the sparse matrix mapping
       INQUIRE(IOLENGTH = direct_io_factor) dum_int
       unf_recl = direct_io_factor * INT(nind, KIND = KIND(unf_recl))
-      OPEN(UNIT = iunsparseqcb, FILE = 'sparseqcb', IOSTAT = ierr, FORM = 'unformatted', &
+      OPEN(UNIT = iunsparseqcb, FILE = 'sparseqcb'// TRIM(fnm), IOSTAT = ierr, FORM = 'unformatted', &
            STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
       IF (ierr /= 0) CALL errore('transport_ibte', 'Error in reading sparseqcb', 1)
-      OPEN(UNIT = iunsparsekcb, FILE = 'sparsekcb', IOSTAT = ierr, FORM = 'unformatted', &
+      OPEN(UNIT = iunsparsekcb, FILE = 'sparsekcb'// TRIM(fnm), IOSTAT = ierr, FORM = 'unformatted', &
            STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
       IF (ierr /= 0) CALL errore('transport_ibte', 'Error in reading sparsekcb', 1)
-      OPEN(UNIT = iunsparseicb, FILE = 'sparseicb', IOSTAT = ierr, FORM = 'unformatted', &
+      OPEN(UNIT = iunsparseicb, FILE = 'sparseicb'// TRIM(fnm), IOSTAT = ierr, FORM = 'unformatted', &
            STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
       IF (ierr /= 0) CALL errore('transport_ibte', 'Error in reading sparseicb', 1)
-      OPEN(UNIT = iunsparsejcb, FILE = 'sparsejcb', IOSTAT = ierr, FORM = 'unformatted', &
+      OPEN(UNIT = iunsparsejcb, FILE = 'sparsejcb'// TRIM(fnm), IOSTAT = ierr, FORM = 'unformatted', &
            STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
       IF (ierr /= 0) CALL errore('transport_ibte', 'Error in reading sparsejcb', 1)
-      OPEN(UNIT = iunsparsetcb, FILE = 'sparsetcb', IOSTAT = ierr, FORM = 'unformatted', &
+      OPEN(UNIT = iunsparsetcb, FILE = 'sparsetcb'// TRIM(fnm), IOSTAT = ierr, FORM = 'unformatted', &
            STATUS = 'unknown', ACCESS = 'direct', RECL = unf_recl)
       IF (ierr /= 0) CALL errore('transport_ibte', 'Error in reading sparsetcb', 1)
 #endif

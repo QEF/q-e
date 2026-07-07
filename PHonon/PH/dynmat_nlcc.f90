@@ -22,7 +22,7 @@ subroutine dynmat_nlcc (imode0, drhop, npe)
   USE modes,  ONLY : nirr, npert, u
   USE uspp,   ONLY : nlcc_any
   USE dv_of_drho_lr,    ONLY : dv_of_drho_xc
-  USE control_lr, ONLY: lmultipole
+  USE control_ph, ONLY: lmultipole
 
   implicit none
 

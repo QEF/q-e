@@ -18,7 +18,7 @@ MODULE fhi
   ! All variables read from FHI file format
   !
   USE upf_kinds, ONLY : dp
-  USE pseudo_types, ONLY : pseudo_upf
+  USE pseudo_types, ONLY : pseudo_upf, reset_upf
   !
   TYPE angular_comp
      REAL(dp), ALLOCATABLE  :: pot(:)
@@ -190,6 +190,8 @@ SUBROUTINE convert_fhi (upf)
   CHARACTER (len=2), EXTERNAL:: atom_name
   INTEGER :: l, i, ir, iv
   !
+  CALL reset_upf(upf)
+  !
   upf%nv       = "2.0.1"
   upf%generated= "Generated using FHI98PP, converted with fhi2upf.x v.5.0.2"
   upf%author   = "unknown"
@@ -210,19 +212,6 @@ SUBROUTINE convert_fhi (upf)
   upf%typ = 'SL'
   upf%nlcc = nlcc_
   !
-  ! for compatibility with USPP and other formats
-  !
-  upf%nqf = 0
-  upf%nqlc= 0
-  upf%tvanp =.false.
-  upf%tpawp =.false.
-  upf%has_so=.false.
-  upf%has_wfc=.false.
-  upf%has_gipaw=.false.
-  upf%tcoulombp=.false.
-  upf%is_gth=.false.
-  upf%is_multiproj=.false.
-  !
   IF (pspxc == 7) THEN
      upf%dft = 'SLA-PW'
   ELSEIF (pspxc == 11) THEN
@@ -236,9 +225,6 @@ SUBROUTINE convert_fhi (upf)
   ENDIF
   !
   upf%zp   = Zval
-  upf%etotps =0.0d0
-  upf%ecutrho=0.0d0
-  upf%ecutwfc=0.0d0
   !
 ! 2014/11/11 JM
 ! Use lloc (from fhi module) here, otherwise the user input has not effect on the vloc assignment below.

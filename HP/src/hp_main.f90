@@ -20,7 +20,8 @@ PROGRAM hp_main
   USE environment,       ONLY : environment_start, environment_end
   USE ions_base,         ONLY : nat, ityp, atm, tau, amass
   USE io_files,          ONLY : tmp_dir
-  USE control_flags,     ONLY : dfpt_hub, use_para_diag, use_gpu
+  USE control_flags,     ONLY : use_para_diag, use_gpu
+  USE ldaU,              ONLY : dfpt_hub
   USE ldaU_hp,           ONLY : perturbed_atom, start_q, last_q, nqs, code, &
                                 compute_hp, sum_pertq, perturb_only_atom,   &
                                 determine_num_pert_only, tmp_dir_save,      &
@@ -233,7 +234,7 @@ PROGRAM hp_main
      CALL hp_print_clock()
   ENDIF
   !
-  CALL environment_end(code)
+  CALL environment_end( )
   !
   IF ( use_para_diag ) CALL laxlib_end() 
   CALL mp_global_end()

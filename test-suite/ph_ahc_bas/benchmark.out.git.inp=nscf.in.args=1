@@ -1,9 +1,5 @@
-MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
-MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
-MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
-MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
 
-     Program PWSCF v.7.2 starts on  7Dec2023 at 19: 1:43 
+     Program PWSCF v.7.6-dev starts on  6Jul2026 at 10:26:19 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -17,8 +13,8 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
      Parallel version (MPI), running on     4 processors
 
      MPI processes distributed on     1 nodes
-     38325 MiB available memory on the printing compute node when the environment starts
- 
+     7994 MiB available memory on the printing compute node when the environment starts
+
      Waiting for input...
      Reading input from standard input
 
@@ -29,22 +25,22 @@ MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra proces
 
      Atomic positions and unit cell read from directory:
      ./BAs.save/
- 
- 
+
+
      R & G space division:  proc/nbgrp/npool/nimage =       4
      Subspace diagonalization in iterative solution of the eigenvalue problem:
      a serial algorithm will be used
 
- 
+
      Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Min         112     112     34                 1604     1604     266
      Max         113     113     35                 1607     1607     267
      Sum         451     451    139                 6423     6423    1067
- 
+
      Using Slab Decomposition
- 
+
 
 
      bravais-lattice index     =            2
@@ -466,19 +462,19 @@ T_2    3.00  0.00 -1.00 -1.00  1.00
      total cpu time spent up to now is        0.2 secs
 
      Computing kpt #:     2  of     8
-     total cpu time spent up to now is        0.2 secs
+     total cpu time spent up to now is        0.3 secs
 
      Computing kpt #:     3  of     8
-     total cpu time spent up to now is        0.2 secs
+     total cpu time spent up to now is        0.3 secs
 
      Computing kpt #:     4  of     8
-     total cpu time spent up to now is        0.3 secs
+     total cpu time spent up to now is        0.4 secs
 
      Computing kpt #:     5  of     8
-     total cpu time spent up to now is        0.3 secs
+     total cpu time spent up to now is        0.4 secs
 
      Computing kpt #:     6  of     8
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.5 secs
 
      Computing kpt #:     7  of     8
      total cpu time spent up to now is        0.5 secs
@@ -522,7 +518,7 @@ T_2    3.00  0.00 -1.00 -1.00  1.00
           k = 0.0000 1.0000 0.0000 (   790 PWs)   bands (ev):
 
     -3.0689  -0.2352   4.1228   4.1228   9.4420   9.4719  18.9920  18.9920
-    20.9720  23.8233  25.5661  25.5661  26.5656  28.2832
+    20.9721  23.8233  25.5661  25.5661  26.5656  28.2832
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   0.0000   0.0000   0.0000   0.0000
@@ -540,7 +536,7 @@ T_2    3.00  0.00 -1.00 -1.00  1.00
           k =-1.0000 0.0000 0.0000 (   790 PWs)   bands (ev):
 
     -3.0689  -0.2352   4.1228   4.1228   9.4420   9.4719  18.9920  18.9920
-    20.9720  23.8233  25.5661  25.5661  26.5656  28.2832
+    20.9721  23.8233  25.5661  25.5661  26.5656  28.2832
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   0.0000   0.0000   0.0000   0.0000
@@ -549,7 +545,7 @@ T_2    3.00  0.00 -1.00 -1.00  1.00
           k = 0.0000 0.0000 1.0000 (   790 PWs)   bands (ev):
 
     -3.0689  -0.2352   4.1228   4.1228   9.4420   9.4719  18.9920  18.9920
-    20.9720  23.8233  25.5661  25.5661  26.5656  28.2832
+    20.9721  23.8233  25.5661  25.5661  26.5656  28.2832
 
      occupation numbers 
      1.0000   1.0000   1.0000   1.0000   0.0000   0.0000   0.0000   0.0000
@@ -568,55 +564,54 @@ T_2    3.00  0.00 -1.00 -1.00  1.00
 
      Writing all to output data dir ./BAs.save/ :
      XML data file, pseudopotentials, collected wavefunctions
- 
-     init_run     :      0.02s CPU      0.03s WALL (       1 calls)
-     electrons    :      0.40s CPU      0.41s WALL (       1 calls)
+
+     init_run     :      0.12s CPU      0.13s WALL (       1 calls)
+     electrons    :      0.36s CPU      0.39s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
      wfcinit:atom :      0.00s CPU      0.00s WALL (       8 calls)
      wfcinit:wfcr :      0.02s CPU      0.02s WALL (       8 calls)
      potinit      :      0.00s CPU      0.00s WALL (       1 calls)
-     hinit0       :      0.01s CPU      0.02s WALL (       1 calls)
+     hinit0       :      0.11s CPU      0.11s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.40s CPU      0.41s WALL (       1 calls)
+     c_bands      :      0.36s CPU      0.39s WALL (       1 calls)
      v_of_rho     :      0.00s CPU      0.00s WALL (       1 calls)
      v_h          :      0.00s CPU      0.00s WALL (       1 calls)
      v_xc         :      0.00s CPU      0.00s WALL (       1 calls)
 
      Called by c_bands:
      init_us_2    :      0.00s CPU      0.00s WALL (       8 calls)
-     init_us_2:cp :      0.00s CPU      0.00s WALL (       8 calls)
-     cegterg      :      0.37s CPU      0.38s WALL (      11 calls)
+     cegterg      :      0.34s CPU      0.37s WALL (      11 calls)
 
      Called by sum_band:
 
      Called by *egterg:
-     cdiaghg      :      0.06s CPU      0.06s WALL (     172 calls)
+     cdiaghg      :      0.03s CPU      0.03s WALL (     172 calls)
      cegterg:over :      0.01s CPU      0.01s WALL (     164 calls)
-     cegterg:upda :      0.00s CPU      0.01s WALL (     164 calls)
+     cegterg:upda :      0.00s CPU      0.00s WALL (     164 calls)
      cegterg:last :      0.01s CPU      0.01s WALL (     132 calls)
-     h_psi        :      0.30s CPU      0.31s WALL (     183 calls)
+     h_psi        :      0.30s CPU      0.33s WALL (     183 calls)
      g_psi        :      0.00s CPU      0.00s WALL (     164 calls)
 
      Called by h_psi:
      h_psi:calbec :      0.00s CPU      0.00s WALL (     183 calls)
-     vloc_psi     :      0.30s CPU      0.30s WALL (     183 calls)
+     vloc_psi     :      0.30s CPU      0.32s WALL (     183 calls)
      add_vuspsi   :      0.00s CPU      0.00s WALL (     183 calls)
 
      General routines
      calbec       :      0.00s CPU      0.00s WALL (     183 calls)
-     fft          :      0.00s CPU      0.01s WALL (       3 calls)
-     fftw         :      0.26s CPU      0.27s WALL (    3644 calls)
+     fft          :      0.09s CPU      0.09s WALL (       3 calls)
+     fftw         :      0.24s CPU      0.26s WALL (    3644 calls)
      davcio       :      0.00s CPU      0.00s WALL (      16 calls)
- 
-     Parallel routines
- 
-     PWSCF        :      0.48s CPU      0.51s WALL
 
- 
-   This run was terminated on:  19: 1:44   7Dec2023            
+     Parallel routines
+
+     PWSCF        :      0.51s CPU      0.55s WALL
+
+
+   This run was terminated on:  10:26:19   6Jul2026            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

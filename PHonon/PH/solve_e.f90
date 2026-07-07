@@ -49,56 +49,37 @@ subroutine solve_e
   USE qpoint,                ONLY : nksq, ikks
   USE control_lr,            ONLY : lgamma, convt, rec_code_read, rec_code, where_rec
   USE uspp_init,             ONLY : init_us_2
+  USE dfpt_type,             ONLY : dfpt_data_type, allocate_dfpt_data, deallocate_dfpt_data
   USE dfpt_kernels,          ONLY : dfpt_kernel
+  USE recover_mod,           ONLY : write_rec
   !
   IMPLICIT NONE
+  !
+  EXTERNAL :: stop_smoothly_ph
   !
   LOGICAL :: exst
   !!
   INTEGER :: ikk, npw, iter0, ipol, ik
   !! counters
+  INTEGER :: nnr
+  !! dffts%nnr, defined used for acc
   REAL(DP) :: dr2
   !! self-consistency error
-
-  COMPLEX(DP), ALLOCATABLE, TARGET :: dvscfin (:,:,:)
-  !! change of the scf potential (input)
-  COMPLEX(DP), POINTER :: dvscfins (:,:,:)
-  !! change of the scf potential (smooth)
-  COMPLEX(DP), ALLOCATABLE :: drhos(:, :, :)
-  !! change of the charge density (smooth part only, dffts)
-  COMPLEX(DP), ALLOCATABLE :: drhop(:, :, :)
-  !! change of the charge density (smooth and hard parts, dfftp)
-  COMPLEX(DP), ALLOCATABLE :: dbecsum(:,:,:,:)
-  !! the becsum with dpsi
-  INTEGER :: nnr
+  TYPE(dfpt_data_type) :: dfpt_data
+  !! Data that describes linear response quantities
   !
   call start_clock ('solve_e')
   !
   !  This routine is task group aware
   !
-  allocate (dvscfin( dfftp%nnr, nspin_mag, 3))
-  nnr = dfftp%nnr
-  dvscfin=(0.0_DP,0.0_DP)
-  if (doublegrid) then
-     allocate (dvscfins(dffts%nnr, nspin_mag, 3))
-     nnr = dffts%nnr
-  else
-     dvscfins => dvscfin
-  endif
-  !$acc enter data create(dvscfins(1:nnr, 1:nspin_mag, 1:3))
-  ALLOCATE(drhos(dffts%nnr, nspin_mag, 3))
-  ALLOCATE(drhop(dfftp%nnr, nspin_mag, 3))
-  allocate (dbecsum( nhm*(nhm+1)/2, nat, nspin_mag, 3))
-  dbecsum = (0.d0, 0.d0)
-
-
+  CALL allocate_dfpt_data(dfpt_data, 3)
+  !
+  nnr = dffts%nnr
+  !$acc enter data create(dfpt_data, dfpt_data%dvscfs(1:nnr, 1:nspin_mag, 1:3))
+  !
   if (rec_code_read == -20.AND.ext_recover) then
      ! restarting in Electric field calculation
-     IF (okpaw) THEN
-        CALL read_rec(dr2, iter0, 3, dvscfin, dvscfins, drhop, dbecsum)
-     ELSE
-        CALL read_rec(dr2, iter0, 3, dvscfin, dvscfins)
-     ENDIF
+     CALL read_rec(dr2, iter0, dfpt_data)
   else if (rec_code_read > -20 .AND. rec_code_read <= -10) then
      ! restarting in Raman: proceed
      convt = .true.
@@ -149,7 +130,8 @@ subroutine solve_e
   !
   !   Solve DFPT fixed-point equation
   !
-  CALL dfpt_kernel('PHONON', 3, iter0, lrebar, iuebar, dr2, drhos, drhop, dvscfins, dvscfin, dbecsum, 1, 0, 'efield')
+  CALL dfpt_kernel('PHONON', 3, iter0, lrebar, iuebar, dr2, dfpt_data, 1, 0, &
+                   write_rec_callback = write_rec, stop_callback = stop_smoothly_ph)
   !
   IF (lda_plus_u) CALL dnsq_store(3, 0)
   !
@@ -160,19 +142,15 @@ subroutine solve_e
         CALL diropn (iudrho, TRIM(fildrho)//'.E', lrdrho, exst)
      END IF
      DO ipol=1,3
-        CALL davcio_drho(dvscfin(1,1,ipol),lrdrho, iudrho,ipol,+1)
+        CALL davcio_drho(dfpt_data%drhop(1,1,ipol),lrdrho, iudrho,ipol,+1)
      END DO
   END IF
   !
 155 continue
   !
-  deallocate (dbecsum)
-  deallocate (drhos)
-  deallocate (drhop)
-  !$acc exit data delete(dvscfins)
-  if (doublegrid) deallocate (dvscfins)
-  deallocate (dvscfin)
-
+  !$acc exit data delete(dfpt_data, dfpt_data%dvscfs)
+  CALL deallocate_dfpt_data(dfpt_data)
+  !
   call stop_clock ('solve_e')
   return
 end subroutine solve_e

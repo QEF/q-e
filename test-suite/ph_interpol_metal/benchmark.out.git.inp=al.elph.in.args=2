@@ -1,18 +1,22 @@
 
-     Program PHONON v.6.5 starts on 21Mar2020 at 18:41:28 
+     Program PHONON v.7.6-dev starts on  6Jul2026 at 10:23:56 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
          "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     1 processors
+     Parallel version (MPI), running on     4 processors
 
      MPI processes distributed on     1 nodes
-     Fft bands division:     nmany     =       1
+     8027 MiB available memory on the printing compute node when the environment starts
+
+     Waiting for input...
+     Reading input from standard input
 
 
      Dynamical matrices for q-points given in input
@@ -32,8 +36,11 @@
      Reading xml data from directory:
 
      ./aluminum.save/
-     Message from routine qexsd_readschema :
-     input info not found or not readable in xml file
+
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+     Subspace diagonalization in iterative solution of the eigenvalue problem:
+     a serial algorithm will be used
+
 
      IMPORTANT: XC functional enforced from input :
      Exchange-correlation= PZ
@@ -41,13 +48,42 @@
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
- 
-     G-vector sticks info
+
+     Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min          30      30     10                  216      216      45
+     Max          31      31     11                  218      218      46
      Sum         121     121     43                  869      869     181
- 
-     Reading collected, re-writing distributed wavefunctions
+
+     Using Slab Decomposition
+
+     Reading collected, re-writing distributed wavefunctions in ./
+
+     Number and degeneracy of irreps per q-point
+       N         xq(1)         xq(2)         xq(3)   N irreps
+       1   0.000000000   0.000000000   0.000000000       1
+        3
+       2   0.250000000   0.000000000   0.000000000       2
+        1   2
+       3   0.500000000   0.000000000   0.000000000       2
+        1   2
+       4   1.000000000   0.000000000   0.000000000       2
+        2   1
+       5   0.750000000   0.250000000   0.250000000       3
+     No degeneracy
+       6   0.500000000   0.500000000   0.500000000       2
+        2   1
+       7   0.250000000   0.250000000   0.250000000       2
+        1   2
+       8   0.000000000   0.000000000   0.000000000       1
+        3
+       9   0.250000000   0.250000000   0.000000000       3
+     No degeneracy
+      10   0.500000000   0.500000000   0.000000000       3
+     No degeneracy
+
+     Saving dvscf to file. Distribute only q points, not irreducible representations.
 
      Calculation of q =    0.0000000   0.0000000   0.0000000
 
@@ -86,15 +122,15 @@
      Cartesian axes
 
      site n.  atom      mass           positions (alat units)
-        1     Al  26.9800   tau(    1) = (   -0.16667    0.33333    0.50000  )
+        1  Al     26.9800   tau(    1) = (   -0.16667    0.33333    0.50000  )
 
      Computing dynamical matrix for 
                     q = (   0.0000000   0.0000000   0.0000000 )
- 
+
      49 Sym.Ops. (with q -> -q+G )
 
 
-     G cutoff =   85.4897  (    869 G-vectors)     FFT grid: ( 15, 15, 15)
+     G cutoff =   85.4897  (    217 G-vectors)     FFT grid: ( 15, 15, 15)
 
      number of k points=    29  Marzari-Vanderbilt smearing, width (Ry)=  0.0500
 
@@ -111,46 +147,46 @@
 
 
      Atomic displacements:
-     There are   1 irreducible representations
+     There are    1 irreducible representations
 
-     Representation     1      3 modes -T_1u G_15  G_4-  To be done
+     Representation     1      3 modes -  To be done
 
 
 
      Alpha used in Ewald sum =   0.7000
-     PHONON       :      0.17s CPU      0.17s WALL
+     PHONON       :      0.04s CPU      0.05s WALL
 
 
 
-     Representation #  1 modes #   1  2  3
+     Representation #   1 modes #   1   2   3
 
      Self-consistent Calculation
- 
-     Pert. #  1: Fermi energy shift (Ry) =    -1.6501E-24    -6.2693E-38
-     Pert. #  2: Fermi energy shift (Ry) =    -4.3190E-25    -4.3885E-37
-     Pert. #  3: Fermi energy shift (Ry) =     1.8849E-25     0.0000E+00
 
-      iter #   1 total cpu time :     0.4 secs   av.it.:   3.2
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  1.431E-08
- 
-     Pert. #  1: Fermi energy shift (Ry) =    -4.0497E-25     7.3468E-40
-     Pert. #  2: Fermi energy shift (Ry) =     7.6687E-25    -9.7958E-40
-     Pert. #  3: Fermi energy shift (Ry) =    -4.8898E-25     1.2321E-39
+     Pert. #  1: Fermi energy shift (Ry) =    -4.9631E-24     0.0000E+00
+     Pert. #  2: Fermi energy shift (Ry) =     0.0000E+00     5.6424E-37
+     Pert. #  3: Fermi energy shift (Ry) =     5.5145E-25     4.3885E-37
 
-      iter #   2 total cpu time :     0.6 secs   av.it.:   5.4
-      thresh= 1.196E-05 alpha_mix =  0.700 |ddv_scf|^2 =  1.497E-09
- 
-     Pert. #  1: Fermi energy shift (Ry) =     1.3959E-24    -2.4489E-40
-     Pert. #  2: Fermi energy shift (Ry) =    -3.0158E-25    -1.1020E-39
-     Pert. #  3: Fermi energy shift (Ry) =    -1.6150E-24    -1.0331E-39
+      iter #   1 total cpu time :     0.1 secs   av.it.:   3.3
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  1.256E-08
 
-      iter #   3 total cpu time :     0.8 secs   av.it.:   5.0
-      thresh= 3.869E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.706E-13
+     Pert. #  1: Fermi energy shift (Ry) =    -1.0478E-23    -6.7346E-40
+     Pert. #  2: Fermi energy shift (Ry) =     2.7573E-24    -7.3468E-40
+     Pert. #  3: Fermi energy shift (Ry) =     1.1029E-24     8.5713E-40
+
+      iter #   2 total cpu time :     0.2 secs   av.it.:   5.6
+      thresh= 1.121E-05 alpha_mix =  0.700 |ddv_scf|^2 =  1.314E-09
+
+     Pert. #  1: Fermi energy shift (Ry) =    -7.1689E-24     0.0000E+00
+     Pert. #  2: Fermi energy shift (Ry) =    -3.3087E-24    -1.1020E-39
+     Pert. #  3: Fermi energy shift (Ry) =     7.7204E-24    -8.5713E-40
+
+      iter #   3 total cpu time :     0.3 secs   av.it.:   5.2
+      thresh= 3.625E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.472E-13
 
      End of self-consistent calculation
 
      Convergence has been achieved 
- 
+
      Number of q in the star =    1
      List of q in the star:
           1   0.000000000   0.000000000   0.000000000
@@ -160,96 +196,96 @@
      q = (    0.000000000   0.000000000   0.000000000 ) 
 
  **************************************************************************
-     freq (    1) =       0.171313 [THz] =       5.714400 [cm-1]
-     freq (    2) =       0.171313 [THz] =       5.714400 [cm-1]
-     freq (    3) =       0.171313 [THz] =       5.714400 [cm-1]
+     freq (    1) =       0.173093 [THz] =       5.773766 [cm-1]
+     freq (    2) =       0.173093 [THz] =       5.773766 [cm-1]
+     freq (    3) =       0.173093 [THz] =       5.773766 [cm-1]
  **************************************************************************
 
      Mode symmetry, O_h (m-3m)  point group:
 
-     freq (  1 -  3) =          5.7  [cm-1]   --> T_1u G_15  G_4- I  
- 
+     freq (   1-   3) =          5.8  [cm-1]   --> T_1u G_15  G_4- I  
+
      Gaussian Broadening:   0.020 Ry, ngauss=   0
-     DOS =  2.675809 states/spin/Ry/Unit Cell at Ef=  8.278667 eV
-     double delta at Ef =104.058639
+     DOS =  2.675809 states/spin/Ry/Unit Cell at Ef=  8.278666 eV
+     double delta at Ef =104.058647
      lambda(    1)=  0.0000   gamma=    0.00 GHz
      lambda(    2)=  0.0000   gamma=    0.00 GHz
      lambda(    3)=  0.0000   gamma=    0.00 GHz
- 
+
      Gaussian Broadening:   0.040 Ry, ngauss=   0
-     DOS =  2.703387 states/spin/Ry/Unit Cell at Ef=  8.200081 eV
-     double delta at Ef = 56.350968
+     DOS =  2.703385 states/spin/Ry/Unit Cell at Ef=  8.200080 eV
+     double delta at Ef = 56.350923
      lambda(    1)=  0.0000   gamma=    0.32 GHz
      lambda(    2)=  0.0000   gamma=    0.32 GHz
      lambda(    3)=  0.0000   gamma=    0.32 GHz
- 
+
      Gaussian Broadening:   0.060 Ry, ngauss=   0
-     DOS =  2.781691 states/spin/Ry/Unit Cell at Ef=  8.182007 eV
-     double delta at Ef = 42.846273
+     DOS =  2.781690 states/spin/Ry/Unit Cell at Ef=  8.182006 eV
+     double delta at Ef = 42.846251
      lambda(    1)=  0.0000   gamma=    1.23 GHz
      lambda(    2)=  0.0000   gamma=    1.23 GHz
      lambda(    3)=  0.0000   gamma=    1.23 GHz
- 
+
      Gaussian Broadening:   0.080 Ry, ngauss=   0
-     DOS =  2.793236 states/spin/Ry/Unit Cell at Ef=  8.205919 eV
-     double delta at Ef = 36.753070
+     DOS =  2.793236 states/spin/Ry/Unit Cell at Ef=  8.205918 eV
+     double delta at Ef = 36.753058
      lambda(    1)=  0.0000   gamma=    2.20 GHz
      lambda(    2)=  0.0000   gamma=    2.20 GHz
      lambda(    3)=  0.0000   gamma=    2.20 GHz
- 
+
      Gaussian Broadening:   0.100 Ry, ngauss=   0
-     DOS =  2.781098 states/spin/Ry/Unit Cell at Ef=  8.232637 eV
-     double delta at Ef = 32.865698
+     DOS =  2.781098 states/spin/Ry/Unit Cell at Ef=  8.232636 eV
+     double delta at Ef = 32.865692
      lambda(    1)=  0.0000   gamma=    2.67 GHz
      lambda(    2)=  0.0000   gamma=    2.67 GHz
      lambda(    3)=  0.0000   gamma=    2.67 GHz
- 
+
      Gaussian Broadening:   0.120 Ry, ngauss=   0
-     DOS =  2.753458 states/spin/Ry/Unit Cell at Ef=  8.253288 eV
-     double delta at Ef = 29.857717
+     DOS =  2.753458 states/spin/Ry/Unit Cell at Ef=  8.253287 eV
+     double delta at Ef = 29.857713
      lambda(    1)=  0.0000   gamma=    2.80 GHz
      lambda(    2)=  0.0000   gamma=    2.80 GHz
      lambda(    3)=  0.0000   gamma=    2.80 GHz
- 
+
      Gaussian Broadening:   0.140 Ry, ngauss=   0
-     DOS =  2.719703 states/spin/Ry/Unit Cell at Ef=  8.267116 eV
-     double delta at Ef = 27.504731
+     DOS =  2.719702 states/spin/Ry/Unit Cell at Ef=  8.267115 eV
+     double delta at Ef = 27.504728
      lambda(    1)=  0.0000   gamma=    2.87 GHz
      lambda(    2)=  0.0000   gamma=    2.87 GHz
      lambda(    3)=  0.0000   gamma=    2.87 GHz
- 
+
      Gaussian Broadening:   0.160 Ry, ngauss=   0
-     DOS =  2.693265 states/spin/Ry/Unit Cell at Ef=  8.275899 eV
-     double delta at Ef = 25.729529
+     DOS =  2.693265 states/spin/Ry/Unit Cell at Ef=  8.275898 eV
+     double delta at Ef = 25.729528
      lambda(    1)=  0.0000   gamma=    2.95 GHz
      lambda(    2)=  0.0000   gamma=    2.95 GHz
      lambda(    3)=  0.0000   gamma=    2.95 GHz
- 
+
      Gaussian Broadening:   0.180 Ry, ngauss=   0
-     DOS =  2.678788 states/spin/Ry/Unit Cell at Ef=  8.281626 eV
-     double delta at Ef = 24.395225
+     DOS =  2.678788 states/spin/Ry/Unit Cell at Ef=  8.281625 eV
+     double delta at Ef = 24.395224
      lambda(    1)=  0.0000   gamma=    3.04 GHz
      lambda(    2)=  0.0000   gamma=    3.04 GHz
      lambda(    3)=  0.0000   gamma=    3.04 GHz
- 
+
      Gaussian Broadening:   0.200 Ry, ngauss=   0
-     DOS =  2.674046 states/spin/Ry/Unit Cell at Ef=  8.285693 eV
-     double delta at Ef = 23.360121
+     DOS =  2.674046 states/spin/Ry/Unit Cell at Ef=  8.285691 eV
+     double delta at Ef = 23.360120
      lambda(    1)=  0.0000   gamma=    3.12 GHz
      lambda(    2)=  0.0000   gamma=    3.12 GHz
      lambda(    3)=  0.0000   gamma=    3.12 GHz
 
      Calculation of q =    0.2500000   0.0000000   0.0000000
 
-     Subspace diagonalization in iterative solution of the eigenvalue problem:
-     a serial algorithm will be used
-
- 
-     G-vector sticks info
+     Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min          30      30     13                  216      216      64
+     Max          31      31     14                  218      218      65
      Sum         121     121     55                  869      869     259
- 
+
+     Using Slab Decomposition
+
 
      Title: 
      Electron-phonon coefficients for Al                                        
@@ -291,7 +327,7 @@
                 l(2) =   1
 
      atomic species   valence    mass     pseudopotential
-        Al             3.00    26.98000     Al( 1.00)
+     Al                3.00    26.98000     Al( 1.00)
 
      48 Sym. Ops., with inversion, found
 
@@ -300,7 +336,7 @@
    Cartesian axes
 
      site n.     atom                  positions (alat units)
-         1           Al  tau(   1) = (  -0.1666667   0.3333333   0.5000000  )
+         1        Al     tau(   1) = (  -0.1666667   0.3333333   0.5000000  )
 
      number of k points=   200  Marzari-Vanderbilt smearing, width (Ry)=  0.0500
 
@@ -308,7 +344,9 @@
 
      Dense  grid:      869 G-vectors     FFT dimensions: (  15,  15,  15)
 
-     Estimated max dynamical RAM per process >       0.51 MB
+     Estimated max dynamical RAM per process >       0.19 MB
+
+     Estimated total dynamical RAM >       0.77 MB
 
      The potential is recalculated from file :
      ./_ph0/aluminum.q_2/aluminum.save/charge-density
@@ -318,9 +356,9 @@
      Band Structure Calculation
      Davidson diagonalization with overlap
 
-     ethr =  3.33E-10,  avg # of iterations = 13.3
+     ethr =  3.33E-10,  avg # of iterations = 13.4
 
-     total cpu time spent up to now is        2.1 secs
+     total cpu time spent up to now is        0.7 secs
 
      End of band structure calculation
 
@@ -328,7 +366,8 @@
 
      the Fermi energy is     8.1776 ev
 
-     Writing output data file ./_ph0/aluminum.q_2/aluminum.save/
+     Writing config to output data dir ./_ph0/aluminum.q_2/aluminum.save/ :
+     XML data file
 
      Electron-phonon coefficients for Al                                        
 
@@ -365,15 +404,15 @@
      Cartesian axes
 
      site n.  atom      mass           positions (alat units)
-        1     Al  26.9800   tau(    1) = (   -0.16667    0.33333    0.50000  )
+        1  Al     26.9800   tau(    1) = (   -0.16667    0.33333    0.50000  )
 
      Computing dynamical matrix for 
                     q = (   0.2500000   0.0000000   0.0000000 )
- 
+
       8 Sym.Ops. (no q -> -q+G )
 
 
-     G cutoff =   85.4897  (    869 G-vectors)     FFT grid: ( 15, 15, 15)
+     G cutoff =   85.4897  (    218 G-vectors)     FFT grid: ( 15, 15, 15)
 
      number of k points=   200  Marzari-Vanderbilt smearing, width (Ry)=  0.0500
 
@@ -390,66 +429,68 @@
 
 
      Atomic displacements:
-     There are   2 irreducible representations
+     There are    2 irreducible representations
 
-     Representation     1      1 modes -A_1  G_1 D_1  To be done
+     Representation     1      1 modes -  To be done
 
-     Representation     2      2 modes -E    G_5 D_5  To be done
+     Representation     2      2 modes -  To be done
 
 
+     Message from routine init_vloc:
+     Interpolation table for Vloc re-allocated
 
      Alpha used in Ewald sum =   0.7000
-     PHONON       :      2.93s CPU      3.05s WALL
+     PHONON       :      0.91s CPU      1.06s WALL
 
 
 
-     Representation #  1 mode #   1
+     Representation #   1 mode #   1
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :     3.3 secs   av.it.:   4.0
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  7.010E-01
+      iter #   1 total cpu time :     1.1 secs   av.it.:   4.0
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  6.161E-01
 
-      iter #   2 total cpu time :     3.5 secs   av.it.:   5.3
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  2.853E+02
+      iter #   2 total cpu time :     1.2 secs   av.it.:   5.3
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  2.508E+02
 
-      iter #   3 total cpu time :     3.6 secs   av.it.:   5.3
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  1.183E-03
+      iter #   3 total cpu time :     1.3 secs   av.it.:   5.3
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  1.040E-03
 
-      iter #   4 total cpu time :     3.8 secs   av.it.:   2.3
-      thresh= 3.439E-03 alpha_mix =  0.700 |ddv_scf|^2 =  1.837E-09
+      iter #   4 total cpu time :     1.3 secs   av.it.:   2.3
+      thresh= 3.224E-03 alpha_mix =  0.700 |ddv_scf|^2 =  1.622E-09
 
-      iter #   5 total cpu time :     4.0 secs   av.it.:   6.0
-      thresh= 4.286E-06 alpha_mix =  0.700 |ddv_scf|^2 =  9.129E-10
+      iter #   5 total cpu time :     1.4 secs   av.it.:   6.0
+      thresh= 4.028E-06 alpha_mix =  0.700 |ddv_scf|^2 =  7.154E-10
 
-      iter #   6 total cpu time :     4.1 secs   av.it.:   4.6
-      thresh= 3.021E-06 alpha_mix =  0.700 |ddv_scf|^2 =  4.185E-08
+      iter #   6 total cpu time :     1.4 secs   av.it.:   4.7
+      thresh= 2.675E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.085E-08
 
-      iter #   7 total cpu time :     4.3 secs   av.it.:   2.2
-      thresh= 2.046E-05 alpha_mix =  0.700 |ddv_scf|^2 =  7.982E-11
+      iter #   7 total cpu time :     1.5 secs   av.it.:   3.6
+      thresh= 2.675E-06 alpha_mix =  0.700 |ddv_scf|^2 =  6.051E-11
 
      End of self-consistent calculation
 
      Convergence has been achieved 
 
 
-     Representation #  2 modes #   2  3
+     Representation #   2 modes #   2   3
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :     4.7 secs   av.it.:   3.3
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  4.277E-08
+      iter #   1 total cpu time :     1.6 secs   av.it.:   3.3
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  3.755E-08
 
-      iter #   2 total cpu time :     5.1 secs   av.it.:   5.7
-      thresh= 2.068E-05 alpha_mix =  0.700 |ddv_scf|^2 =  3.544E-09
+      iter #   2 total cpu time :     1.8 secs   av.it.:   5.8
+      thresh= 1.938E-05 alpha_mix =  0.700 |ddv_scf|^2 =  3.113E-09
 
-      iter #   3 total cpu time :     5.4 secs   av.it.:   5.5
-      thresh= 5.953E-06 alpha_mix =  0.700 |ddv_scf|^2 =  2.872E-11
+      iter #   3 total cpu time :     1.9 secs   av.it.:   5.6
+      thresh= 5.579E-06 alpha_mix =  0.700 |ddv_scf|^2 =  2.522E-11
 
      End of self-consistent calculation
 
      Convergence has been achieved 
- 
+
      Number of q in the star =    6
      List of q in the star:
           1   0.250000000   0.000000000   0.000000000
@@ -464,93 +505,97 @@
      q = (    0.250000000   0.000000000   0.000000000 ) 
 
  **************************************************************************
-     freq (    1) =       2.295452 [THz] =      76.568020 [cm-1]
-     freq (    2) =       2.295452 [THz] =      76.568020 [cm-1]
-     freq (    3) =       4.006882 [THz] =     133.655203 [cm-1]
+     freq (    1) =       2.295311 [THz] =      76.563329 [cm-1]
+     freq (    2) =       2.295311 [THz] =      76.563329 [cm-1]
+     freq (    3) =       4.003797 [THz] =     133.552277 [cm-1]
  **************************************************************************
 
      Mode symmetry, C_4v (4mm)  point group:
 
-     freq (  1 -  2) =         76.6  [cm-1]   --> E    G_5 D_5       
-     freq (  3 -  3) =        133.7  [cm-1]   --> A_1  G_1 D_1       
- 
+     freq (   1-   2) =         76.6  [cm-1]   --> E    G_5 D_5       
+     freq (   3-   3) =        133.6  [cm-1]   --> A_1  G_1 D_1       
+
      Gaussian Broadening:   0.020 Ry, ngauss=   0
      DOS =  2.675810 states/spin/Ry/Unit Cell at Ef=  8.278657 eV
-     double delta at Ef = 20.425507
-     lambda(    1)=  0.1975   gamma=    2.66 GHz
-     lambda(    2)=  0.1975   gamma=    2.66 GHz
-     lambda(    3)=  0.0373   gamma=    1.53 GHz
- 
+     double delta at Ef = 20.425511
+     lambda(    1)=  0.1976   gamma=    2.66 GHz
+     lambda(    2)=  0.1976   gamma=    2.66 GHz
+     lambda(    3)=  0.0374   gamma=    1.53 GHz
+
      Gaussian Broadening:   0.040 Ry, ngauss=   0
      DOS =  2.703426 states/spin/Ry/Unit Cell at Ef=  8.200073 eV
-     double delta at Ef = 19.334701
-     lambda(    1)=  0.4708   gamma=    6.40 GHz
-     lambda(    2)=  0.4708   gamma=    6.40 GHz
-     lambda(    3)=  0.2058   gamma=    8.53 GHz
- 
+     double delta at Ef = 19.334703
+     lambda(    1)=  0.4709   gamma=    6.40 GHz
+     lambda(    2)=  0.4709   gamma=    6.40 GHz
+     lambda(    3)=  0.2061   gamma=    8.53 GHz
+
      Gaussian Broadening:   0.060 Ry, ngauss=   0
      DOS =  2.781707 states/spin/Ry/Unit Cell at Ef=  8.181999 eV
-     double delta at Ef = 19.823356
+     double delta at Ef = 19.823357
      lambda(    1)=  0.3166   gamma=    4.43 GHz
      lambda(    2)=  0.3166   gamma=    4.43 GHz
-     lambda(    3)=  0.3642   gamma=   15.53 GHz
- 
+     lambda(    3)=  0.3648   gamma=   15.53 GHz
+
      Gaussian Broadening:   0.080 Ry, ngauss=   0
-     DOS =  2.793243 states/spin/Ry/Unit Cell at Ef=  8.205910 eV
+     DOS =  2.793243 states/spin/Ry/Unit Cell at Ef=  8.205911 eV
      double delta at Ef = 19.866604
      lambda(    1)=  0.2715   gamma=    3.82 GHz
      lambda(    2)=  0.2715   gamma=    3.82 GHz
-     lambda(    3)=  0.4128   gamma=   17.68 GHz
- 
+     lambda(    3)=  0.4135   gamma=   17.68 GHz
+
      Gaussian Broadening:   0.100 Ry, ngauss=   0
      DOS =  2.781101 states/spin/Ry/Unit Cell at Ef=  8.232628 eV
-     double delta at Ef = 20.003856
-     lambda(    1)=  0.2774   gamma=    3.88 GHz
-     lambda(    2)=  0.2774   gamma=    3.88 GHz
-     lambda(    3)=  0.4258   gamma=   18.16 GHz
- 
+     double delta at Ef = 20.003857
+     lambda(    1)=  0.2775   gamma=    3.88 GHz
+     lambda(    2)=  0.2775   gamma=    3.88 GHz
+     lambda(    3)=  0.4265   gamma=   18.16 GHz
+
      Gaussian Broadening:   0.120 Ry, ngauss=   0
      DOS =  2.753459 states/spin/Ry/Unit Cell at Ef=  8.253279 eV
      double delta at Ef = 20.043744
-     lambda(    1)=  0.2937   gamma=    4.07 GHz
-     lambda(    2)=  0.2937   gamma=    4.07 GHz
-     lambda(    3)=  0.4279   gamma=   18.06 GHz
- 
+     lambda(    1)=  0.2938   gamma=    4.07 GHz
+     lambda(    2)=  0.2938   gamma=    4.07 GHz
+     lambda(    3)=  0.4286   gamma=   18.06 GHz
+
      Gaussian Broadening:   0.140 Ry, ngauss=   0
      DOS =  2.719703 states/spin/Ry/Unit Cell at Ef=  8.267107 eV
-     double delta at Ef = 19.991055
+     double delta at Ef = 19.991056
      lambda(    1)=  0.3085   gamma=    4.22 GHz
      lambda(    2)=  0.3085   gamma=    4.22 GHz
-     lambda(    3)=  0.4267   gamma=   17.79 GHz
- 
+     lambda(    3)=  0.4274   gamma=   17.79 GHz
+
      Gaussian Broadening:   0.160 Ry, ngauss=   0
      DOS =  2.693266 states/spin/Ry/Unit Cell at Ef=  8.275890 eV
      double delta at Ef = 19.897014
      lambda(    1)=  0.3194   gamma=    4.33 GHz
      lambda(    2)=  0.3194   gamma=    4.33 GHz
-     lambda(    3)=  0.4234   gamma=   17.48 GHz
- 
+     lambda(    3)=  0.4241   gamma=   17.49 GHz
+
      Gaussian Broadening:   0.180 Ry, ngauss=   0
      DOS =  2.678788 states/spin/Ry/Unit Cell at Ef=  8.281617 eV
      double delta at Ef = 19.776351
-     lambda(    1)=  0.3266   gamma=    4.40 GHz
-     lambda(    2)=  0.3266   gamma=    4.40 GHz
-     lambda(    3)=  0.4178   gamma=   17.16 GHz
- 
+     lambda(    1)=  0.3267   gamma=    4.40 GHz
+     lambda(    2)=  0.3267   gamma=    4.40 GHz
+     lambda(    3)=  0.4185   gamma=   17.16 GHz
+
      Gaussian Broadening:   0.200 Ry, ngauss=   0
      DOS =  2.674046 states/spin/Ry/Unit Cell at Ef=  8.285684 eV
      double delta at Ef = 19.625993
-     lambda(    1)=  0.3311   gamma=    4.46 GHz
-     lambda(    2)=  0.3311   gamma=    4.46 GHz
-     lambda(    3)=  0.4100   gamma=   16.81 GHz
+     lambda(    1)=  0.3312   gamma=    4.46 GHz
+     lambda(    2)=  0.3312   gamma=    4.46 GHz
+     lambda(    3)=  0.4107   gamma=   16.81 GHz
 
      Calculation of q =    0.5000000   0.0000000   0.0000000
- 
-     G-vector sticks info
+
+     Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min          30      30     13                  216      216      64
+     Max          31      31     14                  218      218      65
      Sum         121     121     55                  869      869     259
- 
+
+     Using Slab Decomposition
+
 
      Title: 
      Electron-phonon coefficients for Al                                        
@@ -592,7 +637,7 @@
                 l(2) =   1
 
      atomic species   valence    mass     pseudopotential
-        Al             3.00    26.98000     Al( 1.00)
+     Al                3.00    26.98000     Al( 1.00)
 
      48 Sym. Ops., with inversion, found
 
@@ -601,7 +646,7 @@
    Cartesian axes
 
      site n.     atom                  positions (alat units)
-         1           Al  tau(   1) = (  -0.1666667   0.3333333   0.5000000  )
+         1        Al     tau(   1) = (  -0.1666667   0.3333333   0.5000000  )
 
      number of k points=   200  Marzari-Vanderbilt smearing, width (Ry)=  0.0500
 
@@ -609,7 +654,9 @@
 
      Dense  grid:      869 G-vectors     FFT dimensions: (  15,  15,  15)
 
-     Estimated max dynamical RAM per process >       0.52 MB
+     Estimated max dynamical RAM per process >       0.19 MB
+
+     Estimated total dynamical RAM >       0.78 MB
 
      The potential is recalculated from file :
      ./_ph0/aluminum.q_3/aluminum.save/charge-density
@@ -619,9 +666,9 @@
      Band Structure Calculation
      Davidson diagonalization with overlap
 
-     ethr =  3.33E-10,  avg # of iterations = 13.3
+     ethr =  3.33E-10,  avg # of iterations = 13.4
 
-     total cpu time spent up to now is        4.1 secs
+     total cpu time spent up to now is        1.3 secs
 
      End of band structure calculation
 
@@ -629,7 +676,8 @@
 
      the Fermi energy is     8.1776 ev
 
-     Writing output data file ./_ph0/aluminum.q_3/aluminum.save/
+     Writing config to output data dir ./_ph0/aluminum.q_3/aluminum.save/ :
+     XML data file
 
      Electron-phonon coefficients for Al                                        
 
@@ -666,15 +714,15 @@
      Cartesian axes
 
      site n.  atom      mass           positions (alat units)
-        1     Al  26.9800   tau(    1) = (   -0.16667    0.33333    0.50000  )
+        1  Al     26.9800   tau(    1) = (   -0.16667    0.33333    0.50000  )
 
      Computing dynamical matrix for 
                     q = (   0.5000000   0.0000000   0.0000000 )
- 
+
       8 Sym.Ops. (no q -> -q+G )
 
 
-     G cutoff =   85.4897  (    869 G-vectors)     FFT grid: ( 15, 15, 15)
+     G cutoff =   85.4897  (    218 G-vectors)     FFT grid: ( 15, 15, 15)
 
      number of k points=   200  Marzari-Vanderbilt smearing, width (Ry)=  0.0500
 
@@ -691,66 +739,66 @@
 
 
      Atomic displacements:
-     There are   2 irreducible representations
+     There are    2 irreducible representations
 
-     Representation     1      1 modes -A_1  G_1 D_1  To be done
+     Representation     1      1 modes -  To be done
 
-     Representation     2      2 modes -E    G_5 D_5  To be done
+     Representation     2      2 modes -  To be done
 
 
 
      Alpha used in Ewald sum =   0.7000
-     PHONON       :      7.31s CPU      7.66s WALL
+     PHONON       :      2.22s CPU      2.69s WALL
 
 
 
-     Representation #  1 mode #   1
+     Representation #   1 mode #   1
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :     7.9 secs   av.it.:   3.9
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  9.527E-03
+      iter #   1 total cpu time :     2.8 secs   av.it.:   3.9
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  8.373E-03
 
-      iter #   2 total cpu time :     8.0 secs   av.it.:   4.5
-      thresh= 9.761E-03 alpha_mix =  0.700 |ddv_scf|^2 =  2.274E-01
+      iter #   2 total cpu time :     2.8 secs   av.it.:   4.5
+      thresh= 9.151E-03 alpha_mix =  0.700 |ddv_scf|^2 =  1.998E-01
 
-      iter #   3 total cpu time :     8.2 secs   av.it.:   4.4
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  6.443E-08
+      iter #   3 total cpu time :     2.9 secs   av.it.:   4.5
+      thresh= 9.151E-03 alpha_mix =  0.700 |ddv_scf|^2 =  6.158E-08
 
-      iter #   4 total cpu time :     8.4 secs   av.it.:   5.5
-      thresh= 2.538E-05 alpha_mix =  0.700 |ddv_scf|^2 =  3.166E-09
+      iter #   4 total cpu time :     3.0 secs   av.it.:   5.4
+      thresh= 2.481E-05 alpha_mix =  0.700 |ddv_scf|^2 =  1.889E-09
 
-      iter #   5 total cpu time :     8.6 secs   av.it.:   4.8
-      thresh= 5.626E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.156E-10
+      iter #   5 total cpu time :     3.0 secs   av.it.:   5.0
+      thresh= 4.346E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.175E-10
 
-      iter #   6 total cpu time :     8.7 secs   av.it.:   4.2
-      thresh= 1.777E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.171E-11
+      iter #   6 total cpu time :     3.1 secs   av.it.:   4.4
+      thresh= 1.084E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.319E-12
 
      End of self-consistent calculation
 
      Convergence has been achieved 
 
 
-     Representation #  2 modes #   2  3
+     Representation #   2 modes #   2   3
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :     9.2 secs   av.it.:   3.4
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  1.015E-07
+      iter #   1 total cpu time :     3.2 secs   av.it.:   3.4
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  8.924E-08
 
-      iter #   2 total cpu time :     9.6 secs   av.it.:   5.9
-      thresh= 3.187E-05 alpha_mix =  0.700 |ddv_scf|^2 =  3.560E-09
+      iter #   2 total cpu time :     3.4 secs   av.it.:   6.0
+      thresh= 2.987E-05 alpha_mix =  0.700 |ddv_scf|^2 =  3.127E-09
 
-      iter #   3 total cpu time :     9.9 secs   av.it.:   5.4
-      thresh= 5.967E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.982E-10
+      iter #   3 total cpu time :     3.5 secs   av.it.:   5.5
+      thresh= 5.592E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.745E-10
 
-      iter #   4 total cpu time :    10.3 secs   av.it.:   5.3
-      thresh= 1.408E-06 alpha_mix =  0.700 |ddv_scf|^2 =  2.046E-14
+      iter #   4 total cpu time :     3.7 secs   av.it.:   5.4
+      thresh= 1.321E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.782E-14
 
      End of self-consistent calculation
 
      Convergence has been achieved 
- 
+
      Number of q in the star =    6
      List of q in the star:
           1   0.500000000   0.000000000   0.000000000
@@ -765,93 +813,97 @@
      q = (    0.500000000   0.000000000   0.000000000 ) 
 
  **************************************************************************
-     freq (    1) =       4.200411 [THz] =     140.110636 [cm-1]
-     freq (    2) =       4.200411 [THz] =     140.110636 [cm-1]
-     freq (    3) =       6.475305 [THz] =     215.992926 [cm-1]
+     freq (    1) =       4.200357 [THz] =     140.108824 [cm-1]
+     freq (    2) =       4.200357 [THz] =     140.108824 [cm-1]
+     freq (    3) =       6.481418 [THz] =     216.196820 [cm-1]
  **************************************************************************
 
      Mode symmetry, C_4v (4mm)  point group:
 
-     freq (  1 -  2) =        140.1  [cm-1]   --> E    G_5 D_5       
-     freq (  3 -  3) =        216.0  [cm-1]   --> A_1  G_1 D_1       
- 
+     freq (   1-   2) =        140.1  [cm-1]   --> E    G_5 D_5       
+     freq (   3-   3) =        216.2  [cm-1]   --> A_1  G_1 D_1       
+
      Gaussian Broadening:   0.020 Ry, ngauss=   0
      DOS =  2.675810 states/spin/Ry/Unit Cell at Ef=  8.278657 eV
      double delta at Ef =  1.280706
      lambda(    1)=  0.0000   gamma=    0.00 GHz
      lambda(    2)=  0.0000   gamma=    0.00 GHz
-     lambda(    3)=  0.0604   gamma=    6.47 GHz
- 
+     lambda(    3)=  0.0602   gamma=    6.47 GHz
+
      Gaussian Broadening:   0.040 Ry, ngauss=   0
      DOS =  2.703426 states/spin/Ry/Unit Cell at Ef=  8.200073 eV
-     double delta at Ef =  7.961468
+     double delta at Ef =  7.961469
      lambda(    1)=  0.0343   gamma=    1.56 GHz
      lambda(    2)=  0.0343   gamma=    1.56 GHz
-     lambda(    3)=  0.2664   gamma=   28.84 GHz
- 
+     lambda(    3)=  0.2658   gamma=   28.83 GHz
+
      Gaussian Broadening:   0.060 Ry, ngauss=   0
      DOS =  2.781707 states/spin/Ry/Unit Cell at Ef=  8.181999 eV
      double delta at Ef = 13.294748
      lambda(    1)=  0.0982   gamma=    4.60 GHz
      lambda(    2)=  0.0982   gamma=    4.60 GHz
-     lambda(    3)=  0.2857   gamma=   31.82 GHz
- 
+     lambda(    3)=  0.2851   gamma=   31.82 GHz
+
      Gaussian Broadening:   0.080 Ry, ngauss=   0
-     DOS =  2.793243 states/spin/Ry/Unit Cell at Ef=  8.205910 eV
+     DOS =  2.793243 states/spin/Ry/Unit Cell at Ef=  8.205911 eV
      double delta at Ef = 15.274766
      lambda(    1)=  0.1288   gamma=    6.06 GHz
      lambda(    2)=  0.1288   gamma=    6.06 GHz
-     lambda(    3)=  0.2804   gamma=   31.37 GHz
- 
+     lambda(    3)=  0.2799   gamma=   31.36 GHz
+
      Gaussian Broadening:   0.100 Ry, ngauss=   0
      DOS =  2.781101 states/spin/Ry/Unit Cell at Ef=  8.232628 eV
      double delta at Ef = 16.049476
      lambda(    1)=  0.1456   gamma=    6.82 GHz
      lambda(    2)=  0.1456   gamma=    6.82 GHz
-     lambda(    3)=  0.2754   gamma=   30.66 GHz
- 
+     lambda(    3)=  0.2748   gamma=   30.66 GHz
+
      Gaussian Broadening:   0.120 Ry, ngauss=   0
      DOS =  2.753459 states/spin/Ry/Unit Cell at Ef=  8.253279 eV
      double delta at Ef = 16.311098
      lambda(    1)=  0.1546   gamma=    7.17 GHz
      lambda(    2)=  0.1546   gamma=    7.17 GHz
-     lambda(    3)=  0.2715   gamma=   29.93 GHz
- 
+     lambda(    3)=  0.2709   gamma=   29.92 GHz
+
      Gaussian Broadening:   0.140 Ry, ngauss=   0
      DOS =  2.719703 states/spin/Ry/Unit Cell at Ef=  8.267107 eV
-     double delta at Ef = 16.374728
+     double delta at Ef = 16.374729
      lambda(    1)=  0.1593   gamma=    7.30 GHz
      lambda(    2)=  0.1593   gamma=    7.30 GHz
-     lambda(    3)=  0.2707   gamma=   29.48 GHz
- 
+     lambda(    3)=  0.2702   gamma=   29.47 GHz
+
      Gaussian Broadening:   0.160 Ry, ngauss=   0
      DOS =  2.693266 states/spin/Ry/Unit Cell at Ef=  8.275890 eV
      double delta at Ef = 16.366754
      lambda(    1)=  0.1615   gamma=    7.33 GHz
      lambda(    2)=  0.1615   gamma=    7.33 GHz
-     lambda(    3)=  0.2718   gamma=   29.31 GHz
- 
+     lambda(    3)=  0.2712   gamma=   29.30 GHz
+
      Gaussian Broadening:   0.180 Ry, ngauss=   0
      DOS =  2.678788 states/spin/Ry/Unit Cell at Ef=  8.281617 eV
      double delta at Ef = 16.332596
      lambda(    1)=  0.1623   gamma=    7.32 GHz
      lambda(    2)=  0.1623   gamma=    7.32 GHz
-     lambda(    3)=  0.2731   gamma=   29.29 GHz
- 
+     lambda(    3)=  0.2725   gamma=   29.29 GHz
+
      Gaussian Broadening:   0.200 Ry, ngauss=   0
      DOS =  2.674046 states/spin/Ry/Unit Cell at Ef=  8.285684 eV
-     double delta at Ef = 16.288343
-     lambda(    1)=  0.1623   gamma=    7.31 GHz
-     lambda(    2)=  0.1623   gamma=    7.31 GHz
-     lambda(    3)=  0.2738   gamma=   29.31 GHz
+     double delta at Ef = 16.288344
+     lambda(    1)=  0.1624   gamma=    7.31 GHz
+     lambda(    2)=  0.1624   gamma=    7.31 GHz
+     lambda(    3)=  0.2732   gamma=   29.30 GHz
 
      Calculation of q =    1.0000000   0.0000000   0.0000000
- 
-     G-vector sticks info
+
+     Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min          30      30     15                  216      216      82
+     Max          31      31     16                  218      218      83
      Sum         121     121     61                  869      869     331
- 
+
+     Using Slab Decomposition
+
 
      Title: 
      Electron-phonon coefficients for Al                                        
@@ -893,7 +945,7 @@
                 l(2) =   1
 
      atomic species   valence    mass     pseudopotential
-        Al             3.00    26.98000     Al( 1.00)
+     Al                3.00    26.98000     Al( 1.00)
 
      48 Sym. Ops., with inversion, found
 
@@ -902,7 +954,7 @@
    Cartesian axes
 
      site n.     atom                  positions (alat units)
-         1           Al  tau(   1) = (  -0.1666667   0.3333333   0.5000000  )
+         1        Al     tau(   1) = (  -0.1666667   0.3333333   0.5000000  )
 
      number of k points=   118  Marzari-Vanderbilt smearing, width (Ry)=  0.0500
 
@@ -910,7 +962,9 @@
 
      Dense  grid:      869 G-vectors     FFT dimensions: (  15,  15,  15)
 
-     Estimated max dynamical RAM per process >       0.52 MB
+     Estimated max dynamical RAM per process >       0.20 MB
+
+     Estimated total dynamical RAM >       0.79 MB
 
      The potential is recalculated from file :
      ./_ph0/aluminum.q_4/aluminum.save/charge-density
@@ -920,9 +974,9 @@
      Band Structure Calculation
      Davidson diagonalization with overlap
 
-     ethr =  3.33E-10,  avg # of iterations = 13.1
+     ethr =  3.33E-10,  avg # of iterations = 13.2
 
-     total cpu time spent up to now is        5.2 secs
+     total cpu time spent up to now is        1.8 secs
 
      End of band structure calculation
 
@@ -930,7 +984,8 @@
 
      the Fermi energy is     8.1776 ev
 
-     Writing output data file ./_ph0/aluminum.q_4/aluminum.save/
+     Writing config to output data dir ./_ph0/aluminum.q_4/aluminum.save/ :
+     XML data file
 
      Electron-phonon coefficients for Al                                        
 
@@ -967,15 +1022,15 @@
      Cartesian axes
 
      site n.  atom      mass           positions (alat units)
-        1     Al  26.9800   tau(    1) = (   -0.16667    0.33333    0.50000  )
+        1  Al     26.9800   tau(    1) = (   -0.16667    0.33333    0.50000  )
 
      Computing dynamical matrix for 
                     q = (   1.0000000   0.0000000   0.0000000 )
- 
+
      17 Sym.Ops. (with q -> -q+G )
 
 
-     G cutoff =   85.4897  (    869 G-vectors)     FFT grid: ( 15, 15, 15)
+     G cutoff =   85.4897  (    218 G-vectors)     FFT grid: ( 15, 15, 15)
 
      number of k points=   118  Marzari-Vanderbilt smearing, width (Ry)=  0.0500
 
@@ -990,7 +1045,7 @@
 
 
      Atomic displacements:
-     There are   2 irreducible representations
+     There are    2 irreducible representations
 
      Representation     1      2 modes -  To be done
 
@@ -999,51 +1054,51 @@
 
 
      Alpha used in Ewald sum =   0.7000
-     PHONON       :     11.09s CPU     11.68s WALL
+     PHONON       :      3.42s CPU      4.17s WALL
 
 
 
-     Representation #  1 modes #   1  2
+     Representation #   1 modes #   1   2
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    11.9 secs   av.it.:   3.4
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  3.159E-07
+      iter #   1 total cpu time :     4.3 secs   av.it.:   3.4
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  2.771E-07
 
-      iter #   2 total cpu time :    12.1 secs   av.it.:   5.8
-      thresh= 5.620E-05 alpha_mix =  0.700 |ddv_scf|^2 =  4.457E-09
+      iter #   2 total cpu time :     4.4 secs   av.it.:   5.7
+      thresh= 5.264E-05 alpha_mix =  0.700 |ddv_scf|^2 =  3.870E-09
 
-      iter #   3 total cpu time :    12.3 secs   av.it.:   5.5
-      thresh= 6.676E-06 alpha_mix =  0.700 |ddv_scf|^2 =  4.210E-10
+      iter #   3 total cpu time :     4.4 secs   av.it.:   5.4
+      thresh= 6.221E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.672E-10
 
-      iter #   4 total cpu time :    12.5 secs   av.it.:   5.3
-      thresh= 2.052E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.870E-14
+      iter #   4 total cpu time :     4.5 secs   av.it.:   5.3
+      thresh= 1.916E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.956E-14
 
      End of self-consistent calculation
 
      Convergence has been achieved 
 
 
-     Representation #  2 mode #   3
+     Representation #   2 mode #   3
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    12.8 secs   av.it.:   3.8
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  6.930E-05
+      iter #   1 total cpu time :     4.6 secs   av.it.:   3.8
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  6.091E-05
 
-      iter #   2 total cpu time :    12.9 secs   av.it.:   5.1
-      thresh= 8.324E-04 alpha_mix =  0.700 |ddv_scf|^2 =  2.668E-05
+      iter #   2 total cpu time :     4.6 secs   av.it.:   5.1
+      thresh= 7.804E-04 alpha_mix =  0.700 |ddv_scf|^2 =  2.345E-05
 
-      iter #   3 total cpu time :    13.0 secs   av.it.:   4.9
-      thresh= 5.165E-04 alpha_mix =  0.700 |ddv_scf|^2 =  5.195E-09
+      iter #   3 total cpu time :     4.7 secs   av.it.:   4.9
+      thresh= 4.843E-04 alpha_mix =  0.700 |ddv_scf|^2 =  4.558E-09
 
-      iter #   4 total cpu time :    13.1 secs   av.it.:   5.0
-      thresh= 7.207E-06 alpha_mix =  0.700 |ddv_scf|^2 =  2.885E-11
+      iter #   4 total cpu time :     4.7 secs   av.it.:   5.1
+      thresh= 6.751E-06 alpha_mix =  0.700 |ddv_scf|^2 =  2.519E-11
 
      End of self-consistent calculation
 
      Convergence has been achieved 
- 
+
      Number of q in the star =    3
      List of q in the star:
           1   1.000000000   0.000000000   0.000000000
@@ -1055,88 +1110,92 @@
      q = (    1.000000000   0.000000000   0.000000000 ) 
 
  **************************************************************************
-     freq (    1) =       6.062766 [THz] =     202.232094 [cm-1]
-     freq (    2) =       6.062766 [THz] =     202.232094 [cm-1]
-     freq (    3) =       9.881199 [THz] =     329.601337 [cm-1]
+     freq (    1) =       6.062837 [THz] =     202.234463 [cm-1]
+     freq (    2) =       6.062837 [THz] =     202.234463 [cm-1]
+     freq (    3) =       9.881016 [THz] =     329.595213 [cm-1]
  **************************************************************************
- 
+
      Gaussian Broadening:   0.020 Ry, ngauss=   0
      DOS =  2.675810 states/spin/Ry/Unit Cell at Ef=  8.278657 eV
-     double delta at Ef = 34.425003
+     double delta at Ef = 34.425004
      lambda(    1)=  0.3803   gamma=   35.72 GHz
      lambda(    2)=  0.3803   gamma=   35.72 GHz
      lambda(    3)=  0.0608   gamma=   15.17 GHz
- 
+
      Gaussian Broadening:   0.040 Ry, ngauss=   0
      DOS =  2.703426 states/spin/Ry/Unit Cell at Ef=  8.200073 eV
-     double delta at Ef = 18.410086
+     double delta at Ef = 18.410089
      lambda(    1)=  0.1771   gamma=   16.81 GHz
      lambda(    2)=  0.1771   gamma=   16.81 GHz
      lambda(    3)=  0.2112   gamma=   53.23 GHz
- 
+
      Gaussian Broadening:   0.060 Ry, ngauss=   0
      DOS =  2.781707 states/spin/Ry/Unit Cell at Ef=  8.181999 eV
-     double delta at Ef = 14.910232
+     double delta at Ef = 14.910233
      lambda(    1)=  0.1471   gamma=   14.36 GHz
      lambda(    2)=  0.1471   gamma=   14.36 GHz
      lambda(    3)=  0.1428   gamma=   37.03 GHz
- 
+
      Gaussian Broadening:   0.080 Ry, ngauss=   0
-     DOS =  2.793243 states/spin/Ry/Unit Cell at Ef=  8.205910 eV
-     double delta at Ef = 13.194919
+     DOS =  2.793243 states/spin/Ry/Unit Cell at Ef=  8.205911 eV
+     double delta at Ef = 13.194920
      lambda(    1)=  0.1253   gamma=   12.28 GHz
      lambda(    2)=  0.1253   gamma=   12.28 GHz
      lambda(    3)=  0.1245   gamma=   32.43 GHz
- 
+
      Gaussian Broadening:   0.100 Ry, ngauss=   0
      DOS =  2.781101 states/spin/Ry/Unit Cell at Ef=  8.232628 eV
      double delta at Ef = 12.449424
      lambda(    1)=  0.1112   gamma=   10.86 GHz
      lambda(    2)=  0.1112   gamma=   10.86 GHz
      lambda(    3)=  0.1311   gamma=   34.00 GHz
- 
+
      Gaussian Broadening:   0.120 Ry, ngauss=   0
      DOS =  2.753459 states/spin/Ry/Unit Cell at Ef=  8.253279 eV
-     double delta at Ef = 12.239855
+     double delta at Ef = 12.239856
      lambda(    1)=  0.1045   gamma=   10.10 GHz
      lambda(    2)=  0.1045   gamma=   10.10 GHz
      lambda(    3)=  0.1424   gamma=   36.56 GHz
- 
+
      Gaussian Broadening:   0.140 Ry, ngauss=   0
      DOS =  2.719703 states/spin/Ry/Unit Cell at Ef=  8.267107 eV
-     double delta at Ef = 12.291335
+     double delta at Ef = 12.291336
      lambda(    1)=  0.1025   gamma=    9.79 GHz
      lambda(    2)=  0.1025   gamma=    9.79 GHz
      lambda(    3)=  0.1526   gamma=   38.69 GHz
- 
+
      Gaussian Broadening:   0.160 Ry, ngauss=   0
      DOS =  2.693266 states/spin/Ry/Unit Cell at Ef=  8.275890 eV
      double delta at Ef = 12.455519
-     lambda(    1)=  0.1027   gamma=    9.71 GHz
-     lambda(    2)=  0.1027   gamma=    9.71 GHz
+     lambda(    1)=  0.1027   gamma=    9.70 GHz
+     lambda(    2)=  0.1027   gamma=    9.70 GHz
      lambda(    3)=  0.1602   gamma=   40.24 GHz
- 
+
      Gaussian Broadening:   0.180 Ry, ngauss=   0
      DOS =  2.678788 states/spin/Ry/Unit Cell at Ef=  8.281617 eV
      double delta at Ef = 12.650123
      lambda(    1)=  0.1034   gamma=    9.72 GHz
      lambda(    2)=  0.1034   gamma=    9.72 GHz
      lambda(    3)=  0.1656   gamma=   41.35 GHz
- 
+
      Gaussian Broadening:   0.200 Ry, ngauss=   0
      DOS =  2.674046 states/spin/Ry/Unit Cell at Ef=  8.285684 eV
      double delta at Ef = 12.838575
      lambda(    1)=  0.1041   gamma=    9.78 GHz
      lambda(    2)=  0.1041   gamma=    9.78 GHz
-     lambda(    3)=  0.1691   gamma=   42.15 GHz
+     lambda(    3)=  0.1691   gamma=   42.16 GHz
 
      Calculation of q =    0.7500000   0.2500000   0.2500000
- 
-     G-vector sticks info
+
+     Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min          30      30     15                  216      216      82
+     Max          31      31     16                  218      218      83
      Sum         121     121     61                  869      869     331
- 
+
+     Using Slab Decomposition
+
 
      Title: 
      Electron-phonon coefficients for Al                                        
@@ -1178,7 +1237,7 @@
                 l(2) =   1
 
      atomic species   valence    mass     pseudopotential
-        Al             3.00    26.98000     Al( 1.00)
+     Al                3.00    26.98000     Al( 1.00)
 
      48 Sym. Ops., with inversion, found
 
@@ -1187,7 +1246,7 @@
    Cartesian axes
 
      site n.     atom                  positions (alat units)
-         1           Al  tau(   1) = (  -0.1666667   0.3333333   0.5000000  )
+         1        Al     tau(   1) = (  -0.1666667   0.3333333   0.5000000  )
 
      number of k points=   576  Marzari-Vanderbilt smearing, width (Ry)=  0.0500
 
@@ -1195,7 +1254,9 @@
 
      Dense  grid:      869 G-vectors     FFT dimensions: (  15,  15,  15)
 
-     Estimated max dynamical RAM per process >       0.52 MB
+     Estimated max dynamical RAM per process >       0.20 MB
+
+     Estimated total dynamical RAM >       0.79 MB
 
      The potential is recalculated from file :
      ./_ph0/aluminum.q_5/aluminum.save/charge-density
@@ -1205,9 +1266,9 @@
      Band Structure Calculation
      Davidson diagonalization with overlap
 
-     ethr =  3.33E-10,  avg # of iterations = 13.5
+     ethr =  3.33E-10,  avg # of iterations = 13.6
 
-     total cpu time spent up to now is       10.8 secs
+     total cpu time spent up to now is        3.8 secs
 
      End of band structure calculation
 
@@ -1215,7 +1276,8 @@
 
      the Fermi energy is     8.1776 ev
 
-     Writing output data file ./_ph0/aluminum.q_5/aluminum.save/
+     Writing config to output data dir ./_ph0/aluminum.q_5/aluminum.save/ :
+     XML data file
 
      Electron-phonon coefficients for Al                                        
 
@@ -1252,15 +1314,15 @@
      Cartesian axes
 
      site n.  atom      mass           positions (alat units)
-        1     Al  26.9800   tau(    1) = (   -0.16667    0.33333    0.50000  )
+        1  Al     26.9800   tau(    1) = (   -0.16667    0.33333    0.50000  )
 
      Computing dynamical matrix for 
                     q = (   0.7500000   0.2500000   0.2500000 )
- 
+
       2 Sym.Ops. (no q -> -q+G )
 
 
-     G cutoff =   85.4897  (    869 G-vectors)     FFT grid: ( 15, 15, 15)
+     G cutoff =   85.4897  (    218 G-vectors)     FFT grid: ( 15, 15, 15)
 
      number of k points=   576  Marzari-Vanderbilt smearing, width (Ry)=  0.0500
 
@@ -1277,95 +1339,95 @@
 
 
      Atomic displacements:
-     There are   3 irreducible representations
+     There are    3 irreducible representations
 
-     Representation     1      1 modes -A'  To be done
+     Representation     1      1 modes -  To be done
 
-     Representation     2      1 modes -A'  To be done
+     Representation     2      1 modes -  To be done
 
-     Representation     3      1 modes -A''  To be done
+     Representation     3      1 modes -  To be done
 
 
 
      Alpha used in Ewald sum =   0.7000
-     PHONON       :     18.00s CPU     18.90s WALL
+     PHONON       :      5.72s CPU      6.84s WALL
 
 
 
-     Representation #  1 mode #   1
+     Representation #   1 mode #   1
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    19.5 secs   av.it.:   3.8
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  1.088E-05
+      iter #   1 total cpu time :     7.1 secs   av.it.:   3.8
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  9.234E-06
 
-      iter #   2 total cpu time :    20.0 secs   av.it.:   5.7
-      thresh= 3.298E-04 alpha_mix =  0.700 |ddv_scf|^2 =  4.139E-06
+      iter #   2 total cpu time :     7.3 secs   av.it.:   5.7
+      thresh= 3.039E-04 alpha_mix =  0.700 |ddv_scf|^2 =  2.573E-06
 
-      iter #   3 total cpu time :    20.5 secs   av.it.:   5.4
-      thresh= 2.035E-04 alpha_mix =  0.700 |ddv_scf|^2 =  4.193E-07
+      iter #   3 total cpu time :     7.5 secs   av.it.:   5.5
+      thresh= 1.604E-04 alpha_mix =  0.700 |ddv_scf|^2 =  2.400E-07
 
-      iter #   4 total cpu time :    21.0 secs   av.it.:   5.1
-      thresh= 6.476E-05 alpha_mix =  0.700 |ddv_scf|^2 =  3.136E-09
+      iter #   4 total cpu time :     7.7 secs   av.it.:   5.1
+      thresh= 4.899E-05 alpha_mix =  0.700 |ddv_scf|^2 =  3.304E-09
 
-      iter #   5 total cpu time :    21.5 secs   av.it.:   5.6
-      thresh= 5.600E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.344E-10
+      iter #   5 total cpu time :     7.9 secs   av.it.:   5.5
+      thresh= 5.748E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.139E-10
 
-      iter #   6 total cpu time :    22.1 secs   av.it.:   5.5
-      thresh= 1.159E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.098E-13
+      iter #   6 total cpu time :     8.1 secs   av.it.:   5.6
+      thresh= 1.067E-06 alpha_mix =  0.700 |ddv_scf|^2 =  9.062E-14
 
      End of self-consistent calculation
 
      Convergence has been achieved 
 
 
-     Representation #  2 mode #   2
+     Representation #   2 mode #   2
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    23.0 secs   av.it.:   4.1
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  2.041E-04
+      iter #   1 total cpu time :     8.4 secs   av.it.:   4.1
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  1.797E-04
 
-      iter #   2 total cpu time :    23.5 secs   av.it.:   5.4
-      thresh= 1.428E-03 alpha_mix =  0.700 |ddv_scf|^2 =  3.004E-04
+      iter #   2 total cpu time :     8.5 secs   av.it.:   5.4
+      thresh= 1.341E-03 alpha_mix =  0.700 |ddv_scf|^2 =  2.651E-04
 
-      iter #   3 total cpu time :    24.0 secs   av.it.:   4.7
-      thresh= 1.733E-03 alpha_mix =  0.700 |ddv_scf|^2 =  2.042E-07
+      iter #   3 total cpu time :     8.7 secs   av.it.:   4.9
+      thresh= 1.341E-03 alpha_mix =  0.700 |ddv_scf|^2 =  1.654E-07
 
-      iter #   4 total cpu time :    24.6 secs   av.it.:   5.5
-      thresh= 4.518E-05 alpha_mix =  0.700 |ddv_scf|^2 =  2.751E-09
+      iter #   4 total cpu time :     8.9 secs   av.it.:   5.6
+      thresh= 4.067E-05 alpha_mix =  0.700 |ddv_scf|^2 =  2.459E-09
 
-      iter #   5 total cpu time :    25.1 secs   av.it.:   5.5
-      thresh= 5.245E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.432E-10
+      iter #   5 total cpu time :     9.1 secs   av.it.:   5.5
+      thresh= 4.959E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.305E-10
 
-      iter #   6 total cpu time :    25.6 secs   av.it.:   5.5
-      thresh= 1.197E-06 alpha_mix =  0.700 |ddv_scf|^2 =  4.526E-13
+      iter #   6 total cpu time :     9.3 secs   av.it.:   5.6
+      thresh= 1.142E-06 alpha_mix =  0.700 |ddv_scf|^2 =  2.383E-13
 
      End of self-consistent calculation
 
      Convergence has been achieved 
 
 
-     Representation #  3 mode #   3
+     Representation #   3 mode #   3
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    26.5 secs   av.it.:   3.3
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  5.549E-07
+      iter #   1 total cpu time :     9.5 secs   av.it.:   3.3
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  4.876E-07
 
-      iter #   2 total cpu time :    27.1 secs   av.it.:   5.4
-      thresh= 7.449E-05 alpha_mix =  0.700 |ddv_scf|^2 =  1.395E-08
+      iter #   2 total cpu time :     9.7 secs   av.it.:   5.4
+      thresh= 6.983E-05 alpha_mix =  0.700 |ddv_scf|^2 =  1.226E-08
 
-      iter #   3 total cpu time :    27.5 secs   av.it.:   4.8
-      thresh= 1.181E-05 alpha_mix =  0.700 |ddv_scf|^2 =  1.064E-09
+      iter #   3 total cpu time :     9.9 secs   av.it.:   4.8
+      thresh= 1.107E-05 alpha_mix =  0.700 |ddv_scf|^2 =  9.344E-10
 
-      iter #   4 total cpu time :    28.0 secs   av.it.:   4.9
-      thresh= 3.262E-06 alpha_mix =  0.700 |ddv_scf|^2 =  9.533E-14
+      iter #   4 total cpu time :    10.1 secs   av.it.:   4.9
+      thresh= 3.057E-06 alpha_mix =  0.700 |ddv_scf|^2 =  8.343E-14
 
      End of self-consistent calculation
 
      Convergence has been achieved 
- 
+
      Number of q in the star =   24
      List of q in the star:
           1   0.750000000   0.250000000   0.250000000
@@ -1398,80 +1460,80 @@
      q = (    0.750000000   0.250000000   0.250000000 ) 
 
  **************************************************************************
-     freq (    1) =       5.392360 [THz] =     179.869757 [cm-1]
-     freq (    2) =       6.716390 [THz] =     224.034650 [cm-1]
-     freq (    3) =       8.785621 [THz] =     293.056788 [cm-1]
+     freq (    1) =       5.392300 [THz] =     179.867752 [cm-1]
+     freq (    2) =       6.716308 [THz] =     224.031933 [cm-1]
+     freq (    3) =       8.785597 [THz] =     293.055981 [cm-1]
  **************************************************************************
 
      Mode symmetry, C_s (m)     point group:
 
-     freq (  1 -  1) =        179.9  [cm-1]   --> A''                
-     freq (  2 -  2) =        224.0  [cm-1]   --> A'                 
-     freq (  3 -  3) =        293.1  [cm-1]   --> A'                 
- 
+     freq (   1-   1) =        179.9  [cm-1]   --> A''                
+     freq (   2-   2) =        224.0  [cm-1]   --> A'                 
+     freq (   3-   3) =        293.1  [cm-1]   --> A'                 
+
      Gaussian Broadening:   0.020 Ry, ngauss=   0
      DOS =  2.675810 states/spin/Ry/Unit Cell at Ef=  8.278657 eV
-     double delta at Ef = 16.984783
+     double delta at Ef = 16.984781
      lambda(    1)=  0.1107   gamma=    8.22 GHz
-     lambda(    2)=  0.1601   gamma=   18.46 GHz
+     lambda(    2)=  0.1602   gamma=   18.46 GHz
      lambda(    3)=  0.3820   gamma=   75.34 GHz
- 
+
      Gaussian Broadening:   0.040 Ry, ngauss=   0
      DOS =  2.703426 states/spin/Ry/Unit Cell at Ef=  8.200073 eV
-     double delta at Ef = 12.925455
+     double delta at Ef = 12.925456
      lambda(    1)=  0.0786   gamma=    5.90 GHz
      lambda(    2)=  0.1035   gamma=   12.05 GHz
      lambda(    3)=  0.2317   gamma=   46.18 GHz
- 
+
      Gaussian Broadening:   0.060 Ry, ngauss=   0
      DOS =  2.781707 states/spin/Ry/Unit Cell at Ef=  8.181999 eV
      double delta at Ef = 14.131085
      lambda(    1)=  0.0871   gamma=    6.73 GHz
      lambda(    2)=  0.1095   gamma=   13.12 GHz
      lambda(    3)=  0.2362   gamma=   48.43 GHz
- 
+
      Gaussian Broadening:   0.080 Ry, ngauss=   0
-     DOS =  2.793243 states/spin/Ry/Unit Cell at Ef=  8.205910 eV
+     DOS =  2.793243 states/spin/Ry/Unit Cell at Ef=  8.205911 eV
      double delta at Ef = 14.167432
      lambda(    1)=  0.0875   gamma=    6.79 GHz
      lambda(    2)=  0.1060   gamma=   12.75 GHz
      lambda(    3)=  0.2233   gamma=   45.98 GHz
- 
+
      Gaussian Broadening:   0.100 Ry, ngauss=   0
      DOS =  2.781101 states/spin/Ry/Unit Cell at Ef=  8.232628 eV
      double delta at Ef = 13.955867
      lambda(    1)=  0.0868   gamma=    6.70 GHz
      lambda(    2)=  0.1034   gamma=   12.39 GHz
      lambda(    3)=  0.2093   gamma=   42.91 GHz
- 
+
      Gaussian Broadening:   0.120 Ry, ngauss=   0
      DOS =  2.753459 states/spin/Ry/Unit Cell at Ef=  8.253279 eV
      double delta at Ef = 13.769271
      lambda(    1)=  0.0868   gamma=    6.64 GHz
      lambda(    2)=  0.1034   gamma=   12.26 GHz
      lambda(    3)=  0.2013   gamma=   40.86 GHz
- 
+
      Gaussian Broadening:   0.140 Ry, ngauss=   0
      DOS =  2.719703 states/spin/Ry/Unit Cell at Ef=  8.267107 eV
      double delta at Ef = 13.674406
      lambda(    1)=  0.0876   gamma=    6.62 GHz
      lambda(    2)=  0.1050   gamma=   12.30 GHz
      lambda(    3)=  0.1983   gamma=   39.75 GHz
- 
+
      Gaussian Broadening:   0.160 Ry, ngauss=   0
      DOS =  2.693266 states/spin/Ry/Unit Cell at Ef=  8.275890 eV
      double delta at Ef = 13.661793
      lambda(    1)=  0.0888   gamma=    6.64 GHz
      lambda(    2)=  0.1070   gamma=   12.42 GHz
      lambda(    3)=  0.1974   gamma=   39.18 GHz
- 
+
      Gaussian Broadening:   0.180 Ry, ngauss=   0
      DOS =  2.678788 states/spin/Ry/Unit Cell at Ef=  8.281617 eV
      double delta at Ef = 13.697478
      lambda(    1)=  0.0899   gamma=    6.69 GHz
      lambda(    2)=  0.1089   gamma=   12.57 GHz
      lambda(    3)=  0.1967   gamma=   38.84 GHz
- 
+
      Gaussian Broadening:   0.200 Ry, ngauss=   0
      DOS =  2.674046 states/spin/Ry/Unit Cell at Ef=  8.285684 eV
      double delta at Ef = 13.753491
@@ -1480,12 +1542,16 @@
      lambda(    3)=  0.1958   gamma=   38.59 GHz
 
      Calculation of q =    0.5000000   0.5000000   0.5000000
- 
-     G-vector sticks info
+
+     Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min          30      30     15                  217      217      76
+     Max          31      31     16                  218      218      77
      Sum         121     121     61                  869      869     307
- 
+
+     Using Slab Decomposition
+
 
      Title: 
      Electron-phonon coefficients for Al                                        
@@ -1527,7 +1593,7 @@
                 l(2) =   1
 
      atomic species   valence    mass     pseudopotential
-        Al             3.00    26.98000     Al( 1.00)
+     Al                3.00    26.98000     Al( 1.00)
 
      48 Sym. Ops., with inversion, found
 
@@ -1536,7 +1602,7 @@
    Cartesian axes
 
      site n.     atom                  positions (alat units)
-         1           Al  tau(   1) = (  -0.1666667   0.3333333   0.5000000  )
+         1        Al     tau(   1) = (  -0.1666667   0.3333333   0.5000000  )
 
      number of k points=   130  Marzari-Vanderbilt smearing, width (Ry)=  0.0500
 
@@ -1544,7 +1610,9 @@
 
      Dense  grid:      869 G-vectors     FFT dimensions: (  15,  15,  15)
 
-     Estimated max dynamical RAM per process >       0.52 MB
+     Estimated max dynamical RAM per process >       0.20 MB
+
+     Estimated total dynamical RAM >       0.79 MB
 
      The potential is recalculated from file :
      ./_ph0/aluminum.q_6/aluminum.save/charge-density
@@ -1554,9 +1622,9 @@
      Band Structure Calculation
      Davidson diagonalization with overlap
 
-     ethr =  3.33E-10,  avg # of iterations = 13.8
+     ethr =  3.33E-10,  avg # of iterations = 13.7
 
-     total cpu time spent up to now is       12.2 secs
+     total cpu time spent up to now is        4.3 secs
 
      End of band structure calculation
 
@@ -1564,7 +1632,8 @@
 
      the Fermi energy is     8.1776 ev
 
-     Writing output data file ./_ph0/aluminum.q_6/aluminum.save/
+     Writing config to output data dir ./_ph0/aluminum.q_6/aluminum.save/ :
+     XML data file
 
      Electron-phonon coefficients for Al                                        
 
@@ -1601,15 +1670,15 @@
      Cartesian axes
 
      site n.  atom      mass           positions (alat units)
-        1     Al  26.9800   tau(    1) = (   -0.16667    0.33333    0.50000  )
+        1  Al     26.9800   tau(    1) = (   -0.16667    0.33333    0.50000  )
 
      Computing dynamical matrix for 
                     q = (   0.5000000   0.5000000   0.5000000 )
- 
+
      13 Sym.Ops. (with q -> -q+G )
 
 
-     G cutoff =   85.4897  (    869 G-vectors)     FFT grid: ( 15, 15, 15)
+     G cutoff =   85.4897  (    217 G-vectors)     FFT grid: ( 15, 15, 15)
 
      number of k points=   130  Marzari-Vanderbilt smearing, width (Ry)=  0.0500
 
@@ -1624,7 +1693,7 @@
 
 
      Atomic displacements:
-     There are   2 irreducible representations
+     There are    2 irreducible representations
 
      Representation     1      2 modes -  To be done
 
@@ -1633,51 +1702,51 @@
 
 
      Alpha used in Ewald sum =   0.7000
-     PHONON       :     28.23s CPU     29.76s WALL
+     PHONON       :      8.79s CPU     10.70s WALL
 
 
 
-     Representation #  1 modes #   1  2
+     Representation #   1 modes #   1   2
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    30.0 secs   av.it.:   3.4
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  4.102E-08
+      iter #   1 total cpu time :    10.8 secs   av.it.:   3.4
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  3.603E-08
 
-      iter #   2 total cpu time :    30.2 secs   av.it.:   5.9
-      thresh= 2.025E-05 alpha_mix =  0.700 |ddv_scf|^2 =  3.605E-09
+      iter #   2 total cpu time :    10.9 secs   av.it.:   6.0
+      thresh= 1.898E-05 alpha_mix =  0.700 |ddv_scf|^2 =  3.165E-09
 
-      iter #   3 total cpu time :    30.5 secs   av.it.:   5.6
-      thresh= 6.004E-06 alpha_mix =  0.700 |ddv_scf|^2 =  2.029E-11
+      iter #   3 total cpu time :    11.0 secs   av.it.:   5.6
+      thresh= 5.626E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.785E-11
 
      End of self-consistent calculation
 
      Convergence has been achieved 
 
 
-     Representation #  2 mode #   3
+     Representation #   2 mode #   3
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    30.7 secs   av.it.:   4.4
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  2.724E-04
+      iter #   1 total cpu time :    11.1 secs   av.it.:   4.4
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  2.394E-04
 
-      iter #   2 total cpu time :    30.9 secs   av.it.:   5.5
-      thresh= 1.650E-03 alpha_mix =  0.700 |ddv_scf|^2 =  3.200E-04
+      iter #   2 total cpu time :    11.2 secs   av.it.:   5.5
+      thresh= 1.547E-03 alpha_mix =  0.700 |ddv_scf|^2 =  2.813E-04
 
-      iter #   3 total cpu time :    31.0 secs   av.it.:   4.9
-      thresh= 1.789E-03 alpha_mix =  0.700 |ddv_scf|^2 =  7.196E-09
+      iter #   3 total cpu time :    11.2 secs   av.it.:   5.1
+      thresh= 1.547E-03 alpha_mix =  0.700 |ddv_scf|^2 =  6.303E-09
 
-      iter #   4 total cpu time :    31.1 secs   av.it.:   5.5
-      thresh= 8.483E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.354E-10
+      iter #   4 total cpu time :    11.3 secs   av.it.:   5.5
+      thresh= 7.939E-06 alpha_mix =  0.700 |ddv_scf|^2 =  2.947E-10
 
-      iter #   5 total cpu time :    31.2 secs   av.it.:   5.1
-      thresh= 1.831E-06 alpha_mix =  0.700 |ddv_scf|^2 =  7.888E-14
+      iter #   5 total cpu time :    11.3 secs   av.it.:   5.1
+      thresh= 1.717E-06 alpha_mix =  0.700 |ddv_scf|^2 =  6.546E-14
 
      End of self-consistent calculation
 
      Convergence has been achieved 
- 
+
      Number of q in the star =    4
      List of q in the star:
           1   0.500000000   0.500000000   0.500000000
@@ -1690,74 +1759,74 @@
      q = (    0.500000000   0.500000000   0.500000000 ) 
 
  **************************************************************************
-     freq (    1) =       4.438910 [THz] =     148.066107 [cm-1]
-     freq (    2) =       4.438910 [THz] =     148.066107 [cm-1]
-     freq (    3) =       9.422633 [THz] =     314.305204 [cm-1]
+     freq (    1) =       4.438883 [THz] =     148.065187 [cm-1]
+     freq (    2) =       4.438883 [THz] =     148.065187 [cm-1]
+     freq (    3) =       9.422648 [THz] =     314.305694 [cm-1]
  **************************************************************************
- 
+
      Gaussian Broadening:   0.020 Ry, ngauss=   0
      DOS =  2.675810 states/spin/Ry/Unit Cell at Ef=  8.278657 eV
-     double delta at Ef =  1.718168
+     double delta at Ef =  1.718170
      lambda(    1)=  0.0073   gamma=    0.37 GHz
      lambda(    2)=  0.0073   gamma=    0.37 GHz
      lambda(    3)=  0.0310   gamma=    7.03 GHz
- 
+
      Gaussian Broadening:   0.040 Ry, ngauss=   0
      DOS =  2.703426 states/spin/Ry/Unit Cell at Ef=  8.200073 eV
-     double delta at Ef = 10.177916
+     double delta at Ef = 10.177918
      lambda(    1)=  0.0534   gamma=    2.72 GHz
      lambda(    2)=  0.0534   gamma=    2.72 GHz
      lambda(    3)=  0.1394   gamma=   31.95 GHz
- 
+
      Gaussian Broadening:   0.060 Ry, ngauss=   0
      DOS =  2.781707 states/spin/Ry/Unit Cell at Ef=  8.181999 eV
-     double delta at Ef = 14.089272
+     double delta at Ef = 14.089273
      lambda(    1)=  0.0798   gamma=    4.18 GHz
      lambda(    2)=  0.0798   gamma=    4.18 GHz
      lambda(    3)=  0.1486   gamma=   35.05 GHz
- 
+
      Gaussian Broadening:   0.080 Ry, ngauss=   0
-     DOS =  2.793243 states/spin/Ry/Unit Cell at Ef=  8.205910 eV
+     DOS =  2.793243 states/spin/Ry/Unit Cell at Ef=  8.205911 eV
      double delta at Ef = 14.850423
      lambda(    1)=  0.0809   gamma=    4.25 GHz
      lambda(    2)=  0.0809   gamma=    4.25 GHz
      lambda(    3)=  0.1601   gamma=   37.91 GHz
- 
+
      Gaussian Broadening:   0.100 Ry, ngauss=   0
      DOS =  2.781101 states/spin/Ry/Unit Cell at Ef=  8.232628 eV
      double delta at Ef = 14.792267
      lambda(    1)=  0.0778   gamma=    4.07 GHz
      lambda(    2)=  0.0778   gamma=    4.07 GHz
      lambda(    3)=  0.1701   gamma=   40.11 GHz
- 
+
      Gaussian Broadening:   0.120 Ry, ngauss=   0
      DOS =  2.753459 states/spin/Ry/Unit Cell at Ef=  8.253279 eV
      double delta at Ef = 14.545807
      lambda(    1)=  0.0757   gamma=    3.92 GHz
      lambda(    2)=  0.0757   gamma=    3.92 GHz
      lambda(    3)=  0.1788   gamma=   41.74 GHz
- 
+
      Gaussian Broadening:   0.140 Ry, ngauss=   0
      DOS =  2.719703 states/spin/Ry/Unit Cell at Ef=  8.267107 eV
      double delta at Ef = 14.356743
      lambda(    1)=  0.0747   gamma=    3.82 GHz
      lambda(    2)=  0.0747   gamma=    3.82 GHz
      lambda(    3)=  0.1878   gamma=   43.30 GHz
- 
+
      Gaussian Broadening:   0.160 Ry, ngauss=   0
      DOS =  2.693266 states/spin/Ry/Unit Cell at Ef=  8.275890 eV
      double delta at Ef = 14.259440
      lambda(    1)=  0.0742   gamma=    3.76 GHz
      lambda(    2)=  0.0742   gamma=    3.76 GHz
      lambda(    3)=  0.1958   gamma=   44.72 GHz
- 
+
      Gaussian Broadening:   0.180 Ry, ngauss=   0
      DOS =  2.678788 states/spin/Ry/Unit Cell at Ef=  8.281617 eV
      double delta at Ef = 14.224739
      lambda(    1)=  0.0738   gamma=    3.72 GHz
      lambda(    2)=  0.0738   gamma=    3.72 GHz
      lambda(    3)=  0.2018   gamma=   45.84 GHz
- 
+
      Gaussian Broadening:   0.200 Ry, ngauss=   0
      DOS =  2.674046 states/spin/Ry/Unit Cell at Ef=  8.285684 eV
      double delta at Ef = 14.224196
@@ -1766,12 +1835,16 @@
      lambda(    3)=  0.2058   gamma=   46.65 GHz
 
      Calculation of q =    0.2500000   0.2500000   0.2500000
- 
-     G-vector sticks info
+
+     Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min          30      30     13                  216      216      64
+     Max          31      31     14                  218      218      65
      Sum         121     121     55                  869      869     259
- 
+
+     Using Slab Decomposition
+
 
      Title: 
      Electron-phonon coefficients for Al                                        
@@ -1813,7 +1886,7 @@
                 l(2) =   1
 
      atomic species   valence    mass     pseudopotential
-        Al             3.00    26.98000     Al( 1.00)
+     Al                3.00    26.98000     Al( 1.00)
 
      48 Sym. Ops., with inversion, found
 
@@ -1822,7 +1895,7 @@
    Cartesian axes
 
      site n.     atom                  positions (alat units)
-         1           Al  tau(   1) = (  -0.1666667   0.3333333   0.5000000  )
+         1        Al     tau(   1) = (  -0.1666667   0.3333333   0.5000000  )
 
      number of k points=   240  Marzari-Vanderbilt smearing, width (Ry)=  0.0500
 
@@ -1830,7 +1903,9 @@
 
      Dense  grid:      869 G-vectors     FFT dimensions: (  15,  15,  15)
 
-     Estimated max dynamical RAM per process >       0.52 MB
+     Estimated max dynamical RAM per process >       0.19 MB
+
+     Estimated total dynamical RAM >       0.78 MB
 
      The potential is recalculated from file :
      ./_ph0/aluminum.q_7/aluminum.save/charge-density
@@ -1842,7 +1917,7 @@
 
      ethr =  3.33E-10,  avg # of iterations = 13.8
 
-     total cpu time spent up to now is       14.6 secs
+     total cpu time spent up to now is        5.1 secs
 
      End of band structure calculation
 
@@ -1850,7 +1925,8 @@
 
      the Fermi energy is     8.1776 ev
 
-     Writing output data file ./_ph0/aluminum.q_7/aluminum.save/
+     Writing config to output data dir ./_ph0/aluminum.q_7/aluminum.save/ :
+     XML data file
 
      Electron-phonon coefficients for Al                                        
 
@@ -1887,15 +1963,15 @@
      Cartesian axes
 
      site n.  atom      mass           positions (alat units)
-        1     Al  26.9800   tau(    1) = (   -0.16667    0.33333    0.50000  )
+        1  Al     26.9800   tau(    1) = (   -0.16667    0.33333    0.50000  )
 
      Computing dynamical matrix for 
                     q = (   0.2500000   0.2500000   0.2500000 )
- 
+
       6 Sym.Ops. (no q -> -q+G )
 
 
-     G cutoff =   85.4897  (    869 G-vectors)     FFT grid: ( 15, 15, 15)
+     G cutoff =   85.4897  (    218 G-vectors)     FFT grid: ( 15, 15, 15)
 
      number of k points=   240  Marzari-Vanderbilt smearing, width (Ry)=  0.0500
 
@@ -1912,66 +1988,63 @@
 
 
      Atomic displacements:
-     There are   2 irreducible representations
+     There are    2 irreducible representations
 
-     Representation     1      1 modes -A_1  L_1  To be done
+     Representation     1      1 modes -  To be done
 
-     Representation     2      2 modes -E    L_3  To be done
+     Representation     2      2 modes -  To be done
 
 
 
      Alpha used in Ewald sum =   0.7000
-     PHONON       :     32.03s CPU     33.77s WALL
+     PHONON       :     10.05s CPU     12.20s WALL
 
 
 
-     Representation #  1 mode #   1
+     Representation #   1 mode #   1
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    34.0 secs   av.it.:   4.2
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  2.383E-02
+      iter #   1 total cpu time :    12.3 secs   av.it.:   4.2
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  2.094E-02
 
-      iter #   2 total cpu time :    34.2 secs   av.it.:   4.9
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  1.036E+00
+      iter #   2 total cpu time :    12.4 secs   av.it.:   4.9
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  9.107E-01
 
-      iter #   3 total cpu time :    34.4 secs   av.it.:   4.7
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  5.855E-07
+      iter #   3 total cpu time :    12.4 secs   av.it.:   4.8
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  5.179E-07
 
-      iter #   4 total cpu time :    34.6 secs   av.it.:   5.2
-      thresh= 7.652E-05 alpha_mix =  0.700 |ddv_scf|^2 =  4.580E-09
+      iter #   4 total cpu time :    12.5 secs   av.it.:   5.2
+      thresh= 7.196E-05 alpha_mix =  0.700 |ddv_scf|^2 =  2.264E-09
 
-      iter #   5 total cpu time :    34.8 secs   av.it.:   5.4
-      thresh= 6.768E-06 alpha_mix =  0.700 |ddv_scf|^2 =  6.324E-08
+      iter #   5 total cpu time :    12.6 secs   av.it.:   5.4
+      thresh= 4.758E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.585E-10
 
-      iter #   6 total cpu time :    35.0 secs   av.it.:   3.4
-      thresh= 2.515E-05 alpha_mix =  0.700 |ddv_scf|^2 =  7.435E-10
-
-      iter #   7 total cpu time :    35.2 secs   av.it.:   4.8
-      thresh= 2.727E-06 alpha_mix =  0.700 |ddv_scf|^2 =  9.100E-13
+      iter #   6 total cpu time :    12.7 secs   av.it.:   5.2
+      thresh= 1.259E-06 alpha_mix =  0.700 |ddv_scf|^2 =  7.521E-11
 
      End of self-consistent calculation
 
      Convergence has been achieved 
 
 
-     Representation #  2 modes #   2  3
+     Representation #   2 modes #   2   3
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    35.8 secs   av.it.:   3.4
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  3.732E-08
+      iter #   1 total cpu time :    12.8 secs   av.it.:   3.4
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  3.277E-08
 
-      iter #   2 total cpu time :    36.2 secs   av.it.:   5.9
-      thresh= 1.932E-05 alpha_mix =  0.700 |ddv_scf|^2 =  3.496E-09
+      iter #   2 total cpu time :    13.0 secs   av.it.:   6.0
+      thresh= 1.810E-05 alpha_mix =  0.700 |ddv_scf|^2 =  3.070E-09
 
-      iter #   3 total cpu time :    36.6 secs   av.it.:   5.7
-      thresh= 5.913E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.153E-11
+      iter #   3 total cpu time :    13.2 secs   av.it.:   5.7
+      thresh= 5.540E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.014E-11
 
      End of self-consistent calculation
 
      Convergence has been achieved 
- 
+
      Number of q in the star =    8
      List of q in the star:
           1   0.250000000   0.250000000   0.250000000
@@ -1988,79 +2061,79 @@
      q = (    0.250000000   0.250000000   0.250000000 ) 
 
  **************************************************************************
-     freq (    1) =       3.512884 [THz] =     117.177204 [cm-1]
-     freq (    2) =       3.512884 [THz] =     117.177204 [cm-1]
-     freq (    3) =       6.337625 [THz] =     211.400403 [cm-1]
+     freq (    1) =       3.512812 [THz] =     117.174797 [cm-1]
+     freq (    2) =       3.512812 [THz] =     117.174797 [cm-1]
+     freq (    3) =       6.337571 [THz] =     211.398624 [cm-1]
  **************************************************************************
 
      Mode symmetry, C_3v (3m)   point group:
 
-     freq (  1 -  2) =        117.2  [cm-1]   --> E    L_3           
-     freq (  3 -  3) =        211.4  [cm-1]   --> A_1  L_1           
- 
+     freq (   1-   2) =        117.2  [cm-1]   --> E    L_3           
+     freq (   3-   3) =        211.4  [cm-1]   --> A_1  L_1           
+
      Gaussian Broadening:   0.020 Ry, ngauss=   0
      DOS =  2.675810 states/spin/Ry/Unit Cell at Ef=  8.278657 eV
-     double delta at Ef = 26.430867
+     double delta at Ef = 26.430865
      lambda(    1)=  0.0459   gamma=    1.45 GHz
      lambda(    2)=  0.0459   gamma=    1.45 GHz
      lambda(    3)=  0.3442   gamma=   35.32 GHz
- 
+
      Gaussian Broadening:   0.040 Ry, ngauss=   0
      DOS =  2.703426 states/spin/Ry/Unit Cell at Ef=  8.200073 eV
-     double delta at Ef = 21.429882
+     double delta at Ef = 21.429883
      lambda(    1)=  0.0698   gamma=    2.22 GHz
      lambda(    2)=  0.0698   gamma=    2.22 GHz
      lambda(    3)=  0.3560   gamma=   36.91 GHz
- 
+
      Gaussian Broadening:   0.060 Ry, ngauss=   0
      DOS =  2.781707 states/spin/Ry/Unit Cell at Ef=  8.181999 eV
-     double delta at Ef = 20.494460
+     double delta at Ef = 20.494461
      lambda(    1)=  0.0728   gamma=    2.39 GHz
      lambda(    2)=  0.0728   gamma=    2.39 GHz
-     lambda(    3)=  0.3385   gamma=   36.12 GHz
- 
+     lambda(    3)=  0.3386   gamma=   36.12 GHz
+
      Gaussian Broadening:   0.080 Ry, ngauss=   0
-     DOS =  2.793243 states/spin/Ry/Unit Cell at Ef=  8.205910 eV
-     double delta at Ef = 19.158893
+     DOS =  2.793243 states/spin/Ry/Unit Cell at Ef=  8.205911 eV
+     double delta at Ef = 19.158894
      lambda(    1)=  0.0720   gamma=    2.37 GHz
      lambda(    2)=  0.0720   gamma=    2.37 GHz
      lambda(    3)=  0.3200   gamma=   34.29 GHz
- 
+
      Gaussian Broadening:   0.100 Ry, ngauss=   0
      DOS =  2.781101 states/spin/Ry/Unit Cell at Ef=  8.232628 eV
      double delta at Ef = 18.018277
      lambda(    1)=  0.0726   gamma=    2.38 GHz
      lambda(    2)=  0.0726   gamma=    2.38 GHz
      lambda(    3)=  0.3070   gamma=   32.75 GHz
- 
+
      Gaussian Broadening:   0.120 Ry, ngauss=   0
      DOS =  2.753459 states/spin/Ry/Unit Cell at Ef=  8.253279 eV
      double delta at Ef = 17.200343
      lambda(    1)=  0.0744   gamma=    2.42 GHz
      lambda(    2)=  0.0744   gamma=    2.42 GHz
      lambda(    3)=  0.2987   gamma=   31.55 GHz
- 
+
      Gaussian Broadening:   0.140 Ry, ngauss=   0
      DOS =  2.719703 states/spin/Ry/Unit Cell at Ef=  8.267107 eV
      double delta at Ef = 16.721708
      lambda(    1)=  0.0772   gamma=    2.48 GHz
      lambda(    2)=  0.0772   gamma=    2.48 GHz
      lambda(    3)=  0.2951   gamma=   30.79 GHz
- 
+
      Gaussian Broadening:   0.160 Ry, ngauss=   0
      DOS =  2.693266 states/spin/Ry/Unit Cell at Ef=  8.275890 eV
      double delta at Ef = 16.504692
      lambda(    1)=  0.0806   gamma=    2.56 GHz
      lambda(    2)=  0.0806   gamma=    2.56 GHz
      lambda(    3)=  0.2944   gamma=   30.41 GHz
- 
+
      Gaussian Broadening:   0.180 Ry, ngauss=   0
      DOS =  2.678788 states/spin/Ry/Unit Cell at Ef=  8.281617 eV
      double delta at Ef = 16.445757
      lambda(    1)=  0.0840   gamma=    2.65 GHz
      lambda(    2)=  0.0840   gamma=    2.65 GHz
      lambda(    3)=  0.2947   gamma=   30.28 GHz
- 
+
      Gaussian Broadening:   0.200 Ry, ngauss=   0
      DOS =  2.674046 states/spin/Ry/Unit Cell at Ef=  8.285684 eV
      double delta at Ef = 16.461924
@@ -2069,12 +2142,16 @@
      lambda(    3)=  0.2950   gamma=   30.26 GHz
 
      Calculation of q =    0.0000000   0.0000000   0.0000000
- 
-     G-vector sticks info
+
+     Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min          30      30     10                  216      216      45
+     Max          31      31     11                  218      218      46
      Sum         121     121     43                  869      869     181
- 
+
+     Using Slab Decomposition
+
 
      Title: 
      Electron-phonon coefficients for Al                                        
@@ -2116,7 +2193,7 @@
                 l(2) =   1
 
      atomic species   valence    mass     pseudopotential
-        Al             3.00    26.98000     Al( 1.00)
+     Al                3.00    26.98000     Al( 1.00)
 
      48 Sym. Ops., with inversion, found
 
@@ -2125,7 +2202,7 @@
    Cartesian axes
 
      site n.     atom                  positions (alat units)
-         1           Al  tau(   1) = (  -0.1666667   0.3333333   0.5000000  )
+         1        Al     tau(   1) = (  -0.1666667   0.3333333   0.5000000  )
 
      number of k points=    29  Marzari-Vanderbilt smearing, width (Ry)=  0.0500
                        cart. coord. in units 2pi/alat
@@ -2161,7 +2238,9 @@
 
      Dense  grid:      869 G-vectors     FFT dimensions: (  15,  15,  15)
 
-     Estimated max dynamical RAM per process >       0.51 MB
+     Estimated max dynamical RAM per process >       0.19 MB
+
+     Estimated total dynamical RAM >       0.77 MB
 
      The potential is recalculated from file :
      ./_ph0/aluminum.q_8/aluminum.save/charge-density
@@ -2171,9 +2250,9 @@
      Band Structure Calculation
      Davidson diagonalization with overlap
 
-     ethr =  3.33E-10,  avg # of iterations = 13.4
+     ethr =  3.33E-10,  avg # of iterations = 13.7
 
-     total cpu time spent up to now is       14.9 secs
+     total cpu time spent up to now is        5.2 secs
 
      End of band structure calculation
 
@@ -2295,7 +2374,8 @@
 
      the Fermi energy is     8.1776 ev
 
-     Writing output data file ./_ph0/aluminum.q_8/aluminum.save/
+     Writing config to output data dir ./_ph0/aluminum.q_8/aluminum.save/ :
+     XML data file
 
      Electron-phonon coefficients for Al                                        
 
@@ -2332,15 +2412,15 @@
      Cartesian axes
 
      site n.  atom      mass           positions (alat units)
-        1     Al  26.9800   tau(    1) = (   -0.16667    0.33333    0.50000  )
+        1  Al     26.9800   tau(    1) = (   -0.16667    0.33333    0.50000  )
 
      Computing dynamical matrix for 
                     q = (   0.0000000   0.0000000   0.0000000 )
- 
+
      49 Sym.Ops. (with q -> -q+G )
 
 
-     G cutoff =   85.4897  (    869 G-vectors)     FFT grid: ( 15, 15, 15)
+     G cutoff =   85.4897  (    217 G-vectors)     FFT grid: ( 15, 15, 15)
 
      number of k points=    29  Marzari-Vanderbilt smearing, width (Ry)=  0.0500
 
@@ -2357,46 +2437,46 @@
 
 
      Atomic displacements:
-     There are   1 irreducible representations
+     There are    1 irreducible representations
 
-     Representation     1      3 modes -T_1u G_15  G_4-  To be done
+     Representation     1      3 modes -  To be done
 
 
 
      Alpha used in Ewald sum =   0.7000
-     PHONON       :     35.29s CPU     37.21s WALL
+     PHONON       :     10.99s CPU     13.40s WALL
 
 
 
-     Representation #  1 modes #   1  2  3
+     Representation #   1 modes #   1   2   3
 
      Self-consistent Calculation
- 
-     Pert. #  1: Fermi energy shift (Ry) =     1.1374E-24    -6.8962E-37
-     Pert. #  2: Fermi energy shift (Ry) =     6.1392E-25     1.7241E-37
-     Pert. #  3: Fermi energy shift (Ry) =     7.1517E-25    -1.8808E-37
 
-      iter #   1 total cpu time :    37.4 secs   av.it.:   3.3
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  1.431E-08
- 
-     Pert. #  1: Fermi energy shift (Ry) =     2.7573E-25     0.0000E+00
-     Pert. #  2: Fermi energy shift (Ry) =    -7.3671E-25    -1.0408E-39
-     Pert. #  3: Fermi energy shift (Ry) =    -1.5337E-24     1.7143E-39
+     Pert. #  1: Fermi energy shift (Ry) =    -5.7386E-24     1.0344E-36
+     Pert. #  2: Fermi energy shift (Ry) =    -6.5097E-24     7.0530E-38
+     Pert. #  3: Fermi energy shift (Ry) =    -3.4466E-25    -6.2693E-38
 
-      iter #   2 total cpu time :    37.5 secs   av.it.:   5.5
-      thresh= 1.196E-05 alpha_mix =  0.700 |ddv_scf|^2 =  1.497E-09
- 
-     Pert. #  1: Fermi energy shift (Ry) =    -4.8252E-25     9.7958E-40
-     Pert. #  2: Fermi energy shift (Ry) =     5.2345E-25     4.6836E-39
-     Pert. #  3: Fermi energy shift (Ry) =    -1.0512E-24     3.6734E-40
+      iter #   1 total cpu time :    13.5 secs   av.it.:   3.4
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  1.256E-08
 
-      iter #   3 total cpu time :    37.7 secs   av.it.:   5.3
-      thresh= 3.869E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.764E-13
+     Pert. #  1: Fermi energy shift (Ry) =    -1.4476E-24     1.4694E-39
+     Pert. #  2: Fermi energy shift (Ry) =     3.1278E-24    -7.2244E-39
+     Pert. #  3: Fermi energy shift (Ry) =     8.0995E-25    -3.9183E-39
+
+      iter #   2 total cpu time :    13.6 secs   av.it.:   5.5
+      thresh= 1.121E-05 alpha_mix =  0.700 |ddv_scf|^2 =  1.315E-09
+
+     Pert. #  1: Fermi energy shift (Ry) =    -3.9291E-24     4.8979E-40
+     Pert. #  2: Fermi energy shift (Ry) =    -9.9951E-25    -2.4489E-39
+     Pert. #  3: Fermi energy shift (Ry) =    -1.0628E-23    -3.6734E-40
+
+      iter #   3 total cpu time :    13.7 secs   av.it.:   5.3
+      thresh= 3.626E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.479E-13
 
      End of self-consistent calculation
 
      Convergence has been achieved 
- 
+
      Number of q in the star =    1
      List of q in the star:
           1   0.000000000   0.000000000   0.000000000
@@ -2406,92 +2486,96 @@
      q = (    0.000000000   0.000000000   0.000000000 ) 
 
  **************************************************************************
-     freq (    1) =       0.172822 [THz] =       5.764724 [cm-1]
-     freq (    2) =       0.172822 [THz] =       5.764724 [cm-1]
-     freq (    3) =       0.172822 [THz] =       5.764724 [cm-1]
+     freq (    1) =       0.172379 [THz] =       5.749929 [cm-1]
+     freq (    2) =       0.172379 [THz] =       5.749929 [cm-1]
+     freq (    3) =       0.172379 [THz] =       5.749929 [cm-1]
  **************************************************************************
 
      Mode symmetry, O_h (m-3m)  point group:
 
-     freq (  1 -  3) =          5.8  [cm-1]   --> T_1u G_15  G_4- I  
- 
+     freq (   1-   3) =          5.7  [cm-1]   --> T_1u G_15  G_4- I  
+
      Gaussian Broadening:   0.020 Ry, ngauss=   0
      DOS =  2.675810 states/spin/Ry/Unit Cell at Ef=  8.278657 eV
-     double delta at Ef =104.058472
+     double delta at Ef =104.058471
      lambda(    1)=  0.0000   gamma=    0.00 GHz
      lambda(    2)=  0.0000   gamma=    0.00 GHz
      lambda(    3)=  0.0000   gamma=    0.00 GHz
- 
+
      Gaussian Broadening:   0.040 Ry, ngauss=   0
      DOS =  2.703426 states/spin/Ry/Unit Cell at Ef=  8.200073 eV
-     double delta at Ef = 56.351825
+     double delta at Ef = 56.351829
      lambda(    1)=  0.0000   gamma=    0.32 GHz
      lambda(    2)=  0.0000   gamma=    0.32 GHz
      lambda(    3)=  0.0000   gamma=    0.32 GHz
- 
+
      Gaussian Broadening:   0.060 Ry, ngauss=   0
      DOS =  2.781707 states/spin/Ry/Unit Cell at Ef=  8.181999 eV
-     double delta at Ef = 42.846628
+     double delta at Ef = 42.846631
      lambda(    1)=  0.0000   gamma=    1.23 GHz
      lambda(    2)=  0.0000   gamma=    1.23 GHz
      lambda(    3)=  0.0000   gamma=    1.23 GHz
- 
+
      Gaussian Broadening:   0.080 Ry, ngauss=   0
-     DOS =  2.793243 states/spin/Ry/Unit Cell at Ef=  8.205910 eV
-     double delta at Ef = 36.753205
+     DOS =  2.793243 states/spin/Ry/Unit Cell at Ef=  8.205911 eV
+     double delta at Ef = 36.753207
      lambda(    1)=  0.0000   gamma=    2.20 GHz
      lambda(    2)=  0.0000   gamma=    2.20 GHz
      lambda(    3)=  0.0000   gamma=    2.20 GHz
- 
+
      Gaussian Broadening:   0.100 Ry, ngauss=   0
      DOS =  2.781101 states/spin/Ry/Unit Cell at Ef=  8.232628 eV
-     double delta at Ef = 32.865749
+     double delta at Ef = 32.865750
      lambda(    1)=  0.0000   gamma=    2.67 GHz
      lambda(    2)=  0.0000   gamma=    2.67 GHz
      lambda(    3)=  0.0000   gamma=    2.67 GHz
- 
+
      Gaussian Broadening:   0.120 Ry, ngauss=   0
      DOS =  2.753459 states/spin/Ry/Unit Cell at Ef=  8.253279 eV
-     double delta at Ef = 29.857732
+     double delta at Ef = 29.857733
      lambda(    1)=  0.0000   gamma=    2.80 GHz
      lambda(    2)=  0.0000   gamma=    2.80 GHz
      lambda(    3)=  0.0000   gamma=    2.80 GHz
- 
+
      Gaussian Broadening:   0.140 Ry, ngauss=   0
      DOS =  2.719703 states/spin/Ry/Unit Cell at Ef=  8.267107 eV
      double delta at Ef = 27.504730
      lambda(    1)=  0.0000   gamma=    2.87 GHz
      lambda(    2)=  0.0000   gamma=    2.87 GHz
      lambda(    3)=  0.0000   gamma=    2.87 GHz
- 
+
      Gaussian Broadening:   0.160 Ry, ngauss=   0
      DOS =  2.693266 states/spin/Ry/Unit Cell at Ef=  8.275890 eV
      double delta at Ef = 25.729520
      lambda(    1)=  0.0000   gamma=    2.95 GHz
      lambda(    2)=  0.0000   gamma=    2.95 GHz
      lambda(    3)=  0.0000   gamma=    2.95 GHz
- 
+
      Gaussian Broadening:   0.180 Ry, ngauss=   0
      DOS =  2.678788 states/spin/Ry/Unit Cell at Ef=  8.281617 eV
-     double delta at Ef = 24.395210
+     double delta at Ef = 24.395211
      lambda(    1)=  0.0000   gamma=    3.04 GHz
      lambda(    2)=  0.0000   gamma=    3.04 GHz
      lambda(    3)=  0.0000   gamma=    3.04 GHz
- 
+
      Gaussian Broadening:   0.200 Ry, ngauss=   0
      DOS =  2.674046 states/spin/Ry/Unit Cell at Ef=  8.285684 eV
-     double delta at Ef = 23.360102
+     double delta at Ef = 23.360103
      lambda(    1)=  0.0000   gamma=    3.12 GHz
      lambda(    2)=  0.0000   gamma=    3.12 GHz
      lambda(    3)=  0.0000   gamma=    3.12 GHz
 
      Calculation of q =    0.2500000   0.2500000   0.0000000
- 
-     G-vector sticks info
+
+     Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min          30      30     13                  216      216      64
+     Max          31      31     14                  218      218      65
      Sum         121     121     55                  869      869     259
- 
+
+     Using Slab Decomposition
+
 
      Title: 
      Electron-phonon coefficients for Al                                        
@@ -2533,7 +2617,7 @@
                 l(2) =   1
 
      atomic species   valence    mass     pseudopotential
-        Al             3.00    26.98000     Al( 1.00)
+     Al                3.00    26.98000     Al( 1.00)
 
      48 Sym. Ops., with inversion, found
 
@@ -2542,7 +2626,7 @@
    Cartesian axes
 
      site n.     atom                  positions (alat units)
-         1           Al  tau(   1) = (  -0.1666667   0.3333333   0.5000000  )
+         1        Al     tau(   1) = (  -0.1666667   0.3333333   0.5000000  )
 
      number of k points=   328  Marzari-Vanderbilt smearing, width (Ry)=  0.0500
 
@@ -2550,7 +2634,9 @@
 
      Dense  grid:      869 G-vectors     FFT dimensions: (  15,  15,  15)
 
-     Estimated max dynamical RAM per process >       0.52 MB
+     Estimated max dynamical RAM per process >       0.19 MB
+
+     Estimated total dynamical RAM >       0.77 MB
 
      The potential is recalculated from file :
      ./_ph0/aluminum.q_9/aluminum.save/charge-density
@@ -2562,7 +2648,7 @@
 
      ethr =  3.33E-10,  avg # of iterations = 13.4
 
-     total cpu time spent up to now is       18.1 secs
+     total cpu time spent up to now is        6.4 secs
 
      End of band structure calculation
 
@@ -2570,7 +2656,8 @@
 
      the Fermi energy is     8.1776 ev
 
-     Writing output data file ./_ph0/aluminum.q_9/aluminum.save/
+     Writing config to output data dir ./_ph0/aluminum.q_9/aluminum.save/ :
+     XML data file
 
      Electron-phonon coefficients for Al                                        
 
@@ -2607,15 +2694,15 @@
      Cartesian axes
 
      site n.  atom      mass           positions (alat units)
-        1     Al  26.9800   tau(    1) = (   -0.16667    0.33333    0.50000  )
+        1  Al     26.9800   tau(    1) = (   -0.16667    0.33333    0.50000  )
 
      Computing dynamical matrix for 
                     q = (   0.2500000   0.2500000   0.0000000 )
- 
+
       4 Sym.Ops. (no q -> -q+G )
 
 
-     G cutoff =   85.4897  (    869 G-vectors)     FFT grid: ( 15, 15, 15)
+     G cutoff =   85.4897  (    218 G-vectors)     FFT grid: ( 15, 15, 15)
 
      number of k points=   328  Marzari-Vanderbilt smearing, width (Ry)=  0.0500
 
@@ -2632,83 +2719,83 @@
 
 
      Atomic displacements:
-     There are   3 irreducible representations
+     There are    3 irreducible representations
 
-     Representation     1      1 modes -A_1  D_1  S_1  To be done
+     Representation     1      1 modes -  To be done
 
-     Representation     2      1 modes -B_1  D_3  S_3  To be done
+     Representation     2      1 modes -  To be done
 
-     Representation     3      1 modes -B_2  D_4  S_4  To be done
+     Representation     3      1 modes -  To be done
 
 
 
      Alpha used in Ewald sum =   0.7000
-     PHONON       :     38.98s CPU     41.08s WALL
+     PHONON       :     12.25s CPU     14.87s WALL
 
 
 
-     Representation #  1 mode #   1
+     Representation #   1 mode #   1
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    41.4 secs   av.it.:   4.1
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  7.346E-02
+      iter #   1 total cpu time :    15.0 secs   av.it.:   4.1
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  6.456E-02
 
-      iter #   2 total cpu time :    41.7 secs   av.it.:   5.0
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  6.383E+00
+      iter #   2 total cpu time :    15.1 secs   av.it.:   5.0
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  5.610E+00
 
-      iter #   3 total cpu time :    42.0 secs   av.it.:   4.9
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  6.067E-06
+      iter #   3 total cpu time :    15.2 secs   av.it.:   4.9
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  5.327E-06
 
-      iter #   4 total cpu time :    42.2 secs   av.it.:   4.1
-      thresh= 2.463E-04 alpha_mix =  0.700 |ddv_scf|^2 =  3.078E-09
+      iter #   4 total cpu time :    15.3 secs   av.it.:   4.1
+      thresh= 2.308E-04 alpha_mix =  0.700 |ddv_scf|^2 =  2.766E-09
 
-      iter #   5 total cpu time :    42.5 secs   av.it.:   5.1
-      thresh= 5.548E-06 alpha_mix =  0.700 |ddv_scf|^2 =  9.728E-11
+      iter #   5 total cpu time :    15.4 secs   av.it.:   5.1
+      thresh= 5.260E-06 alpha_mix =  0.700 |ddv_scf|^2 =  9.192E-11
 
      End of self-consistent calculation
 
      Convergence has been achieved 
 
 
-     Representation #  2 mode #   2
+     Representation #   2 mode #   2
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    43.0 secs   av.it.:   3.2
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  1.282E-07
+      iter #   1 total cpu time :    15.5 secs   av.it.:   3.2
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  1.126E-07
 
-      iter #   2 total cpu time :    43.3 secs   av.it.:   4.8
-      thresh= 3.580E-05 alpha_mix =  0.700 |ddv_scf|^2 =  1.350E-08
+      iter #   2 total cpu time :    15.6 secs   av.it.:   4.9
+      thresh= 3.355E-05 alpha_mix =  0.700 |ddv_scf|^2 =  1.186E-08
 
-      iter #   3 total cpu time :    43.6 secs   av.it.:   4.6
-      thresh= 1.162E-05 alpha_mix =  0.700 |ddv_scf|^2 =  1.525E-12
+      iter #   3 total cpu time :    15.7 secs   av.it.:   4.6
+      thresh= 1.089E-05 alpha_mix =  0.700 |ddv_scf|^2 =  1.341E-12
 
      End of self-consistent calculation
 
      Convergence has been achieved 
 
 
-     Representation #  3 mode #   3
+     Representation #   3 mode #   3
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    44.1 secs   av.it.:   3.4
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  3.693E-07
+      iter #   1 total cpu time :    15.9 secs   av.it.:   3.4
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  3.245E-07
 
-      iter #   2 total cpu time :    44.4 secs   av.it.:   5.4
-      thresh= 6.077E-05 alpha_mix =  0.700 |ddv_scf|^2 =  1.376E-08
+      iter #   2 total cpu time :    16.0 secs   av.it.:   5.5
+      thresh= 5.696E-05 alpha_mix =  0.700 |ddv_scf|^2 =  1.208E-08
 
-      iter #   3 total cpu time :    44.7 secs   av.it.:   4.8
-      thresh= 1.173E-05 alpha_mix =  0.700 |ddv_scf|^2 =  8.428E-10
+      iter #   3 total cpu time :    16.1 secs   av.it.:   4.8
+      thresh= 1.099E-05 alpha_mix =  0.700 |ddv_scf|^2 =  7.403E-10
 
-      iter #   4 total cpu time :    45.0 secs   av.it.:   4.8
-      thresh= 2.903E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.180E-13
+      iter #   4 total cpu time :    16.2 secs   av.it.:   4.8
+      thresh= 2.721E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.036E-13
 
      End of self-consistent calculation
 
      Convergence has been achieved 
- 
+
      Number of q in the star =   12
      List of q in the star:
           1   0.250000000   0.250000000   0.000000000
@@ -2729,94 +2816,98 @@
      q = (    0.250000000   0.250000000   0.000000000 ) 
 
  **************************************************************************
-     freq (    1) =       3.022844 [THz] =     100.831222 [cm-1]
-     freq (    2) =       3.330076 [THz] =     111.079393 [cm-1]
-     freq (    3) =       5.522148 [THz] =     184.199029 [cm-1]
+     freq (    1) =       3.022721 [THz] =     100.827110 [cm-1]
+     freq (    2) =       3.329983 [THz] =     111.076276 [cm-1]
+     freq (    3) =       5.523483 [THz] =     184.243562 [cm-1]
  **************************************************************************
 
      Mode symmetry, C_2v (mm2)  point group:
 
-     freq (  1 -  1) =        100.8  [cm-1]   --> B_1  D_3  S_3      
-     freq (  2 -  2) =        111.1  [cm-1]   --> B_2  D_4  S_4      
-     freq (  3 -  3) =        184.2  [cm-1]   --> A_1  D_1  S_1      
- 
+     freq (   1-   1) =        100.8  [cm-1]   --> B_1  D_3  S_3      
+     freq (   2-   2) =        111.1  [cm-1]   --> B_2  D_4  S_4      
+     freq (   3-   3) =        184.2  [cm-1]   --> A_1  D_1  S_1      
+
      Gaussian Broadening:   0.020 Ry, ngauss=   0
      DOS =  2.675810 states/spin/Ry/Unit Cell at Ef=  8.278657 eV
      double delta at Ef = 20.055744
      lambda(    1)=  0.0284   gamma=    0.66 GHz
      lambda(    2)=  0.0596   gamma=    1.69 GHz
-     lambda(    3)=  0.9457   gamma=   73.68 GHz
- 
+     lambda(    3)=  0.9452   gamma=   73.68 GHz
+
      Gaussian Broadening:   0.040 Ry, ngauss=   0
      DOS =  2.703426 states/spin/Ry/Unit Cell at Ef=  8.200073 eV
-     double delta at Ef = 18.372730
+     double delta at Ef = 18.372732
      lambda(    1)=  0.0579   gamma=    1.37 GHz
      lambda(    2)=  0.1093   gamma=    3.13 GHz
-     lambda(    3)=  0.5440   gamma=   42.82 GHz
- 
+     lambda(    3)=  0.5437   gamma=   42.82 GHz
+
      Gaussian Broadening:   0.060 Ry, ngauss=   0
      DOS =  2.781707 states/spin/Ry/Unit Cell at Ef=  8.181999 eV
-     double delta at Ef = 18.934984
+     double delta at Ef = 18.934985
      lambda(    1)=  0.0609   gamma=    1.48 GHz
      lambda(    2)=  0.1558   gamma=    4.59 GHz
-     lambda(    3)=  0.4182   gamma=   33.87 GHz
- 
+     lambda(    3)=  0.4180   gamma=   33.87 GHz
+
      Gaussian Broadening:   0.080 Ry, ngauss=   0
-     DOS =  2.793243 states/spin/Ry/Unit Cell at Ef=  8.205910 eV
-     double delta at Ef = 18.371978
+     DOS =  2.793243 states/spin/Ry/Unit Cell at Ef=  8.205911 eV
+     double delta at Ef = 18.371979
      lambda(    1)=  0.0629   gamma=    1.53 GHz
      lambda(    2)=  0.1776   gamma=    5.25 GHz
-     lambda(    3)=  0.3656   gamma=   29.74 GHz
- 
+     lambda(    3)=  0.3654   gamma=   29.74 GHz
+
      Gaussian Broadening:   0.100 Ry, ngauss=   0
      DOS =  2.781101 states/spin/Ry/Unit Cell at Ef=  8.232628 eV
      double delta at Ef = 18.036860
      lambda(    1)=  0.0658   gamma=    1.60 GHz
      lambda(    2)=  0.1891   gamma=    5.57 GHz
-     lambda(    3)=  0.3492   gamma=   28.28 GHz
- 
+     lambda(    3)=  0.3490   gamma=   28.28 GHz
+
      Gaussian Broadening:   0.120 Ry, ngauss=   0
      DOS =  2.753459 states/spin/Ry/Unit Cell at Ef=  8.253279 eV
      double delta at Ef = 17.830958
      lambda(    1)=  0.0688   gamma=    1.65 GHz
      lambda(    2)=  0.1959   gamma=    5.71 GHz
-     lambda(    3)=  0.3460   gamma=   27.74 GHz
- 
+     lambda(    3)=  0.3458   gamma=   27.74 GHz
+
      Gaussian Broadening:   0.140 Ry, ngauss=   0
      DOS =  2.719703 states/spin/Ry/Unit Cell at Ef=  8.267107 eV
      double delta at Ef = 17.718582
      lambda(    1)=  0.0719   gamma=    1.71 GHz
-     lambda(    2)=  0.2011   gamma=    5.79 GHz
-     lambda(    3)=  0.3477   gamma=   27.53 GHz
- 
+     lambda(    2)=  0.2012   gamma=    5.79 GHz
+     lambda(    3)=  0.3475   gamma=   27.53 GHz
+
      Gaussian Broadening:   0.160 Ry, ngauss=   0
      DOS =  2.693266 states/spin/Ry/Unit Cell at Ef=  8.275890 eV
      double delta at Ef = 17.683107
      lambda(    1)=  0.0753   gamma=    1.77 GHz
      lambda(    2)=  0.2052   gamma=    5.85 GHz
-     lambda(    3)=  0.3504   gamma=   27.48 GHz
- 
+     lambda(    3)=  0.3502   gamma=   27.48 GHz
+
      Gaussian Broadening:   0.180 Ry, ngauss=   0
      DOS =  2.678788 states/spin/Ry/Unit Cell at Ef=  8.281617 eV
      double delta at Ef = 17.686639
      lambda(    1)=  0.0785   gamma=    1.84 GHz
      lambda(    2)=  0.2080   gamma=    5.90 GHz
-     lambda(    3)=  0.3520   gamma=   27.46 GHz
- 
+     lambda(    3)=  0.3518   gamma=   27.46 GHz
+
      Gaussian Broadening:   0.200 Ry, ngauss=   0
      DOS =  2.674046 states/spin/Ry/Unit Cell at Ef=  8.285684 eV
      double delta at Ef = 17.692563
      lambda(    1)=  0.0815   gamma=    1.90 GHz
      lambda(    2)=  0.2097   gamma=    5.94 GHz
-     lambda(    3)=  0.3518   gamma=   27.39 GHz
+     lambda(    3)=  0.3516   gamma=   27.39 GHz
 
      Calculation of q =    0.5000000   0.5000000   0.0000000
- 
-     G-vector sticks info
+
+     Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min          30      30     15                  217      217      76
+     Max          31      31     16                  218      218      77
      Sum         121     121     61                  869      869     307
- 
+
+     Using Slab Decomposition
+
 
      Title: 
      Electron-phonon coefficients for Al                                        
@@ -2858,7 +2949,7 @@
                 l(2) =   1
 
      atomic species   valence    mass     pseudopotential
-        Al             3.00    26.98000     Al( 1.00)
+     Al                3.00    26.98000     Al( 1.00)
 
      48 Sym. Ops., with inversion, found
 
@@ -2867,7 +2958,7 @@
    Cartesian axes
 
      site n.     atom                  positions (alat units)
-         1           Al  tau(   1) = (  -0.1666667   0.3333333   0.5000000  )
+         1        Al     tau(   1) = (  -0.1666667   0.3333333   0.5000000  )
 
      number of k points=   328  Marzari-Vanderbilt smearing, width (Ry)=  0.0500
 
@@ -2875,7 +2966,9 @@
 
      Dense  grid:      869 G-vectors     FFT dimensions: (  15,  15,  15)
 
-     Estimated max dynamical RAM per process >       0.52 MB
+     Estimated max dynamical RAM per process >       0.20 MB
+
+     Estimated total dynamical RAM >       0.78 MB
 
      The potential is recalculated from file :
      ./_ph0/aluminum.q_10/aluminum.save/charge-density
@@ -2885,9 +2978,9 @@
      Band Structure Calculation
      Davidson diagonalization with overlap
 
-     ethr =  3.33E-10,  avg # of iterations = 13.6
+     ethr =  3.33E-10,  avg # of iterations = 13.4
 
-     total cpu time spent up to now is       21.4 secs
+     total cpu time spent up to now is        7.5 secs
 
      End of band structure calculation
 
@@ -2895,7 +2988,8 @@
 
      the Fermi energy is     8.1776 ev
 
-     Writing output data file ./_ph0/aluminum.q_10/aluminum.save/
+     Writing config to output data dir ./_ph0/aluminum.q_10/aluminum.save/ :
+     XML data file
 
      Electron-phonon coefficients for Al                                        
 
@@ -2932,15 +3026,15 @@
      Cartesian axes
 
      site n.  atom      mass           positions (alat units)
-        1     Al  26.9800   tau(    1) = (   -0.16667    0.33333    0.50000  )
+        1  Al     26.9800   tau(    1) = (   -0.16667    0.33333    0.50000  )
 
      Computing dynamical matrix for 
                     q = (   0.5000000   0.5000000   0.0000000 )
- 
+
       4 Sym.Ops. (no q -> -q+G )
 
 
-     G cutoff =   85.4897  (    869 G-vectors)     FFT grid: ( 15, 15, 15)
+     G cutoff =   85.4897  (    217 G-vectors)     FFT grid: ( 15, 15, 15)
 
      number of k points=   328  Marzari-Vanderbilt smearing, width (Ry)=  0.0500
 
@@ -2957,86 +3051,86 @@
 
 
      Atomic displacements:
-     There are   3 irreducible representations
+     There are    3 irreducible representations
 
-     Representation     1      1 modes -A_1  D_1  S_1  To be done
+     Representation     1      1 modes -  To be done
 
-     Representation     2      1 modes -B_1  D_3  S_3  To be done
+     Representation     2      1 modes -  To be done
 
-     Representation     3      1 modes -B_2  D_4  S_4  To be done
+     Representation     3      1 modes -  To be done
 
 
 
      Alpha used in Ewald sum =   0.7000
-     PHONON       :     46.06s CPU     48.58s WALL
+     PHONON       :     14.32s CPU     17.40s WALL
 
 
 
-     Representation #  1 mode #   1
+     Representation #   1 mode #   1
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    48.9 secs   av.it.:   4.0
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  6.628E-04
+      iter #   1 total cpu time :    17.5 secs   av.it.:   4.0
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  5.825E-04
 
-      iter #   2 total cpu time :    49.2 secs   av.it.:   4.9
-      thresh= 2.574E-03 alpha_mix =  0.700 |ddv_scf|^2 =  2.330E-03
+      iter #   2 total cpu time :    17.6 secs   av.it.:   4.9
+      thresh= 2.414E-03 alpha_mix =  0.700 |ddv_scf|^2 =  2.048E-03
 
-      iter #   3 total cpu time :    49.5 secs   av.it.:   4.1
-      thresh= 4.827E-03 alpha_mix =  0.700 |ddv_scf|^2 =  4.772E-08
+      iter #   3 total cpu time :    17.7 secs   av.it.:   4.6
+      thresh= 2.414E-03 alpha_mix =  0.700 |ddv_scf|^2 =  4.304E-08
 
-      iter #   4 total cpu time :    49.8 secs   av.it.:   5.9
-      thresh= 2.184E-05 alpha_mix =  0.700 |ddv_scf|^2 =  1.749E-09
+      iter #   4 total cpu time :    17.8 secs   av.it.:   5.8
+      thresh= 2.075E-05 alpha_mix =  0.700 |ddv_scf|^2 =  1.446E-09
 
-      iter #   5 total cpu time :    50.1 secs   av.it.:   5.4
-      thresh= 4.182E-06 alpha_mix =  0.700 |ddv_scf|^2 =  7.393E-11
+      iter #   5 total cpu time :    17.9 secs   av.it.:   5.4
+      thresh= 3.802E-06 alpha_mix =  0.700 |ddv_scf|^2 =  6.605E-11
 
      End of self-consistent calculation
 
      Convergence has been achieved 
 
 
-     Representation #  2 mode #   2
+     Representation #   2 mode #   2
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    50.6 secs   av.it.:   3.2
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  2.031E-07
+      iter #   1 total cpu time :    18.1 secs   av.it.:   3.2
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  1.785E-07
 
-      iter #   2 total cpu time :    50.9 secs   av.it.:   5.2
-      thresh= 4.507E-05 alpha_mix =  0.700 |ddv_scf|^2 =  1.465E-08
+      iter #   2 total cpu time :    18.2 secs   av.it.:   5.2
+      thresh= 4.224E-05 alpha_mix =  0.700 |ddv_scf|^2 =  1.287E-08
 
-      iter #   3 total cpu time :    51.1 secs   av.it.:   5.0
-      thresh= 1.210E-05 alpha_mix =  0.700 |ddv_scf|^2 =  2.194E-10
+      iter #   3 total cpu time :    18.3 secs   av.it.:   5.0
+      thresh= 1.134E-05 alpha_mix =  0.700 |ddv_scf|^2 =  1.928E-10
 
-      iter #   4 total cpu time :    51.4 secs   av.it.:   5.1
-      thresh= 1.481E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.610E-13
+      iter #   4 total cpu time :    18.4 secs   av.it.:   5.2
+      thresh= 1.389E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.417E-13
 
      End of self-consistent calculation
 
      Convergence has been achieved 
 
 
-     Representation #  3 mode #   3
+     Representation #   3 mode #   3
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    51.9 secs   av.it.:   3.6
-      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  5.702E-06
+      iter #   1 total cpu time :    18.6 secs   av.it.:   3.6
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  5.011E-06
 
-      iter #   2 total cpu time :    52.2 secs   av.it.:   5.4
-      thresh= 2.388E-04 alpha_mix =  0.700 |ddv_scf|^2 =  3.765E-07
+      iter #   2 total cpu time :    18.7 secs   av.it.:   5.4
+      thresh= 2.239E-04 alpha_mix =  0.700 |ddv_scf|^2 =  3.309E-07
 
-      iter #   3 total cpu time :    52.5 secs   av.it.:   5.3
-      thresh= 6.136E-05 alpha_mix =  0.700 |ddv_scf|^2 =  3.022E-09
+      iter #   3 total cpu time :    18.8 secs   av.it.:   5.4
+      thresh= 5.752E-05 alpha_mix =  0.700 |ddv_scf|^2 =  2.653E-09
 
-      iter #   4 total cpu time :    52.8 secs   av.it.:   5.2
-      thresh= 5.497E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.988E-12
+      iter #   4 total cpu time :    18.9 secs   av.it.:   5.2
+      thresh= 5.151E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.755E-12
 
      End of self-consistent calculation
 
      Convergence has been achieved 
- 
+
      Number of q in the star =   12
      List of q in the star:
           1   0.500000000   0.500000000   0.000000000
@@ -3057,193 +3151,192 @@
      q = (    0.500000000   0.500000000   0.000000000 ) 
 
  **************************************************************************
-     freq (    1) =       4.864101 [THz] =     162.248947 [cm-1]
-     freq (    2) =       6.528749 [THz] =     217.775609 [cm-1]
-     freq (    3) =       8.467445 [THz] =     282.443561 [cm-1]
+     freq (    1) =       4.864032 [THz] =     162.246642 [cm-1]
+     freq (    2) =       6.528716 [THz] =     217.774537 [cm-1]
+     freq (    3) =       8.465688 [THz] =     282.384956 [cm-1]
  **************************************************************************
 
      Mode symmetry, C_2v (mm2)  point group:
 
-     freq (  1 -  1) =        162.2  [cm-1]   --> B_1  D_3  S_3      
-     freq (  2 -  2) =        217.8  [cm-1]   --> B_2  D_4  S_4      
-     freq (  3 -  3) =        282.4  [cm-1]   --> A_1  D_1  S_1      
- 
+     freq (   1-   1) =        162.2  [cm-1]   --> B_1  D_3  S_3      
+     freq (   2-   2) =        217.8  [cm-1]   --> B_2  D_4  S_4      
+     freq (   3-   3) =        282.4  [cm-1]   --> A_1  D_1  S_1      
+
      Gaussian Broadening:   0.020 Ry, ngauss=   0
      DOS =  2.675810 states/spin/Ry/Unit Cell at Ef=  8.278657 eV
-     double delta at Ef = 40.569273
+     double delta at Ef = 40.569275
      lambda(    1)=  0.1200   gamma=    7.25 GHz
      lambda(    2)=  0.1920   gamma=   20.91 GHz
-     lambda(    3)=  0.9766   gamma=  178.91 GHz
- 
+     lambda(    3)=  0.9770   gamma=  178.92 GHz
+
      Gaussian Broadening:   0.040 Ry, ngauss=   0
      DOS =  2.703426 states/spin/Ry/Unit Cell at Ef=  8.200073 eV
-     double delta at Ef = 22.157373
+     double delta at Ef = 22.157375
      lambda(    1)=  0.0585   gamma=    3.58 GHz
      lambda(    2)=  0.1723   gamma=   18.96 GHz
-     lambda(    3)=  0.3917   gamma=   72.50 GHz
- 
+     lambda(    3)=  0.3919   gamma=   72.51 GHz
+
      Gaussian Broadening:   0.060 Ry, ngauss=   0
      DOS =  2.781707 states/spin/Ry/Unit Cell at Ef=  8.181999 eV
-     double delta at Ef = 18.361264
+     double delta at Ef = 18.361265
      lambda(    1)=  0.0478   gamma=    3.00 GHz
      lambda(    2)=  0.1541   gamma=   17.45 GHz
-     lambda(    3)=  0.2632   gamma=   50.13 GHz
- 
+     lambda(    3)=  0.2634   gamma=   50.14 GHz
+
      Gaussian Broadening:   0.080 Ry, ngauss=   0
-     DOS =  2.793243 states/spin/Ry/Unit Cell at Ef=  8.205910 eV
-     double delta at Ef = 16.418327
+     DOS =  2.793243 states/spin/Ry/Unit Cell at Ef=  8.205911 eV
+     double delta at Ef = 16.418328
      lambda(    1)=  0.0422   gamma=    2.66 GHz
      lambda(    2)=  0.1424   gamma=   16.19 GHz
-     lambda(    3)=  0.2192   gamma=   41.93 GHz
- 
+     lambda(    3)=  0.2193   gamma=   41.93 GHz
+
      Gaussian Broadening:   0.100 Ry, ngauss=   0
      DOS =  2.781101 states/spin/Ry/Unit Cell at Ef=  8.232628 eV
      double delta at Ef = 15.413854
      lambda(    1)=  0.0396   gamma=    2.49 GHz
      lambda(    2)=  0.1383   gamma=   15.66 GHz
-     lambda(    3)=  0.2049   gamma=   39.01 GHz
- 
+     lambda(    3)=  0.2050   gamma=   39.01 GHz
+
      Gaussian Broadening:   0.120 Ry, ngauss=   0
      DOS =  2.753459 states/spin/Ry/Unit Cell at Ef=  8.253279 eV
      double delta at Ef = 14.878508
      lambda(    1)=  0.0390   gamma=    2.43 GHz
      lambda(    2)=  0.1369   gamma=   15.34 GHz
-     lambda(    3)=  0.2014   gamma=   37.97 GHz
- 
+     lambda(    3)=  0.2015   gamma=   37.97 GHz
+
      Gaussian Broadening:   0.140 Ry, ngauss=   0
      DOS =  2.719703 states/spin/Ry/Unit Cell at Ef=  8.267107 eV
      double delta at Ef = 14.573333
      lambda(    1)=  0.0396   gamma=    2.43 GHz
      lambda(    2)=  0.1362   gamma=   15.08 GHz
-     lambda(    3)=  0.2012   gamma=   37.46 GHz
- 
+     lambda(    3)=  0.2013   gamma=   37.47 GHz
+
      Gaussian Broadening:   0.160 Ry, ngauss=   0
      DOS =  2.693266 states/spin/Ry/Unit Cell at Ef=  8.275890 eV
      double delta at Ef = 14.414003
      lambda(    1)=  0.0405   gamma=    2.46 GHz
      lambda(    2)=  0.1360   gamma=   14.90 GHz
-     lambda(    3)=  0.2015   gamma=   37.16 GHz
- 
+     lambda(    3)=  0.2016   gamma=   37.16 GHz
+
      Gaussian Broadening:   0.180 Ry, ngauss=   0
      DOS =  2.678788 states/spin/Ry/Unit Cell at Ef=  8.281617 eV
      double delta at Ef = 14.350015
      lambda(    1)=  0.0415   gamma=    2.51 GHz
      lambda(    2)=  0.1360   gamma=   14.82 GHz
-     lambda(    3)=  0.2015   gamma=   36.96 GHz
- 
+     lambda(    3)=  0.2016   gamma=   36.96 GHz
+
      Gaussian Broadening:   0.200 Ry, ngauss=   0
      DOS =  2.674046 states/spin/Ry/Unit Cell at Ef=  8.285684 eV
      double delta at Ef = 14.342522
      lambda(    1)=  0.0426   gamma=    2.57 GHz
      lambda(    2)=  0.1361   gamma=   14.81 GHz
-     lambda(    3)=  0.2012   gamma=   36.83 GHz
- 
-     init_run     :      0.07s CPU      0.07s WALL (       9 calls)
-     electrons    :     20.36s CPU     21.09s WALL (       9 calls)
+     lambda(    3)=  0.2013   gamma=   36.84 GHz
+
+     init_run     :      0.03s CPU      0.03s WALL (       9 calls)
+     electrons    :      6.29s CPU      7.26s WALL (       9 calls)
 
      Called by init_run:
      wfcinit      :      0.00s CPU      0.00s WALL (       9 calls)
      potinit      :      0.00s CPU      0.00s WALL (       9 calls)
-     hinit0       :      0.04s CPU      0.04s WALL (       9 calls)
+     hinit0       :      0.01s CPU      0.01s WALL (       9 calls)
 
      Called by electrons:
-     c_bands      :     20.34s CPU     21.07s WALL (       9 calls)
+     c_bands      :      6.27s CPU      7.24s WALL (       9 calls)
      v_of_rho     :      0.00s CPU      0.00s WALL (      10 calls)
 
      Called by c_bands:
-     init_us_2    :      0.46s CPU      0.47s WALL (   23105 calls)
-     cegterg      :     18.69s CPU     19.28s WALL (    2237 calls)
-
-     Called by sum_band:
+     init_us_2    :      0.16s CPU      0.20s WALL (   25779 calls)
+     cegterg      :      5.79s CPU      6.68s WALL (    2258 calls)
 
      Called by *egterg:
-     cdiaghg      :      3.62s CPU      3.66s WALL (   31113 calls)
-     h_psi        :     28.97s CPU     30.09s WALL (  116286 calls)
-     g_psi        :      0.20s CPU      0.21s WALL (   28964 calls)
+     cdiaghg      :      1.77s CPU      2.05s WALL (   31206 calls)
+     h_psi        :      7.08s CPU      8.74s WALL (  116756 calls)
+     g_psi        :      0.07s CPU      0.08s WALL (   29057 calls)
 
      Called by h_psi:
-     h_psi:calbec :      0.58s CPU      0.71s WALL (  116286 calls)
-     vloc_psi     :     27.54s CPU     28.31s WALL (  116286 calls)
-     add_vuspsi   :      0.44s CPU      0.51s WALL (  116286 calls)
+     h_psi:calbec :      0.51s CPU      0.64s WALL (  116756 calls)
+     vloc_psi     :      5.91s CPU      7.26s WALL (  116756 calls)
+     add_vuspsi   :      0.14s CPU      0.18s WALL (  116756 calls)
 
      General routines
-     calbec       :      0.67s CPU      0.76s WALL (  223876 calls)
-     fft          :      0.03s CPU      0.03s WALL (     442 calls)
-     ffts         :      0.18s CPU      0.18s WALL (    3521 calls)
-     fftw         :     33.42s CPU     34.02s WALL (  734970 calls)
-     davcio       :      0.31s CPU      0.88s WALL (   86017 calls)
- 
+     calbec       :      0.43s CPU      0.54s WALL (  141410 calls)
+     fft          :      0.04s CPU      0.04s WALL (     439 calls)
+     ffts         :      0.07s CPU      0.08s WALL (    3521 calls)
+     fftw         :      5.71s CPU      7.05s WALL (  736292 calls)
+     davcio       :      0.27s CPU      0.36s WALL (   91553 calls)
+
      Parallel routines
- 
-     PHONON       :     50.29s CPU     53.05s WALL
+
+     PHONON       :     15.54s CPU     18.98s WALL
 
      INITIALIZATION: 
-     phq_setup    :      0.04s CPU      0.04s WALL (      10 calls)
-     phq_init     :      0.17s CPU      0.20s WALL (      10 calls)
- 
-     phq_init     :      0.17s CPU      0.20s WALL (      10 calls)
-     init_vloc    :      0.00s CPU      0.00s WALL (      10 calls)
-     init_us_1    :      0.02s CPU      0.02s WALL (      10 calls)
- 
-     DYNAMICAL MATRIX:
-     dynmat0      :      0.09s CPU      0.11s WALL (      10 calls)
-     phqscf       :     28.92s CPU     30.80s WALL (      10 calls)
-     dynmatrix    :      0.01s CPU      0.02s WALL (      10 calls)
- 
-     phqscf       :     28.92s CPU     30.80s WALL (      10 calls)
-     solve_linter :     28.70s CPU     30.55s WALL (      21 calls)
-     drhodv       :      0.18s CPU      0.21s WALL (      21 calls)
- 
-     dynmat0      :      0.09s CPU      0.11s WALL (      10 calls)
-     dynmat_us    :      0.09s CPU      0.10s WALL (      10 calls)
-     d2ionq       :      0.00s CPU      0.00s WALL (      10 calls)
- 
-     dynmat_us    :      0.09s CPU      0.10s WALL (      10 calls)
- 
-     phqscf       :     28.92s CPU     30.80s WALL (      10 calls)
-     solve_linter :     28.70s CPU     30.55s WALL (      21 calls)
- 
-     solve_linter :     28.70s CPU     30.55s WALL (      21 calls)
-     dvqpsi_us    :      2.34s CPU      2.40s WALL (    3354 calls)
-     ortho        :      0.18s CPU      0.19s WALL (   14913 calls)
-     cgsolve      :     15.92s CPU     17.04s WALL (   14913 calls)
-     incdrhoscf   :      3.22s CPU      3.20s WALL (   14913 calls)
-     vpsifft      :      2.36s CPU      2.40s WALL (   11559 calls)
-     dv_of_drho   :      0.02s CPU      0.02s WALL (     122 calls)
-     mix_pot      :      0.02s CPU      0.03s WALL (      93 calls)
-     ef_shift     :      0.00s CPU      0.01s WALL (       8 calls)
-     localdos     :      0.01s CPU      0.01s WALL (       2 calls)
-     psymdvscf    :      0.24s CPU      0.24s WALL (      93 calls)
- 
-     dvqpsi_us    :      2.34s CPU      2.40s WALL (    3354 calls)
-     dvqpsi_us_on :      0.07s CPU      0.10s WALL (    3354 calls)
- 
-     cgsolve      :     15.92s CPU     17.04s WALL (   14913 calls)
-     ch_psi       :     15.53s CPU     16.60s WALL (   82936 calls)
- 
-     ch_psi       :     15.53s CPU     16.60s WALL (   82936 calls)
-     h_psi        :     28.97s CPU     30.09s WALL (  116286 calls)
-     last         :      0.58s CPU      0.77s WALL (   82936 calls)
- 
-     h_psi        :     28.97s CPU     30.09s WALL (  116286 calls)
-     add_vuspsi   :      0.44s CPU      0.51s WALL (  116286 calls)
- 
-     incdrhoscf   :      3.22s CPU      3.20s WALL (   14913 calls)
- 
- 
-      General routines
-     calbec       :      0.67s CPU      0.76s WALL (  223876 calls)
-     fft          :      0.03s CPU      0.03s WALL (     442 calls)
-     ffts         :      0.18s CPU      0.18s WALL (    3521 calls)
-     fftw         :     33.42s CPU     34.02s WALL (  734970 calls)
-     davcio       :      0.31s CPU      0.88s WALL (   86017 calls)
-     write_rec    :      0.14s CPU      0.16s WALL (     114 calls)
- 
- 
-     PHONON       :     50.29s CPU     53.05s WALL
+     phq_setup    :      0.01s CPU      0.01s WALL (      10 calls)
+     phq_init     :      0.09s CPU      0.11s WALL (      10 calls)
 
- 
-   This run was terminated on:  18:42:21  21Mar2020            
+     phq_init     :      0.09s CPU      0.11s WALL (      10 calls)
+     init_vloc    :      0.00s CPU      0.00s WALL (      10 calls)
+     init_us_1    :      0.00s CPU      0.00s WALL (      10 calls)
+     init_us_2    :      0.16s CPU      0.20s WALL (   25779 calls)
+
+     DYNAMICAL MATRIX:
+     dynmat0      :      0.06s CPU      0.07s WALL (      10 calls)
+     dynmat_us    :      0.05s CPU      0.07s WALL (      10 calls)
+     d2ionq       :      0.00s CPU      0.00s WALL (      10 calls)
+     phqscf       :      8.60s CPU     11.00s WALL (      10 calls)
+     dynmatrix    :      0.00s CPU      0.01s WALL (      10 calls)
+
+     phqscf       :      8.60s CPU     11.00s WALL (      10 calls)
+     solve_linter :      8.48s CPU     10.86s WALL (      21 calls)
+     dfpt_kernel  :      7.17s CPU      9.30s WALL (      21 calls)
+     sth_kernel   :      6.64s CPU      8.72s WALL (      92 calls)
+     h_prec       :      0.06s CPU      0.08s WALL (   12954 calls)
+     apply_dpot_b :      0.97s CPU      1.24s WALL (   14793 calls)
+     ortho        :      0.10s CPU      0.14s WALL (   14793 calls)
+     cgsolve      :      5.05s CPU      6.62s WALL (   14793 calls)
+     incdrhoscf   :      0.54s CPU      0.70s WALL (   14793 calls)
+     vpsifft      :      0.50s CPU      0.60s WALL (    3354 calls)
+     dv_of_drho   :      0.02s CPU      0.03s WALL (     121 calls)
+     mix_pot      :      0.01s CPU      0.02s WALL (      92 calls)
+     ef_shift     :      0.00s CPU      0.00s WALL (       6 calls)
+     ef_shift_wfc :      0.00s CPU      0.00s WALL (       2 calls)
+     drhodv       :      0.11s CPU      0.13s WALL (      21 calls)
+     psymdvscf    :      0.46s CPU      0.47s WALL (     184 calls)
+     com_dvloc    :      0.09s CPU      0.10s WALL (    3417 calls)
+     addcore      :      0.00s CPU      0.00s WALL (      30 calls)
+
+     dvqpsi_us    :      0.56s CPU      0.66s WALL (    3354 calls)
+     dvqpsi_us_on :      0.06s CPU      0.07s WALL (    3354 calls)
+
+     add_vuspsi   :      0.14s CPU      0.18s WALL (  116756 calls)
+
+
+      Electron-phonon coupling
+     elphel       :      0.72s CPU      0.86s WALL (      21 calls)
+
+      General routines
+     calbec       :      0.43s CPU      0.54s WALL (  141410 calls)
+     fft          :      0.04s CPU      0.04s WALL (     439 calls)
+     ffts         :      0.07s CPU      0.08s WALL (    3521 calls)
+     fftw         :      5.71s CPU      7.05s WALL (  736292 calls)
+     davcio       :      0.27s CPU      0.36s WALL (   91553 calls)
+     write_rec    :      0.02s CPU      0.05s WALL (     113 calls)
+
+      Additional routines
+     ch_psi       :      4.63s CPU      6.08s WALL (   83292 calls)
+     last         :      0.65s CPU      0.85s WALL (   83292 calls)
+     Hesh         :      0.07s CPU      0.09s WALL (   83292 calls)
+     ch_psi_all_k :      0.41s CPU      0.54s WALL (   83292 calls)
+     h_psi_bgrp   :      7.24s CPU      8.94s WALL (  116756 calls)
+     h_psi        :      7.08s CPU      8.74s WALL (  116756 calls)
+     h_psi:pot    :      6.88s CPU      8.48s WALL (  116756 calls)
+     h_psi:calbec :      0.51s CPU      0.64s WALL (  116756 calls)
+     s_psi_bgrp   :      0.16s CPU      0.21s WALL (  181377 calls)
+
+
+     PHONON       :     15.54s CPU     18.98s WALL
+
+
+   This run was terminated on:  10:24:15   6Jul2026            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

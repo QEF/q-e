@@ -61,7 +61,7 @@ CONTAINS
     !
     INTEGER :: leng, l, i
     CHARACTER(len=150):: dftout
-    LOGICAL :: check_libxc, dft_defined, meta_libxc_short
+    LOGICAL :: check_libxc, dft_defined, meta_libxc_short, gga_libxc_short
     CHARACTER(len=1) :: lxc
     INTEGER :: ID_vec(6)
     INTEGER :: save_iexch, save_icorr, save_igcx, save_igcc, save_meta, &
@@ -145,11 +145,12 @@ CONTAINS
       icorr=0 ; igcc=0
     ENDIF
     !
-    ! ... A workaround to keep the q-e shortname notation for SCAN and TB09
-    !     functionals valid.
+    ! ... A workaround to keep the q-e shortname notation for SCAN, TB09,
+    !     and BEEF_LXC functionals valid.
     !
     meta_libxc_short = imeta==3 .OR. imeta==5 .OR. &
                        imeta==6 .OR. imeta==7 .OR. imeta==8
+    gga_libxc_short  = ( igcc == 15 )
     !
 #if defined(__LIBXC)
     IF (meta_libxc_short) THEN
@@ -180,8 +181,13 @@ CONTAINS
       END SELECT
       !
     END IF
+    ! BEEF_LXC: igcc=15 is the placeholder ID in dft_full for XC_GGA_XC_BEEFVDW.
+    IF (gga_libxc_short) THEN
+      igcc = 286            ! XC_GGA_XC_BEEFVDW
+      is_libxc(4) = .TRUE.
+    END IF
 #else
-    IF (meta_libxc_short) &
+    IF (meta_libxc_short .OR. gga_libxc_short) &
       CALL xclib_error( 'set_dft_from_name', 'libxc needed for this functional', 2 )
 #endif
     !
@@ -1323,6 +1329,8 @@ CONTAINS
        shortname = TRIM(dft_LDAc_name(icorr))
     ENDIF
     !
+    !
+    IF ( is_libxc(4) .AND. igcc==286 ) shortname = 'BEEF_LXC'
     !
     IF ( ANY(is_libxc(5:6)) ) THEN
        IF (imeta==263 .AND. imetac==267) THEN

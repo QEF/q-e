@@ -36,7 +36,7 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
   use klist,                 only : xk, igk_k, ngk
   use gvect,                 only : ngm, g
   USE control_lr,            ONLY : nbnd_occ
-  USE io_files,              ONLY : iunwfc, nwordwfc
+  USE units_lr,              ONLY : lrwfc, iuwfc
   use uspp,                  only : vkb, okvan
   USE mp_bands,              ONLY : ntask_groups
   USE buffers,               ONLY : get_buffer
@@ -86,9 +86,9 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
   ! the ground-state wavefunctions evc(k) and evq(k+q) are read here
   ! and kept in memory for the rest of the code.
   !
-  CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
+  CALL get_buffer (evc, lrwfc, iuwfc, ikk)
   !$acc update device(evc)
-  CALL get_buffer (evq, nwordwfc, iunwfc, ikq)
+  CALL get_buffer (evq, lrwfc, iuwfc, ikq)
   !$acc update device(evq)
   !
   ! Re-ordering of the G vectors.

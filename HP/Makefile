@@ -1,15 +1,17 @@
 # Makefile for HP
 sinclude ../make.inc
 
-default: all
+# see comments in file tldeps for explanations
+TLDEPS=pwlibs lrmods
+include ../install/tldeps
 
 all: hp
 
-hp:
+hp: hplibs
 	( cd src ; $(MAKE) all || exit 1 )
 
-hp-lib:
-	( cd src ; $(MAKE) libs-hp || exit 1 )
+hplibs:
+	( cd src ; $(MAKE) hplibs || exit 1 )
 
 clean: hp_clean
 

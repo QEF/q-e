@@ -22,8 +22,9 @@ CONTAINS
       !
       USE kinds,            ONLY : DP
       USE fft_base,         ONLY : dfftp
+      USE fft_types,        ONLY : fft_index_to_3d
       USE mp,               ONLY : mp_sum
-      USE mp_bands,         ONLY : me_bgrp, intra_bgrp_comm
+      USE mp_bands,         ONLY : intra_bgrp_comm
       !
       IMPLICIT NONE
       !
@@ -36,14 +37,9 @@ CONTAINS
       !
       ! ... Local variables
       !
-      INTEGER                   :: i, j, k, ir, ir_end
+      INTEGER                   :: i, j, k, ir
       INTEGER                   :: idx, narea
-      !
-#if defined (__MPI)
-      ir_end = MIN(nnr,dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p)
-#else
-      ir_end = nnr
-#endif
+      LOGICAL :: offrange
       !
       narea = dfftp%nr1*dfftp%nr2*dfftp%nr3 / naxis
       !
@@ -53,40 +49,27 @@ CONTAINS
         f1d = 0.D0
       END IF
       !
-      DO ir = 1, ir_end
-         !
-         ! ... find the index along the selected axis
-         !
-         idx = ir -1
-         i   = idx / (dfftp%nr1x*dfftp%my_nr2p)
-         idx = idx - (dfftp%nr1x*dfftp%my_nr2p)*i
-         i   = i + dfftp%my_i0r3p
-         IF ( idx .GE. dfftp%nr3 ) CYCLE
-         IF ( axis .LT. 3 ) THEN
-            i   = idx / dfftp%nr1x
-            idx = idx - dfftp%nr1x * i
-            i   = i + dfftp%my_i0r2p
-           IF ( idx .GE. dfftp%nr2 ) CYCLE
-         END IF
-         IF ( axis .EQ. 1 ) THEN
-            i   = idx
-            IF ( idx .GE. dfftp%nr1 ) CYCLE
-         END IF
-         !
-         idx = idx + 1 + shift
-         !
-         IF ( idx .GT. naxis ) THEN
-           idx = idx - naxis
-         ELSE IF (idx .LE. 0 ) THEN
-           idx = idx + naxis
-         ENDIF
-         !
-         IF ( reverse ) THEN
-           f(ir) = f1d(idx)
-         ELSE
-           f1d(idx) = f1d(idx) + f(ir)
-         END IF
-         !
+      DO ir = 1, dfftp%nr1x * dfftp%my_nr2p * dfftp%my_nr3p
+        CALL fft_index_to_3d(ir, dfftp, i, j, k, offrange)
+        IF (offrange) CYCLE
+        !
+        SELECT CASE (axis)
+        CASE (1); idx = i + 1 + shift
+        CASE (2); idx = j + 1 + shift
+        CASE (3); idx = k + 1 + shift
+        END SELECT
+        !
+        IF ( idx .GT. naxis ) THEN
+          idx = idx - naxis
+        ELSE IF ( idx .LE. 0 ) THEN
+          idx = idx + naxis
+        END IF
+        !
+        IF ( reverse ) THEN
+          f(ir) = f1d(idx)
+        ELSE
+          f1d(idx) = f1d(idx) + f(ir)
+        END IF
       END DO
       !
       IF ( .NOT. reverse ) THEN

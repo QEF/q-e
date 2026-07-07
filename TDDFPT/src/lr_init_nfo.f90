@@ -21,9 +21,7 @@ SUBROUTINE lr_init_nfo()
   USE klist,                ONLY : nks,xk,ngk,igk_k
   USE wvfct,                ONLY : nbnd
   USE lr_variables,         ONLY : lr_verbosity, eels, size_evc, calculator, &
-                                 & iund0psi, iudwf, iu1dwf,&
-                                 & iundvpsi, magnons, iunTwfc, & 
-                                 & restart
+                                   iund0psi, iundvpsi, magnons, iunTwfc, restart
   USE io_global,            ONLY : stdout
   USE constants,            ONLY : tpi, eps8
   USE noncollin_module,     ONLY : npol, nspin_mag
@@ -32,7 +30,7 @@ SUBROUTINE lr_init_nfo()
   USE lsda_mod,             ONLY : current_spin, nspin
   USE wvfct,                ONLY : npwx, wg
   USE gvecw,                ONLY : gcutw
-  USE io_files,             ONLY : prefix, iunwfc, nwordwfc, wfc_dir
+  USE io_files,             ONLY : prefix, nwordwfc, wfc_dir
   USE gvecs,                ONLY : doublegrid
   USE fft_base,             ONLY : dfftp 
   USE uspp,                 ONLY : vkb, okvan, nkb
@@ -42,6 +40,7 @@ SUBROUTINE lr_init_nfo()
   USE lrus,                 ONLY : becp1
   USE control_lr,           ONLY : alpha_pv, alpha_mix, tr2_ph, nbnd_occ, &
                                    nbnd_occx
+  USE units_lr,             ONLY : lrdwf, iudwf, lrwfc, iuwfc
   USE qpoint,               ONLY : xq, ikks, ikqs, nksq, eigqts, npwq
   USE eqv,                  ONLY : evq
   USE buffers,              ONLY : open_buffer, get_buffer, save_buffer
@@ -130,14 +129,17 @@ SUBROUTINE lr_init_nfo()
      !
      size_evc = nbnd * npwx * npol * nksq
      nwordwfc = nbnd * npwx * npol
+     lrdwf = nbnd * npwx * npol
+     lrwfc = nbnd * npwx * npol
+     iudwf = 24
+     iuwfc = 21
+     !
      IF (trim(calculator)=='sternheimer') THEN
         CALL open_buffer ( iundvpsi, 'dvpsi.', nwordwfc, io_level, exst_mem, exst)
-        CALL open_buffer ( iudwf, 'dwf', nwordwfc, io_level, exst_mem, exst)
-        CALL open_buffer ( iu1dwf, 'mwf', nwordwfc, io_level, exst_mem, exst)
-        !
+        CALL open_buffer ( iudwf, 'dwf', lrdwf, io_level, exst_mem, exst)
      ENDIF
      !
-     CALL open_buffer (iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst)
+     CALL open_buffer (iuwfc, 'wfc', lrwfc, io_level, exst_mem, exst)
      ! 
      IF (.NOT.exst .AND. .NOT.exst_mem) THEN
         CALL errore ('lr_init_nfo', 'file '//trim(prefix)//'.wfc not found', 1)
@@ -170,7 +172,7 @@ SUBROUTINE lr_init_nfo()
            npw = ngk(ikk)
            !
            ! Read the wavefunction evc
-           CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
+           CALL get_buffer (evc, lrwfc, iuwfc, ikk)
            !
            ! Calculate beta-functions vkb at point k
            CALL init_us_2(npw, igk_k(1,ikk), xk(1,ikk), vkb, .true.)
@@ -191,7 +193,10 @@ SUBROUTINE lr_init_nfo()
   !
   IF (magnons) THEN
      !
+     size_evc = nbnd * npwx * npol * nksq
      nwordwfc = nbnd * npwx * npol
+     lrwfc = nbnd * npwx * npol
+     iuwfc = 21
      !
      ! additional 2 for the anti-resonant part
      !
@@ -200,9 +205,7 @@ SUBROUTINE lr_init_nfo()
      ! Open the file to read the wavefunctions at k and k+Q and k-Q
      ! after the nscf calculation.
      !
-     size_evc = nbnd * npwx * npol * nksq
-     !
-     CALL open_buffer (iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst)
+     CALL open_buffer (iuwfc, 'wfc', lrwfc, io_level, exst_mem, exst)
      ! 
      IF (.NOT.exst .AND. .NOT.exst_mem) THEN
         CALL errore ('lr_init_nfo', 'file '//trim(prefix)//'.wfc not found', 1)
@@ -261,7 +264,7 @@ SUBROUTINE lr_init_nfo()
            ! -k wfc
            ! 
            ! read u(-k)
-           CALL get_buffer (evc, nwordwfc, iunwfc, imk)
+           CALL get_buffer (evc, lrwfc, iuwfc, imk)
            !
            ! form Tu(-k)
            do ibnd = 1, nbnd
@@ -274,7 +277,7 @@ SUBROUTINE lr_init_nfo()
            ! -k-q wfc
            !
            ! read u(-k-q)
-           CALL get_buffer (evc, nwordwfc, iunwfc, imkq)
+           CALL get_buffer (evc, lrwfc, iuwfc, imkq)
            !
            ! form Tu(-k-q)
            do ibnd = 1, nbnd

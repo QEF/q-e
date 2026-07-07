@@ -45,7 +45,7 @@ SUBROUTINE stop_run( exit_status )
   !
   CALL clean_pw( .TRUE. )
   !
-  CALL environment_end( 'PWSCF' )
+  CALL environment_end( )
   !
   CALL mp_global_end()
   !

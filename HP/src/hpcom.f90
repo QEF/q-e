@@ -18,7 +18,7 @@ MODULE ldaU_hp
   LOGICAL :: skip_type(ntypx),        &     ! If .true. skip the calculation for a specific type 
                                             ! (e.g. Ni_up can be used for Ni_down with some spin 
                                             ! considerations)
-             perturb_only_atom(500),  &     ! If perturb_only_atom(i)=.true. perterb only i-th atom
+             perturb_only_atom(1000),  &     ! If perturb_only_atom(i)=.true. perterb only i-th atom
              recalc_sym,              &     ! If .true. we recalculate the number of symmetries
                                             ! of the unperturbed lattice due to the change of 
                                             ! the atomic type of one of the atoms
@@ -32,7 +32,7 @@ MODULE ldaU_hp
              no_metq0,                &     ! If .true. the metallic response term at q=0 is ignored
              disable_type_analysis,   &     ! If .true. disable the algorithm which detects whether
                                             ! there are atoms of the same type but with different occupations
-             skip_atom(500)                 ! If .true. no LR calculation will be performed 
+             skip_atom(1000)                 ! If .true. no LR calculation will be performed 
                                             ! for a selected atomic site.
                                             ! skip_atom(i), where i runs over atoms. If skip_atom(i)=.true.
                                             ! then no linear-response calculation will be performed for the
@@ -86,7 +86,7 @@ MODULE ldaU_hp
   CHARACTER(LEN=16)  :: background          ! Background correction
   CHARACTER(LEN=256) :: tmp_dir_save,  &    ! Temprary directory  
                         tmp_dir_hp                  
-  CHARACTER(LEN=5)   :: atm_new(500)        ! Label for atomic types
+  CHARACTER(LEN=5)   :: atm_new(1000)        ! Label for atomic types
   CHARACTER(LEN=2)   :: code = 'HP'         ! Name of the code
   !
   INTEGER, PARAMETER :: maxter = 500        ! Maximum number of iterations

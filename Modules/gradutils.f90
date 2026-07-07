@@ -1,5 +1,6 @@
+
 !
-! Copyright (C) 2018 Quantum ESPRESSO Foundation
+! Copyright (C) 2018-2026 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -190,24 +191,8 @@ SUBROUTINE fft_gradient_g2r( dfft, a, g, ga )
   INTEGER :: ipol, n, ip
   COMPLEX(DP), ALLOCATABLE :: gaux(:)
   !
-#if defined(__CUDA) && defined(_OPENACC)
-  INTEGER, POINTER, DEVICE :: nl_d(:), nlm_d(:)
   !
-  nl_d  => dfft%nl_d
-  nlm_d => dfft%nlm_d
-#else
-  INTEGER, ALLOCATABLE :: nl_d(:), nlm_d(:)
-  !
-  ALLOCATE( nl_d(dfft%ngm) )
-  nl_d = dfft%nl
-  IF ( dfft%lgamma ) THEN
-    ALLOCATE( nlm_d(dfft%ngm) )
-    nlm_d = dfft%nlm
-  ENDIF
-  !$acc data copyin( nl_d, nlm_d )
-#endif
-  !
-  !$acc data present_or_copyin( a, g ) present_or_copyout( ga )
+  !$acc data  present_or_copyin( a, g ) present_or_copyout( ga )
   !
   ALLOCATE( gaux(dfft%nnr) )
   !$acc data create( gaux )
@@ -227,11 +212,11 @@ SUBROUTINE fft_gradient_g2r( dfft, a, g, ga )
      !
      ! ... multiply a(G) by iG to get the gradient in real space
      !
-     !$acc parallel loop
+     !$acc parallel loop present( dfft, dfft%nl, dfft%nlm )
      DO n = 1, dfft%ngm
-        gaux(nl_d(n) ) = CMPLX( 0.0_dp, g(ipol,n),kind=DP)* a(n) - &
+        gaux(dfft%nl(n) ) = CMPLX( 0.0_dp, g(ipol,n),kind=DP)* a(n) - &
                                       CMPLX(g(ipol+1,n),kind=DP) * a(n)
-        gaux(nlm_d(n)) = CMPLX( 0.0_dp,-g(ipol,n),kind=DP)*CONJG(a(n)) + &
+        gaux(dfft%nlm(n)) = CMPLX( 0.0_dp,-g(ipol,n),kind=DP)*CONJG(a(n)) + &
                                       CMPLX(g(ipol+1,n),kind=DP) * CONJG(a(n))
      ENDDO
      !
@@ -258,11 +243,11 @@ SUBROUTINE fft_gradient_g2r( dfft, a, g, ga )
      !
      ! ... multiply a(G) by iG to get the gradient in real space
      !
-     !$acc parallel loop
+     !$acc parallel loop present( dfft, dfft%nl, dfft%nlm )
      DO n = 1, dfft%ngm
-        gaux(nl_d(n)) = CMPLX(g(ipol,n),kind=DP) * &
+        gaux(dfft%nl(n)) = CMPLX(g(ipol,n),kind=DP) * &
                         CMPLX( -AIMAG(a(n)), REAL(a(n)),kind=DP)
-        gaux(nlm_d(n)) = CONJG( gaux(nl_d(n)) )
+        gaux(dfft%nlm(n)) = CONJG( gaux(dfft%nl(n)) )
      ENDDO
      !
      ! ... bring back to R-space, (\grad_ipol a)(r) ...
@@ -292,13 +277,13 @@ SUBROUTINE fft_gradient_g2r( dfft, a, g, ga )
         !
         !$acc parallel loop
         DO n = 1, dfft%ngm
-          gaux(nl_d(n)) = CMPLX(g(ipol,n), kind=DP) * &
+          gaux(dfft%nl(n)) = CMPLX(g(ipol,n), kind=DP) * &
                           CMPLX( -AIMAG(a(n)), REAL(a(n)), kind=DP)
         ENDDO
         !
         ! ... bring back to R-space, (\grad_ipol a)(r) ...
         !
-        !$acc host_data use_device( gaux )
+       !$acc host_data use_device( gaux )
         CALL invfft( 'Rho', gaux, dfft )
         !$acc end host_data
         !
@@ -317,12 +302,6 @@ SUBROUTINE fft_gradient_g2r( dfft, a, g, ga )
   DEALLOCATE( gaux )
   !
   !$acc end data
-  !
-#if !defined(__CUDA) || !defined(_OPENACC)
-  !$acc end data
-  DEALLOCATE( nl_d )
-  IF ( dfft%lgamma ) DEALLOCATE( nlm_d )
-#endif
   !
   RETURN
   !
@@ -356,22 +335,6 @@ SUBROUTINE fft_graddot( dfft, a, g, da )
   COMPLEX(DP), ALLOCATABLE :: aux(:), gaux(:)
   COMPLEX(DP) :: fp, fm, aux1, aux2
   !
-#if defined(__CUDA) && defined(_OPENACC)
-  INTEGER, POINTER, DEVICE :: nl_d(:), nlm_d(:)
-  !
-  nl_d  => dfft%nl_d
-  nlm_d => dfft%nlm_d
-#else
-  INTEGER, ALLOCATABLE :: nl_d(:), nlm_d(:)
-  !
-  ALLOCATE( nl_d(dfft%ngm) )
-  nl_d = dfft%nl
-  IF ( dfft%lgamma ) THEN
-    ALLOCATE( nlm_d(dfft%ngm) )
-    nlm_d = dfft%nlm
-  ENDIF
-  !$acc data copyin( nl_d, nlm_d )
-#endif
   !
   !$acc data present_or_copyin( a, g ) present_or_copyout( da )
   !
@@ -402,13 +365,13 @@ SUBROUTINE fft_graddot( dfft, a, g, da )
      !
      ! ... multiply by iG to get the gradient in G-space
      !
-     !$acc parallel loop
+     !$acc parallel loop  present( dfft, dfft%nl, dfft%nlm )
      DO n = 1, dfft%ngm
-        fp = (aux(nl_d(n)) + aux(nlm_d(n)))*0.5_dp
-        fm = (aux(nl_d(n)) - aux(nlm_d(n)))*0.5_dp
+        fp = (aux(dfft%nl(n)) + aux(dfft%nlm(n)))*0.5_dp
+        fm = (aux(dfft%nl(n)) - aux(dfft%nlm(n)))*0.5_dp
         aux1 = CMPLX( REAL(fp), AIMAG(fm), kind=DP)
         aux2 = CMPLX(AIMAG(fp), -REAL(fm), kind=DP)
-        gaux(nl_d(n)) = &
+        gaux(dfft%nl(n)) = &
              CMPLX(0.0_dp, g(ipol  ,n),kind=DP) * aux1 + &
              CMPLX(0.0_dp, g(ipol+1,n),kind=DP) * aux2
      ENDDO
@@ -428,12 +391,12 @@ SUBROUTINE fft_graddot( dfft, a, g, da )
      ! ... multiply by iG to get the gradient in G-space
      ! ... fill both gaux(G) and gaux(-G) = gaux*(G)
      !
-     !$acc parallel loop
+     !$acc parallel loop present( dfft, dfft%nl, dfft%nlm )
      DO n = 1, dfft%ngm
-        gaux(nl_d(n)) = gaux(nl_d(n)) + CMPLX(g(ipol,n),kind=DP) * &
-             CMPLX( -AIMAG( aux(nl_d(n)) ), &
-                      REAL( aux(nl_d(n)) ), kind=DP)
-        gaux(nlm_d(n)) = CONJG( gaux(nl_d(n)) )
+        gaux(dfft%nl(n)) = gaux(dfft%nl(n)) + CMPLX(g(ipol,n),kind=DP) * &
+             CMPLX( -AIMAG( aux(dfft%nl(n)) ), &
+                      REAL( aux(dfft%nl(n)) ), kind=DP)
+        gaux(dfft%nlm(n)) = CONJG( gaux(dfft%nl(n)) )
      ENDDO
      !
   ELSE
@@ -453,11 +416,11 @@ SUBROUTINE fft_graddot( dfft, a, g, da )
         !
         ! ... multiply by iG to get the gradient in G-space
         !
-        !$acc parallel loop
+        !$acc parallel loop present( dfft, dfft%nl )
         DO n = 1, dfft%ngm
-           gaux(nl_d(n)) = gaux(nl_d(n)) + CMPLX(g(ipol,n),kind=DP) * &
-                CMPLX( -AIMAG( aux(nl_d(n)) ), &
-                         REAL( aux(nl_d(n)),kind=DP ), kind=DP)
+           gaux(dfft%nl(n)) = gaux(dfft%nl(n)) + CMPLX(g(ipol,n),kind=DP) * &
+                CMPLX( -AIMAG( aux(dfft%nl(n)) ), &
+                         REAL( aux(dfft%nl(n)),kind=DP ), kind=DP)
         ENDDO
         !
      ENDDO
@@ -481,12 +444,6 @@ SUBROUTINE fft_graddot( dfft, a, g, da )
   DEALLOCATE( aux, gaux )
   !
   !$acc end data
-  !
-#if !defined(__CUDA) || !defined(_OPENACC)
-  !$acc end data
-  DEALLOCATE( nl_d )
-  IF ( dfft%lgamma ) DEALLOCATE( nlm_d )
-#endif  
   !
   RETURN
   !

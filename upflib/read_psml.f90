@@ -35,7 +35,7 @@ CONTAINS
   USE xmltools
   USE upf_kinds, ONLY : dp
   USE upf_const, ONLY : e2, fpi
-  USE pseudo_types, ONLY: pseudo_upf
+  USE pseudo_types, ONLY: pseudo_upf, reset_upf
   !
   IMPLICIT NONE
   !
@@ -50,6 +50,8 @@ CONTAINS
   !! tag where error (ierr != 0) was detected
   INTEGER :: iun
   !! unit for reading data
+  !
+  CALL reset_upf(upf)
   !
   ierr = 0
   iun = xml_open_file ( filename )
@@ -141,16 +143,7 @@ CONTAINS
     INTEGER :: n, nxc, ndum
     INTEGER :: xc(6)
     CHARACTER(len=3) :: cc
-    
     !
-    upf%tvanp = .false.
-    upf%tpawp = .false.
-    upf%has_so = .false.
-    upf%has_gipaw = .false.
-    upf%paw_as_gipaw = .false.
-    upf%tcoulombp = .false.
-    upf%is_gth = .false.
-    upf%is_multiproj = .false.
     upf%typ = 'NC'
     call xmlr_opentag ( 'pseudo-atom-spec', IERR = ierr )
     if (ierr /= 0) return
