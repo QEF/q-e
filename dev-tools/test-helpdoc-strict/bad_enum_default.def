@@ -1,0 +1,22 @@
+# Test .def file: a malformed input description that must be REJECTED by
+# helpdoc --strict. The variable "calculation" carries an <options> block
+# enumerating its allowed values, but its literal <default> ("relax") is
+# NOT one of the declared "opt -val" choices. This is an enumerated-default
+# consistency violation.
+# Used by run-tests.sh of the helpdoc --strict test harness.
+
+input_description -distribution {Quantum ESPRESSO} -package TEST -program test.x {
+
+    namelist TEST {
+
+        var calculation -type CHARACTER {
+            default { relax }
+            info { the kind of calculation to perform }
+            options {
+                opt -val 'scf'   { self-consistent field }
+                opt -val 'nscf'  { non-self-consistent field }
+                opt -val 'bands' { band structure }
+            }
+        }
+    }
+}

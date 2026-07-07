@@ -1,0 +1,16 @@
+&inputph
+    tr2_ph = 1.0d-14,
+    prefix = 'cdo',
+    amass(1) = 112.411,
+    amass(2) = 15.9994,
+    outdir = './',
+    fildyn = 'cdo.dyn',
+    fildvscf = 'dvscf'
+    ldisp = .true.,
+    epsil = .true.,
+    trans = .true.
+    alpha_mix(1) = 0.5
+    nq1 = 2,
+    nq2 = 2,
+    nq3 = 2,
+/

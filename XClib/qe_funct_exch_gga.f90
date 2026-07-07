@@ -1477,6 +1477,66 @@ END SUBROUTINE b86b
 !
 !
 !-----------------------------------------------------------------------
+SUBROUTINE W3MX( rho, grho, sx, v1x, v2x )
+  !---------------------------------------------------------------------
+  !! Exchange for vdW-DF3-mc, DOI: 10.1103/hp9d-4kpf
+  !
+  USE kind_l,      ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  !$acc routine seq
+  !
+  REAL(DP), INTENT(IN) :: rho, grho
+  ! input: charge and squared gradient
+  REAL(DP), INTENT(OUT) :: sx, v1x, v2x
+  ! output: energy, potential
+  !
+  ! ... local variables
+  !
+  REAL(DP) :: absgrho, kf, s, s2, exunif, fx, dfxds
+  REAL(DP) :: fx_small, fx_large, fx_small_s0, fx_large_s0
+  REAL(DP) :: aa, bb, cc, dd
+  REAL(DP), PARAMETER :: pi=3.14159265358979323846_DP,         &
+                         c1=3._DP*pi*pi, c2=-3._DP/(4._DP*pi), &
+                         third=1._DP/3._DP, ft=4._DP/3._DP,    &
+                         mu=0.12345679012345679_DP, s0=1.5_DP, &
+                         s02=s0*s0, A0=0.275_DP, kappa=0.88_DP
+  !
+  !
+  absgrho = SQRT(grho)
+  kf      = (c1 * rho)**third
+  s       = absgrho / (2._DP * kf * rho)
+  s2      = s * s
+  exunif  = c2 * kf
+  !
+  aa  = ( 5._DP * A0 - 8._DP * mu * s0) / ( 8._DP * s0 * s02)
+  bb  = (-3._DP * A0 + 4._DP * mu * s0) / (12._DP * s0 * s02 * s02)
+  cc  =  -0.075_DP * kappa * s02       - 1.4375_DP * (A0 * s0**2.6_DP - 0.4_DP * kappa * s02)
+  dd  = 0.03333_DP * kappa * s02 * s02 + 0.3611_DP * (A0 * s0**4.6_DP - 0.4_DP * kappa * s02 * s02)
+  !
+  IF ( s < s0 ) THEN
+     fx_small    = mu * s2 + aa * s2 * s2 + bb * s2 * s2 * s2
+     fx          = fx_small
+     dfxds       = 2._DP * mu * s + 4._DP * aa * s * s2 + 6._DP * bb * s2 * s2 * s
+  ELSE
+     fx_small_s0 = mu * s02 + aa * s02 * s02 + bb * s02 * s02 * s02 
+     fx_large    = kappa * s **0.4_DP + cc * s **(-1.6_DP) + dd * s **(-3.6_DP)
+     fx_large_s0 = kappa * s0**0.4_DP + cc * s0**(-1.6_DP) + dd * s0**(-3.6_DP)
+     fx          = fx_large - fx_large_s0 + fx_small_s0
+     dfxds       = 0.4_DP * kappa * s**(-0.6_DP) - 1.6_DP * cc * s**(-2.6_DP) - 3.6_DP * dd * s**(-4.6_DP)
+  END IF
+  !
+  sx      = rho * exunif * fx
+  v1x     = ft  * exunif * (fx - s * dfxds)
+  v2x     = c2  * dfxds / (2._DP * absgrho)
+  !
+  RETURN
+  !
+END SUBROUTINE W3MX
+!
+!
+!-----------------------------------------------------------------------
 SUBROUTINE cx13( rho, grho, sx, v1x, v2x )
   !-----------------------------------------------------------------------
   !! The new exchange partner for a vdW-DF1-cx suggested

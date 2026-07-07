@@ -1,5 +1,5 @@
 #!/bin/sh
-# compute dependencies for the PWscf directory tree
+# compute dependencies for the QE directory tree
 
 # make sure there is no locale setting creating unneeded differences.
 LC_ALL=C
@@ -10,38 +10,54 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 # run from directory where this script is
 cd `dirname $0`
 TOPDIR=`pwd`
+QEDIR=`(cd ..; pwd)`
+# directory QEDIR is the root directory of QE
+# directory TOPDIR=QEDIR/install is where this script is
 
-if test $# = 0
-then
 # this is the list of all directories for which we want to find dependencies
 # upon include files *.h or *.fh or modules. Note that libraries that are
 # externally maintained should not go into this list
 
-    dirs=" LAXlib FFTXlib/src UtilXlib \
-           dft-d3 \
-           KS_Solvers/Davidson KS_Solvers/Davidson_RCI KS_Solvers/CG \
-	   KS_Solvers/ParO  KS_Solvers/DENSE  KS_Solvers/RMM \
-           upflib XClib Modules LR_Modules PW/src CPV/src PW/tools PP/src PWCOND/src \
-           PHonon/Gamma PHonon/PH PHonon/FD HP/src atomic/src \
-           EPW/src EPW/ZG/src XSpectra/src NEB/src TDDFPT/src \
-           GWW/pw4gww GWW/gww GWW/head GWW/bse GWW/simple \
-	   GWW/simple_bse GWW/simple_ip QEHeat/src KCW/src KCW/PP "
-          
-elif
-    test $1 = "-addson"
-then
-    echo "The script for adding new dependencies is running"
-    echo "Usage: $0 -addson DIR DEPENDENCY_DIRS"
-    echo "$0 assumes that the new dependencies are in $TOPDIR/../"
-    dirs=$2
-    shift
-    shift
-    add_deps=$*
-    echo "dependencies in $add_deps will be searched for $dirs"
-else
-    dirs=$*
-fi
+dirs=" LAXlib FFTXlib/src UtilXlib \
+       dft-d3 \
+       KS_Solvers/Davidson KS_Solvers/Davidson_RCI KS_Solvers/CG \
+       KS_Solvers/ParO  KS_Solvers/DENSE  KS_Solvers/RMM  KS_Solvers/Direct \
+       upflib XClib Modules LR_Modules \
+       PW/src CPV/src PW/tools PP/src PWCOND/src \
+       PHonon/Gamma PHonon/PH PHonon/FD HP/src atomic/src \
+       EPW/src EPW/ZG/src XSpectra/src NEB/src TDDFPT/src \
+       GWW/pw4gww GWW/gww GWW/head GWW/bse GWW/simple \
+       GWW/simple_bse GWW/simple_ip QEHeat/src KCW/src KCW/PP "
 
+BUILDDIR=
+
+if test $# = 0
+then
+    echo "$0: no arguments, compute all dependencies"
+else
+    if  test $1 = "-addson"
+    then
+	dirs=$2
+	shift
+	shift
+	add_deps=$*
+	echo "$0: add new dependencies to default ones"
+	echo "dependencies in $add_deps will be searched for $dirs"
+    else
+        if test $# = 1
+	then
+            BUILDDIR=$1
+            echo "$0: compute all dependencies, output to $BUILDDIR"
+# final make.depend files go to BUILDDIR (for out-of-source building)
+	else
+	    echo "Usage: $0 [BUILDDIR]                                   "
+	    echo "       compute all dependencies under the current tree "
+	    echo "       optionally write output make.depend to BUILDDIR "
+	    echo "Usage: $0 [-addson DIR DEP_DIRS]                       "
+	    echo "       find dependencies of DIR in directories DEP_DIRS"
+	fi
+    fi
+fi
 
 for dir in $dirs; do
 
@@ -55,17 +71,21 @@ for dir in $dirs; do
     # modules that are used, or files that are included, by routines
     # in directory DIR should be listed in DEPENDS
     # (directory DIR itself should not be listed in DEPENDS)
+    # Next line: for subdirectories
     LEVEL1=..
+    # Next line: for sub-subdirectories
     LEVEL2=../..
+    # Next line for EPW/ZG/src, that is in a sub-sub-subdirectory ... !
     LEVEL3=../../..
-    # default
-    DEPENDS="$LEVEL1/include"
     # for convenience, used later
     DEPEND1="$LEVEL1/include $LEVEL1/FFTXlib/src $LEVEL1/XClib $LEVEL1/LAXlib \
 	     $LEVEL1/UtilXlib $LEVEL1/upflib"
-    DEPEND3="$LEVEL2/include $LEVEL2/FFTXlib/src $LEVEL2/LAXlib $LEVEL2/UtilXlib"
-    DEPEND2="$DEPEND3 $LEVEL2/upflib $LEVEL2/XClib $LEVEL2/Modules"
+    DEPEND2="$LEVEL2/include $LEVEL2/FFTXlib/src $LEVEL2/LAXlib $LEVEL2/UtilXlib"
+    DEPEND3="$DEPEND2 $LEVEL2/upflib $LEVEL2/XClib $LEVEL2/Modules"
+    #
     case $DIR in
+        LAXlib | UtilXlib )
+             DEPENDS="$LEVEL1/include" ;;
         upflib )
              DEPENDS="$LEVEL1/include $LEVEL1/UtilXlib" ;;
         XClib )
@@ -76,44 +96,45 @@ for dir in $dirs; do
              DEPENDS="$LEVEL1/include $LEVEL1/UtilXlib $LEVEL1/Modules" ;;
         LR_Modules )
              DEPENDS="$DEPEND1 $LEVEL1/Modules $LEVEL1/PW/src" ;;
-	ACFDT/src )
-             DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules" ;;
-	atomic/src | GWW/gww )
+        FFTXlib/src )
+             DEPENDS="$LEVEL1/include" ;;
+	KS_Solvers/Davidson | KS_Solvers/Davidson_RCI | KS_Solvers/CG | KS_Solvers/ParO | KS_Solvers/DENSE | KS_Solvers/RMM | KS_Solvers/Direct )
 	     DEPENDS="$DEPEND2" ;;
-	PW/src | CPV/src )
-	     DEPENDS="$DEPEND2 $LEVEL2/KS_Solvers/Davidson $LEVEL2/KS_Solvers/CG $LEVEL2/KS_Solvers/ParO $LEVEL2/KS_Solvers/DENSE $LEVEL2/KS_Solvers/RMM $LEVEL2/dft-d3" ;;
-	KS_Solvers/Davidson | KS_Solvers/Davidson_RCI | KS_Solvers/CG | KS_Solvers/ParO | KS_Solvers/DENSE | KS_Solvers/RMM )
+	ACFDT/src )
+             DEPENDS="$DEPEND3 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules" ;;
+	atomic/src | GWW/gww )
 	     DEPENDS="$DEPEND3" ;;
+	PW/src | CPV/src )
+	     DEPENDS="$DEPEND3 $LEVEL2/KS_Solvers/Davidson $LEVEL2/KS_Solvers/CG $LEVEL2/KS_Solvers/ParO $LEVEL2/KS_Solvers/DENSE $LEVEL2/KS_Solvers/RMM $LEVEL2/KS_Solvers/Direct $LEVEL2/dft-d3" ;;
 	PP/src )
-	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/dft-d3" ;;
+	     DEPENDS="$DEPEND3 $LEVEL2/PW/src $LEVEL2/dft-d3" ;;
 	PW/tools | PWCOND/src | GWW/pw4gww | NEB/src )
-	     DEPENDS="$DEPEND2 $LEVEL2/PW/src" ;;
+	     DEPENDS="$DEPEND3 $LEVEL2/PW/src" ;;
 	PHonon/PH )
-	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules $LEVEL2/dft-d3" ;;
+	     DEPENDS="$DEPEND3 $LEVEL2/PW/src $LEVEL2/LR_Modules $LEVEL2/dft-d3" ;;
 	PHonon/FD | PHonon/PH | PHonon/Gamma | HP/src | TDDFPT/src | XSpectra/src  | GIPAW/src | KCW/src )
-	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules" ;;
+	     DEPENDS="$DEPEND3 $LEVEL2/PW/src $LEVEL2/LR_Modules" ;;
 	KCW/PP )
-	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules $LEVEL1/src" ;;
-    EPW/src )
-         DEPENDS="$DEPEND2 io utilities $LEVEL2/PW/src $LEVEL2/LR_Modules $LEVEL2/PHonon/PH $LEVEL2/Modules" ;;
-    QEHeat/src )
-         DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules $LEVEL2/PHonon/PH $LEVEL2/Modules" ;;
+	     DEPENDS="$DEPEND3 $LEVEL2/PW/src $LEVEL2/LR_Modules $LEVEL1/src" ;;
+        EPW/src )
+             DEPENDS="$DEPEND3 io utilities $LEVEL2/PW/src $LEVEL2/LR_Modules $LEVEL2/PHonon/PH $LEVEL2/Modules" ;;
+        QEHeat/src )
+             DEPENDS="$DEPEND3 $LEVEL2/PW/src $LEVEL2/LR_Modules $LEVEL2/PHonon/PH $LEVEL2/Modules" ;;
 	EPW/ZG/src )
 	     DEPENDS="$LEVEL3/PW/src $LEVEL3/LR_Modules $LEVEL3/PHonon/PH $LEVEL3/Modules $LEVEL3/upflib $LEVEL3/UtilXlib" ;;
 	GWW/head )
-	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules" ;;
+	     DEPENDS="$DEPEND3 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules" ;;
 	GWW/bse )
-	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules $LEVEL2/GWW/pw4gww $LEVEL2/GWW/gww" ;;
+	     DEPENDS="$DEPEND3 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules $LEVEL2/GWW/pw4gww $LEVEL2/GWW/gww" ;;
 	GWW/simple )
-	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/GWW/pw4gww $LEVEL2/GWW/gww" ;;
+	     DEPENDS="$DEPEND3 $LEVEL2/PW/src $LEVEL2/GWW/pw4gww $LEVEL2/GWW/gww" ;;
 	GWW/simple_bse )
-	     DEPENDS="$DEPEND2 $LEVEL2/GWW/gww" ;;
+	     DEPENDS="$DEPEND3 $LEVEL2/GWW/gww" ;;
 	GWW/simple_ip)
-	     DEPENDS="$DEPEND2" ;;
-    *)
+	     DEPENDS="$DEPEND3" ;;
+        *)
 # if addson needs a make.depend file
-	DEPENDS="$DEPENDS $add_deps"
-
+	     DEPENDS="$DEPEND1 $add_deps"
     esac
 
     # list of all system modules
@@ -124,7 +145,8 @@ for dir in $dirs; do
     libdeps="mpi omp_lib hdf5 mkl_dfti mkl_dfti.f90 fftw3.f03 fftw3.f \
              xc_version.h xc_f03_lib_m elpa elpa1 \
              mbd w90_io fox_dom fox_wxml m_common_io \
-             device_fbuff_m device_memcpy_m device_auxfunc_m"
+             device_fbuff_m device_memcpy_m device_auxfunc_m \
+             onemkl_blas_omp_offload_lp64"
 
     # list of all cuda-related modules
     cudadeps="cublas cudafor curand cufft flops_tracker cusolverdn \
@@ -133,9 +155,9 @@ for dir in $dirs; do
 
     # generate dependencies file (only for directories that are present)
 
-    if test -d $TOPDIR/../$DIR
+    if test -d $QEDIR/$DIR
     then
-	cd $TOPDIR/../$DIR
+	cd $QEDIR/$DIR
 
 cat > make.depend << EOF
 #####################################################################
@@ -162,17 +184,26 @@ EOF
 
         # check for missing dependencies
 	missing=`grep @ make.depend | grep -v @some_module@`
-        if test "$missing" != "";
-        then
+        if test "$missing" != ""; then
 	   notfound=1
 	   $ECHO "\nWARNING! dependencies not found in directory $DIR:"
 	   grep @ make.depend
-	   $ECHO "File $DIR/make.depend is broken"
-       else
+	   $ECHO "File make.depend is broken"
+        else
            $ECHO -n "\rdirectory $DIR : ok"
-       fi
+        fi
+	# for out-of-source build:
+        if test "$BUILDDIR" != ""; then
+	    # check existence of target directory, create if not existent,
+	    if [ ! -d "$BUILDDIR/$DIR" ]; then
+		mkdir -p $BUILDDIR/$DIR
+	    fi
+	    # copy Makefiles, move make.depend to the target directory
+	    mv make.depend $BUILDDIR/$DIR/make.depend
+	    sed "s?@srcdir@?$QEDIR/$DIR?" Makefile > $BUILDDIR/$DIR/Makefile
+        fi
     else
-       $ECHO "\ndirectory $DIR : not present in $TOPDIR"
+       $ECHO "\ndirectory $DIR : not present in $QEDIR/"
     fi
 done
 if test "$notfound" = ""

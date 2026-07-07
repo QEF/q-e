@@ -7,7 +7,7 @@
 !
 !
 !---------------------------------------------------------------------
-subroutine sym_dmag (dmagtosym)
+subroutine sym_dmag (dmagtosym, dfft)
   !---------------------------------------------------------------------
   !! Symmetrize the change of the magnetization density belonging to
   !! an irreducible representation.  
@@ -19,7 +19,7 @@ subroutine sym_dmag (dmagtosym)
   !
   USE kinds, only : DP
   USE constants, ONLY: tpi
-  USE fft_base, ONLY: dfftp
+  USE fft_base,         ONLY : fft_type_descriptor
   USE cell_base, ONLY : at, bg
   USE symm_base, ONLY : s, ft, t_rev, sname, invs
   USE noncollin_module, ONLY: nspin_mag
@@ -27,7 +27,9 @@ subroutine sym_dmag (dmagtosym)
 
   implicit none
 
-  complex(DP) :: dmagtosym(dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, nspin_mag, lr_npert)
+  TYPE(fft_type_descriptor), INTENT(IN) :: dfft
+  !! FFT descriptor for dvtosym (dfftp for hard grid, dffts for soft grid)
+  COMPLEX(DP), INTENT(INOUT) :: dmagtosym(dfft%nr1x, dfft%nr2x, dfft%nr3x, nspin_mag, lr_npert)
   !! the magnetization to symmetrize (only 2:4 components)
   !
   ! ... local variables
@@ -74,14 +76,14 @@ subroutine sym_dmag (dmagtosym)
   !
   call start_clock ('sym_dmag')
   !
-  allocate (dmagsym(  dfftp%nr1x , dfftp%nr2x , dfftp%nr3x , 3, lr_npert))
+  allocate (dmagsym(  dfft%nr1x , dfft%nr2x , dfft%nr3x , 3, lr_npert))
   allocate (dmags( 3, lr_npert))
   !
-  in1 = tpi / DBLE (dfftp%nr1)
-  in2 = tpi / DBLE (dfftp%nr2)
-  in3 = tpi / DBLE (dfftp%nr3)
+  in1 = tpi / DBLE (dfft%nr1)
+  in2 = tpi / DBLE (dfft%nr2)
+  in3 = tpi / DBLE (dfft%nr3)
   !
-  CALL scale_sym_ops( nsymq, s, ft, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+  CALL scale_sym_ops( nsymq, s, ft, dfft%nr1, dfft%nr2, dfft%nr3, &
        s_scaled, ftau )
   !
   ! Here we symmetrize with respect to the small group of q
@@ -107,13 +109,13 @@ subroutine sym_dmag (dmagtosym)
   do isym = 1, nsymq
      phase (isym) = (1.d0, 0.d0)
   enddo
-  do k = 1, dfftp%nr3
-     do j = 1, dfftp%nr2
-        do i = 1, dfftp%nr1
+  do k = 1, dfft%nr3
+     do j = 1, dfft%nr2
+        do i = 1, dfft%nr1
            do isym = 1, nsymq
               ! rotate_grid_point finds the rotated of i,j,k with S^-1
               CALL rotate_grid_point(s_scaled(1,1,isym), ftau(1,isym), &
-                   i, j, k, dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
+                   i, j, k, dfft%nr1, dfft%nr2, dfft%nr3, ri, rj, rk)
               dmags=(0.d0,0.d0)
               do ipert = 1, lr_npert
                  do jpert = 1, lr_npert

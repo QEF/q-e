@@ -211,9 +211,9 @@
       USE cell_base,          ONLY : tpiba, tpiba2
       USE splines,            ONLY : init_spline, allocate_spline, kill_spline, nullify_spline
       USE pseudo_base,        ONLY : formfn, formfa
-      USE uspp_param,         only : upf
-      USE control_flags,      only : tpre
-      use gvect, ONLY : gg, gstart
+      USE uspp_param,         ONLY : upf
+      USE cp_control,         ONLY : tpre
+      use gvect,              ONLY : gg, gstart
       USE cp_interfaces,      ONLY : compute_xgtab
       USE pseudopotential,    ONLY : vps_sp, dvps_sp, xgtab
       USE local_pseudo,       ONLY : vps0

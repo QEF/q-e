@@ -9,7 +9,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program matd
         @i q vectors starting from the interatomic force constants generated
         from the dynamical matrices as written by DFPT phonon code through
         the companion program @b q2r.x
-  
+
         @b matdyn.x can generate a supercell of the original cell for mass
         approximation calculation. If supercell data are not specified
         in input, the unit cell, lattice vectors, atom types and positions
@@ -42,6 +42,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program matd
                 if the dynamical matrices produced by ph.x were in xml
                 format). No default value: must be specified.
             }
+            default { ' ' }
         }
 
         var  asr -type  CHARACTER {
@@ -53,7 +54,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program matd
                     Allowed values:
                 }
                 opt -val 'no' {
-                    no Acoustic Sum Rules imposed (default)
+                    no Acoustic Sum Rules imposed
                 }
                 opt -val 'simple' {
                     previous implementation of the asr used
@@ -69,8 +70,8 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program matd
                     conditions for vanishing stress tensor, imposed by
                     optimized correction of the force constants (projection).
                     Remember to set write_lr = .true. to write long-range
-                    force constants into file when running q2r and set @ref 
-                    read_lr = .true. when running matdyn in the case of 
+                    force constants into file when running q2r and set @ref
+                    read_lr = .true. when running matdyn in the case of
                     infrared-active solids. (See npj Comput Mater 8, 236 (2022))
                 }
                 opt -val 'one-dim' {
@@ -79,7 +80,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program matd
                     rotation axis is the direction of periodicity; it
                     will work only if this axis considered is one of
                     the Cartesian axis).
-                }         
+                }
                 opt -val 'zero-dim' {
                     3 translational asr + 3 rotational asr imposed
                     by optimized correction of the dyn. mat.
@@ -94,7 +95,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program matd
             }
         }
         var huang -type LOGICAL {
-            default {@tt .true.}
+            default { .true. }
             info {
                 if @b .true. 15 Huang conditions for vanishing stress
                 tensor are included in @ref asr = 'all'.
@@ -105,10 +106,11 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program matd
                 if @b .true. calculate phonon Density of States (DOS)
                 using tetrahedra and a uniform q-point grid (see below)
                 @b NB: may not work properly in noncubic materials
-                
+
                 if @b .false. calculate phonon bands from the list of q-points
-                supplied in input (default)
+                supplied in input
             }
+            default { .false. }
         }
 
         vargroup -type INTEGER {
@@ -119,14 +121,17 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program matd
                 uniform q-point grid for DOS calculation (includes q=0)
                 (must be specified if @ref dos = .true., ignored otherwise)
             }
+            default { 0 }
         }
 
         var deltaE -type REAL {
             info {
-                energy step, in cm@sup -1, for DOS calculation: from min
-                to max phonon energy (default: 1 cm@sup -1 if ndos, see
-                below, is not specified)
+                energy step for DOS calculation: from min
+                to max phonon energy (used if ndos, see below, is not specified)
             }
+            dimensionality { energy }
+            units { cm-1 }
+            default { 1.0 }
         }
 
         var ndos -type INTEGER {
@@ -139,52 +144,70 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program matd
         var degauss -type REAL {
             info {
                 DOS broadening in cm@sup -1
-                
-                Default: 0 - meaning use tetrahedra
+
+                A value of 0 means use tetrahedra.
             }
+            dimensionality { energy }
+            units { cm-1 }
+            default { 0.0 }
         }
-        
+
         var fldos -type CHARACTER {
             info {
-                output file for dos (default: @tt 'matdyn.dos')
+                output file for dos.
                 the dos is in states/cm@sup -1 plotted vs omega in cm(-1)
                 and is normalised to 3*nat, i.e. the number of phonons
             }
+            default { 'matdyn.dos' }
         }
 
         var flfrq  -type CHARACTER {
             info {
-                output file for frequencies (default: @tt 'matdyn.freq')
+                output file for frequencies
             }
+            default { 'matdyn.freq' }
         }
-        
+
         var flvec -type CHARACTER {
             info {
-                output file for normalized phonon displacements 
-                (default: @tt 'matdyn.modes'). The normalized phonon displacements
+                output file for normalized phonon displacements.
+                The normalized phonon displacements
                 are the eigenvectors divided by the square root of the mass,
                 then normalized. As such they are not orthogonal.
             }
+            default { 'matdyn.modes' }
         }
-        
+
         var fleig  -type CHARACTER {
             info {
-                output file for phonon eigenvectors (default: @tt 'matdyn.eig')
+                output file for phonon eigenvectors.
                 The phonon eigenvectors are the eigenvectors of the dynamical
                 matrix. They are orthogonal.
             }
+            default { ' ' }
         }
-        
+
         var fldyn -type CHARACTER {
             info {
-                output file for dynamical matrix (default: ' ' i.e. not written)
+                output file for dynamical matrix (' ' means it is not written)
             }
+            default { ' ' }
         }
-        
+
         multidimension  at -indexes i,j -start 1,1 -end 3,3 -type REAL {
             info {
                 supercell lattice vectors - must form a superlattice of the
-                original lattice (default: use original cell)
+                original lattice
+            }
+            dimensionality { length }
+            units { alat }
+            default -kind conditional {
+                case -test {@ref at(:,:) == 0.0} {
+                    original cell lattice vectors
+                }
+                case {
+                    0.0
+                }
             }
         }
 
@@ -194,114 +217,141 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program matd
             var l3
             info {
                 supercell lattice vectors are original cell vectors times
-                l1, l2, l3 respectively (default: 1, ignored if @ref at specified)
+                l1, l2, l3 respectively (ignored if @ref at specified)
             }
+            default { 1 }
         }
         var ntyp -type INTEGER {
             info {
                 number of atom types in the supercell
-                (default: @ref ntyp of the original cell)
+            }
+            default -kind conditional {
+                case -test {@ref ntyp == 0} {
+                    @ref ntyp of the original cell (ntyp_blk)
+                }
+                case {
+                    0
+                }
             }
         }
-        
+
         dimension amass -start 1 -end ntyp -type REAL {
             info {
-                masses of atoms in the supercell (a.m.u.), one per atom type
-                (default: use masses read from file @tt flfrc)
+                masses of atoms in the supercell, one per atom type
+            }
+            dimensionality { mass }
+            units { amu }
+            default -kind conditional {
+                case -test {@ref amass(it) == 0.0} {
+                    masses read from force-constant file @tt flfrc
+                }
+                case {
+                    0.0
+                }
             }
         }
-        
+
         var readtau -type LOGICAL {
             info {
                 read  atomic positions of the supercell from input
-                (used to specify different masses) (default: @tt .false.)
+                (used to specify different masses)
             }
+            default { .false. }
         }
-        
+
         var fltau -type CHARACTER {
             info {
                 write atomic positions of the supercell to file @tt fltau
-                (default: @ref fltau = ' ', do not write)
+                (if @ref fltau = ' ', do not write)
             }
+            default { ' ' }
         }
         var la2F -type LOGICAL {
             info {
                 if @b .true. interpolates also the el-ph coefficients
             }
+            default { .false. }
         }
-        
+
         var q_in_band_form -type LOGICAL {
             info {
                 if @b .true. the q points are given in band form:
-                only the first and last point of one or more lines 
-                are given. See below. (default: @tt .false.).
+                only the first and last point of one or more lines
+                are given. See below.
             }
+            default { .false. }
         }
-        
+
         var q_in_cryst_coord -type LOGICAL {
             info {
-                if @b .true. input q points are in crystalline 
-                coordinates (default: @tt .false.)
+                if @b .true. input q points are in crystalline
+                coordinates
             }
+            default { .false. }
         }
-        
+
         var eigen_similarity -type LOGICAL {
             info {
-                use similarity of the displacements to order 
-                frequencies  (default: @tt .false.)
+                use similarity of the displacements to order
+                frequencies
 
                 @b NB: You cannot use this option with the symmetry
                 analysis of the modes.
             }
+            default { .false. }
         }
-        
+
         var fd -type LOGICAL {
             info {
                 if @b .true. the ifc come from the finite displacement calculation
             }
+            default { .false. }
         }
-        
+
         var na_ifc -type LOGICAL {
             info {
-                add non analitic contributions to the interatomic force 
+                add non analitic contributions to the interatomic force
                 constants if finite displacement method is used (as in Wang et al.
                 PRB 85, 224303 (2012)) [to be used in conjunction with @b fd.x]
             }
+            default { .false. }
         }
-        
+
         var nosym -type LOGICAL {
             info {
                 if @b .true., no symmetry and no time reversal are imposed
             }
+            default { .false. }
         }
 
         var  loto_2d -type LOGICAL {
             info {
                 set to @b .true. to activate two-dimensional treatment of LO-TO splitting
             }
+            default { .false. }
         }
-        
+
         var loto_disable -type LOGICAL {
             info {
                 if @b .true. do not apply LO-TO splitting for q=0
-                (default: @tt .false.)
             }
+            default { .false. }
         }
 
         var read_lr -type LOGICAL {
-            default {@tt .false.}
+            default { .false. }
             info {
-                if @b .true. read also long-range force constants when they exist in 
-                force constant file. This is required when enforcing @ref asr = 'all' 
+                if @b .true. read also long-range force constants when they exist in
+                force constant file. This is required when enforcing @ref asr = 'all'
                 for infrared-active solids.
             }
         }
 
         var write_frc -type LOGICAL {
-            default {@tt .false.}
+            default { .false. }
             info {
                 if @b .true. write force constants with @ref asr imposed into file.
-                The filename would be @ref flfrc+".matdyn". The long-range part of 
+                The filename would be @ref flfrc+".matdyn". The long-range part of
                 force constants will be not written.
             }
         }
@@ -312,18 +362,27 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program matd
             card AtomicPositionSpecs -nameless 1 {
                 label {
                     if (@ref readtau) atomic positions must be specified as follows:
-                }                       
+                }
 
                 syntax {
                     table atomic_coordinates {
                         rows -start 1 -end nat {
                             colgroup -type REAL {
-                                info { 
-                                    X, Y, Z atomic positions 
+                                info {
+                                    X, Y, Z atomic positions
                                 }
-                                col X
-                                col Y
-                                col Z
+                                col X {
+                                    dimensionality { length }
+                                    units { alat }
+                                }
+                                col Y {
+                                    dimensionality { length }
+                                    units { alat }
+                                }
+                                col Z {
+                                    dimensionality { length }
+                                    units { alat }
+                                }
                             }
                             col ityp -type INTEGER {
                                 info {
@@ -336,13 +395,13 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program matd
             }
         }
     }
-    
+
     choose {
         when -test "q_in_band_form == .true .and. dos == .false." {
             card qPointsSpecs -nameless 1 {
                 label {
                     if (@ref q_in_band_form .and. .not.@ref dos) q-points must be specified as follows:
-                }                       
+                }
 
                 syntax {
                     line {
@@ -365,12 +424,21 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program matd
                         }
                         rows -start 1 -end nq {
                             colgroup -type REAL {
-                                info { 
+                                info {
                                     coordinates of the Q point
                                 }
-                                col q_x
-                                col q_y
-                                col q_z
+                                col q_x {
+                                    dimensionality { length^-1 }
+                                    units { tpiba }
+                                }
+                                col q_y {
+                                    dimensionality { length^-1 }
+                                    units { tpiba }
+                                }
+                                col q_z {
+                                    dimensionality { length^-1 }
+                                    units { tpiba }
+                                }
                             }
                             col nptq -type INTEGER {
                                 info {
@@ -381,7 +449,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program matd
                                     generated. the q points are given in Cartesian
                                     coordinates, 2pi/@i a units (@i a = lattice parameters)
                                 }
-                            }                            
+                            }
                         }
                     }
                 }
@@ -390,7 +458,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program matd
         elsewhen -test "dos == .false." {
             label {
                 if (.not. @ref dos) q-points must be specified as follows:
-            } 
+            }
            card qPointsSpecs -nameless 1 {
                syntax {
                    line {
@@ -403,18 +471,27 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program matd
                    table qPoints2 {
                        info {
                            The format of the q-points specification is:
-                           
+
                            ((q(i,n),i=1,3), n=1,nq)
-                           
+
                        }
                        rows -start 1 -end nq {
                            colgroup -type REAL {
-                               info { 
+                               info {
                                    q-points in cartesian coordinates, 2pi/@i a units (@i a = lattice parameters)
                                }
-                               col q_x
-                               col q_y
-                               col q_z
+                               col q_x {
+                                   dimensionality { length^-1 }
+                                   units { tpiba }
+                               }
+                               col q_y {
+                                   dimensionality { length^-1 }
+                                   units { tpiba }
+                               }
+                               col q_z {
+                                   dimensionality { length^-1 }
+                                   units { tpiba }
+                               }
                            }
                        }
                    }
@@ -427,9 +504,9 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program matd
         text {
             If q = 0, the direction qhat (q=>0) for the non-analytic part
             is extracted from the sequence of q-points as follows:
-            
+
             qhat = q(n) - q(n-1)   or   qhat = q(n) - q(n+1)
-            
+
             depending on which one is available and nonzero.
 
             For low-symmetry crystals, specify twice q = 0 in the list

@@ -130,7 +130,7 @@ PROGRAM plan_avg
   DEALLOCATE (plan)
   DEALLOCATE (averag)
   !
-  CALL environment_end ( 'plan-avg' )
+  CALL environment_end( )
   !
   CALL stop_pp ( )
 

@@ -73,7 +73,7 @@ SUBROUTINE cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
      u_u = u_u + uu(ibnd)
   ENDDO
   !
-        print '("  iter # ",i3,"  u_u = ",e10.4)', 0, u_u  ! JDE
+        write(stdout, * ) '("  iter # ",i3,"  u_u = ",e10.4)', 0, u_u  ! JDE
   !
   !   main iteration loop
   !
@@ -130,7 +130,7 @@ SUBROUTINE cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
      DO ibnd=1,nbnd
         u_u = u_u + uu(ibnd)
      ENDDO
-              print '("  iter # ",i3,"  u_u = ",e10.4)', iter, u_u ! JDE
+              write(stdout, * ) '("  iter # ",i3,"  u_u = ",e10.4)', iter, u_u ! JDE
      !
      IF( u_u <= eps) GOTO 10
      IF (iter==niter) THEN

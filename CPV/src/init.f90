@@ -273,7 +273,8 @@
 !-----------------------------------------------------------------------
 !
       USE kinds,            ONLY: DP
-      use control_flags,    only: iprint, thdyn, ndr, nbeg, tbeg
+      use control_flags,    only: iprint
+      use cp_control,       only: nbeg, tbeg, ndr
       use io_global,        only: stdout, ionode
       use mp_global,        only: nproc_bgrp, me_bgrp, intra_bgrp_comm, root_bgrp
       use ions_base,        only: na, nsp, nat, tau, if_pos

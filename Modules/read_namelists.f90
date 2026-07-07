@@ -241,6 +241,7 @@ MODULE read_namelists_module
        ! ... EXX
        !
        ace=.TRUE.
+       exx_type = 'band_pairs'
        n_proj = 0    
        localization_thr = 0.0_dp
        scdm=.FALSE.
@@ -974,6 +975,7 @@ MODULE read_namelists_module
        ! ... EXX
 
        CALL mp_bcast( ace,                 ionode_id, intra_image_comm )
+       CALL mp_bcast( exx_type,            ionode_id, intra_image_comm )
        CALL mp_bcast( localization_thr,    ionode_id, intra_image_comm )
        CALL mp_bcast( scdm,                ionode_id, intra_image_comm )
        CALL mp_bcast( scdmden,             ionode_id, intra_image_comm )

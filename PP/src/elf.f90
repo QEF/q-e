@@ -181,24 +181,26 @@ SUBROUTINE do_elf_kin(fout,iself,spin_component)
      !
      ! Calculate ELF
      !
-     fac = 5.d0 / (3.d0 * (6.d0 * pi**2) ** (2.d0 / 3.d0) )
-     fout(:) = 0.d0
-     DO i = 1, dfftp%nnr
-        IF ( nspin == 2 ) THEN
+     IF ( nspin == 2 ) THEN
+        fac = 5.d0 / (3.d0 * (6.d0 * pi**2) ** (2.d0 / 3.d0) )
+        DO i = 1, dfftp%nnr
            IF ( (rho%of_r (i,1) > 1.d-30).and.(rho%of_r (i,2) > 1.d-30) ) THEN
               d = fac / ( rho%of_r(i,1)**(5d0/3d0) + rho%of_r(i,2)**(5d0/3d0) ) &
                  *(kkin(i) - 0.25d0*tbos(i,1)/rho%of_r(i,1) - &
                  0.25d0*tbos(i,2)/rho%of_r(i,2) + 1.d-5)
               fout (i) = 1.0d0 / (1.0d0 + d**2)
            ENDIF
-        ELSE
+        END DO
+     ELSE
+        fac = 5.d0 / (3.d0 * (3.d0 * pi**2) ** (2.d0 / 3.d0) )
+        DO i = 1, dfftp%nnr
            IF ( rho%of_r (i,1) > 1.d-30 ) THEN
               d = fac / ( rho%of_r(i,1)**(5d0/3d0) ) &
                  *(kkin(i) - 0.25d0*tbos(i,1)/rho%of_r(i,1) + 1.d-5)
               fout (i) = 1.0d0 / (1.0d0 + d**2)
            END IF
-        ENDIF
-     END DO
+        END DO
+     END IF
      DEALLOCATE (aux, aux2, tbos, kkin)
   ELSE
      !! calculation of the kinetic energy density !!

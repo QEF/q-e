@@ -2,6 +2,7 @@
 
 include ../../make.inc
 
+VPATH = @srcdir@
 
 all: graph.x abcoeff_to_eps.x memory_pw4gww.x
 
@@ -18,5 +19,4 @@ memory_pw4gww.x: memory_pw4gww.f90
 
 clean:
 	- /bin/rm -f *.x
-
 

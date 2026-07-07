@@ -19,11 +19,11 @@
         A. Marrazzo and N. Colonna, Phys. Rev. Research 6, 033085 (2024)  
      =--------------------------------------------------------------------------------=
 
-     Program KCW v.7.4 starts on  6Feb2025 at 16:32:17 
-        Git branch: SAWFinDEV
-        Last git commit: 9ade76a4decd37fd9abb92f7cbb03e68d8aede0d
-        Last git commit date: Thu Feb 6 13:38:09 2025 +0100
-        Last git commit subject: Merge branch 'KCW_symrho_G' of gitlab.com:ncolonna
+     Program KCW v.7.5 starts on 17Sep2025 at 13:46:27 
+        Git branch: develop
+        Last git commit: 7e86c4d7f8b367fcfbff0156d653f13ca55b1b03-dirty
+        Last git commit date: Tue Sep 16 17:33:36 2025 +0000
+        Last git commit subject: Merge branch 'vhpsi' into 'develop'
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -37,8 +37,8 @@
      Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     205924 MiB available memory on the printing compute node when the environment starts
- 
+     587 MiB available memory on the printing compute node when the environment starts
+
 
      KCW INPUT SUMMARY 
      ============================================
@@ -90,14 +90,14 @@
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         295     295     91                 3287     3287     609
- 
+
      Using Slab Decomposition
- 
+
      Reading collected, re-writing distributed wavefunctions
 
      WARNING: !!! NON-MAGNETIC setup !!!
@@ -189,10 +189,10 @@
      orb, Self hartree     2     0.273392
      orb, Self hartree     3     0.273392
      orb, Self hartree     4     0.273392
-        iwann=    1   DO_LR = T
-        iwann=    2   DO_LR = F   -->     1
-        iwann=    3   DO_LR = F   -->     1
-        iwann=    4   DO_LR = F   -->     1
+        iwann=    1   DO_LR =T
+        iwann=    2   DO_LR =F   -->     1
+        iwann=    3   DO_LR =F   -->     1
+        iwann=    4   DO_LR =F   -->     1
 
      INFO: Group the orbitals according to the SH ... DONE 
 
@@ -215,7 +215,7 @@
 
         INFO: rhowan_q(r) RETRIEVED
 
-        DEBUG: \int dr [rho - rho_PWSCF] =      -0.293733E-13
+        DEBUG: \int dr [rho - rho_PWSCF] =       0.828358E-13
 
 
         Start LR calculation for the wannier #  1   iq =  1   spin =  1
@@ -225,14 +225,14 @@
      Subspace diagonalization in iterative solution of the eigenvalue problem:
      a serial algorithm will be used
 
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         295     295     91                 3287     3287     609
- 
+
      Using Slab Decomposition
- 
+
 
      Title: 
      KI Silicon                                                                 
@@ -335,25 +335,25 @@
         INFO: NSCF calculation DONE
 
 
-      iter #   1 total cpu time :     0.1 secs   av.it.:  10.0
+      iter #   1 total cpu time :     0.3 secs   av.it.:  10.0
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  4.585E-08
 
-      iter #   2 total cpu time :     0.2 secs   av.it.:   9.0
+      iter #   2 total cpu time :     0.3 secs   av.it.:   9.0
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.273E-10
 
-      iter #   3 total cpu time :     0.2 secs   av.it.:   9.0
+      iter #   3 total cpu time :     0.3 secs   av.it.:   9.0
       thresh= 1.809E-07 alpha_mix =  0.700 |ddv_scf|^2 =  6.519E-13
 
-      iter #   4 total cpu time :     0.2 secs   av.it.:   9.2
+      iter #   4 total cpu time :     0.4 secs   av.it.:   9.2
       thresh= 8.074E-09 alpha_mix =  0.700 |ddv_scf|^2 =  7.497E-15
 
-      iter #   5 total cpu time :     0.2 secs   av.it.:   8.2
+      iter #   5 total cpu time :     0.4 secs   av.it.:   8.8
       thresh= 8.659E-10 alpha_mix =  0.700 |ddv_scf|^2 =  1.036E-16
 
-      iter #   6 total cpu time :     0.3 secs   av.it.:   9.0
-      thresh= 1.018E-10 alpha_mix =  0.700 |ddv_scf|^2 =  3.124E-20
+      iter #   6 total cpu time :     0.4 secs   av.it.:   9.5
+      thresh= 1.018E-10 alpha_mix =  0.700 |ddv_scf|^2 =  3.135E-20
 
-        iq =   1   iwann =   1   rPi_q =     0.01112134    -0.00000000   uPi_q =     0.01891049     0.00000000   SH_q =     0.01453569     0.00000000
+        iq =   1   iwann =   1   rPi_q =     0.01112134    -0.00000000   uPi_q =     0.01891049    -0.00000000   SH_q =     0.01453569     0.00000000
 
 
      ==============================================================================
@@ -370,14 +370,14 @@
 
         SYM : number of symmetry for iwann =    1 :    6   (out of    48 )
         SYM : iwann=     1 iq =     2 weight =   0.37500000
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         295     295    109                 3287     3287     749
- 
+
      Using Slab Decomposition
- 
+
 
      Title: 
      KI Silicon                                                                 
@@ -436,7 +436,7 @@
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.2500000
         k(    2) = (  -0.5000000   0.5000000  -0.5000000), wk =   0.0000000
         k(    3) = (   0.5000000  -0.5000000   0.5000000), wk =   0.2500000
-        k(    4) = (   0.0000000  -0.0000000   0.0000000), wk =   0.0000000
+        k(    4) = (   0.0000000   0.0000000   0.0000000), wk =   0.0000000
         k(    5) = (   0.0000000  -1.0000000   0.0000000), wk =   0.2500000
         k(    6) = (  -0.5000000  -0.5000000  -0.5000000), wk =   0.0000000
         k(    7) = (   0.5000000   0.5000000  -0.5000000), wk =   0.5000000
@@ -476,7 +476,7 @@
 
     -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
-          k = 0.0000-0.0000 0.0000 (   411 PWs)   bands (ev):
+          k = 0.0000 0.0000 0.0000 (   411 PWs)   bands (ev):
 
     -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730   8.7730
 
@@ -520,34 +520,34 @@
         INFO: NSCF calculation DONE
 
 
-      iter #   1 total cpu time :     0.5 secs   av.it.:  11.7
+      iter #   1 total cpu time :     0.6 secs   av.it.:  11.8
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  5.524E-06
 
-      iter #   2 total cpu time :     0.5 secs   av.it.:  11.7
+      iter #   2 total cpu time :     0.6 secs   av.it.:  11.8
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.693E-06
 
-      iter #   3 total cpu time :     0.5 secs   av.it.:  11.0
+      iter #   3 total cpu time :     0.7 secs   av.it.:  11.0
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.627E-09
 
-      iter #   4 total cpu time :     0.6 secs   av.it.:   9.5
+      iter #   4 total cpu time :     0.7 secs   av.it.:   9.5
       thresh= 4.033E-07 alpha_mix =  0.700 |ddv_scf|^2 =  3.061E-11
 
-      iter #   5 total cpu time :     0.6 secs   av.it.:   9.5
+      iter #   5 total cpu time :     0.7 secs   av.it.:   9.5
       thresh= 5.533E-08 alpha_mix =  0.700 |ddv_scf|^2 =  2.089E-13
 
-      iter #   6 total cpu time :     0.6 secs   av.it.:   9.8
-      thresh= 4.571E-09 alpha_mix =  0.700 |ddv_scf|^2 =  1.130E-16
+      iter #   6 total cpu time :     0.8 secs   av.it.:   9.8
+      thresh= 4.570E-09 alpha_mix =  0.700 |ddv_scf|^2 =  1.158E-16
 
-      iter #   7 total cpu time :     0.7 secs   av.it.:  10.3
-      thresh= 1.063E-10 alpha_mix =  0.700 |ddv_scf|^2 =  2.740E-17
+      iter #   7 total cpu time :     0.8 secs   av.it.:  10.3
+      thresh= 1.076E-10 alpha_mix =  0.700 |ddv_scf|^2 =  4.704E-17
 
-      iter #   8 total cpu time :     0.7 secs   av.it.:  10.0
-      thresh= 5.235E-11 alpha_mix =  0.700 |ddv_scf|^2 =  1.520E-17
+      iter #   8 total cpu time :     0.9 secs   av.it.:  10.0
+      thresh= 6.858E-11 alpha_mix =  0.700 |ddv_scf|^2 =  1.082E-17
 
-      iter #   9 total cpu time :     0.7 secs   av.it.:   9.5
-      thresh= 3.899E-11 alpha_mix =  0.700 |ddv_scf|^2 =  1.853E-20
+      iter #   9 total cpu time :     0.9 secs   av.it.:  10.2
+      thresh= 3.289E-11 alpha_mix =  0.700 |ddv_scf|^2 =  1.754E-20
 
-        iq =   2   iwann =   1   rPi_q =     0.09474989     0.00000000   uPi_q =     0.21259941    -0.00000000   SH_q =     0.12125174    -0.00000000
+        iq =   2   iwann =   1   rPi_q =     0.09474989    -0.00000000   uPi_q =     0.21259941     0.00000000   SH_q =     0.12125174    -0.00000000
 
 
      ==============================================================================
@@ -564,14 +564,14 @@
 
         SYM : number of symmetry for iwann =    1 :    6   (out of    48 )
         SYM : iwann=     1 iq =     3 weight =   0.12500000
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         295     295    109                 3287     3287     749
- 
+
      Using Slab Decomposition
- 
+
 
      Title: 
      KI Silicon                                                                 
@@ -630,7 +630,7 @@
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.2500000
         k(    2) = (   0.5000000   0.5000000   0.5000000), wk =   0.0000000
         k(    3) = (   0.5000000  -0.5000000   0.5000000), wk =   0.7500000
-        k(    4) = (   1.0000000  -0.0000000   1.0000000), wk =   0.0000000
+        k(    4) = (   1.0000000   0.0000000   1.0000000), wk =   0.0000000
         k(    5) = (   0.0000000  -1.0000000   0.0000000), wk =   0.7500000
         k(    6) = (   0.5000000  -0.5000000   0.5000000), wk =   0.0000000
         k(    7) = (   0.5000000   0.5000000   0.5000000), wk =   0.2500000
@@ -666,7 +666,7 @@
 
     -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
-          k = 1.0000-0.0000 1.0000 (   412 PWs)   bands (ev):
+          k = 1.0000 0.0000 1.0000 (   412 PWs)   bands (ev):
 
     -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
@@ -694,29 +694,29 @@
         INFO: NSCF calculation DONE
 
 
-      iter #   1 total cpu time :     0.8 secs   av.it.:  11.5
+      iter #   1 total cpu time :     1.0 secs   av.it.:  11.5
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.063E-05
 
-      iter #   2 total cpu time :     0.9 secs   av.it.:  12.0
+      iter #   2 total cpu time :     1.1 secs   av.it.:  12.0
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.602E-04
 
-      iter #   3 total cpu time :     0.9 secs   av.it.:  12.0
+      iter #   3 total cpu time :     1.1 secs   av.it.:  12.2
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.476E-09
 
-      iter #   4 total cpu time :     0.9 secs   av.it.:   9.8
+      iter #   4 total cpu time :     1.1 secs   av.it.:   9.8
       thresh= 5.896E-07 alpha_mix =  0.700 |ddv_scf|^2 =  2.564E-10
 
-      iter #   5 total cpu time :     0.9 secs   av.it.:  10.0
-      thresh= 1.601E-07 alpha_mix =  0.700 |ddv_scf|^2 =  9.720E-14
+      iter #   5 total cpu time :     1.2 secs   av.it.:  10.0
+      thresh= 1.601E-07 alpha_mix =  0.700 |ddv_scf|^2 =  9.726E-14
 
-      iter #   6 total cpu time :     1.0 secs   av.it.:   9.5
-      thresh= 3.118E-09 alpha_mix =  0.700 |ddv_scf|^2 =  4.540E-15
+      iter #   6 total cpu time :     1.2 secs   av.it.:   9.5
+      thresh= 3.119E-09 alpha_mix =  0.700 |ddv_scf|^2 =  4.543E-15
 
-      iter #   7 total cpu time :     1.0 secs   av.it.:   8.8
-      thresh= 6.738E-10 alpha_mix =  0.700 |ddv_scf|^2 =  5.258E-18
+      iter #   7 total cpu time :     1.2 secs   av.it.:   9.2
+      thresh= 6.740E-10 alpha_mix =  0.700 |ddv_scf|^2 =  5.251E-18
 
-      iter #   8 total cpu time :     1.0 secs   av.it.:   9.2
-      thresh= 2.293E-11 alpha_mix =  0.700 |ddv_scf|^2 =  1.779E-19
+      iter #   8 total cpu time :     1.3 secs   av.it.:  10.0
+      thresh= 2.292E-11 alpha_mix =  0.700 |ddv_scf|^2 =  1.932E-19
 
         iq =   3   iwann =   1   rPi_q =     0.01776372     0.00000000   uPi_q =     0.06546788    -0.00000000   SH_q =     0.03756384    -0.00000000
 
@@ -735,14 +735,14 @@
 
         SYM : number of symmetry for iwann =    1 :    6   (out of    48 )
         SYM : iwann=     1 iq =     4 weight =   0.37500000
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         295     295    109                 3287     3287     749
- 
+
      Using Slab Decomposition
- 
+
 
      Title: 
      KI Silicon                                                                 
@@ -803,7 +803,7 @@
         k(    3) = (   0.5000000  -0.5000000   0.5000000), wk =   0.2500000
         k(    4) = (   0.5000000   0.5000000   0.5000000), wk =   0.0000000
         k(    5) = (   0.0000000  -1.0000000   0.0000000), wk =   0.2500000
-        k(    6) = (   0.0000000  -0.0000000   0.0000000), wk =   0.0000000
+        k(    6) = (   0.0000000   0.0000000   0.0000000), wk =   0.0000000
         k(    7) = (   0.5000000   0.5000000  -0.5000000), wk =   0.5000000
         k(    8) = (   0.5000000   1.5000000  -0.5000000), wk =   0.0000000
         k(    9) = (   0.5000000   0.5000000   0.5000000), wk =   0.2500000
@@ -849,7 +849,7 @@
 
     -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
-          k = 0.0000-0.0000 0.0000 (   411 PWs)   bands (ev):
+          k = 0.0000 0.0000 0.0000 (   411 PWs)   bands (ev):
 
     -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730   8.7730
 
@@ -885,37 +885,37 @@
         INFO: NSCF calculation DONE
 
 
-      iter #   1 total cpu time :     1.2 secs   av.it.:  11.7
+      iter #   1 total cpu time :     1.5 secs   av.it.:  12.0
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  7.090E-06
 
-      iter #   2 total cpu time :     1.2 secs   av.it.:  12.2
+      iter #   2 total cpu time :     1.5 secs   av.it.:  12.2
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.475E-05
 
-      iter #   3 total cpu time :     1.2 secs   av.it.:  11.8
+      iter #   3 total cpu time :     1.6 secs   av.it.:  12.0
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.272E-08
 
-      iter #   4 total cpu time :     1.3 secs   av.it.:  10.0
-      thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.418E-10
+      iter #   4 total cpu time :     1.6 secs   av.it.:  10.0
+      thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.417E-10
 
-      iter #   5 total cpu time :     1.3 secs   av.it.:   9.7
+      iter #   5 total cpu time :     1.7 secs   av.it.:   9.7
       thresh= 1.191E-07 alpha_mix =  0.700 |ddv_scf|^2 =  1.532E-11
 
-      iter #   6 total cpu time :     1.3 secs   av.it.:   9.7
-      thresh= 3.914E-08 alpha_mix =  0.700 |ddv_scf|^2 =  1.798E-14
+      iter #   6 total cpu time :     1.7 secs   av.it.:   9.5
+      thresh= 3.914E-08 alpha_mix =  0.700 |ddv_scf|^2 =  1.799E-14
 
-      iter #   7 total cpu time :     1.4 secs   av.it.:   9.8
-      thresh= 1.341E-09 alpha_mix =  0.700 |ddv_scf|^2 =  2.778E-16
+      iter #   7 total cpu time :     1.8 secs   av.it.:  10.0
+      thresh= 1.341E-09 alpha_mix =  0.700 |ddv_scf|^2 =  2.769E-16
 
-      iter #   8 total cpu time :     1.4 secs   av.it.:  10.0
-      thresh= 1.667E-10 alpha_mix =  0.700 |ddv_scf|^2 =  6.964E-18
+      iter #   8 total cpu time :     1.8 secs   av.it.:   9.8
+      thresh= 1.664E-10 alpha_mix =  0.700 |ddv_scf|^2 =  3.994E-18
 
-      iter #   9 total cpu time :     1.4 secs   av.it.:  10.7
-      thresh= 2.639E-11 alpha_mix =  0.700 |ddv_scf|^2 =  5.102E-18
+      iter #   9 total cpu time :     1.9 secs   av.it.:  10.3
+      thresh= 1.999E-11 alpha_mix =  0.700 |ddv_scf|^2 =  2.054E-18
 
-      iter #  10 total cpu time :     1.5 secs   av.it.:   9.8
-      thresh= 2.259E-11 alpha_mix =  0.700 |ddv_scf|^2 =  1.427E-19
+      iter #  10 total cpu time :     1.9 secs   av.it.:   9.8
+      thresh= 1.433E-11 alpha_mix =  0.700 |ddv_scf|^2 =  1.348E-19
 
-        iq =   4   iwann =   1   rPi_q =     0.06413677     0.00000000   uPi_q =     0.17067584     0.00000000   SH_q =     0.10004121    -0.00000000
+        iq =   4   iwann =   1   rPi_q =     0.06413678     0.00000000   uPi_q =     0.17067584    -0.00000000   SH_q =     0.10004121    -0.00000000
 
 
      ==============================================================================
@@ -984,109 +984,109 @@
 
 
 
-        iwann  =     1   relaxed =      0.18777172   unrelaxed =      0.46765361   alpha =  0.40151881   self Hartree =  0.27339248
+        iwann  =     1   relaxed =      0.18777173   unrelaxed =      0.46765361   alpha =  0.40151882   self Hartree =  0.27339248
 
-        iwann* =     2   relaxed =      0.18777172   unrelaxed =      0.46765361   alpha =  0.40151881   self Hartree =  0.27339248
+        iwann* =     2   relaxed =      0.18777173   unrelaxed =      0.46765361   alpha =  0.40151882   self Hartree =  0.27339248
 
-        iwann* =     3   relaxed =      0.18777172   unrelaxed =      0.46765361   alpha =  0.40151881   self Hartree =  0.27339248
+        iwann* =     3   relaxed =      0.18777173   unrelaxed =      0.46765361   alpha =  0.40151882   self Hartree =  0.27339248
 
-        iwann* =     4   relaxed =      0.18777172   unrelaxed =      0.46765361   alpha =  0.40151881   self Hartree =  0.27339248
-
-
+        iwann* =     4   relaxed =      0.18777173   unrelaxed =      0.46765361   alpha =  0.40151882   self Hartree =  0.27339248
 
 
- 
+
+
+
      init_run     :      0.02s CPU      0.02s WALL (       4 calls)
-     electrons    :      0.33s CPU      0.34s WALL (       4 calls)
+     electrons    :      0.50s CPU      0.51s WALL (       4 calls)
 
      Called by init_run:
      wfcinit      :      0.00s CPU      0.00s WALL (       4 calls)
      wfcinit:atom :      0.00s CPU      0.00s WALL (      36 calls)
-     wfcinit:wfcr :      0.03s CPU      0.03s WALL (      36 calls)
+     wfcinit:wfcr :      0.13s CPU      0.13s WALL (      36 calls)
      potinit      :      0.00s CPU      0.00s WALL (       4 calls)
      hinit0       :      0.01s CPU      0.01s WALL (       4 calls)
 
      Called by electrons:
-     c_bands      :      0.33s CPU      0.34s WALL (       4 calls)
+     c_bands      :      0.50s CPU      0.51s WALL (       4 calls)
      v_of_rho     :      0.00s CPU      0.00s WALL (       5 calls)
      v_h          :      0.00s CPU      0.00s WALL (       5 calls)
      v_xc         :      0.00s CPU      0.00s WALL (       5 calls)
 
      Called by c_bands:
      init_us_2    :      0.01s CPU      0.01s WALL (     206 calls)
-     cegterg      :      0.30s CPU      0.30s WALL (      36 calls)
+     cegterg      :      0.37s CPU      0.38s WALL (      36 calls)
 
      Called by sum_band:
 
      Called by *egterg:
-     cdiaghg      :      0.04s CPU      0.04s WALL (     393 calls)
-     cegterg:over :      0.01s CPU      0.02s WALL (     357 calls)
-     cegterg:upda :      0.01s CPU      0.01s WALL (     357 calls)
-     cegterg:last :      0.00s CPU      0.00s WALL (     108 calls)
-     h_psi        :      0.88s CPU      0.92s WALL (    2364 calls)
+     cdiaghg      :      0.03s CPU      0.03s WALL (     393 calls)
+     cegterg:over :      0.03s CPU      0.03s WALL (     357 calls)
+     cegterg:upda :      0.02s CPU      0.02s WALL (     357 calls)
+     cegterg:last :      0.01s CPU      0.01s WALL (     108 calls)
+     h_psi        :      1.26s CPU      1.28s WALL (    2366 calls)
      g_psi        :      0.00s CPU      0.00s WALL (     357 calls)
 
      Called by h_psi:
-     h_psi:calbec :      0.02s CPU      0.02s WALL (    2364 calls)
-     vloc_psi     :      0.83s CPU      0.87s WALL (    2364 calls)
-                                        0.00s GPU  (    2364 calls)
-     add_vuspsi   :      0.01s CPU      0.02s WALL (    2364 calls)
+     h_psi:calbec :      0.03s CPU      0.03s WALL (    2366 calls)
+     vloc_psi     :      1.18s CPU      1.20s WALL (    2366 calls)
+                                        0.00s GPU  (    2366 calls)
+     add_vuspsi   :      0.03s CPU      0.03s WALL (    2366 calls)
 
      General routines
-     calbec       :      0.01s CPU      0.02s WALL (    2364 calls)
-     fft          :      0.01s CPU      0.01s WALL (     114 calls)
+     calbec       :      0.03s CPU      0.03s WALL (    2366 calls)
+     fft          :      0.13s CPU      0.13s WALL (     114 calls)
      ffts         :      0.00s CPU      0.00s WALL (      56 calls)
-     fftw         :      0.67s CPU      0.71s WALL (   22480 calls)
-     davcio       :      0.02s CPU      0.05s WALL (    1222 calls)
- 
+     fftw         :      1.17s CPU      1.19s WALL (   22544 calls)
+     davcio       :      0.03s CPU      0.03s WALL (    1222 calls)
+
      Parallel routines
- 
-     KCW          :      1.35s CPU      1.47s WALL
+
+     KCW          :      1.87s CPU      1.91s WALL
 
      INITIALIZATION: 
- 
+
      init_vloc    :      0.00s CPU      0.00s WALL (       5 calls)
      init_us_1    :      0.00s CPU      0.00s WALL (       5 calls)
- 
-     solve_linter :      0.94s CPU      1.03s WALL (       4 calls)
-     kcw_run_nscf :      0.37s CPU      0.38s WALL (       4 calls)
- 
-     solve_linter :      0.94s CPU      1.03s WALL (       4 calls)
+
+     solve_linter :      1.19s CPU      1.22s WALL (       4 calls)
+     kcw_run_nscf :      0.53s CPU      0.54s WALL (       4 calls)
+
+     solve_linter :      1.19s CPU      1.22s WALL (       4 calls)
      ortho        :      0.00s CPU      0.00s WALL (     170 calls)
-     cgsolve      :      0.70s CPU      0.75s WALL (     170 calls)
-     incdrhoscf   :      0.07s CPU      0.07s WALL (     170 calls)
+     cgsolve      :      0.93s CPU      0.95s WALL (     170 calls)
+     incdrhoscf   :      0.09s CPU      0.09s WALL (     170 calls)
                                         0.00s GPU  (     170 calls)
      dv_of_drho   :      0.01s CPU      0.01s WALL (      33 calls)
-     mix_pot      :      0.02s CPU      0.04s WALL (      33 calls)
-     psymdvscf    :      0.07s CPU      0.07s WALL (      33 calls)
- 
- 
-     cgsolve      :      0.70s CPU      0.75s WALL (     170 calls)
-     ch_psi       :      0.68s CPU      0.72s WALL (    1935 calls)
- 
-     ch_psi       :      0.68s CPU      0.72s WALL (    1935 calls)
-     h_psi        :      0.88s CPU      0.92s WALL (    2364 calls)
-     last         :      0.03s CPU      0.04s WALL (    1935 calls)
- 
-     h_psi        :      0.88s CPU      0.92s WALL (    2364 calls)
-     add_vuspsi   :      0.01s CPU      0.02s WALL (    2364 calls)
- 
-     incdrhoscf   :      0.07s CPU      0.07s WALL (     170 calls)
-                                        0.00s GPU  (     170 calls)
- 
- 
-      General routines
-     calbec       :      0.01s CPU      0.02s WALL (    2364 calls)
-     fft          :      0.01s CPU      0.01s WALL (     114 calls)
-     ffts         :      0.00s CPU      0.00s WALL (      56 calls)
-     fftw         :      0.67s CPU      0.71s WALL (   22480 calls)
-     davcio       :      0.02s CPU      0.05s WALL (    1222 calls)
- 
- 
-     KCW          :      1.35s CPU      1.47s WALL
+     mix_pot      :      0.02s CPU      0.03s WALL (      33 calls)
+     psymdvscf    :      0.04s CPU      0.04s WALL (      33 calls)
 
- 
-   This run was terminated on:  16:32:18   6Feb2025            
+
+     cgsolve      :      0.93s CPU      0.95s WALL (     170 calls)
+     ch_psi       :      0.91s CPU      0.92s WALL (    1937 calls)
+
+     ch_psi       :      0.91s CPU      0.92s WALL (    1937 calls)
+     h_psi        :      1.26s CPU      1.28s WALL (    2366 calls)
+     last         :      0.03s CPU      0.03s WALL (    1937 calls)
+
+     h_psi        :      1.26s CPU      1.28s WALL (    2366 calls)
+     add_vuspsi   :      0.03s CPU      0.03s WALL (    2366 calls)
+
+     incdrhoscf   :      0.09s CPU      0.09s WALL (     170 calls)
+                                        0.00s GPU  (     170 calls)
+
+
+      General routines
+     calbec       :      0.03s CPU      0.03s WALL (    2366 calls)
+     fft          :      0.13s CPU      0.13s WALL (     114 calls)
+     ffts         :      0.00s CPU      0.00s WALL (      56 calls)
+     fftw         :      1.17s CPU      1.19s WALL (   22544 calls)
+     davcio       :      0.03s CPU      0.03s WALL (    1222 calls)
+
+
+     KCW          :      1.87s CPU      1.96s WALL
+
+
+   This run was terminated on:  13:46:29  17Sep2025            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

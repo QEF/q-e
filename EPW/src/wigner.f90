@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2019 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
@@ -883,6 +884,7 @@
     !
     IF (use_ws) THEN
       !
+      !$omp parallel do collapse(4)
       DO imode = 1, nmodes
         DO iw2 = 1, dims
           DO iw = 1, dims
@@ -899,15 +901,18 @@
           ENDDO ! iw
         ENDDO ! iw2
       ENDDO ! imode
+      !$omp end parallel do
       !
     ELSE ! .NOT. use_ws
       !
+      !$omp parallel do collapse(2)
       DO imode = 1, nmodes
         DO ir = 1, nrr
           array(:, :, :, ir, imode) &
           = array(:, :, :, ir, imode) / REAL(ndegen(ir, 1, 1), KIND = DP)
         ENDDO ! ir
       ENDDO ! imode
+      !$omp end parallel do
       !
     ENDIF ! use_ws
     !
@@ -926,6 +931,7 @@
     USE kinds,         ONLY : DP
     USE ep_constants,  ONLY : czero
     USE input,         ONLY : use_ws
+    USE global_var,    ONLY : irg_start, irn_start, irn_stop
     !
     IMPLICIT NONE
     !
@@ -951,118 +957,38 @@
     !! Band index
     INTEGER :: iw2
     !! Band index
-    INTEGER :: ir_k, ir_g
-    !! WS vectors for electrons.
-    INTEGER :: imode
-    !! Counter on phonon modes
-    INTEGER :: iatm
-    !! Counter on atoms
-    !
-    IF (use_ws) THEN
-      !
-      DO ir_g = 1, nrr_g
-        DO imode = 1, nmodes
-          iatm = (imode - 1) / 3 + 1
-          DO ir_k = 1, nrr_k
-            DO iw2 = 1, nbnd
-              DO iw = 1, nbnd
-                !
-                IF (ndegen(iw, ir_g, iatm) > 0) THEN
-                  array(iw, iw2, ir_k, imode, ir_g) &
-                  = array(iw, iw2, ir_k, imode, ir_g) / REAL(ndegen(iw, ir_g, iatm), KIND = DP)
-                ELSE ! ndegen == 0
-                  array(iw, iw2, ir_k, imode, ir_g) = czero
-                ENDIF
-                !
-              ENDDO ! iw
-            ENDDO ! iw2
-          ENDDO ! ir_k
-        ENDDO ! imode
-      ENDDO ! ir_g
-      !
-    ELSE ! .NOT. use_ws
-      !
-      DO ir_g = 1, nrr_g
-        array(:, :, :, :, ir_g) &
-        = array(:, :, :, :, ir_g) / REAL(ndegen(1, ir_g, 1), KIND = DP)
-      ENDDO ! ir
-      !
-    ENDIF ! use_ws
-    !
-    !---------------------------------------------------------------------------
-    END SUBROUTINE wigner_divide_ndegen_epmat
-    !---------------------------------------------------------------------------
-    !
-    !---------------------------------------------------------------------------
-    SUBROUTINE wigner_divide_ndegen_epmat_dist(array, nbnd, nrr_k, nrr_g, nmodes, ndegen, dims, dims2)
-    !---------------------------------------------------------------------------
-    !!
-    !! Divide an array in the real-space Wannier representation by the degeneracy
-    !! factor ndegen. This subroutine must be called once and only once before
-    !! calling Wannier-to-Bloch routines.
-    !!
-    !! JML TODO: Merge with wigner_divide_ndegen_epmat
-    !!
-    USE kinds,         ONLY : DP
-    USE ep_constants,  ONLY : czero
-    USE input,         ONLY : use_ws
-    USE parallelism,   ONLY : para_bounds
-    !
-    IMPLICIT NONE
-    !
-    INTEGER, INTENT(in) :: nbnd
-    !! number of bands (possibly in the optimal subspace)
-    INTEGER, INTENT(in) :: nrr_k
-    !! Number of Wigner-Size points
-    INTEGER, INTENT(in) :: nrr_g
-    !! Number of Wigner-Size points
-    INTEGER, INTENT(in) :: nmodes
-    !! number of modes
-    INTEGER, INTENT(in) :: dims
-    !! Is equal to the number of Wannier functions if use_ws == .TRUE. Is equal to 1 otherwise.
-    INTEGER, INTENT(in) :: dims2
-    !! Is equal to the number of atoms if use_ws == .TRUE. Is equal to 1 otherwise.
-    INTEGER, INTENT(in) :: ndegen(dims, nrr_g, dims2)
-    !! Degeneracy factor for each R
-    COMPLEX(KIND = DP), DIMENSION(:, :, :, :), INTENT(inout) :: array
-    !! Matrix in Wannier representation. Size (nbnd, nbnd, nrr_k, ir_stop - ir_start + 1)
-    !
-    ! Local variables
-    INTEGER :: iw
-    !! Band index
-    INTEGER :: iw2
-    !! Band index
     INTEGER :: irn
-    !! Combined WS and mode index
-    INTEGER :: irn_loc
-    !! Combined WS and mode index in the local
-    INTEGER :: ir_start, ir_stop
-    !! locally start and end points of combined WS and mode index
-    INTEGER :: ir_k, ir_g
-    !! WS vectors for electrons.
+    !! Global counter for mode*WS vector indices
+    INTEGER :: ir_k
+    !! Global index for WS vectors (electron)
+    INTEGER :: ir_g
+    !! Global index for WS vectors (electron-phonon)
+    INTEGER :: ir_g_loc
+    !! Local index for WS vectors (electron-phonon) in this pool
     INTEGER :: imode
     !! Counter on phonon modes
     INTEGER :: iatm
     !! Counter on atoms
     !
-    CALL para_bounds(ir_start, ir_stop, nrr_g * nmodes)
-    !
     IF (use_ws) THEN
       !
-      DO irn = ir_start, ir_stop
-        irn_loc = irn - ir_start + 1
-        ir_g = (irn - 1)/nmodes + 1
+      DO irn = irn_start, irn_stop
+        !
+        ir_g = (irn - 1) / nmodes + 1
         imode = MOD((irn - 1), nmodes) + 1
         iatm = (imode - 1) / 3 + 1
+        !
+        ir_g_loc = ir_g - irg_start + 1
+        !
         DO ir_k = 1, nrr_k
           DO iw2 = 1, nbnd
             DO iw = 1, nbnd
               !
               IF (ndegen(iw, ir_g, iatm) > 0) THEN
-                array(iw, iw2, ir_k, irn_loc) &
-                = array(iw, iw2, ir_k, irn_loc) / REAL(ndegen(iw, ir_g, iatm), KIND = DP)
+                array(iw, iw2, ir_k, imode, ir_g_loc) &
+                  = array(iw, iw2, ir_k, imode, ir_g_loc) / REAL(ndegen(iw, ir_g, iatm), KIND = DP)
               ELSE ! ndegen == 0
-                array(iw, iw2, ir_k, irn_loc) = czero
+                array(iw, iw2, ir_k, imode, ir_g_loc) = czero
               ENDIF
               !
             ENDDO ! iw
@@ -1072,19 +998,64 @@
       !
     ELSE ! .NOT. use_ws
       !
-      DO irn = ir_start, ir_stop
-        irn_loc = irn - ir_start + 1
-        ir_g = (irn - 1)/nmodes + 1
+      DO irn = irn_start, irn_stop
+        !
+        ir_g = (irn - 1) / nmodes + 1
         imode = MOD((irn - 1), nmodes) + 1
-        array(:, :, :, irn_loc) &
-          = array(:, :, :, irn_loc) / REAL(ndegen(1, ir_g, 1), KIND = DP)
+        !
+        ir_g_loc = ir_g - irg_start + 1
+        !
+        array(:, :, :, imode, ir_g_loc) &
+          = array(:, :, :, imode, ir_g_loc) / REAL(ndegen(1, ir_g, 1), KIND = DP)
       ENDDO ! irn
       !
     ENDIF ! use_ws
     !
     !---------------------------------------------------------------------------
-    END SUBROUTINE wigner_divide_ndegen_epmat_dist
+    END SUBROUTINE wigner_divide_ndegen_epmat
     !---------------------------------------------------------------------------
+    !
+    !---------------------------------------------------------------------------
+    SUBROUTINE ws_indexes_distribution(nrr_g)
+    !---------------------------------------------------------------------------
+    !!
+    !! Generate indexes for the distribution of wigner-seitz indexes (use_ws == .true.),
+    !! or Mode*wigner-seitz combined indexes (use_ws == .false.) in epmatwp
+    !!
+    !! 05/2025 - Zhe Liu 
+    !!
+    !----------------------------------------------------------------------------
+    USE global_var,    ONLY : irg_start, irg_stop, nirg_loc, irn_start, irn_stop, &
+                              nirn_loc, imode_start
+    USE input,         ONLY : use_ws, etf_mem
+    USE modes,         ONLY : nmodes
+    USE ions_base,     ONLY : nat
+    USE parallelism,   ONLY : para_bounds
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(in) :: nrr_g
+    !! maximum number of WS vectors for the electron-phonon
+    !
+    ! SP: Because nrr_g can be quite small, we do a combined parallelization on WS vector and atoms
+    IF (use_ws .AND. (etf_mem /= 0)) THEN
+      CALL para_bounds(irn_start, irn_stop, nrr_g * nat)
+      irg_start = (irn_start - 1) / nat + 1
+      irg_stop = (irn_stop - 1) / nat + 1
+    ELSE
+      CALL para_bounds(irn_start, irn_stop, nrr_g * nmodes)
+      irg_start = (irn_start - 1) / nmodes + 1
+      irg_stop = (irn_stop - 1) / nmodes + 1
+    ENDIF
+    !
+    nirg_loc = irg_stop - irg_start + 1
+    imode_start = MOD(irn_start - 1, nmodes) + 1
+    nirn_loc = irn_stop - irn_start + 1
+    !
+    !---------------------------------------------------------------------------
+    END SUBROUTINE ws_indexes_distribution
+    !---------------------------------------------------------------------------
+    !
   !-------------------------------------------------------------------------------------------
   END MODULE wigner
   !-------------------------------------------------------------------------------------------

@@ -127,6 +127,7 @@ MODULE qes_reset_module
     MODULE PROCEDURE qes_reset_cp_cellNose
     MODULE PROCEDURE qes_reset_scalmags
     MODULE PROCEDURE qes_reset_d3mags
+    MODULE PROCEDURE qes_reset_pseudoPath
     MODULE PROCEDURE qes_reset_integerMatrix
     MODULE PROCEDURE qes_reset_scalarQuantity
     MODULE PROCEDURE qes_reset_rism3d
@@ -486,6 +487,7 @@ MODULE qes_reset_module
     obj%lread  = .FALSE.
     !
     obj%mass_ispresent = .FALSE.
+    CALL qes_reset_pseudoPath(obj%pseudo_file)
     obj%starting_magnetization_ispresent = .FALSE.
     obj%spin_teta_ispresent = .FALSE.
     obj%spin_phi_ispresent = .FALSE.
@@ -636,6 +638,8 @@ MODULE qes_reset_module
     obj%x_gamma_extrapolation_ispresent = .FALSE.
     obj%ecutvcut_ispresent = .FALSE.
     obj%localization_threshold_ispresent = .FALSE.
+    obj%use_ace_ispresent = .FALSE.
+    obj%nbndproj_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_hybrid
   !
@@ -2390,6 +2394,23 @@ MODULE qes_reset_module
     obj%nat_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_d3mags
+  !
+  !
+  SUBROUTINE qes_reset_pseudoPath(obj)
+    !
+    IMPLICIT NONE
+    TYPE(pseudoPath_type),INTENT(INOUT)    :: obj
+    !
+    obj%tagname = ""
+    obj%lwrite  = .FALSE.
+    obj%lread  = .FALSE.
+    !
+    obj%Zval_ispresent = .FALSE.
+    obj%mesh_ispresent = .FALSE.
+    obj%nbeta_ispresent = .FALSE.
+    obj%l_ispresent = .FALSE.
+    !
+  END SUBROUTINE qes_reset_pseudoPath
   !
   !
   SUBROUTINE qes_reset_integerMatrix(obj)

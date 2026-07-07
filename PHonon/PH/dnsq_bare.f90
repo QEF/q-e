@@ -32,8 +32,8 @@ SUBROUTINE dnsq_bare
   USE ldaU,          ONLY : Hubbard_lmax, Hubbard_l, offsetU, is_hubbard, nwfcU
   USE ldaU_ph,       ONLY : wfcatomk, wfcatomkpq, dwfcatomkpq, &
                             sdwfcatomk, sdwfcatomkpq, dvkb, vkbkpq, dvkbkpq, &
-                            dnsbare, dnsbare_all_modes, proj1, proj2, read_dns_bare
-  USE ldaU_lr,       ONLY : swfcatomk, swfcatomkpq
+                            dnsbare, dnsbare_all_modes, read_dns_bare
+  USE ldaU_lr,       ONLY : swfcatomk, swfcatomkpq, proj1, proj2
   USE wvfct,         ONLY : npwx, wg, nbnd 
   USE uspp,          ONLY : vkb, nkb, ofsbeta
   USE qpoint,        ONLY : nksq, ikks, ikqs

@@ -1,0 +1,28 @@
+ &control
+    calculation = 'scf',
+    restart_mode='from_scratch',
+    prefix='h2o',
+    tprnfor = .true.,
+ /
+ &system
+    ibrav     = 1,
+    celldm(1) = 15.0,
+    nat       = 3,
+    ntyp      = 2,
+    ecutwfc   = 30.D0,
+ /
+ &electrons
+    conv_thr    = 1.D-13
+    mixing_beta = 0.7,
+ /
+ATOMIC_SPECIES
+  O 15.999  O.pz-hgh.UPF
+  H 1.0078  H.pz-hgh.UPF
+
+ATOMIC_POSITIONS (angstrom)
+O   0.00000  0.00000  0.00000
+H   0.81649  0.57736  0.00000
+H  -0.81649  0.57736  0.00000
+
+K_POINTS (automatic)
+1 1 1 0 0 0

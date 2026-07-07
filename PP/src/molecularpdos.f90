@@ -408,7 +408,7 @@ PROGRAM molecularpdos
      !
   END IF
   !
-  CALL environment_end ( 'MOLECULARPDOS' ) 
+  CALL environment_end( ) 
   !
   CALL stop_pp
   !

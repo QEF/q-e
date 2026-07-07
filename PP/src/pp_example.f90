@@ -70,7 +70,7 @@ PROGRAM post_processing_example
   !
   CALL re_diagonalize ( )
   !
-  CALL environment_end ( 'PPEXAMPLE' )
+  CALL environment_end( )
   !
   CALL stop_pp()
   !

@@ -1,3 +1,31 @@
+Fixed in 7.6 version:
+  * Stress for meta-GGA functionals was broken (Marc Slot, Pietro Delugas) 
+  * pw2wannier90: Fix gamma_only bug in write_plot (Jae-Mo Lihm)
+  * Improved performance ph.x of initialization for USPP and PAW cases in CPUs 
+  * Improved performance for computations of effective charges in ph.x  in the USPP, PAW cases.  
+  * Calculation of Raman coefficients with second-order response was broken
+    since v.7.4.1
+  * Bug in ELF normalization for nspin=1 (courtesy Nicolas F. Barrera)
+  * Phonon bug for GPU + 1 k-point + finite wave-vector (courtesy A. Dal Corso)
+  * Bug in TDDFPT codes when restart is used (courtesy Ermanno Botti)
+
+Incompatible changes in 7.6 version:
+  * Removed the option to compile PW with the pre-processor flag
+    __SPIN_BALANCE (T. Thonhauser)
+
+New in 7.6 version:
+  * NLCC for norm-conserving with mega-GGA functionals (Marc Slot, Pietro Delugas) 
+  * Use of ONCVPP for R2SCAN with model atomic kinetic energy density (Marc Slot) 
+  * Support for out of build directory with autoconf (Tommaso Gorni) 
+  * vdW-DF3-mc, van der Waals density functional for molecular crystals
+    [T. Jenkins, K. Berland, and T. Thonhauser, Phys. Rev. B 112, 235121 (2025)]
+  * Symmetry and the nonlocal pseudopotential contribution added to PP/epsilon 
+    for eps_calc, now allowing USPP/PAW pseudos. Calculations that previously 
+    used nonlocal pseudopotentials (ex: ONCVs) may yield different (more 
+    accurate) numerical results
+  * Expose BEEF vdW functional using LibXC, named BEEF_LXC (A. Fonari).
+  * Performance optimization and GPU porting of lr_addusddens (Giannis Savva)
+
 New in 7.5 version:
   * New Orbital Resolved DFT+U method -E. Macke, I. Timrov 
     (see Macke et al. JCTC  2024 20 (11), 4824-4843) 

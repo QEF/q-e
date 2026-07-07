@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
@@ -27,34 +28,34 @@
     !-----------------------------------------------------------------------
     !
     USE kinds,            ONLY : DP
-    USE pwcom,            ONLY : nbnd, nks, nkstot, xk, et
-    USE input,            ONLY : et_loc, xk_loc
+    USE pwcom,            ONLY : nbnd
+    USE input,            ONLY : et_loc, xk_loc, xk_all, et_all
     USE ions_base,        ONLY : nat, tau
     USE modes,            ONLY : nmodes
     USE input,            ONLY : use_ws, system_2d, nkc1, nkc2, nkc3, lpolar,        &
                                  etf_mem, epwread, epwwrite, epbread, lifc,          &
                                  eig_read, nbndsub, nqc1, nqc2, nqc3, lwfpt,         &
-                                 calc_nelec_wann, epw_memdist
+                                 calc_nelec_wann, lsda
     USE ep_constants,     ONLY : zero, czero
     USE io_files,         ONLY : diropn
     USE io_global,        ONLY : stdout, ionode, ionode_id
     USE io_var,           ONLY : iunepmatwe
     USE global_var,       ONLY : cu, cuq, lwin, lwinq, chw, chw_ks, cvmew, cdmew,    &
                                  rdw, epmatwp, epmatq, dynq, et_ks, dmec, exband,    &
-                                 xkq, nbndep, qrpl, crrw, cpmew, nbndskip,           &
-                                 epmatwp_dist
+                                 xkq, nbndep, qrpl, crrw, cpmew, nbndskip, nk_loc,   &
+                                 epmatwp_dist, nkpts, nirg_loc
     USE bloch2wannier,    ONLY : hambloch2wan, dmebloch2wan, dynbloch2wan,           &
                                  vmebloch2wan, ephbloch2wane, ephbloch2wanp,         &
                                  ephbloch2wanp_mem
     USE wigner,           ONLY : wigner_seitz_wrap, wigner_divide_ndegen,            &
-                                 wigner_divide_ndegen_epmat,                         &
-                                 wigner_divide_ndegen_epmat_dist
+                                 wigner_divide_ndegen_epmat, ws_indexes_distribution
     USE io,               ONLY : rwepmatw, epw_read, epw_write, loadumat,            &
                                  epw_read_ws_data, epw_write_ws_data
-    USE mp,               ONLY : mp_bcast
+    USE mp,               ONLY : mp_bcast, mp_barrier
     USE mp_world,         ONLY : world_comm
+    USE mp_global,        ONLY : inter_pool_comm
     USE low_lvl,          ONLY : system_mem_usage
-    USE utilities,        ONLY : get_nbndskip, epmatwp_redistribution
+    USE utilities,        ONLY : get_nbndskip
     USE longrange,        ONLY : epsi_thickn_2d
     USE wfpt,             ONLY : wfpt_bloch2wan_setup, wfpt_bloch2wan_iq,            &
                                  wfpt_bloch2wan_finalize
@@ -119,23 +120,28 @@
     !! e-p matrix  in wannier basis - electrons (written on disk)
     COMPLEX(KIND = DP), ALLOCATABLE :: A(:, :, :, :)
     !! Berry connection in Wannier representation
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer file name
     !
     CALL start_clock('build_wannier')
     !
     IF (nbndsub /= nbndep) WRITE(stdout, '(/,5x,a,i4)' ) 'Band disentanglement is used: nbndsub = ', nbndsub
     !
+    fnm = ''
+    IF (TRIM(lsda) == 'down') fnm = 'down.'
+    !
     IF (.NOT. (epwread .AND. .NOT. epbread)) THEN
-      ALLOCATE(cu(nbndep, nbndsub, nks), STAT = ierr)
+      ALLOCATE(cu(nbndep, nbndsub, nk_loc), STAT = ierr)
       IF (ierr /= 0) CALL errore('build_wannier', 'Error allocating cu', 1)
-      ALLOCATE(cuq(nbndep, nbndsub, nks), STAT = ierr)
+      ALLOCATE(cuq(nbndep, nbndsub, nk_loc), STAT = ierr)
       IF (ierr /= 0) CALL errore('build_wannier', 'Error allocating cuq', 1)
-      ALLOCATE(lwin(nbndep, nks), STAT = ierr)
+      ALLOCATE(lwin(nbndep, nk_loc), STAT = ierr)
       IF (ierr /= 0) CALL errore('build_wannier', 'Error allocating lwin', 1)
-      ALLOCATE(lwinq(nbndep, nks), STAT = ierr)
+      ALLOCATE(lwinq(nbndep, nk_loc), STAT = ierr)
       IF (ierr /= 0) CALL errore('build_wannier', 'Error allocating lwinq', 1)
       ALLOCATE(exband(nbnd), STAT = ierr)
       IF (ierr /= 0) CALL errore('build_wannier', 'Error allocating exband', 1)
-      ALLOCATE(A(3, nbndsub, nbndsub, nks), STAT = ierr)
+      ALLOCATE(A(3, nbndsub, nbndsub, nk_loc), STAT = ierr)
       IF (ierr /= 0) CALL errore('build_wannier', 'Error allocating A', 1)
       cu(:, :, :)  = czero
       cuq(:, :, :) = czero
@@ -202,6 +208,8 @@
         WRITE(stdout, '(5x,a)' )    'Results may improve by using use_ws == .TRUE. '
       ENDIF
       !
+      CALL ws_indexes_distribution(nrr_g)
+      !
       CALL epw_read(nrr_k, nrr_q, nrr_g)
       !
       !CALL epw_read_ws_data(dims, dims2, nrr_k, irvec_k, ndegen_k, wslen_k, &
@@ -215,9 +223,9 @@
       ! Determine Wigner-Seitz points
       ! For this we need the Wannier centers and w_centers is allocated inside loadumat
       xxq = 0.d0
-      ALLOCATE(xkq(3, nkstot), STAT = ierr)
+      ALLOCATE(xkq(3, nkpts), STAT = ierr)
       IF (ierr /= 0) CALL errore('build_wannier', 'Error allocating xkq', 1)
-      CALL loadumat(nbndep, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband, w_centers)
+      CALL loadumat(nbndep, nbndsub, nk_loc, nkpts, xxq, cu, cuq, lwin, lwinq, exband, w_centers)
       DEALLOCATE(xkq, STAT = ierr)
       IF (ierr /= 0) CALL errore('build_wannier', 'Error deallocating xkq', 1)
       !
@@ -260,6 +268,8 @@
         WRITE(stdout, '(5x,a)' )    'Results may improve by using use_ws == .TRUE. '
       ENDIF
       !
+      CALL ws_indexes_distribution(nrr_g)
+      !
       IF (lpolar) THEN
         IF (system_2d == 'dipole_sh') CALL epsi_thickn_2d()
       ENDIF
@@ -290,9 +300,10 @@
       IF (etf_mem == 0) THEN
         ALLOCATE(epmatwe(nbndsub, nbndsub, nrr_k, nmodes, nqc), STAT = ierr)
         IF (ierr /= 0) CALL errore('build_wannier', 'Error allocating epmatwe', 1)
-        ALLOCATE(epmatwp(nbndsub, nbndsub, nrr_k, nmodes, nrr_g), STAT = ierr)
-        IF (ierr /= 0) CALL errore('build_wannier', 'Error allocating epmatwp', 1)
         epmatwe(:, :, :, :, :) = czero
+        !
+        ALLOCATE(epmatwp(nbndsub, nbndsub, nrr_k, nmodes, nirg_loc), STAT = ierr)
+        IF (ierr /= 0) CALL errore('build_wannier', 'Error allocating epmatwp', 1)
         epmatwp(:, :, : ,: ,:) = czero
       ENDIF
       ALLOCATE(epmatwe_mem(nbndsub, nbndsub, nrr_k, nmodes), STAT = ierr)
@@ -303,21 +314,21 @@
       !
       ! Hamiltonian
       !
-      CALL hambloch2wan(nbnd, nbndsub, nks, nkstot, et_loc, xk_loc, cu, lwin, exband, nrr_k, irvec_k, wslen_k, chw)
+      CALL hambloch2wan(nbnd, nbndsub, nk_loc, nkpts, et_loc, xk_loc, cu, lwin, exband, nrr_k, irvec_k, wslen_k, chw)
       !
       ! Kohn-Sham eigenvalues
       !
       IF (eig_read) THEN
         WRITE (stdout,'(5x,a)') "Interpolating MB and KS eigenvalues"
-        CALL hambloch2wan(nbnd, nbndsub, nks, nkstot, et_ks, xk_loc, cu, lwin, exband, nrr_k, irvec_k, wslen_k, chw_ks)
+        CALL hambloch2wan(nbnd, nbndsub, nk_loc, nkpts, et_ks, xk_loc, cu, lwin, exband, nrr_k, irvec_k, wslen_k, chw_ks)
       ENDIF
       !
       A(:, :, :, :) = czero
       ! Transform of position matrix elements - PRB 74 195118  (2006)
-      CALL vmebloch2wan(dims, nbnd, nbndsub, nks, nkstot, xk_loc, cu, nrr_k, irvec_k, wslen_k, lwin, exband, &
+      CALL vmebloch2wan(dims, nbnd, nbndsub, nk_loc, nkpts, xk_loc, cu, nrr_k, irvec_k, wslen_k, lwin, exband, &
                         A(:, :, :, :), w_centers, ndegen_k)
       ! Transform of velocity matrix elements (dH/dk)
-      CALL dmebloch2wan(nbnd, nbndsub, nks, nkstot, dmec, xk_loc, cu, nrr_k, irvec_k, wslen_k, lwin, exband, cdmew)
+      CALL dmebloch2wan(nbnd, nbndsub, nk_loc, nkpts, dmec, xk_loc, cu, nrr_k, irvec_k, wslen_k, lwin, exband, cdmew)
       !
       ! Dynamical Matrix
       !
@@ -328,8 +339,9 @@
       !
       ! Open the prefix.epmatwe file
       IF ((etf_mem == 1) .AND. ionode) THEN
+        ! TODO: lrepmatw overflow for large systems
         lrepmatw = 2 * nbndsub * nbndsub * nrr_k * nmodes
-        CALL diropn(iunepmatwe, 'epmatwe', lrepmatw, exst)
+        CALL diropn(iunepmatwe, TRIM(fnm)//'epmatwe', lrepmatw, exst)
       ENDIF
       !
       WRITE(stdout, '(a)' ) ' '
@@ -341,17 +353,17 @@
         ! we need the cu again for the k+q points, we generate the map here
         !
         cuq(:, :, :) = czero
-        ALLOCATE(xkq(3, nkstot), STAT = ierr)
+        ALLOCATE(xkq(3, nkpts), STAT = ierr)
         IF (ierr /= 0) CALL errore('build_wannier', 'Error allocating xkq', 1)
-        CALL loadumat(nbndep, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband, w_centers)
+        CALL loadumat(nbndep, nbndsub, nk_loc, nkpts, xxq, cu, cuq, lwin, lwinq, exband, w_centers)
         DEALLOCATE(xkq, STAT = ierr)
         IF (ierr /= 0) CALL errore('build_wannier', 'Error deallocating xkq', 1)
         !
         IF (etf_mem == 0) THEN
-          CALL ephbloch2wane(iq, xxq, nbndep, nbndsub, nmodes, nks, nkstot, xk_loc, cu, cuq, &
+          CALL ephbloch2wane(iq, xxq, nbndep, nbndsub, nmodes, nk_loc, nkpts, xk_loc, cu, cuq, &
             epmatq(:, :, :, :, iq), nrr_k, irvec_k, wslen_k, epmatwe(:, :, :, :, iq), A(:, :, :, :))
         ELSE
-          CALL ephbloch2wane(iq, xxq, nbndep, nbndsub, nmodes, nks, nkstot, xk_loc, cu, cuq, &
+          CALL ephbloch2wane(iq, xxq, nbndep, nbndsub, nmodes, nk_loc, nkpts, xk_loc, cu, cuq, &
             epmatq(:, :, :, :, iq), nrr_k, irvec_k, wslen_k, epmatwe_mem(:, :, :, :), A(:, :, :, :))
           !
         ENDIF
@@ -376,14 +388,18 @@
       ! Electron-Phonon vertex (Wannier el and Bloch ph -> Wannier el and Wannier ph)
       !
       IF (etf_mem == 0) THEN
-        IF (ionode) CALL ephbloch2wanp(nbndsub, nmodes, xqc, nqc, irvec_k, irvec_g, nrr_k, nrr_g, epmatwe)
-        CALL mp_bcast(epmatwp, ionode_id, world_comm)
+        CALL ephbloch2wanp(nbndsub, nmodes, xqc, nqc, irvec_k, irvec_g, nrr_k, nrr_g, epmatwe)
+        ! TODO: the following I/O optimization is disabled because epmatwp was distributed across pools
+        ! IF (ionode) CALL ephbloch2wanp(nbndsub, nmodes, xqc, nqc, irvec_k, irvec_g, nrr_k, nrr_g, epmatwe)
+        ! CALL mp_bcast(epmatwp, ionode_id, inter_pool_comm)
       ENDIF
       IF (etf_mem > 0) CALL ephbloch2wanp_mem(nbndsub, nmodes, xqc, nqc, irvec_k, irvec_g, nrr_k, nrr_g)
       !
       ! Determine the number of bands to skip when calculating Fermi level
       !
-      IF (calc_nelec_wann) nbndskip = get_nbndskip(nkstot, nbnd, xk, et, nrr_k, irvec_k, ndegen_k, dims)
+      IF (calc_nelec_wann) nbndskip = get_nbndskip(nkpts, nbnd, xk_all, et_all, nrr_k, irvec_k, ndegen_k, dims)
+      !
+      CALL mp_barrier(world_comm)
       !
       IF (epwwrite) THEN
         CALL epw_write(nrr_k, nrr_q, nrr_g, w_centers)
@@ -391,8 +407,6 @@
         CALL epw_write_ws_data(dims, dims2, nrr_k, irvec_k, ndegen_k, wslen_k, &
           nrr_q, irvec_q, ndegen_q, wslen_q, nrr_g, irvec_g, ndegen_g, wslen_g)
       ENDIF
-      !
-      IF (etf_mem == 0 .AND. epw_memdist) CALL epmatwp_redistribution(nrr_k, nrr_q, nrr_g)
       !
       DEALLOCATE(epmatq, STAT = ierr)
       IF (ierr /= 0) CALL errore('build_wannier', 'Error deallocating epmatq', 1)
@@ -435,12 +449,12 @@
     IF (lwfpt) CALL wigner_divide_ndegen(cpmew, 3, nbndsub, nrr_k, 1, ndegen_k, dims)
     IF (eig_read) CALL wigner_divide_ndegen(chw_ks, 1, nbndsub, nrr_k, 1, ndegen_k, dims)
     IF (etf_mem == 0) THEN
-      IF (.NOT. epw_memdist) THEN
-        CALL wigner_divide_ndegen_epmat(epmatwp, nbndsub, nrr_k, nrr_g, nmodes, ndegen_g, dims, dims2)
-      ELSE
-        CALL wigner_divide_ndegen_epmat_dist(epmatwp_dist, nbndsub, nrr_k, nrr_g, nmodes, ndegen_g, dims, dims2)
-      ENDIF
+      CALL wigner_divide_ndegen_epmat(epmatwp, nbndsub, nrr_k, nrr_g, nmodes, ndegen_g, dims, dims2)
+      !$acc enter data copyin(epmatwp)
+      !$omp target enter data map(to:epmatwp)
     ENDIF
+    !
+    CALL mp_barrier(world_comm)
     !
     ! Check Memory usage
     CALL system_mem_usage(valueRSS)

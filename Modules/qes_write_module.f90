@@ -129,6 +129,7 @@ MODULE qes_write_module
     MODULE PROCEDURE qes_write_cp_cellNose
     MODULE PROCEDURE qes_write_scalmags
     MODULE PROCEDURE qes_write_d3mags
+    MODULE PROCEDURE qes_write_pseudoPath
     MODULE PROCEDURE qes_write_integerMatrix
     MODULE PROCEDURE qes_write_scalarQuantity
     MODULE PROCEDURE qes_write_rism3d
@@ -604,9 +605,7 @@ MODULE qes_write_module
            CALL xml_addCharacters(xp, obj%mass, fmt='s16')
         CALL xml_EndElement(xp, "mass")
      END IF
-     CALL xml_NewElement(xp, 'pseudo_file')
-        CALL xml_addCharacters(xp, TRIM(obj%pseudo_file))
-     CALL xml_EndElement(xp, 'pseudo_file')
+     CALL qes_write_pseudoPath (xp, obj%pseudo_file)
      IF (obj%starting_magnetization_ispresent) THEN
         CALL xml_NewElement(xp, "starting_magnetization")
            CALL xml_addCharacters(xp, obj%starting_magnetization, fmt='s16')
@@ -805,6 +804,16 @@ MODULE qes_write_module
         CALL xml_NewElement(xp, "localization_threshold")
            CALL xml_addCharacters(xp, obj%localization_threshold, fmt='s16')
         CALL xml_EndElement(xp, "localization_threshold")
+     END IF
+     IF (obj%use_ace_ispresent) THEN
+        CALL xml_NewElement(xp, "use_ace")
+           CALL xml_addCharacters(xp, obj%use_ace)
+        CALL xml_EndElement(xp, "use_ace")
+     END IF
+     IF (obj%nbndproj_ispresent) THEN
+        CALL xml_NewElement(xp, "nbndproj")
+           CALL xml_addCharacters(xp, obj%nbndproj)
+        CALL xml_EndElement(xp, "nbndproj")
      END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_hybrid
@@ -3539,6 +3548,25 @@ MODULE qes_write_module
      END DO
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_d3mags
+
+   SUBROUTINE qes_write_pseudoPath(xp, obj)
+     !-----------------------------------------------------------------
+     IMPLICIT NONE
+     TYPE (xmlf_t),INTENT(INOUT)                      :: xp
+     TYPE(pseudoPath_type),INTENT(IN)    :: obj
+     ! 
+     INTEGER                                          :: i 
+     ! 
+     IF ( .NOT. obj%lwrite ) RETURN 
+     ! 
+     CALL xml_NewElement(xp, TRIM(obj%tagname))
+     IF (obj%Zval_ispresent) CALL xml_addAttribute(xp, 'Zval', obj%Zval )
+     IF (obj%mesh_ispresent) CALL xml_addAttribute(xp, 'mesh', obj%mesh )
+     IF (obj%nbeta_ispresent) CALL xml_addAttribute(xp, 'nbeta', obj%nbeta )
+     IF (obj%l_ispresent) CALL xml_addAttribute(xp, 'l', obj%l )
+        CALL xml_AddCharacters(xp, TRIM(obj%pseudoPath))
+     CALL xml_EndElement(xp, TRIM(obj%tagname))
+   END SUBROUTINE qes_write_pseudoPath
 
    SUBROUTINE qes_write_integerMatrix(xp, obj)
      !-----------------------------------------------------------------

@@ -1,0 +1,13 @@
+# BAD: a <default> with BOTH a text body AND <case> children (rule 5 violation).
+input_description -distribution {Quantum ESPRESSO} -package TEST -program test.x {
+    namelist TEST {
+        var occupations -type CHARACTER {
+            default -kind conditional {
+                fixed
+                case -test "ltetra" { tetrahedra }
+                case { smearing }
+            }
+            info { occupation scheme }
+        }
+    }
+}

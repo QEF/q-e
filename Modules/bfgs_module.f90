@@ -873,6 +873,7 @@ CONTAINS
       REAL(DP), ALLOCATABLE :: Hy(:), yH(:)
       REAL(DP)              :: sdoty, sBs, Theta
       REAL(DP), ALLOCATABLE :: B(:,:)
+      INTEGER :: i, j
       !
       ALLOCATE( y( n ), s( n ), Hy( n ), yH( n ) )
       !
@@ -918,7 +919,7 @@ CONTAINS
         yH= s
         call DPOSV('U',n,1,B,n, yH, n, info)
 !       Info .ne. 0 should be trapped ...
-        if(info .ne. 0)write( stdout, '(/,5X,"WARNING: info=",i3," for Hessian")' )info
+        if(info.ne.0) write( stdout,'(/,5X,"WARNING: info=",i3," for Hessian")') info
         DEALLOCATE ( B )
 !
 !       Calculate s.B.s
@@ -929,7 +930,7 @@ CONTAINS
 !               Conventional damping
                 Theta = 0.8D0*sBs/(sBs-sdoty)
                 WRITE( stdout, '(/,5X,"WARNING: bfgs curvature condition ", &
-                &     "failed, Theta=",F6.3)' )theta
+                &     "failed, Theta=",F6.3)' ) theta
                 y = Theta*y + (1.D0 - Theta)*yH
         endif
       END IF
@@ -938,10 +939,20 @@ CONTAINS
       yH(:) = ( y(:) .times. inv_hess )
       !
       ! ... BFGS update
+      !! Next lines: the elegant way, modern fortran style ...
+      !!inv_hess = inv_hess + 1.0_DP / sdoty * &
+      !!           ( ( 1.0_DP + ( y .dot. Hy ) / sdoty ) * matrix( s, s ) - &
+      !!            ( matrix( s, yH ) +  matrix( Hy, s ) ) )
+      !! Next lines: the ugly, old-fashioned way, that does not crash with
+      !!             the Intel compilers because stack size is exceeded!
       !
-      inv_hess = inv_hess + 1.0_DP / sdoty * &
-                 ( ( 1.0_DP + ( y .dot. Hy ) / sdoty ) * matrix( s, s ) - &
-                  ( matrix( s, yH ) +  matrix( Hy, s ) ) )
+      theta = ( 1.0_DP + ( y .dot. Hy ) / sdoty ) / sdoty
+      DO j = 1, n
+         DO i = 1, n
+            inv_hess(i,j) = inv_hess(i,j) + theta * s(i)*s(j) - &
+                   ( s(i)*yH(j) + Hy(i)*s(j) ) / sdoty
+         END DO
+      END DO
       !
       DEALLOCATE( y, s, Hy, yH )
       !

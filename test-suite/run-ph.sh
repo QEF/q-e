@@ -16,6 +16,15 @@ else
   unset PARA_SUFFIX
 fi
 
+# ph.x never purges its own _ph0 restart directory: leftover _ph0 from
+# a previous (unrelated or aborted) run can confuse a later step. Each
+# "$1" case below that starts ph.x from scratch wipes _ph0 first. A few
+# inputs deliberately need to keep it (resuming via recover=.true., or
+# reading dvscf from a preceding trans=.true. step) - they use case
+# "10" instead of "2", set explicitly in jobconfig's inputs_args. Add
+# "keep" companions for cases 11/13 the same way if a test ever needs
+# one.
+
 # echo $0" "$@
 if [[ "$1" == "1" ]]
 then
@@ -28,21 +37,24 @@ then
   fi
 elif [[ "$1" == "11" ]]
 then
+  # Option 11: ph.x, but skip if a previous run has crashed
   if [[ -e CRASH ]]
   then
     cat CRASH > $3
   else
     echo "Running PH ..."
+    rm -rf _ph0
     ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4
     if [[ -e CRASH ]]
     then
       cat $3
     fi
   fi
-elif [[ "$1" == "2" ]]
+elif [[ "$1" == "2" || "$1" == "10" ]]
 then
   echo "Running PH ..."
 # echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4"
+  if [[ "$1" == "2" ]]; then rm -rf _ph0; fi
   ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
@@ -131,6 +143,7 @@ elif [[ "$1" == "13" ]]
 then
   echo "Running PH ..."
   echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4"
+  rm -rf _ph0
   ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/ph.x ${PARA_SUFFIX} < $2 > $3 2> $4
   echo "Running Python postprocessing.."
   python3 multipole.py -f --order 3 --epsil_order 4 --alat 8.237B > postprocessing.out

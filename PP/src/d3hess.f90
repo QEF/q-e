@@ -71,7 +71,7 @@ program d3hess
   !
   CALL d3hess_sub(filhess)
   !
-  CALL environment_end ( 'd3hess' )
+  CALL environment_end( )
   !
   CALL stop_pp
   !

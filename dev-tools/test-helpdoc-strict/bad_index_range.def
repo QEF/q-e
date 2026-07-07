@@ -1,0 +1,10 @@
+# BAD: keyed-clist index out of the entry's start/end bounds (rule 4 violation).
+input_description -distribution {Quantum ESPRESSO} -package TEST -program test.x {
+    namelist TEST {
+        dimension starting_magnetization -start 1 -end 3 -type REAL {
+            default { 0.0 }
+            dimensionality { 1-2:dimensionless, 7:energy }
+            info { starting magnetization per type }
+        }
+    }
+}

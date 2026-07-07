@@ -1,0 +1,14 @@
+Normal modes for H2O
+&inputph
+  prefix    = 'h2o',
+  reduce_io = .true.,
+  amass(1)  = 15.999,
+  amass(2)  = 1.0078,
+  tr2_ph    = 1.0d-25,
+  epsil     = .true.,
+  trans     = .true.,
+  lraman    = .true.,
+  asr       = .true.,
+  fildyn    = 'dynmat.h2o',
+/
+ 0.0 0.0 0.0

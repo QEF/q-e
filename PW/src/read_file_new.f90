@@ -245,7 +245,7 @@ SUBROUTINE post_xml_init (  )
   USE gvecw,                ONLY : ecutwfc
   USE fft_rho,              ONLY : rho_g2r
   USE fft_base,             ONLY : dfftp, dffts
-  USE scf,                  ONLY : rho, rho_core, rhog_core, v
+  USE scf,                  ONLY : rho, rho_core, rhog_core, tau_core, v
   USE io_rho_xml,           ONLY : read_scf
   USE vlocal,               ONLY : strf
   USE control_flags,        ONLY : gamma_only, use_gpu
@@ -399,7 +399,7 @@ SUBROUTINE post_xml_init (  )
      !ts_vdw = .false.
   END IF
   !
-  CALL v_of_rho( rho, rho_core, rhog_core, &
+  CALL v_of_rho( rho, rho_core, rhog_core, tau_core, &
        ehart, etxc, vtxc, eth, etotefield, charge, v )
   !
   ! ... recalculate the solvation potential (3D-RISM)

@@ -63,10 +63,12 @@ SUBROUTINE c_bands_nscf_ph( )
   !
   IF ( isolve == 0 ) THEN
      WRITE( stdout, '(5X,"Davidson diagonalization with overlap")' )
-  ELSE IF ( isolve == 1 ) THEN
+  ELSEIF ( isolve == 1 ) THEN
      WRITE( stdout, '(5X,"CG style diagonalization")')
+  ELSEIF ( isolve == 5 ) THEN
+     WRITE( stdout, '(5X,"Direct diagonalization of the dense Hamiltonian matrix")')
   ELSE
-     CALL errore ( 'c_bands', 'invalid type of diagonalization', isolve)
+     CALL errore ( 'c_bands_ph', 'invalid type of diagonalization', 1)
   END IF
   !
   ! ... For each k point (except those already calculated if restarting)

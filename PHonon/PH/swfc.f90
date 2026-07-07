@@ -30,6 +30,7 @@ SUBROUTINE swfc (npw_, nbnd_, vkb_, wfc_, swfc_)
   USE becmod, ONLY : becp, calbec
   USE uspp,   ONLY : vkb, nkb
   USE wvfct,  ONLY : npwx
+  USE control_flags, ONLY : offload_type
   
   IMPLICIT NONE
   
@@ -49,14 +50,20 @@ SUBROUTINE swfc (npw_, nbnd_, vkb_, wfc_, swfc_)
   !
   vkb_save = vkb
   vkb = vkb_
-  ! 
-  CALL calbec (npw_, vkb, wfc_, becp)
+  !$acc update device(vkb)
+  !
+  !$acc data copyin(wfc_) copyout(swfc_) 
+  !
+  CALL calbec (offload_type, npw_, vkb, wfc_, becp)
   !
   ! s_psi uses vkb
   !
   CALL s_psi (npwx, npw_, nbnd_, wfc_, swfc_)
   !
+  !$acc end data
+  !
   vkb = vkb_save
+  !$acc update device(vkb)
   ! 
   CALL stop_clock( 'swfc' )
   !

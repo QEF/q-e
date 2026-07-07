@@ -635,8 +635,6 @@ PROGRAM dvscf_q2r
   iunwpot = find_free_unit()
   lrwpot = 2 * dfftp%nr1x * dfftp%nr2x * dfftp%nr3x * nspin_mag
   !
-  CALL start_clock('w_pot')
-  !
   ALLOCATE(w_pot(dfftp%nnr, nspin_mag, nat*3))
   ALLOCATE(w_pot_gathered(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x, nspin_mag))
   !
@@ -741,7 +739,7 @@ PROGRAM dvscf_q2r
   CALL print_clock('calc_w_pot')
   CALL print_clock('write_w_pot')
   !
-  CALL environment_end('DVSCF_Q2R')
+  CALL environment_end( )
   CALL mp_global_end()
   !
 CONTAINS

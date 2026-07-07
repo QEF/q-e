@@ -19,11 +19,11 @@
         A. Marrazzo and N. Colonna, Phys. Rev. Research 6, 033085 (2024)  
      =--------------------------------------------------------------------------------=
 
-     Program KCW v.7.3.1 starts on 25Sep2024 at 15: 9:34 
+     Program KCW v.7.5 starts on 16Sep2025 at 20:34:36 
         Git branch: develop
-        Last git commit: bdd82480539e9b5a8a2317b314f3e3ce005b4fba-dirty
-        Last git commit date: Sat Sep 21 21:24:12 2024 +0000
-        Last git commit subject: Merge branch 'XClib_some_updates' into 'develop'
+        Last git commit: 7e86c4d7f8b367fcfbff0156d653f13ca55b1b03-dirty
+        Last git commit date: Tue Sep 16 17:33:36 2025 +0000
+        Last git commit subject: Merge branch 'vhpsi' into 'develop'
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -34,19 +34,19 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     8 processors
+     Parallel version (MPI), running on     4 processors
 
      MPI processes distributed on     1 nodes
-     R & G space division:  proc/nbgrp/npool/nimage =       8
-     204049 MiB available memory on the printing compute node when the environment starts
- 
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+     4904 MiB available memory on the printing compute node when the environment starts
+
 
      KCW INPUT SUMMARY 
      ============================================
 
       CONTROL 
        # title               =            KI H2O
-       # out_dir             =/home/colonna_n/CO
+       # out_dir             =/home/nicola/CODES
        # prefix              =                Si
        # calculation         =               ham
        # kcw_iverbosity      =                 1
@@ -60,6 +60,8 @@
        # assume_isolated     =              none
        # io_sp               =                 F
        # io_real_space       =                 F
+       # irr_bz              =                 F
+           # use_wct         =                 F
 
       WANNIER 
        # seedname            =                Si
@@ -84,7 +86,7 @@
 
      Reading xml data from directory:
 
-     /home/colonna_n/CODES/q-e-kcw/tempdir/Si.save/
+     /home/nicola/CODES/q-e-kcw/tempdir/Si.save/
 
      IMPORTANT: XC functional enforced from input :
      Exchange-correlation= PW
@@ -92,30 +94,30 @@
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
- 
+
      Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
-     Min          36      36     11                  410      410      76
-     Max          37      37     12                  412      412      77
+     Min          73      73     22                  821      821     152
+     Max          74      74     23                  823      823     153
      Sum         295     295     91                 3287     3287     609
- 
+
      Using Slab Decomposition
- 
+
      Reading collected, re-writing distributed wavefunctions
 
      INFO: total number of primitive cell    8
 
      READING SCREENING PARAMETERS
 
-     INFO: alphas read from:/home/colonna_n/CODES/q-e-kcw/tempdir/kcw/Si.alpha.dat                                                                                                                                                                                                          
-     iwann =     1   alpha =      0.30564463
-     iwann =     2   alpha =      0.30564460
-     iwann =     3   alpha =      0.30564455
-     iwann =     4   alpha =      0.30564462
-     iwann =     5   alpha =      0.23808869
-     iwann =     6   alpha =      0.23808935
-     iwann =     7   alpha =      0.23808821
+     INFO: alphas read from:/home/nicola/CODES/q-e-kcw/tempdir/kcw/Si.alpha.dat                                                                                                                                                                                                             
+     iwann =     1   alpha =      0.30564466
+     iwann =     2   alpha =      0.30564467
+     iwann =     3   alpha =      0.30564467
+     iwann =     4   alpha =      0.30564468
+     iwann =     5   alpha =      0.23808875
+     iwann =     6   alpha =      0.23808941
+     iwann =     7   alpha =      0.23808825
      iwann =     8   alpha =      0.23808891
 
      INFO: MLWF read from file: Reading collected, re-writing distributed wavefunctions
@@ -127,7 +129,7 @@
 
         KS Hamiltonian calculation at k=     -0.5000      0.5000     -0.5000   ...    DONE 
 
-        WANN      -3.3376    -0.7612     5.1093     5.1093     7.6771    11.9701    11.9701    15.2067
+        WANN      -3.3376    -0.7612     5.1093     5.1093     7.6771    11.9701    11.9701    15.2068
         PWSCF     -3.3376    -0.7612     5.1093     5.1093     7.6771     9.4935     9.4935    13.6075
 
         KS Hamiltonian calculation at k=      0.5000      0.5000      0.5000   ...    DONE 
@@ -243,7 +245,7 @@
 
           k =-0.5000 0.5000-0.5000     band energies (ev):
 
-          KS      -3.3376    -0.7612     5.1093     5.1093     7.6771    11.9701    11.9701    15.2067
+          KS      -3.3376    -0.7612     5.1093     5.1093     7.6771    11.9701    11.9701    15.2068
           KI      -4.2099    -1.6336     4.2369     4.2369     7.8868    12.1798    12.1798    15.4165
 
           k = 0.5000 0.5000 0.5000     band energies (ev):
@@ -353,7 +355,7 @@
 
         KC interpolated eigenvalues at k=      0.5875      0.1750      0.5875
 
-          -2.6702    -2.1971     2.3577     2.8135     6.9932     7.7691    15.6839    16.9768
+          -2.6702    -2.1971     2.3577     2.8134     6.9932     7.7691    15.6839    16.9768
 
         KC interpolated eigenvalues at k=      0.6000      0.2000      0.6000
 
@@ -421,7 +423,7 @@
 
         KC interpolated eigenvalues at k=      0.1500      0.1500      0.1500
 
-          -6.3962     4.3127     5.2166     5.2166     9.1136     9.6134     9.6134    10.4947
+          -6.3962     4.3127     5.2166     5.2166     9.1136     9.6134     9.6135    10.4947
 
         KC interpolated eigenvalues at k=      0.2000      0.2000      0.2000
 
@@ -493,7 +495,7 @@
 
         KC interpolated eigenvalues at k=      0.5000      0.2250      0.7250
 
-          -2.4428    -2.4428     2.5673     2.5673     7.6612     7.6623    16.3191    16.3202
+          -2.4428    -2.4428     2.5673     2.5673     7.6612     7.6623    16.3192    16.3202
 
         KC interpolated eigenvalues at k=      0.5000      0.2000      0.7000
 
@@ -513,7 +515,7 @@
 
         KC interpolated eigenvalues at k=      0.5000      0.1000      0.6000
 
-          -2.4181    -2.4181     2.5447     2.5447     7.2141     7.2144    16.4122    16.4125
+          -2.4181    -2.4181     2.5447     2.5447     7.2141     7.2145    16.4122    16.4125
 
         KC interpolated eigenvalues at k=      0.5000      0.0750      0.5750
 
@@ -534,39 +536,39 @@
      ENDING BAND STRUCTURE INTERPOLATION
 
 
-     Writing all to output data dir /home/colonna_n/CODES/q-e-kcw/tempdir/Si_kcw.save/ :
+     Writing all to output data dir /home/nicola/CODES/q-e-kcw/tempdir/Si_kcw.save/ :
      XML data file, pseudopotentials, collected wavefunctions
- 
-     KCW          :      0.19s CPU      0.24s WALL
+
+     KCW          :      0.20s CPU      0.22s WALL
 
      INITIALIZATION: 
- 
-     init_vloc    :      0.01s CPU      0.02s WALL (       1 calls)
+
+     init_vloc    :      0.00s CPU      0.00s WALL (       1 calls)
      init_us_1    :      0.00s CPU      0.00s WALL (       1 calls)
- 
- 
- 
- 
- 
+
+
+
+
+
      h_psi        :      0.00s CPU      0.00s WALL (       8 calls)
- 
+
      h_psi        :      0.00s CPU      0.00s WALL (       8 calls)
      add_vuspsi   :      0.00s CPU      0.00s WALL (       8 calls)
- 
- 
- 
+
+
+
       General routines
      calbec       :      0.00s CPU      0.00s WALL (       8 calls)
-     fft          :      0.00s CPU      0.00s WALL (       5 calls)
-     ffts         :      0.01s CPU      0.01s WALL (     512 calls)
+     fft          :      0.11s CPU      0.11s WALL (       5 calls)
+     ffts         :      0.02s CPU      0.02s WALL (     512 calls)
      fftw         :      0.00s CPU      0.00s WALL (     128 calls)
      davcio       :      0.00s CPU      0.00s WALL (      72 calls)
- 
- 
-     KCW          :      0.19s CPU      0.24s WALL
 
- 
-   This run was terminated on:  15: 9:34  25Sep2024            
+
+     KCW          :      0.20s CPU      0.27s WALL
+
+
+   This run was terminated on:  20:34:36  16Sep2025            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

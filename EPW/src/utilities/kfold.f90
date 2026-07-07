@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
@@ -37,14 +38,14 @@
     !
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg
-    USE klist,         ONLY : nkstot, xk
     USE input,         ONLY : nkc1, nkc2, nkc3
     USE io_files,      ONLY : prefix
     USE io_var,        ONLY : iukmap
-    USE input,         ONLY : kmap
-    USE io_global,     ONLY : meta_ionode
+    USE mp_global,     ONLY : my_image_id
+    USE input,         ONLY : kmap, xk_all, lsda
+    USE io_global,     ONLY : meta_ionode, ionode
     USE mp,            ONLY : mp_barrier
-    USE global_var,    ONLY : xkq
+    USE global_var,    ONLY : xkq, nkpts
     USE ep_constants,  ONLY : eps5, zero
     !
     IMPLICIT NONE
@@ -77,14 +78,23 @@
     !! Mapping index of k+q on k
     REAL(KIND = DP) :: xk_q(3)
     !! Coords. of k+q-point
-    REAL(KIND = DP) :: xx_c(nkstot), yy_c(nkstot), zz_c(nkstot)
+    REAL(KIND = DP) :: xx_c(nkpts), yy_c(nkpts), zz_c(nkpts)
     !! k-points in crystal coords. in multiple of nkc1, nkc2, nkc3
     REAL(KIND = DP) :: xx, yy, zz
     !! k+q in crystal coords. in multiple of nkc1, nkc2, nkc3
     REAL(KIND = DP) :: xx_n, yy_n, zz_n
     !! k+q in crystal coords. in multiple of nkc1, nkc2, nkc3 in 1st BZ
+    CHARACTER(LEN = 256) :: my_image_id_ch
+    !! Image ID
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer file name
     !
-    IF (meta_ionode) THEN
+    WRITE(my_image_id_ch, "(I0)") my_image_id
+    ! 
+    fnm = ''
+    IF (TRIM(lsda) == 'down') fnm = '.down'
+    !
+    IF (ionode) THEN
       !
       !  Now fold k+q back into the k-grid for wannier interpolation.
       !  Since this is done before divide and impera, every pool has all the kpoints.
@@ -117,15 +127,15 @@
       !
       !  bring all the k points from cartesian to crystal coordinates
       !
-      CALL cryst_to_cart(nkstot, xk, at, -1)
+      CALL cryst_to_cart(nkpts, xk_all, at, -1)
       !
-      DO ik = 1, nkstot
+      DO ik = 1, nkpts
         !
         !  check that the k's are actually on a uniform mesh centered at gamma
         !
-        xx_c(ik) = xk(1, ik) * nkc1
-        yy_c(ik) = xk(2, ik) * nkc2
-        zz_c(ik) = xk(3, ik) * nkc3
+        xx_c(ik) = xk_all(1, ik) * nkc1
+        yy_c(ik) = xk_all(2, ik) * nkc2
+        zz_c(ik) = xk_all(3, ik) * nkc3
         in_the_list = ABS(xx_c(ik) - NINT(xx_c(ik))) <= eps5 .AND. &
                       ABS(yy_c(ik) - NINT(yy_c(ik))) <= eps5 .AND. &
                       ABS(zz_c(ik) - NINT(zz_c(ik))) <= eps5
@@ -136,11 +146,11 @@
         ENDIF
       ENDDO
       !
-      DO ik = 1, nkstot
+      DO ik = 1, nkpts
         !
         ! Now add the phonon wavevector and check that k+q falls again on the k grid
         !
-        xk_q(:) = xk(:, ik) + xq(:)
+        xk_q(:) = xk_all(:, ik) + xq(:)
         !
         xx = xk_q(1) * nkc1
         yy = xk_q(2) * nkc2
@@ -166,7 +176,7 @@
         !
         n = 0
         found = .FALSE.
-        DO jk = 1, nkstot
+        DO jk = 1, nkpts
           found = NINT(xx_c(jk)) == NINT(xx_n) .AND. &
                   NINT(yy_c(jk)) == NINT(yy_n) .AND. &
                   NINT(zz_c(jk)) == NINT(zz_n)
@@ -208,22 +218,22 @@
         ! very important: now redefine k+q through the corresponding kpoint on the k mesh
         ! Note that this will require using the periodic gauge in the calculation of the
         ! electron-phonon matrix elements (factor e^iG_0*r if G_0 is the vector used for refolding)
-        xkq(:, ik) = xk(:, n)
+        xkq(:, ik) = xk_all(:, n)
         !
       ENDDO
       !
       ! bring k-points, q-point, and G_0-vectors back to cartesian coordinates
       !
       CALL cryst_to_cart(1, xq, bg, 1)
-      CALL cryst_to_cart(nkstot, xk, bg, 1)
+      CALL cryst_to_cart(nkpts, xk_all, bg, 1)
       !
       g0vec_all_r = DBLE(g0vec_all)
       CALL cryst_to_cart(ng0vec, g0vec_all_r, bg, 1)
       !
       !  the unit with kmap(ik) and shift(ik)
       !
-      OPEN(iukmap, FILE = TRIM(prefix) // '.kmap', FORM = 'formatted')
-      DO ik = 1, nkstot
+      OPEN(iukmap, FILE = TRIM(prefix)// '_' // TRIM(my_image_id_ch) // TRIM(fnm) // '.kmap', FORM = 'formatted')
+      DO ik = 1, nkpts
         WRITE(iukmap,'(3i6)') ik, kmap(ik), shift(ik)
       ENDDO
       CLOSE(iukmap)
@@ -248,10 +258,9 @@
     !
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg
-    USE klist,         ONLY : nkstot, xk
-    USE input,         ONLY : kmap
+    USE input,         ONLY : kmap, xk_all
     USE input,         ONLY : nkc1, nkc2, nkc3
-    USE global_var,    ONLY : xkq
+    USE global_var,    ONLY : xkq, nkpts
     USE ep_constants,  ONLY : eps5, zero
     !
     IMPLICIT NONE
@@ -270,7 +279,7 @@
     !! Another k-point index
     INTEGER :: n
     !! Mapping index of k+q on k
-    REAL(KIND = DP) :: xx_c(nkstot), yy_c(nkstot), zz_c(nkstot)
+    REAL(KIND = DP) :: xx_c(nkpts), yy_c(nkpts), zz_c(nkpts)
     !! k-points in crystal coords. in multiple of nkc1, nkc2, nkc3
     REAL(KIND = DP) :: xx, yy, zz
     !! k+q in crystal coords. in multiple of nkc1, nkc2, nkc3
@@ -290,15 +299,15 @@
     !
     !  bring all the k-points from cartesian to crystal coordinates
     !
-    CALL cryst_to_cart(nkstot, xk, at, -1)
+    CALL cryst_to_cart(nkpts, xk_all, at, -1)
     !
-    DO ik = 1, nkstot
+    DO ik = 1, nkpts
       !
       !  check that the k's are actually on a uniform mesh centered at gamma
       !
-      xx_c(ik) = xk(1, ik) * nkc1
-      yy_c(ik) = xk(2, ik) * nkc2
-      zz_c(ik) = xk(3, ik) * nkc3
+      xx_c(ik) = xk_all(1, ik) * nkc1
+      yy_c(ik) = xk_all(2, ik) * nkc2
+      zz_c(ik) = xk_all(3, ik) * nkc3
       in_the_list = ABS(xx_c(ik) - NINT(xx_c(ik))) <= eps5 .AND. &
                     ABS(yy_c(ik) - NINT(yy_c(ik))) <= eps5 .AND. &
                     ABS(zz_c(ik) - NINT(zz_c(ik))) <= eps5
@@ -309,11 +318,11 @@
       ENDIF
     ENDDO
     !
-    DO ik = 1, nkstot
+    DO ik = 1, nkpts
       !
       ! now add the phonon wavevector and check that k+q falls again on the k grid
       !
-      xkq(:, ik) = xk(:, ik) + xxq(:)
+      xkq(:, ik) = xk_all(:, ik) + xxq(:)
       !
       xx = xkq(1, ik) * nkc1
       yy = xkq(2, ik) * nkc2
@@ -331,7 +340,7 @@
       !
       n = 0
       found = .FALSE.
-      DO jk = 1, nkstot
+      DO jk = 1, nkpts
         !
         found = NINT(xx_c(jk)) == NINT(xx) .AND. &
                 NINT(yy_c(jk)) == NINT(yy) .AND. &
@@ -351,7 +360,7 @@
     ! bring everybody back to cartesian coordinates
     !
     CALL cryst_to_cart(1, xxq, bg, 1)
-    CALL cryst_to_cart(nkstot, xk, bg, 1)
+    CALL cryst_to_cart(nkpts, xk_all, bg, 1)
     !
     RETURN
     !-------------------------------------------------------------------------
@@ -366,10 +375,9 @@
     !!
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : bg
-    USE input,         ONLY : nkc1, nkc2, nkc3
     USE pwcom,         ONLY : nkstot
-    USE input,         ONLY : xk_cryst
-    USE io_global,     ONLY : stdout, meta_ionode, meta_ionode_id
+    USE io_global,     ONLY : stdout, meta_ionode, meta_ionode_id,ionode_id,ionode
+    USE input,         ONLY : nkc1, nkc2, nkc3, xk_cryst, lsda
     USE io_files,      ONLY : prefix
     USE io_var,        ONLY : iukgmap
     USE gvect,         ONLY : mill
@@ -380,8 +388,9 @@
     USE f90_unix_io,   ONLY : flush
 #endif
     USE mp_world,      ONLY : world_comm
-    USE mp,            ONLY : mp_bcast
-    USE global_var,    ONLY : mapg, ngxx, ngxxf
+    USE mp_global,     ONLY : inter_pool_comm, my_image_id
+    USE mp,            ONLY : mp_bcast, mp_barrier
+    USE global_var,    ONLY : mapg, ngxx, ngxxf, nkpts 
     !
     IMPLICIT NONE
     !
@@ -406,13 +415,17 @@
     !! Error status
     REAL(KIND = DP) :: xx, yy, zz
     !! k-point in crystal coords. in multiple of nkc1, nkc2, nkc3
+    CHARACTER(LEN = 256) :: fnm
+    !! buffer file name
     !
-    IF (meta_ionode) THEN
+    IF (ionode) THEN
+      fnm = ''
+      IF (TRIM(lsda) == 'down') fnm = '.down'
       !
       WRITE(stdout, '(/5x,a)') 'Calculating kgmap'
       FLUSH(stdout)
       !
-      OPEN(iukgmap, FILE = TRIM(prefix) // '.kgmap', FORM = 'formatted')
+      OPEN(iukgmap, FILE = TRIM(prefix)// TRIM(fnm) // '.kgmap', FORM = 'formatted')
       !
       ! the 5^3 possible G_0 translations
       ng0vec = 0
@@ -480,11 +493,11 @@
       ngxxf = MAXVAL(gmap(:))
       WRITE(iukgmap, *) ngxxf
       !
-      ALLOCATE(shift(nkstot), STAT = ierr)
+      ALLOCATE(shift(nkpts), STAT = ierr)
       IF (ierr /= 0) CALL errore('createkmap_pw2', 'Error allocating shift', 1)
       !
       ig0 = NINT(DBLE(ng0vec) / 2)
-      DO ik = 1, nkstot
+      DO ik = 1, nkpts
         !
         xx = xk_cryst(1, ik) * nkc1
         yy = xk_cryst(2, ik) * nkc2
@@ -518,19 +531,21 @@
       !
     ENDIF
     !
-    CALL mp_bcast(ngxxf, meta_ionode_id, world_comm)
-    CALL mp_bcast(ng0vec, meta_ionode_id, world_comm)
-    CALL mp_bcast(g0vec_all_r, meta_ionode_id, world_comm)
-    IF (.NOT. meta_ionode) THEN
+    CALL mp_bcast(ngxxf, ionode_id, inter_pool_comm)
+    CALL mp_bcast(ng0vec, ionode_id, inter_pool_comm)
+    CALL mp_bcast(g0vec_all_r, ionode_id, inter_pool_comm)
+    ! 
+    IF (.NOT. ionode) THEN
       ALLOCATE(gmap(ngxx * ng0vec), STAT = ierr)
       IF (ierr /= 0) CALL errore('createkmap_pw2', 'Error allocating gmap', 1)
       gmap(:) = 0
     ENDIF
-    CALL mp_bcast(gmap, meta_ionode_id, world_comm)
+    !
+    CALL mp_bcast(gmap, ionode_id, inter_pool_comm)
+    !
     WRITE(stdout, *)
     !
-    !CALL mp_barrier(inter_pool_comm)
-    !CALL mp_barrier(inter_image_comm)
+    CALL mp_barrier(inter_pool_comm)
     !
     RETURN
     !
@@ -599,6 +614,8 @@
     USE mp_images,      ONLY : nproc_image
     USE mp,             ONLY : mp_barrier, mp_bcast
     USE ep_constants,   ONLY : eps5
+    USE global_var,     ONLY : nkpts
+    USE lsda_mod,       ONLY : current_spin
     !
     IMPLICIT NONE
     !
@@ -686,7 +703,7 @@
     !
     n = 0
     found = .FALSE.
-    DO ik = 1, nkstot
+    DO ik = 1, nkpts
       xx_c = xk_cryst(1, ik) * nkc1
       yy_c = xk_cryst(2, ik) * nkc2
       zz_c = xk_cryst(3, ik) * nkc3
@@ -701,7 +718,7 @@
               NINT(yy_c) == NINT(yy) .AND. &
               NINT(zz_c) == NINT(zz)
       IF (found) THEN
-        n = ik
+        n = ik + (current_spin - 1) * nkpts
         EXIT
       ENDIF
     ENDDO

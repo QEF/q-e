@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Jesse Noffsinger, Brad Malone, Feliciano Giustino
@@ -862,7 +863,7 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE fermi_carrier_indabs(itemp, etemp_fca, ef0_fca, ctype)
+    SUBROUTINE fermi_carrier_indabs(itemp, etemp_fca, ef0_fca, ctype, wkf, etf, nbndsub)
     !-----------------------------------------------------------------------
     !! Xiao Zhang: Implemented 03/2021
     !! This is a slightly modified version of subroutine fermicarrier
@@ -874,14 +875,13 @@
     USE kinds,            ONLY : DP
     USE cell_base,        ONLY : omega, alat, at
     USE io_global,        ONLY : stdout
-    USE global_var,       ONLY : etf, nkf, wkf, nkqf, evbm, ecbm
+    USE global_var,       ONLY : nkf, nkqf, evbm, ecbm, spin_fac
     USE ep_constants,     ONLY : ryd2ev, bohr2ang, ang2cm, eps5, kelvin2eV, &
                                  zero, eps80, eps6
     USE noncollin_module, ONLY : noncolin
     USE pwcom,            ONLY : nelec
-    USE input,            ONLY : nbndsub, ncarrier, nstemp, &
-                                 system_2d, assume_metal, ngaussw
-    USE input,            ONLY : isk_dummy
+    USE input,            ONLY : ncarrier, nstemp, system_2d, assume_metal, &
+                                 ngaussw, isk_dummy, lsda
     USE mp,               ONLY : mp_barrier, mp_sum, mp_max, mp_min
     USE mp_global,        ONLY : inter_pool_comm
     !
@@ -889,10 +889,16 @@
     !
     INTEGER, INTENT(in) :: itemp
     !! Temperature index
+    INTEGER, INTENT(in) :: nbndsub
+    !! Number of bands
     INTEGER, INTENT(out) :: ctype
     !! Calculation type: -1 = hole, +1 = electron and 0 = both.
     REAL(KIND = DP), INTENT(in) :: etemp_fca
     !! Temperature in kBT [Ry] unit.
+    REAL(KIND = DP), INTENT(in) :: wkf(nkqf)
+    !! Integration weights
+    REAL(KIND = DP), INTENT(in) :: etf(nbndsub, nkqf)
+    !! Eigenvalues on the fine mesh
     REAL(KIND = DP), INTENT(inout) :: ef0_fca(nstemp)
     !! Fermi level for the temperature itemp
 !    REAL(KIND = DP), INTENT(inout) :: efcb(nstemp)
@@ -968,11 +974,7 @@
       inv_cell = ( 1.0d0 / omega ) * at(3, 3) * alat
     ENDIF
     ! vbm index
-    IF (noncolin) THEN
-      ivbm = FLOOR(nelec / 1.0d0)
-    ELSE
-      ivbm = FLOOR(nelec / 2.0d0)
-    ENDIF
+    ivbm = FLOOR(nelec / spin_fac)
     icbm = ivbm + 1 ! Nb of bands
     !
     ! Initialization value. Should be large enough ...

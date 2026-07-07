@@ -83,7 +83,7 @@ PROGRAM wannier_plot
 
   CALL stop_pp
 
-  CALL environment_end ( 'WANNIER_PLOT' )
+  CALL environment_end( )
 
   CALL wannier_clean()
 

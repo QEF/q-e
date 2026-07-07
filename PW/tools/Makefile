@@ -2,6 +2,8 @@
 
 include ../../make.inc
 
+VPATH = @srcdir@
+
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../src \
@@ -9,9 +11,11 @@ MODFLAGS= $(BASEMOD_FLAGS) \
 QEMODS = ../../dft-d3/libdftd3qe.a $(BASEMODS)
 PWOBJS = ../src/libpw.a ../../KS_Solvers/libks_solvers.a
 
+# see comments in file tldeps for explanations
 TLDEPS= pwlibs
+include ../../install/tldeps
 
-all : tldeps ev.x kpoints.x pwi2xsf.x ibrav2cell.x cell2ibrav.x scan_ibrav.x rism1d.x
+all : ev.x kpoints.x pwi2xsf.x ibrav2cell.x cell2ibrav.x scan_ibrav.x rism1d.x
 
 ibrav2cell.x : ibrav2cell.o $(PWOBJS) $(QEMODS) 
 	$(LD) $(LDFLAGS) -o $@ \
@@ -46,11 +50,10 @@ rism1d.x : rism1d.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 		rism1d.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PW/tools/$@ . )
 
-tldeps:
-	if test -n "$(TLDEPS)" ; then \
-	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
-
 clean :
-	- /bin/rm -f pwi2xsf pwi2xsf_old *.x *.o *~ *_tmp.f90 *.mod *.d *.i *.L
+	- /bin/rm -f *.x *.o *~ *_tmp.f90 *.mod *.d *.i *.L
+
 
 include make.depend
+
+

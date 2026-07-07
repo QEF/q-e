@@ -342,7 +342,7 @@ CONTAINS
 
       USE kinds,             ONLY: DP
       USE io_global,         ONLY: stdout
-      USE control_flags,     ONLY: ortho_eps, ortho_max
+      USE cp_control,        ONLY: ortho_eps, ortho_max
       USE mp_bands,          ONLY: intra_bgrp_comm, me_bgrp, nproc_bgrp
       USE mp_world,          ONLY: mpime
       USE mp,                ONLY: mp_sum, mp_max
@@ -486,7 +486,6 @@ CONTAINS
       USE gvecw,              ONLY: ngw
       USE gvect, ONLY: gstart
       USE mp,                 ONLY: mp_root_sum, mp_sum
-      USE control_flags,      ONLY: iverbosity
       USE io_global,          ONLY: stdout
       USE mp_bands,           ONLY: intra_bgrp_comm, inter_bgrp_comm, my_bgrp_id, nbgrp
 !
@@ -629,7 +628,6 @@ CONTAINS
       USE kinds,              ONLY: DP
       USE mp,                 ONLY: mp_root_sum, mp_sum
       USE mp_bands,           ONLY: intra_bgrp_comm, me_bgrp, inter_bgrp_comm, my_bgrp_id, nbgrp
-      USE control_flags,      ONLY: iverbosity
       USE io_global,          ONLY: stdout
 !
       IMPLICIT NONE
@@ -801,7 +799,6 @@ CONTAINS
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart
       USE mp,                 ONLY: mp_root_sum, mp_sum, mp_barrier
-      USE control_flags,      ONLY: iverbosity
       USE io_global,          ONLY: stdout
       USE mp_bands,           ONLY: intra_bgrp_comm, inter_bgrp_comm, my_bgrp_id, nbgrp
       USE mp_world,           ONLY: mpime
@@ -947,7 +944,6 @@ CONTAINS
       USE uspp,              ONLY: nkb, nkbus
       USE uspp_param,        ONLY: nh
       USE gvecw,             ONLY: ngw
-      USE control_flags,     ONLY: iverbosity
       USE mp,                ONLY: mp_sum, mp_bcast
       USE mp_bands,          ONLY: intra_bgrp_comm, me_bgrp, inter_bgrp_comm
       USE electrons_base,    ONLY: nbspx_bgrp, ibgrp_g2l, nbsp, nspin,  nupdwn, iupdwn, nbspx
@@ -1177,7 +1173,6 @@ CONTAINS
       USE gvecw,          ONLY: ngw
       USE electrons_base, ONLY: nbsp_bgrp, nbsp
       USE constants,      ONLY: pi, fpi
-      USE control_flags,  ONLY: iverbosity
       USE mp,             ONLY: mp_sum
 #if defined (__CUDA)
       USE cudafor

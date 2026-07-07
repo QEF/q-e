@@ -72,7 +72,9 @@ MODULE autopilot
   !---------------------------------------------------------------------------
 
   USE kinds
-  USE parser, ONLY :  read_line
+  USE parser,    ONLY : read_line
+  USE upf_utils, ONLY : matches, capital
+  USE io_global, ONLY : ionode
 
   IMPLICIT NONE
   SAVE
@@ -230,7 +232,7 @@ CONTAINS
     !---------------------------------------------------------------------
     !! Checks if restart files are present.
     !
-    USE io_global, ONLY: ionode, ionode_id
+    USE io_global, ONLY : ionode_id
     USE mp,        ONLY : mp_bcast
     USE mp_world,  ONLY : world_comm
     IMPLICIT NONE
@@ -334,21 +336,17 @@ CONTAINS
     !--------------------------------------------------------------------
     !! Called in READ_CARDS and in PARSE_MAILBOX.
     !
-    USE io_global, ONLY: ionode
-    !
     IMPLICIT NONE
     !
     CHARACTER(LEN=256) :: input_line
     !
     ! ... local variables
     !
-    INTEGER :: i, j, linelen
+    INTEGER :: i, j
     LOGICAL            :: process_this_line = .FALSE.
     LOGICAL            :: endrules = .FALSE.
     LOGICAL            :: tend = .FALSE.
     LOGICAL, SAVE      :: tread = .FALSE.
-    LOGICAL, EXTERNAL  :: matches
-    CHARACTER(LEN=1), EXTERNAL :: capital
 
     !ASU: copied this here since it seems not to be executed during each
     !     call of the routine. Needed for multiple rules in same block
@@ -406,11 +404,7 @@ CONTAINS
           CALL read_line( input_line, end_of_file = tend)
        END IF
        
-       linelen = LEN_TRIM( input_line )
-
-       DO i = 1, linelen
-          input_line( i : i ) = capital( input_line( i : i ) )
-       END DO
+       input_line = capital( TRIM(input_line) )
 
        ! If ENDRULES isnt found, add_rule will fail
        ! and we run out of line anyway
@@ -439,8 +433,6 @@ CONTAINS
     !---------------------------------------------------------------------
     !! ADD RULE
     !
-    USE io_global, ONLY: ionode
-    !
     IMPLICIT NONE
     !
     CHARACTER(LEN=256) :: input_line
@@ -455,7 +447,6 @@ CONTAINS
     integer            :: ios
     integer            :: event
 
-    LOGICAL, EXTERNAL  :: matches
     LOGICAL            :: new_event
 
 
@@ -708,8 +699,6 @@ CONTAINS
     !---------------------------------------------------------------------
     !! ASSIGN RULE
     !
-    USE io_global, ONLY: ionode
-    !
     IMPLICIT NONE
     !
     INTEGER :: event
@@ -718,22 +707,15 @@ CONTAINS
     !
     ! ... local variables
     !
-    INTEGER   :: i, varlen
+    INTEGER   :: i
     INTEGER   :: int_value
     LOGICAL   :: logical_value
     REAL      :: real_value
     REAL(DP) :: realDP_value
     LOGICAL   :: assigned
-    LOGICAL, EXTERNAL  :: matches
-    CHARACTER(LEN=1), EXTERNAL :: capital
 
 
-    var = TRIM(var)
-    varlen = LEN_TRIM(var)
-
-    DO i = 1, varlen
-       var( i : i ) = capital( var( i : i ) )
-    END DO
+    var = capital( TRIM(var) )
 
 
     IF( ionode ) write(*,'("   Reading rule: ",A20,A20)' ) var, value
@@ -840,25 +822,17 @@ CONTAINS
     !! * if it starts with ON_STEP, then apply to event table etc;
     !! * if not the try to establish that its a variable to set right now.
     !
-    USE io_global, ONLY: ionode
-    !
     IMPLICIT NONE
     !
     INTEGER :: i
     CHARACTER(LEN=256) :: input_line
     LOGICAL            :: tend
 
-    CHARACTER(LEN=1), EXTERNAL :: capital
-    LOGICAL, EXTERNAL  :: matches
-
-
     ! we can use this parser routine, since parse_unit=pilot_unit
     CALL read_line( input_line, end_of_file=tend )
     IF (tend) GO TO 50
 
-    DO i = 1, LEN_TRIM( input_line )
-       input_line( i : i ) = capital( input_line( i : i ) )
-    END DO
+    input_line = capital( TRIM(input_line) )
 
     ! This conditional implements the PAUSE feature calling init_auto_pilot, 
     ! will reset this modules global PAUSE_P variable to FALSE

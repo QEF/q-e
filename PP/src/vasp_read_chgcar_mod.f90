@@ -50,8 +50,7 @@ MODULE vasp_read_chgcar
       USE fft_base,      ONLY : dfftp
       USE fft_interfaces, ONLY : fwfft
       USE scatter_mod,   ONLY : scatter_grid
-      USE scf,           ONLY : scf_type, create_scf_type
-      USE scf,           ONLY : rho, create_scf_type
+      USE scf,           ONLY : rho
       USE ions_base,     ONLY : nat, atm
       USE io_files,      ONLY : tmp_dir
       USE lsda_mod,      ONLY : nspin

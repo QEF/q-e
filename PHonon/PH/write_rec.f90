@@ -22,38 +22,29 @@ MODULE recover_mod
 CONTAINS
 
   !-----------------------------------------------------------------------
-  SUBROUTINE write_rec( where, irr, dr2, iter, convt, npe, dvscfin, &
-                        drhop, dbecsum )
+  SUBROUTINE write_rec( where, irr, dr2, iter, convt, dfpt_data )
     !-----------------------------------------------------------------------
     !! This routine saves the information needed to recover the phonon.
     !
     USE kinds, ONLY : DP
-    USE ions_base, ONLY : nat
-    USE uspp_param, ONLY : nhm
-    USE lsda_mod,  ONLY : nspin
     USE units_ph, ONLY : this_pcxpsi_is_on_file
-    USE noncollin_module, ONLY : nspin_mag
-    USE fft_base, ONLY : dfftp
-    USE uspp, ONLY : okvan, nlcc_any
+    USE uspp, ONLY : okvan
+    USE paw_variables, ONLY : okpaw
     USE phus, ONLY : int1, int2
     USE control_lr, ONLY : where_rec, rec_code, reduce_io
     USE control_ph, ONLY : current_iq
     USE ph_restart, ONLY : ph_writefile
     USE efield_mod, ONLY : zstareu0, zstarue0
     USE io_files, ONLY : seqopn
-
+    USE dfpt_type, ONLY : dfpt_data_type
     USE lrus,   ONLY : int3
-    USE eqv,    ONLY : drhos
-    USE qpoint, ONLY : nksq
 
     IMPLICIT NONE
     CHARACTER(LEN=10), INTENT(IN) :: where
-    INTEGER, INTENT(IN) :: irr, iter, npe
+    INTEGER, INTENT(IN) :: irr, iter
     LOGICAL, INTENT(IN) :: convt
     REAL(DP), INTENT(IN) :: dr2
-    COMPLEX(DP), INTENT(IN) :: dvscfin(dfftp%nnr,nspin_mag,npe)
-    COMPLEX(DP), INTENT(IN), OPTIONAL :: drhop (dfftp%nnr, nspin_mag, npe)
-    COMPLEX(DP), INTENT(IN), OPTIONAL :: dbecsum((nhm*(nhm+1))/2,nat,nspin_mag,npe)
+    TYPE(dfpt_data_type), INTENT(INOUT) :: dfpt_data
 
     INTEGER :: ierr
     LOGICAL :: exst
@@ -68,48 +59,45 @@ CONTAINS
     where_rec=where
     CALL ph_writefile('status_ph',current_iq,0,ierr)
     IF (where=='done_drhod') CALL ph_writefile('data_dyn',current_iq,irr,ierr)
-    IF (reduce_io ) THEN
-            CALL stop_clock ('write_rec')   
-            RETURN
+    IF (reduce_io) THEN
+       CALL stop_clock ('write_rec')   
+       RETURN
     ENDIF
     CALL seqopn (iunrec, 'recover', 'unformatted', exst)
     !
     ! info on current iteration (iter=0 potential mixing not available)
     !
-    IF (reduce_io.or.convt) THEN
+    IF (convt) THEN
        WRITE (iunrec) 0, dr2, convt
     ELSE
        WRITE (iunrec) iter, dr2, convt
     ENDIF
     WRITE (iunrec) this_pcxpsi_is_on_file
     WRITE (iunrec) zstareu0, zstarue0
-    WRITE (iunrec) dvscfin
-    IF (PRESENT(drhop).AND.convt.AND.nlcc_any) WRITE (iunrec) drhop
-    IF (convt.AND.ALLOCATED(drhos)) WRITE(iunrec) drhos
-    IF (PRESENT(dbecsum)) WRITE(iunrec) dbecsum
+    WRITE (iunrec) dfpt_data%dvscfp
+    WRITE (iunrec) dfpt_data%drhop
+    WRITE (iunrec) dfpt_data%drhos
+    IF (okpaw) WRITE (iunrec) dfpt_data%dbecsum
     IF (okvan) WRITE (iunrec) int1, int2, int3
 
     CLOSE (UNIT = iunrec, STATUS = 'keep')
 
-    rec_code = 0
     CALL stop_clock ('write_rec')
 
     RETURN
   END SUBROUTINE write_rec
   
   !-----------------------------------------------------------------------------------
-  SUBROUTINE read_rec( dr2, iter0, npe, dvscfin, dvscfins, drhop, dbecsum )
+  SUBROUTINE read_rec( dr2, iter0, dfpt_data)
     !--------------------------------------------------------------------------------
     !! General restart reading routine.
     !
     USE kinds, ONLY : DP
-    USE ions_base, ONLY : nat
-    USE uspp_param, ONLY : nhm
     USE gvecs, ONLY : doublegrid
     USE fft_base, ONLY : dfftp, dffts
     USE fft_interfaces, ONLY : fft_interpolate
-    USE uspp,  ONLY : okvan, nlcc_any
-    USE lsda_mod, ONLY : nspin
+    USE uspp,  ONLY : okvan
+    USE paw_variables, ONLY : okpaw
     USE noncollin_module, ONLY : noncolin, nspin_mag
     USE units_ph, ONLY : this_pcxpsi_is_on_file
     USE control_lr, ONLY : convt
@@ -117,18 +105,13 @@ CONTAINS
     USE efield_mod, ONLY : zstareu0, zstarue0
     USE phus, ONLY : int1, int2
     USE io_files, ONLY : seqopn
-
+    USE dfpt_type, ONLY : dfpt_data_type
     USE lrus, ONLY : int3
-    USE eqv,  ONLY : drhos
 
     IMPLICIT NONE
     INTEGER, INTENT(OUT) :: iter0
-    INTEGER, INTENT(IN)  :: npe
     REAL(DP), INTENT(OUT) :: dr2
-    COMPLEX(DP), INTENT(OUT) :: dvscfin (dfftp%nnr, nspin_mag, npe)
-    COMPLEX(DP), INTENT(OUT) :: dvscfins (dffts%nnr, nspin_mag, npe)
-    COMPLEX(DP), INTENT(OUT), OPTIONAL :: drhop (dfftp%nnr, nspin_mag, npe)
-    COMPLEX(DP), INTENT(OUT), OPTIONAL :: dbecsum((nhm*(nhm+1))/2,nat,nspin_mag,npe)
+    TYPE(dfpt_data_type), INTENT(INOUT) :: dfpt_data
 
     INTEGER :: is, ipol
     LOGICAL :: exst
@@ -138,24 +121,31 @@ CONTAINS
     READ (iunrec) iter0, dr2, convt
     READ (iunrec) this_pcxpsi_is_on_file
     READ (iunrec) zstareu0, zstarue0
-    READ (iunrec) dvscfin
-    IF (convt.AND.nlcc_any) READ(iunrec) drhop
-    IF (convt.AND.ALLOCATED(drhos)) READ(iunrec) drhos
-    IF (PRESENT(dbecsum)) READ(iunrec) dbecsum
+    READ (iunrec) dfpt_data%dvscfp
+    READ (iunrec) dfpt_data%drhop
+    READ (iunrec) dfpt_data%drhos
+    !
+    ! If not PAW, dbecsum is used only for the calculation of drhop, so we do not need it
+    ! for restart. For PAW, we need dbecsum for restart.
+    IF (okpaw) READ (iunrec) dfpt_data%dbecsum
+    !
     IF (okvan) THEN
        READ (iunrec) int1, int2, int3
        IF (noncolin) THEN
           CALL set_int12_nc(0)
-          CALL set_int3_nc(npe)
+          CALL set_int3_nc(dfpt_data%npert)
        END IF
     END IF
     CLOSE (UNIT = iunrec, STATUS = 'keep')
+    !
     IF (doublegrid) THEN
        DO is=1,nspin_mag
-          DO ipol=1,npe
-             CALL fft_interpolate (dfftp, dvscfin(:,is,ipol), dffts, dvscfins(:,is,ipol))
+          DO ipol=1,dfpt_data%npert
+             CALL fft_interpolate (dfftp, dfpt_data%dvscfp(:,is,ipol), dffts, dfpt_data%dvscfs(:,is,ipol))
           END DO
        END DO
+    ELSE
+       CALL zcopy(dfftp%nnr*nspin_mag*dfpt_data%npert, dfpt_data%dvscfp, 1, dfpt_data%dvscfs, 1)
     END IF
     ext_recover=.FALSE.
     CALL stop_clock ('read_rec')

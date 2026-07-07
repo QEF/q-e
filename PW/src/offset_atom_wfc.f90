@@ -37,7 +37,6 @@ SUBROUTINE offset_atom_wfc( hubbard_only, lflag, offset, counter )
                       label_hub,     & ! Label of the first Hubbard manifold
                       label_hub2,    & ! Label of the second Hubbard manifold
                       label_hub3       ! Label of the third Hubbard manifold
-  CHARACTER(LEN=2) :: label_aux
   CHARACTER(LEN=2), ALLOCATABLE :: label(:)
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
@@ -83,8 +82,7 @@ SUBROUTINE offset_atom_wfc( hubbard_only, lflag, offset, counter )
         !
         ! Label of the n-th atomic orbital for the atom na of type nt
         ! (if lowercase, then capitalize)
-        label_aux = upf(nt)%els(n)
-        label(n) = label_aux(1:1) // capital(label_aux(2:2))
+        label(n) = capital(TRIM(upf(nt)%els(n)))
         !
         IF (TRIM(label(n))=='') &
                 CALL errore('offset_atom_wfc', 'The pseudo for ' // atm(nt) // &

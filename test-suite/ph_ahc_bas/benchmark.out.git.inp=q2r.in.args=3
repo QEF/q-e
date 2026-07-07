@@ -1,5 +1,5 @@
 
-     Program Q2R v.7.2 starts on  7Dec2023 at 18:14:13 
+     Program Q2R v.7.6-dev starts on  6Jul2026 at 10:26:11 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -10,37 +10,41 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     1 processors
+     Parallel version (MPI), running on     4 processors
 
      MPI processes distributed on     1 nodes
-     38562 MiB available memory on the printing compute node when the environment starts
- 
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+     7963 MiB available memory on the printing compute node when the environment starts
+
 
   reading grid info from file BAs.dyn0    
 
   reading force constants from file BAs.dyn1
  macroscopic fields = T
-  20.35449   0.00000   0.00000
-   0.00000  20.35449   0.00000
-   0.00000   0.00000  20.35449
+  20.35444   0.00000   0.00000
+   0.00000  20.35444  -0.00000
+   0.00000  -0.00000  20.35444
   na=            1
-  -1.91932   0.00000   0.00000
-   0.00000  -1.91932   0.00000
-   0.00000   0.00000  -1.91932
+  -1.91915   0.00000  -0.00000
+  -0.00000  -1.91915   0.00000
+  -0.00000  -0.00000  -1.91915
   na=            2
-  -1.62058   0.00000   0.00000
-   0.00000  -1.62058   0.00000
-   0.00000   0.00000  -1.62058
-  Norm of the difference between old and new effective charges:    4.33548409479787189014
+  -1.62077   0.00000   0.00000
+   0.00000  -1.62077   0.00000
+   0.00000   0.00000  -1.62077
+  Norm of the difference between old and new effective charges:    4.33549839363423306082
+  alpha Ewald:    2.1022144512408150     
   nqs=            1
  q=   0.00000000  0.00000000  0.00000000
   reading force constants from file BAs.dyn2
+  alpha Ewald:    2.1022144512408150     
   nqs=            4
  q=   0.50000000 -0.50000000  0.50000000
  q=  -0.50000000  0.50000000  0.50000000
  q=   0.50000000  0.50000000 -0.50000000
  q=  -0.50000000 -0.50000000 -0.50000000
   reading force constants from file BAs.dyn3
+  alpha Ewald:    2.1022144512408150     
   nqs=            3
  q=   0.00000000 -1.00000000  0.00000000
  q=   0.00000000  0.00000000 -1.00000000
@@ -49,11 +53,11 @@
       q-space grid ok, #points =    8
 
       fft-check success (sum of imaginary terms < 10^-12)
- 
-     Q2R          :      0.01s CPU      0.01s WALL
 
- 
-   This run was terminated on:  18:14:13   7Dec2023            
+     Q2R          :      0.02s CPU      0.02s WALL
+
+
+   This run was terminated on:  10:26:11   6Jul2026            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

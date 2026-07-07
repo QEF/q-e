@@ -113,7 +113,7 @@ CONTAINS
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexsd_init_atomic_species(obj, nsp, atm, psfile, amass, starting_magnetization,&
-                                         angle1,angle2) 
+                                         angle1,angle2, Zval, nbeta, mesh, l) 
       !------------------------------------------------------------------------
       IMPLICIT NONE
       !
@@ -124,16 +124,25 @@ CONTAINS
       REAL(DP), OPTIONAL,TARGET, INTENT(IN) :: amass(:)
       REAL(DP), OPTIONAL,TARGET, INTENT(IN) :: starting_magnetization(:)
       REAL(DP), OPTIONAL,TARGET, INTENT(IN) :: angle1(:),angle2(:)
+      REAL(DP), OPTIONAL,TARGET, INTENT(IN) :: Zval(:)
+      INTEGER, OPTIONAL,TARGET, INTENT(IN) :: nbeta(:)
+      INTEGER, OPTIONAL,TARGET, INTENT(IN) :: mesh(:)
+      INTEGER, OPTIONAL,TARGET, INTENT(IN) :: l(:,:)
       !
       TYPE(species_type), ALLOCATABLE :: species(:)
+      TYPE(pseudoPath_type) :: pseudo_file_obj
       REAL(DP),POINTER  :: amass_    
       REAL(DP),POINTER  :: start_mag_ 
       REAL(DP),POINTER  :: spin_teta  
       REAL(DP),POINTER  :: spin_phi   
+      REAL(DP),POINTER  :: Zval_
+      INTEGER,POINTER   :: nbeta_
+      INTEGER,POINTER   :: mesh_
+      INTEGER,POINTER   :: l_(:)
       INTEGER   :: i
       
       ALLOCATE(species(nsp))
-      NULLIFY ( amass_, start_mag_, spin_teta, spin_phi) 
+      NULLIFY ( amass_, start_mag_, spin_teta, spin_phi, Zval_, nbeta_, mesh_, l_ ) 
       !
       DO i = 1, nsp
           !
@@ -149,8 +158,22 @@ CONTAINS
           IF ( PRESENT( angle2 ) )  THEN 
              IF (ANY(angle2(1:nsp) /= 0.0_DP)) spin_phi  => angle2(i)
           END IF 
+          IF ( PRESENT( Zval ) ) THEN 
+             IF (Zval(i) /= 0.0_DP) Zval_ => Zval(i)
+          END IF 
+          IF ( PRESENT( nbeta ) ) THEN 
+             IF (nbeta(i) /= 0) nbeta_ => nbeta(i)
+          END IF 
+          IF ( PRESENT( mesh ) ) THEN 
+             IF (mesh(i) /= 0) mesh_ => mesh(i)
+          END IF 
+          IF ( PRESENT( l ) .AND. PRESENT( nbeta ) ) THEN 
+             IF (nbeta(i) > 0 .AND. ANY( l(1:nbeta(i),i) >= 0)) l_ => l(1:nbeta(i),i)
+          END IF 
           !
-          CALL qes_init ( species(i), "species", NAME = TRIM(atm(i)), PSEUDO_FILE = TRIM(psfile(i)), MASS = amass_, &
+          CALL qes_init ( pseudo_file_obj, "pseudo_file", Zval = Zval_, mesh = mesh_, &
+                         nbeta = nbeta_, l = l_, pseudoPath = TRIM(psfile(i)) )
+          CALL qes_init ( species(i), "species", NAME = TRIM(atm(i)), PSEUDO_FILE = pseudo_file_obj, MASS = amass_, &
                                STARTING_MAGNETIZATION = start_mag_, SPIN_TETA = spin_teta, SPIN_PHI = spin_phi )
       ENDDO
       !
@@ -394,11 +417,13 @@ CONTAINS
 
     !------------------------------------------------------------------------
     SUBROUTINE qexsd_init_hybrid ( obj, dft_is_hybrid, nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter,&
-                                   exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr ) 
+                                   exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr, use_ace, nbndproj ) 
          IMPLICIT NONE 
          TYPE (hybrid_type),INTENT(INOUT)        :: obj 
          LOGICAL,INTENT(IN)                      :: dft_is_hybrid 
          INTEGER,OPTIONAL, INTENT(IN)            :: nq1, nq2, nq3 
+         LOGICAL,OPTIONAL,INTENT(IN)             :: use_ace 
+         INTEGER,OPTIONAL, INTENT(IN)            :: nbndproj 
          REAL(DP),OPTIONAL,INTENT(IN)            :: ecutfock, exx_fraction, screening_parameter, ecutvcut,&
                                                     local_thr
          CHARACTER(LEN=*), INTENT(IN)            :: exxdiv_treatment 
@@ -416,7 +441,7 @@ CONTAINS
          !
          CALL qes_init ( obj, "hybrid", qpoint_grid_opt, ecutfock, exx_fraction, &
                         screening_parameter, exxdiv_treatment, x_gamma_extrapolation, ecutvcut,&
-                        local_thr )
+                        local_thr, use_ace, nbndproj )
          !
          IF (ASSOCIATED (qpoint_grid_opt)) CALL qes_reset (qpoint_grid_opt)
          !

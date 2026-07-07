@@ -13,7 +13,7 @@ subroutine read_ncpp (iunps, upf, ierr)
   USE upf_kinds,  only: dp
   USE upf_params, ONLY: lmaxx
   USE upf_io    , ONLY: stdout
-  USE pseudo_types
+  USE pseudo_types, ONLY : pseudo_upf, reset_upf
 
   implicit none
   !
@@ -30,6 +30,7 @@ subroutine read_ncpp (iunps, upf, ierr)
   integer :: nb, i, l, ir, ios = 0
   logical :: bhstype,  numeric
   !
+  CALL reset_upf(upf)
   !====================================================================
   ! read norm-conserving PPs
   !
@@ -267,19 +268,8 @@ subroutine read_ncpp (iunps, upf, ierr)
   deallocate (vnl)
   !
   ! for compatibility with USPP and other formats
+  ! Set variables that are not present to dummy values
   !
-  upf%nqf = 0
-  upf%nqlc= 0
-  upf%tvanp =.false.
-  upf%tpawp =.false.
-  upf%has_so=.false.
-  upf%has_wfc=.false.
-  upf%has_gipaw=.false.
-  upf%tcoulombp=.false.
-  upf%is_gth=.false.
-  upf%is_multiproj=.false.
-  !
-  ! Set additional, not present, variables to dummy values
   allocate(upf%els(upf%nwfc), upf%nchi(upf%nwfc), upf%epseu(upf%nwfc))
   upf%els(:)  = 'nX'
   upf%nchi(:) = 0

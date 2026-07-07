@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2007-2009 Roxana Margine
@@ -119,6 +120,8 @@
   !! frequency on real-axis, wsph(nqstep)
   REAL(KIND = DP), ALLOCATABLE :: wsi(:)
   !! frequency on imag-axis at iw, wi(nsiw(nstemp))
+  REAL(KIND = DP), ALLOCATABLE :: dwsi(:)
+  !! frequency weight for sparse sampling, counts # of uniform indices represented, dwsi(nsiw(nstemp))
   REAL(KIND = DP), ALLOCATABLE :: en(:)
   !! Energy grid over Fermi window
   REAL(KIND = DP), ALLOCATABLE :: dosen(:)

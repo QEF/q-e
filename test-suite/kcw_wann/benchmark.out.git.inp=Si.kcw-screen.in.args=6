@@ -1,5 +1,29 @@
 
-     Program KCW v.7.0 starts on 29Jan2022 at 15:17: 1 
+     =--------------------------------------------------------------------------------=
+                      :::    :::           ::::::::         :::       ::: 
+                     :+:   :+:           :+:    :+:        :+:       :+:  
+                    +:+  +:+            +:+               +:+       +:+   
+                   +#++:++             +#+               +#+  +:+  +#+    
+                  +#+  +#+            +#+               +#+ +#+#+ +#+     
+                 #+#   #+#           #+#    #+#         #+#+# #+#+#       
+                ###    ###           ########           ###   ###         
+
+       Koopmans functional implementation based on DFPT; please cite this program as
+
+        N.Colonna, R. De Gennaro, E. Linscott, and N. Marzari, JCTC 18, 5435 (2022) 
+
+                                                                                    
+
+       If you use the non-collinear mode (with/without spin-orbit coupling) please cite
+
+        A. Marrazzo and N. Colonna, Phys. Rev. Research 6, 033085 (2024)  
+     =--------------------------------------------------------------------------------=
+
+     Program KCW v.7.5 starts on 17Sep2025 at 13:44:56 
+        Git branch: develop
+        Last git commit: 7e86c4d7f8b367fcfbff0156d653f13ca55b1b03-dirty
+        Last git commit date: Tue Sep 16 17:33:36 2025 +0000
+        Last git commit subject: Merge branch 'vhpsi' into 'develop'
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -13,8 +37,8 @@
      Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     724 MiB available memory on the printing compute node when the environment starts
- 
+     733 MiB available memory on the printing compute node when the environment starts
+
 
      KCW INPUT SUMMARY 
      ============================================
@@ -26,12 +50,17 @@
        # calculation         =            screen
        # kcw_iverbosity      =                 2
        # kcw_at_ks           =                 F
+       # MP grid             =     2     2     2
        # spin_component      =                 1
        # homo_only           =                 F
        # read_unitary_matrix =                 T
        # check_ks            =                 T
        # l_vcut              =                 F
        # assume_isolated     =              none
+       # io_sp               =                 F
+       # io_real_space       =                 F
+       # irr_bz              =                 F
+           # use_wct         =                 F
 
       WANNIER 
        # seedname            =                Si
@@ -45,7 +74,6 @@
        # tr2                 =        0.1000E-17
        # niter               =                33
        # nmix                =                 4
-       # MP grid             =     2     2     2
        # eps_inf             =        0.1000E+01
        # check_spread        =                 T
      ============================================
@@ -62,15 +90,20 @@
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         295     295     91                 3287     3287     609
- 
+
      Using Slab Decomposition
- 
+
      Reading collected, re-writing distributed wavefunctions
+
+     WARNING: !!! NON-MAGNETIC setup !!!
+     WARNING: A meaningfull KC requires to ALWAYS account for the spin
+     WARNING: degrees of freedom (even for non-magnetic systems
+     WARNING: use a non-magnetic setup only if you know what you are doing
 
      INFO: Buffer for KS wfcs, OPENED
 
@@ -83,11 +116,10 @@
      INFO: Coulomb q+G=0 treatment:
      INFO: Divergence            none    
      INFO: q-grid dimension         2   2   2
+     INFO: cell volume               270.256360799503
      INFO: Gamma Extrapolation       F
-     INFO: q->0 term not estimated
-     INFO: Bare Coulomb G0            0.00000E+00
-     INFO: Screened Coulomb G0        0.00000E+00
-           Isotropic estimate         0.00000E+00
+     INFO: extrapolation q->0 term not estimated
+     INFO: Bare Coulomb q+G=0            0.00000E+00
 
      INFO: READING Wannier-orbital Densities ...
 
@@ -150,14 +182,17 @@
 
      INFO: Group the orbitals according to the SH ... 
 
+
+     INFO: Reading SH from file ... 
+
      orb, Self hartree     1     0.273392
      orb, Self hartree     2     0.273392
      orb, Self hartree     3     0.273392
      orb, Self hartree     4     0.273392
-        iwann=    1   DO_LR = T
-        iwann=    2   DO_LR = F   -->     1
-        iwann=    3   DO_LR = F   -->     1
-        iwann=    4   DO_LR = F   -->     1
+        iwann=    1   DO_LR =T
+        iwann=    2   DO_LR =F   -->     1
+        iwann=    3   DO_LR =F   -->     1
+        iwann=    4   DO_LR =F   -->     1
 
      INFO: Group the orbitals according to the SH ... DONE 
 
@@ -180,33 +215,34 @@
 
         INFO: kcw_q initialization DONE
 
-        DEBUG: \int dr [rho - rho_PWSCF] =       0.596234E-13
+        DEBUG: \int dr [rho - rho_PWSCF] =       0.270112E-12
 
-weight =    1  0.12500000
 
-        Start linear response calculation for the wannier #  1    spin =  1
+        Start LR calculation for the wannier #  1   iq =  1   spin =  1
 
-      iter #   1 total cpu time :     0.2 secs   av.it.:  10.2
+        SYM : iwann=     1 iq =     1 weight =   0.12500000
+
+      iter #   1 total cpu time :     0.3 secs   av.it.:  10.2
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  4.585E-08
 
-      iter #   2 total cpu time :     0.2 secs   av.it.:   9.8
+      iter #   2 total cpu time :     0.3 secs   av.it.:   9.2
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.273E-10
 
-      iter #   3 total cpu time :     0.3 secs   av.it.:  11.1
+      iter #   3 total cpu time :     0.3 secs   av.it.:   9.0
       thresh= 1.809E-07 alpha_mix =  0.700 |ddv_scf|^2 =  6.520E-13
 
-      iter #   4 total cpu time :     0.4 secs   av.it.:  13.4
-      thresh= 8.074E-09 alpha_mix =  0.700 |ddv_scf|^2 =  7.496E-15
+      iter #   4 total cpu time :     0.4 secs   av.it.:   9.2
+      thresh= 8.074E-09 alpha_mix =  0.700 |ddv_scf|^2 =  7.497E-15
 
-      iter #   5 total cpu time :     0.5 secs   av.it.:  15.5
+      iter #   5 total cpu time :     0.4 secs   av.it.:   8.9
       thresh= 8.658E-10 alpha_mix =  0.700 |ddv_scf|^2 =  1.036E-16
 
-      iter #   6 total cpu time :     0.6 secs   av.it.:  17.2
-      thresh= 1.018E-10 alpha_mix =  0.700 |ddv_scf|^2 =  3.167E-20
+      iter #   6 total cpu time :     0.5 secs   av.it.:   9.5
+      thresh= 1.018E-10 alpha_mix =  0.700 |ddv_scf|^2 =  3.178E-20
 
-        iq =   1   iwann =   1   rPi_q =    -0.00778914    -0.00000000   uPi_q =     0.01891049     0.00000000   SH_q =     0.01453569     0.00000000
+        iq =   1   iwann =   1   rPi_q =     0.01112135    -0.00000000   uPi_q =     0.01891049    -0.00000000   SH_q =     0.01453569    -0.00000000
 
-        INFO: nbnd REDIFINED    4 -->     6
+        INFO: nbnd REDIFINED    4 -->     7
 
 
      ==============================================================================
@@ -221,14 +257,14 @@ weight =    1  0.12500000
      Subspace diagonalization in iterative solution of the eigenvalue problem:
      a serial algorithm will be used
 
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         295     295    109                 3287     3287     749
- 
+
      Using Slab Decomposition
- 
+
 
      Title: 
      KI Silicon                                                                 
@@ -240,7 +276,7 @@ weight =    1  0.12500000
      number of atoms/cell      =            2
      number of atomic types    =            1
      number of electrons       =         8.00
-     number of Kohn-Sham states=            6
+     number of Kohn-Sham states=            7
      kinetic-energy cutoff     =      20.0000  Ry
      charge density cutoff     =      80.0000  Ry
      Exchange-correlation= PZ
@@ -270,7 +306,7 @@ weight =    1  0.12500000
                 l(2) =   1
 
      atomic species   valence    mass     pseudopotential
-        Si             4.00    28.08500     Si( 1.00)
+     Si                4.00    28.08500     Si( 1.00)
 
      48 Sym. Ops., with inversion, found
 
@@ -279,8 +315,8 @@ weight =    1  0.12500000
    Cartesian axes
 
      site n.     atom                  positions (alat units)
-         1           Si  tau(   1) = (   0.0000000   0.0000000   0.0000000  )
-         2           Si  tau(   2) = (   0.2500000   0.2500000   0.2500000  )
+         1        Si     tau(   1) = (   0.0000000   0.0000000   0.0000000  )
+         2        Si     tau(   2) = (   0.2500000   0.2500000   0.2500000  )
 
      number of k points=    16
                        cart. coord. in units 2pi/alat
@@ -303,7 +339,7 @@ weight =    1  0.12500000
 
      Dense  grid:     3287 G-vectors     FFT dimensions: (  24,  24,  24)
 
-     Estimated max dynamical RAM per process >       1.84 MB
+     Estimated max dynamical RAM per process >       1.90 MB
 
      The potential is recalculated from file :
      ./out/kcw/q2/Si.save/charge-density
@@ -313,7 +349,7 @@ weight =    1  0.12500000
      Band Structure Calculation
      Davidson diagonalization with overlap
 
-     ethr =  1.25E-10,  avg # of iterations =  9.8
+     ethr =  1.25E-10,  avg # of iterations = 10.1
 
      total cpu time spent up to now is       -1.0 secs
 
@@ -321,108 +357,110 @@ weight =    1  0.12500000
 
           k = 0.0000 0.0000 0.0000 (   411 PWs)   bands (ev):
 
-    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730
+    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730   8.7730
 
           k =-0.5000 0.5000-0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-0.5000 0.5000-0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-1.0000 1.0000-1.0000 (   411 PWs)   bands (ev):
 
-    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730
+    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730   8.7730
 
           k = 0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k = 0.0000 1.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k = 0.0000 1.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-0.5000 1.5000-0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-0.5000-0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-1.0000 0.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-1.0000 0.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-1.5000 0.5000-0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k = 0.0000 0.0000 1.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-1.0000 1.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
      highest occupied, lowest unoccupied level (ev):     6.3478    6.8163
 
-     Writing all to output data dir ./out/kcw/q2/Si.save/
+     Writing all to output data dir ./out/kcw/q2/Si.save/ :
+     XML data file, pseudopotentials, collected wavefunctions
 
         INFO: NSCF calculation DONE
 
         INFO: kcw_q initialization DONE
 
-weight =    2  0.12500000
 
-        Start linear response calculation for the wannier #  1    spin =  1
+        Start LR calculation for the wannier #  1   iq =  2   spin =  1
 
-      iter #   1 total cpu time :     0.9 secs   av.it.:  11.9
+        SYM : iwann=     1 iq =     2 weight =   0.12500000
+
+      iter #   1 total cpu time :     0.7 secs   av.it.:  11.9
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  5.524E-06
 
-      iter #   2 total cpu time :     1.0 secs   av.it.:  10.9
+      iter #   2 total cpu time :     0.7 secs   av.it.:  12.0
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.693E-06
 
-      iter #   3 total cpu time :     1.0 secs   av.it.:  11.4
+      iter #   3 total cpu time :     0.8 secs   av.it.:  11.1
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.627E-09
 
-      iter #   4 total cpu time :     1.1 secs   av.it.:  11.9
+      iter #   4 total cpu time :     0.8 secs   av.it.:   9.5
       thresh= 4.033E-07 alpha_mix =  0.700 |ddv_scf|^2 =  3.061E-11
 
-      iter #   5 total cpu time :     1.2 secs   av.it.:  13.0
-      thresh= 5.533E-08 alpha_mix =  0.700 |ddv_scf|^2 =  2.090E-13
+      iter #   5 total cpu time :     0.8 secs   av.it.:   9.5
+      thresh= 5.533E-08 alpha_mix =  0.700 |ddv_scf|^2 =  2.089E-13
 
-      iter #   6 total cpu time :     1.3 secs   av.it.:  15.0
-      thresh= 4.571E-09 alpha_mix =  0.700 |ddv_scf|^2 =  1.110E-16
+      iter #   6 total cpu time :     0.9 secs   av.it.:   9.8
+      thresh= 4.570E-09 alpha_mix =  0.700 |ddv_scf|^2 =  1.154E-16
 
-      iter #   7 total cpu time :     1.4 secs   av.it.:  17.5
-      thresh= 1.054E-10 alpha_mix =  0.700 |ddv_scf|^2 =  1.560E-17
+      iter #   7 total cpu time :     0.9 secs   av.it.:  10.1
+      thresh= 1.074E-10 alpha_mix =  0.700 |ddv_scf|^2 =  4.408E-17
 
-      iter #   8 total cpu time :     1.5 secs   av.it.:  18.4
-      thresh= 3.950E-11 alpha_mix =  0.700 |ddv_scf|^2 =  1.953E-17
+      iter #   8 total cpu time :     1.0 secs   av.it.:  10.0
+      thresh= 6.639E-11 alpha_mix =  0.700 |ddv_scf|^2 =  1.131E-17
 
-      iter #   9 total cpu time :     1.6 secs   av.it.:  18.1
-      thresh= 4.420E-11 alpha_mix =  0.700 |ddv_scf|^2 =  2.079E-20
+      iter #   9 total cpu time :     1.0 secs   av.it.:  10.0
+      thresh= 3.364E-11 alpha_mix =  0.700 |ddv_scf|^2 =  1.790E-20
 
-        iq =   2   iwann =   1   rPi_q =    -0.03928317    -0.00000000   uPi_q =     0.07086647     0.00000000   SH_q =     0.04041725    -0.00000000
+        iq =   2   iwann =   1   rPi_q =     0.03158330     0.00000000   uPi_q =     0.07086647     0.00000000   SH_q =     0.04041725     0.00000000
 
 
      ==============================================================================
@@ -434,14 +472,14 @@ weight =    2  0.12500000
 
         INFO: rhowan_q(r) RETRIEVED
 
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         295     295    109                 3287     3287     749
- 
+
      Using Slab Decomposition
- 
+
 
      Title: 
      KI Silicon                                                                 
@@ -453,7 +491,7 @@ weight =    2  0.12500000
      number of atoms/cell      =            2
      number of atomic types    =            1
      number of electrons       =         8.00
-     number of Kohn-Sham states=            6
+     number of Kohn-Sham states=            7
      kinetic-energy cutoff     =      20.0000  Ry
      charge density cutoff     =      80.0000  Ry
      Exchange-correlation= PZ
@@ -483,7 +521,7 @@ weight =    2  0.12500000
                 l(2) =   1
 
      atomic species   valence    mass     pseudopotential
-        Si             4.00    28.08500     Si( 1.00)
+     Si                4.00    28.08500     Si( 1.00)
 
      48 Sym. Ops., with inversion, found
 
@@ -492,8 +530,8 @@ weight =    2  0.12500000
    Cartesian axes
 
      site n.     atom                  positions (alat units)
-         1           Si  tau(   1) = (   0.0000000   0.0000000   0.0000000  )
-         2           Si  tau(   2) = (   0.2500000   0.2500000   0.2500000  )
+         1        Si     tau(   1) = (   0.0000000   0.0000000   0.0000000  )
+         2        Si     tau(   2) = (   0.2500000   0.2500000   0.2500000  )
 
      number of k points=    16
                        cart. coord. in units 2pi/alat
@@ -516,7 +554,7 @@ weight =    2  0.12500000
 
      Dense  grid:     3287 G-vectors     FFT dimensions: (  24,  24,  24)
 
-     Estimated max dynamical RAM per process >       1.84 MB
+     Estimated max dynamical RAM per process >       1.90 MB
 
      The potential is recalculated from file :
      ./out/kcw/q3/Si.save/charge-density
@@ -526,7 +564,7 @@ weight =    2  0.12500000
      Band Structure Calculation
      Davidson diagonalization with overlap
 
-     ethr =  1.25E-10,  avg # of iterations =  9.8
+     ethr =  1.25E-10,  avg # of iterations = 10.1
 
      total cpu time spent up to now is       -1.0 secs
 
@@ -534,105 +572,107 @@ weight =    2  0.12500000
 
           k = 0.0000 0.0000 0.0000 (   411 PWs)   bands (ev):
 
-    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730
+    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730   8.7730
 
           k = 0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-0.5000 0.5000-0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k = 0.0000 1.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k = 0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k = 1.0000 1.0000 1.0000 (   411 PWs)   bands (ev):
 
-    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730
+    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730   8.7730
 
           k = 0.0000 1.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k = 0.5000 1.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-0.5000-0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k = 0.0000 0.0000 1.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-1.0000 0.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k = 0.0000 0.0000 1.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k = 0.5000 0.5000 1.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k = 0.0000 1.0000 1.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
      highest occupied, lowest unoccupied level (ev):     6.3478    6.8163
 
-     Writing all to output data dir ./out/kcw/q3/Si.save/
+     Writing all to output data dir ./out/kcw/q3/Si.save/ :
+     XML data file, pseudopotentials, collected wavefunctions
 
         INFO: NSCF calculation DONE
 
         INFO: kcw_q initialization DONE
 
-weight =    3  0.12500000
 
-        Start linear response calculation for the wannier #  1    spin =  1
+        Start LR calculation for the wannier #  1   iq =  3   spin =  1
 
-      iter #   1 total cpu time :     1.9 secs   av.it.:  11.8
+        SYM : iwann=     1 iq =     3 weight =   0.12500000
+
+      iter #   1 total cpu time :     1.2 secs   av.it.:  11.8
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.063E-05
 
-      iter #   2 total cpu time :     2.0 secs   av.it.:  11.9
+      iter #   2 total cpu time :     1.3 secs   av.it.:  12.0
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.602E-04
 
-      iter #   3 total cpu time :     2.0 secs   av.it.:  10.9
+      iter #   3 total cpu time :     1.3 secs   av.it.:  12.1
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.476E-09
 
-      iter #   4 total cpu time :     2.1 secs   av.it.:  11.0
+      iter #   4 total cpu time :     1.4 secs   av.it.:   9.9
       thresh= 5.896E-07 alpha_mix =  0.700 |ddv_scf|^2 =  2.564E-10
 
-      iter #   5 total cpu time :     2.2 secs   av.it.:  12.0
-      thresh= 1.601E-07 alpha_mix =  0.700 |ddv_scf|^2 =  9.749E-14
+      iter #   5 total cpu time :     1.4 secs   av.it.:  10.0
+      thresh= 1.601E-07 alpha_mix =  0.700 |ddv_scf|^2 =  9.728E-14
 
-      iter #   6 total cpu time :     2.3 secs   av.it.:  14.8
-      thresh= 3.122E-09 alpha_mix =  0.700 |ddv_scf|^2 =  4.558E-15
+      iter #   6 total cpu time :     1.4 secs   av.it.:   9.5
+      thresh= 3.119E-09 alpha_mix =  0.700 |ddv_scf|^2 =  4.543E-15
 
-      iter #   7 total cpu time :     2.4 secs   av.it.:  15.8
-      thresh= 6.751E-10 alpha_mix =  0.700 |ddv_scf|^2 =  5.105E-18
+      iter #   7 total cpu time :     1.5 secs   av.it.:   9.1
+      thresh= 6.740E-10 alpha_mix =  0.700 |ddv_scf|^2 =  5.246E-18
 
-      iter #   8 total cpu time :     2.5 secs   av.it.:  17.6
-      thresh= 2.259E-11 alpha_mix =  0.700 |ddv_scf|^2 =  1.834E-19
+      iter #   8 total cpu time :     1.5 secs   av.it.:   9.5
+      thresh= 2.290E-11 alpha_mix =  0.700 |ddv_scf|^2 =  1.804E-19
 
-        iq =   3   iwann =   1   rPi_q =    -0.04770416    -0.00000000   uPi_q =     0.06546788    -0.00000000   SH_q =     0.03756384     0.00000000
+        iq =   3   iwann =   1   rPi_q =     0.01776372     0.00000000   uPi_q =     0.06546788    -0.00000000   SH_q =     0.03756384    -0.00000000
 
 
      ==============================================================================
@@ -644,14 +684,14 @@ weight =    3  0.12500000
 
         INFO: rhowan_q(r) RETRIEVED
 
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         295     295    121                 3287     3287     869
- 
+
      Using Slab Decomposition
- 
+
 
      Title: 
      KI Silicon                                                                 
@@ -663,7 +703,7 @@ weight =    3  0.12500000
      number of atoms/cell      =            2
      number of atomic types    =            1
      number of electrons       =         8.00
-     number of Kohn-Sham states=            6
+     number of Kohn-Sham states=            7
      kinetic-energy cutoff     =      20.0000  Ry
      charge density cutoff     =      80.0000  Ry
      Exchange-correlation= PZ
@@ -693,7 +733,7 @@ weight =    3  0.12500000
                 l(2) =   1
 
      atomic species   valence    mass     pseudopotential
-        Si             4.00    28.08500     Si( 1.00)
+     Si                4.00    28.08500     Si( 1.00)
 
      48 Sym. Ops., with inversion, found
 
@@ -702,8 +742,8 @@ weight =    3  0.12500000
    Cartesian axes
 
      site n.     atom                  positions (alat units)
-         1           Si  tau(   1) = (   0.0000000   0.0000000   0.0000000  )
-         2           Si  tau(   2) = (   0.2500000   0.2500000   0.2500000  )
+         1        Si     tau(   1) = (   0.0000000   0.0000000   0.0000000  )
+         2        Si     tau(   2) = (   0.2500000   0.2500000   0.2500000  )
 
      number of k points=    16
                        cart. coord. in units 2pi/alat
@@ -726,7 +766,7 @@ weight =    3  0.12500000
 
      Dense  grid:     3287 G-vectors     FFT dimensions: (  24,  24,  24)
 
-     Estimated max dynamical RAM per process >       1.84 MB
+     Estimated max dynamical RAM per process >       1.90 MB
 
      The potential is recalculated from file :
      ./out/kcw/q4/Si.save/charge-density
@@ -736,7 +776,7 @@ weight =    3  0.12500000
      Band Structure Calculation
      Davidson diagonalization with overlap
 
-     ethr =  1.25E-10,  avg # of iterations =  9.8
+     ethr =  1.25E-10,  avg # of iterations = 10.1
 
      total cpu time spent up to now is       -1.0 secs
 
@@ -744,108 +784,113 @@ weight =    3  0.12500000
 
           k = 0.0000 0.0000 0.0000 (   411 PWs)   bands (ev):
 
-    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730
+    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730   8.7730
 
           k = 0.0000 1.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-0.5000 0.5000-0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-0.5000 1.5000-0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k = 0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k = 0.5000 1.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k = 0.0000 1.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k = 0.0000 2.0000 0.0000 (   411 PWs)   bands (ev):
 
-    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730
+    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730   8.7730
 
           k =-0.5000-0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-1.0000 0.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-1.0000 1.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k = 0.0000 0.0000 1.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k = 0.0000 1.0000 1.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-0.5000 1.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
      highest occupied, lowest unoccupied level (ev):     6.3478    6.8163
 
-     Writing all to output data dir ./out/kcw/q4/Si.save/
+     Writing all to output data dir ./out/kcw/q4/Si.save/ :
+     XML data file, pseudopotentials, collected wavefunctions
 
         INFO: NSCF calculation DONE
 
         INFO: kcw_q initialization DONE
 
-weight =    4  0.12500000
 
-        Start linear response calculation for the wannier #  1    spin =  1
+        Start LR calculation for the wannier #  1   iq =  4   spin =  1
 
-      iter #   1 total cpu time :     2.8 secs   av.it.:  11.6
+        SYM : iwann=     1 iq =     4 weight =   0.12500000
+
+      iter #   1 total cpu time :     1.7 secs   av.it.:  11.6
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  7.090E-06
 
-      iter #   2 total cpu time :     2.9 secs   av.it.:  11.2
+      iter #   2 total cpu time :     1.8 secs   av.it.:  12.0
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.475E-05
 
-      iter #   3 total cpu time :     2.9 secs   av.it.:  10.9
+      iter #   3 total cpu time :     1.8 secs   av.it.:  11.9
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.272E-08
 
-      iter #   4 total cpu time :     3.0 secs   av.it.:  11.0
+      iter #   4 total cpu time :     1.9 secs   av.it.:   9.9
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.417E-10
 
-      iter #   5 total cpu time :     3.1 secs   av.it.:  12.2
+      iter #   5 total cpu time :     1.9 secs   av.it.:   9.8
       thresh= 1.191E-07 alpha_mix =  0.700 |ddv_scf|^2 =  1.532E-11
 
-      iter #   6 total cpu time :     3.2 secs   av.it.:  13.0
+      iter #   6 total cpu time :     2.0 secs   av.it.:   9.5
       thresh= 3.914E-08 alpha_mix =  0.700 |ddv_scf|^2 =  1.799E-14
 
-      iter #   7 total cpu time :     3.3 secs   av.it.:  15.2
-      thresh= 1.341E-09 alpha_mix =  0.700 |ddv_scf|^2 =  2.766E-16
+      iter #   7 total cpu time :     2.0 secs   av.it.:   9.8
+      thresh= 1.341E-09 alpha_mix =  0.700 |ddv_scf|^2 =  2.767E-16
 
-      iter #   8 total cpu time :     3.4 secs   av.it.:  16.8
-      thresh= 1.663E-10 alpha_mix =  0.700 |ddv_scf|^2 =  3.009E-18
+      iter #   8 total cpu time :     2.0 secs   av.it.:   9.8
+      thresh= 1.663E-10 alpha_mix =  0.700 |ddv_scf|^2 =  3.471E-18
 
-      iter #   9 total cpu time :     3.5 secs   av.it.:  18.2
-      thresh= 1.735E-11 alpha_mix =  0.700 |ddv_scf|^2 =  4.526E-19
+      iter #   9 total cpu time :     2.1 secs   av.it.:  10.2
+      thresh= 1.863E-11 alpha_mix =  0.700 |ddv_scf|^2 =  1.236E-18
 
-        iq =   4   iwann =   1   rPi_q =    -0.03551303     0.00000000   uPi_q =     0.05689195    -0.00000000   SH_q =     0.03334707     0.00000000
+      iter #  10 total cpu time :     2.1 secs   av.it.:   9.9
+      thresh= 1.112E-11 alpha_mix =  0.700 |ddv_scf|^2 =  1.410E-19
+
+        iq =   4   iwann =   1   rPi_q =     0.02137893    -0.00000000   uPi_q =     0.05689195    -0.00000000   SH_q =     0.03334707     0.00000000
 
 
      ==============================================================================
@@ -857,14 +902,14 @@ weight =    4  0.12500000
 
         INFO: rhowan_q(r) RETRIEVED
 
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         295     295    109                 3287     3287     749
- 
+
      Using Slab Decomposition
- 
+
 
      Title: 
      KI Silicon                                                                 
@@ -876,7 +921,7 @@ weight =    4  0.12500000
      number of atoms/cell      =            2
      number of atomic types    =            1
      number of electrons       =         8.00
-     number of Kohn-Sham states=            6
+     number of Kohn-Sham states=            7
      kinetic-energy cutoff     =      20.0000  Ry
      charge density cutoff     =      80.0000  Ry
      Exchange-correlation= PZ
@@ -906,7 +951,7 @@ weight =    4  0.12500000
                 l(2) =   1
 
      atomic species   valence    mass     pseudopotential
-        Si             4.00    28.08500     Si( 1.00)
+     Si                4.00    28.08500     Si( 1.00)
 
      48 Sym. Ops., with inversion, found
 
@@ -915,8 +960,8 @@ weight =    4  0.12500000
    Cartesian axes
 
      site n.     atom                  positions (alat units)
-         1           Si  tau(   1) = (   0.0000000   0.0000000   0.0000000  )
-         2           Si  tau(   2) = (   0.2500000   0.2500000   0.2500000  )
+         1        Si     tau(   1) = (   0.0000000   0.0000000   0.0000000  )
+         2        Si     tau(   2) = (   0.2500000   0.2500000   0.2500000  )
 
      number of k points=    16
                        cart. coord. in units 2pi/alat
@@ -939,7 +984,7 @@ weight =    4  0.12500000
 
      Dense  grid:     3287 G-vectors     FFT dimensions: (  24,  24,  24)
 
-     Estimated max dynamical RAM per process >       1.84 MB
+     Estimated max dynamical RAM per process >       1.90 MB
 
      The potential is recalculated from file :
      ./out/kcw/q5/Si.save/charge-density
@@ -949,7 +994,7 @@ weight =    4  0.12500000
      Band Structure Calculation
      Davidson diagonalization with overlap
 
-     ethr =  1.25E-10,  avg # of iterations =  9.8
+     ethr =  1.25E-10,  avg # of iterations = 10.1
 
      total cpu time spent up to now is       -1.0 secs
 
@@ -957,108 +1002,110 @@ weight =    4  0.12500000
 
           k = 0.0000 0.0000 0.0000 (   411 PWs)   bands (ev):
 
-    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730
+    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730   8.7730
 
           k =-0.5000-0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-0.5000 0.5000-0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-1.0000 0.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k = 0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k = 0.0000 0.0000 1.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k = 0.0000 1.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-0.5000-0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-1.0000-1.0000 1.0000 (   411 PWs)   bands (ev):
 
-    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730
+    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730   8.7730
 
           k =-1.0000 0.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-1.5000-0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k = 0.0000 0.0000 1.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-0.5000-0.5000 1.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-1.0000 0.0000 1.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
      highest occupied, lowest unoccupied level (ev):     6.3478    6.8163
 
-     Writing all to output data dir ./out/kcw/q5/Si.save/
+     Writing all to output data dir ./out/kcw/q5/Si.save/ :
+     XML data file, pseudopotentials, collected wavefunctions
 
         INFO: NSCF calculation DONE
 
         INFO: kcw_q initialization DONE
 
-weight =    5  0.12500000
 
-        Start linear response calculation for the wannier #  1    spin =  1
+        Start LR calculation for the wannier #  1   iq =  5   spin =  1
 
-      iter #   1 total cpu time :     3.8 secs   av.it.:  11.9
+        SYM : iwann=     1 iq =     5 weight =   0.12500000
+
+      iter #   1 total cpu time :     2.3 secs   av.it.:  11.9
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  5.524E-06
 
-      iter #   2 total cpu time :     3.8 secs   av.it.:  10.8
+      iter #   2 total cpu time :     2.4 secs   av.it.:  12.0
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.693E-06
 
-      iter #   3 total cpu time :     3.9 secs   av.it.:  11.4
+      iter #   3 total cpu time :     2.4 secs   av.it.:  11.1
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.627E-09
 
-      iter #   4 total cpu time :     4.0 secs   av.it.:  11.8
+      iter #   4 total cpu time :     2.5 secs   av.it.:   9.5
       thresh= 4.033E-07 alpha_mix =  0.700 |ddv_scf|^2 =  3.061E-11
 
-      iter #   5 total cpu time :     4.1 secs   av.it.:  13.0
-      thresh= 5.533E-08 alpha_mix =  0.700 |ddv_scf|^2 =  2.090E-13
+      iter #   5 total cpu time :     2.5 secs   av.it.:   9.6
+      thresh= 5.533E-08 alpha_mix =  0.700 |ddv_scf|^2 =  2.089E-13
 
-      iter #   6 total cpu time :     4.2 secs   av.it.:  15.0
-      thresh= 4.572E-09 alpha_mix =  0.700 |ddv_scf|^2 =  1.163E-16
+      iter #   6 total cpu time :     2.6 secs   av.it.:   9.9
+      thresh= 4.570E-09 alpha_mix =  0.700 |ddv_scf|^2 =  1.214E-16
 
-      iter #   7 total cpu time :     4.3 secs   av.it.:  17.6
-      thresh= 1.078E-10 alpha_mix =  0.700 |ddv_scf|^2 =  5.474E-17
+      iter #   7 total cpu time :     2.6 secs   av.it.:  10.2
+      thresh= 1.102E-10 alpha_mix =  0.700 |ddv_scf|^2 =  8.697E-17
 
-      iter #   8 total cpu time :     4.4 secs   av.it.:  17.6
-      thresh= 7.399E-11 alpha_mix =  0.700 |ddv_scf|^2 =  9.760E-18
+      iter #   8 total cpu time :     2.6 secs   av.it.:   9.9
+      thresh= 9.326E-11 alpha_mix =  0.700 |ddv_scf|^2 =  6.940E-18
 
-      iter #   9 total cpu time :     4.5 secs   av.it.:  18.2
-      thresh= 3.124E-11 alpha_mix =  0.700 |ddv_scf|^2 =  1.930E-20
+      iter #   9 total cpu time :     2.7 secs   av.it.:  10.1
+      thresh= 2.634E-11 alpha_mix =  0.700 |ddv_scf|^2 =  1.736E-20
 
-        iq =   5   iwann =   1   rPi_q =    -0.03928317     0.00000000   uPi_q =     0.07086647    -0.00000000   SH_q =     0.04041725    -0.00000000
+        iq =   5   iwann =   1   rPi_q =     0.03158330     0.00000000   uPi_q =     0.07086647    -0.00000000   SH_q =     0.04041725    -0.00000000
 
 
      ==============================================================================
@@ -1070,14 +1117,14 @@ weight =    5  0.12500000
 
         INFO: rhowan_q(r) RETRIEVED
 
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         295     295    121                 3287     3287     869
- 
+
      Using Slab Decomposition
- 
+
 
      Title: 
      KI Silicon                                                                 
@@ -1089,7 +1136,7 @@ weight =    5  0.12500000
      number of atoms/cell      =            2
      number of atomic types    =            1
      number of electrons       =         8.00
-     number of Kohn-Sham states=            6
+     number of Kohn-Sham states=            7
      kinetic-energy cutoff     =      20.0000  Ry
      charge density cutoff     =      80.0000  Ry
      Exchange-correlation= PZ
@@ -1119,7 +1166,7 @@ weight =    5  0.12500000
                 l(2) =   1
 
      atomic species   valence    mass     pseudopotential
-        Si             4.00    28.08500     Si( 1.00)
+     Si                4.00    28.08500     Si( 1.00)
 
      48 Sym. Ops., with inversion, found
 
@@ -1128,8 +1175,8 @@ weight =    5  0.12500000
    Cartesian axes
 
      site n.     atom                  positions (alat units)
-         1           Si  tau(   1) = (   0.0000000   0.0000000   0.0000000  )
-         2           Si  tau(   2) = (   0.2500000   0.2500000   0.2500000  )
+         1        Si     tau(   1) = (   0.0000000   0.0000000   0.0000000  )
+         2        Si     tau(   2) = (   0.2500000   0.2500000   0.2500000  )
 
      number of k points=    16
                        cart. coord. in units 2pi/alat
@@ -1152,7 +1199,7 @@ weight =    5  0.12500000
 
      Dense  grid:     3287 G-vectors     FFT dimensions: (  24,  24,  24)
 
-     Estimated max dynamical RAM per process >       1.84 MB
+     Estimated max dynamical RAM per process >       1.90 MB
 
      The potential is recalculated from file :
      ./out/kcw/q6/Si.save/charge-density
@@ -1162,7 +1209,7 @@ weight =    5  0.12500000
      Band Structure Calculation
      Davidson diagonalization with overlap
 
-     ethr =  1.25E-10,  avg # of iterations =  9.8
+     ethr =  1.25E-10,  avg # of iterations = 10.1
 
      total cpu time spent up to now is       -1.0 secs
 
@@ -1170,108 +1217,113 @@ weight =    5  0.12500000
 
           k = 0.0000 0.0000 0.0000 (   411 PWs)   bands (ev):
 
-    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730
+    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730   8.7730
 
           k =-1.0000 0.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-0.5000 0.5000-0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-1.5000 0.5000-0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k = 0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k = 0.0000 1.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-1.0000 1.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-0.5000-0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-1.5000-0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-1.0000 0.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-2.0000 0.0000 0.0000 (   411 PWs)   bands (ev):
 
-    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730
+    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730   8.7730
 
           k = 0.0000 0.0000 1.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-1.0000 0.0000 1.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-1.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
      highest occupied, lowest unoccupied level (ev):     6.3478    6.8163
 
-     Writing all to output data dir ./out/kcw/q6/Si.save/
+     Writing all to output data dir ./out/kcw/q6/Si.save/ :
+     XML data file, pseudopotentials, collected wavefunctions
 
         INFO: NSCF calculation DONE
 
         INFO: kcw_q initialization DONE
 
-weight =    6  0.12500000
 
-        Start linear response calculation for the wannier #  1    spin =  1
+        Start LR calculation for the wannier #  1   iq =  6   spin =  1
 
-      iter #   1 total cpu time :     4.8 secs   av.it.:  11.8
+        SYM : iwann=     1 iq =     6 weight =   0.12500000
+
+      iter #   1 total cpu time :     2.9 secs   av.it.:  11.8
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  7.090E-06
 
-      iter #   2 total cpu time :     4.9 secs   av.it.:  11.1
+      iter #   2 total cpu time :     2.9 secs   av.it.:  12.0
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.475E-05
 
-      iter #   3 total cpu time :     4.9 secs   av.it.:  10.9
+      iter #   3 total cpu time :     3.0 secs   av.it.:  11.8
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.272E-08
 
-      iter #   4 total cpu time :     5.0 secs   av.it.:  10.9
-      thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.417E-10
+      iter #   4 total cpu time :     3.0 secs   av.it.:   9.8
+      thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.418E-10
 
-      iter #   5 total cpu time :     5.1 secs   av.it.:  12.1
+      iter #   5 total cpu time :     3.1 secs   av.it.:   9.6
       thresh= 1.191E-07 alpha_mix =  0.700 |ddv_scf|^2 =  1.532E-11
 
-      iter #   6 total cpu time :     5.2 secs   av.it.:  13.0
+      iter #   6 total cpu time :     3.1 secs   av.it.:   9.4
       thresh= 3.914E-08 alpha_mix =  0.700 |ddv_scf|^2 =  1.799E-14
 
-      iter #   7 total cpu time :     5.3 secs   av.it.:  15.2
+      iter #   7 total cpu time :     3.2 secs   av.it.:   9.9
       thresh= 1.341E-09 alpha_mix =  0.700 |ddv_scf|^2 =  2.767E-16
 
-      iter #   8 total cpu time :     5.4 secs   av.it.:  16.6
-      thresh= 1.663E-10 alpha_mix =  0.700 |ddv_scf|^2 =  3.012E-18
+      iter #   8 total cpu time :     3.2 secs   av.it.:   9.8
+      thresh= 1.663E-10 alpha_mix =  0.700 |ddv_scf|^2 =  4.039E-18
 
-      iter #   9 total cpu time :     5.5 secs   av.it.:  18.2
-      thresh= 1.736E-11 alpha_mix =  0.700 |ddv_scf|^2 =  4.559E-19
+      iter #   9 total cpu time :     3.2 secs   av.it.:  10.2
+      thresh= 2.010E-11 alpha_mix =  0.700 |ddv_scf|^2 =  2.190E-18
 
-        iq =   6   iwann =   1   rPi_q =    -0.03551303     0.00000000   uPi_q =     0.05689195     0.00000000   SH_q =     0.03334707    -0.00000000
+      iter #  10 total cpu time :     3.3 secs   av.it.:   9.8
+      thresh= 1.480E-11 alpha_mix =  0.700 |ddv_scf|^2 =  1.329E-19
+
+        iq =   6   iwann =   1   rPi_q =     0.02137893     0.00000000   uPi_q =     0.05689195    -0.00000000   SH_q =     0.03334707    -0.00000000
 
 
      ==============================================================================
@@ -1283,14 +1335,14 @@ weight =    6  0.12500000
 
         INFO: rhowan_q(r) RETRIEVED
 
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         295     295    121                 3287     3287     869
- 
+
      Using Slab Decomposition
- 
+
 
      Title: 
      KI Silicon                                                                 
@@ -1302,7 +1354,7 @@ weight =    6  0.12500000
      number of atoms/cell      =            2
      number of atomic types    =            1
      number of electrons       =         8.00
-     number of Kohn-Sham states=            6
+     number of Kohn-Sham states=            7
      kinetic-energy cutoff     =      20.0000  Ry
      charge density cutoff     =      80.0000  Ry
      Exchange-correlation= PZ
@@ -1332,7 +1384,7 @@ weight =    6  0.12500000
                 l(2) =   1
 
      atomic species   valence    mass     pseudopotential
-        Si             4.00    28.08500     Si( 1.00)
+     Si                4.00    28.08500     Si( 1.00)
 
      48 Sym. Ops., with inversion, found
 
@@ -1341,8 +1393,8 @@ weight =    6  0.12500000
    Cartesian axes
 
      site n.     atom                  positions (alat units)
-         1           Si  tau(   1) = (   0.0000000   0.0000000   0.0000000  )
-         2           Si  tau(   2) = (   0.2500000   0.2500000   0.2500000  )
+         1        Si     tau(   1) = (   0.0000000   0.0000000   0.0000000  )
+         2        Si     tau(   2) = (   0.2500000   0.2500000   0.2500000  )
 
      number of k points=    16
                        cart. coord. in units 2pi/alat
@@ -1365,7 +1417,7 @@ weight =    6  0.12500000
 
      Dense  grid:     3287 G-vectors     FFT dimensions: (  24,  24,  24)
 
-     Estimated max dynamical RAM per process >       1.84 MB
+     Estimated max dynamical RAM per process >       1.90 MB
 
      The potential is recalculated from file :
      ./out/kcw/q7/Si.save/charge-density
@@ -1375,7 +1427,7 @@ weight =    6  0.12500000
      Band Structure Calculation
      Davidson diagonalization with overlap
 
-     ethr =  1.25E-10,  avg # of iterations =  9.8
+     ethr =  1.25E-10,  avg # of iterations = 10.1
 
      total cpu time spent up to now is       -1.0 secs
 
@@ -1383,108 +1435,113 @@ weight =    6  0.12500000
 
           k = 0.0000 0.0000 0.0000 (   411 PWs)   bands (ev):
 
-    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730
+    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730   8.7730
 
           k = 0.0000 0.0000 1.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-0.5000 0.5000-0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k = 0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k = 0.5000 0.5000 1.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k = 0.0000 1.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k = 0.0000 1.0000 1.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-0.5000-0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-0.5000-0.5000 1.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-1.0000 0.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-1.0000 0.0000 1.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k = 0.0000 0.0000 1.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k = 0.0000 0.0000 2.0000 (   411 PWs)   bands (ev):
 
-    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730
+    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730   8.7730
 
           k =-0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-0.5000 0.5000 1.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
      highest occupied, lowest unoccupied level (ev):     6.3478    6.8163
 
-     Writing all to output data dir ./out/kcw/q7/Si.save/
+     Writing all to output data dir ./out/kcw/q7/Si.save/ :
+     XML data file, pseudopotentials, collected wavefunctions
 
         INFO: NSCF calculation DONE
 
         INFO: kcw_q initialization DONE
 
-weight =    7  0.12500000
 
-        Start linear response calculation for the wannier #  1    spin =  1
+        Start LR calculation for the wannier #  1   iq =  7   spin =  1
 
-      iter #   1 total cpu time :     5.8 secs   av.it.:  11.6
+        SYM : iwann=     1 iq =     7 weight =   0.12500000
+
+      iter #   1 total cpu time :     3.5 secs   av.it.:  11.8
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  7.090E-06
 
-      iter #   2 total cpu time :     5.8 secs   av.it.:  11.1
+      iter #   2 total cpu time :     3.6 secs   av.it.:  12.0
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.475E-05
 
-      iter #   3 total cpu time :     5.9 secs   av.it.:  10.6
+      iter #   3 total cpu time :     3.6 secs   av.it.:  11.9
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.272E-08
 
-      iter #   4 total cpu time :     6.0 secs   av.it.:  10.9
+      iter #   4 total cpu time :     3.7 secs   av.it.:   9.9
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.417E-10
 
-      iter #   5 total cpu time :     6.1 secs   av.it.:  12.2
+      iter #   5 total cpu time :     3.7 secs   av.it.:   9.6
       thresh= 1.191E-07 alpha_mix =  0.700 |ddv_scf|^2 =  1.532E-11
 
-      iter #   6 total cpu time :     6.2 secs   av.it.:  13.0
+      iter #   6 total cpu time :     3.7 secs   av.it.:   9.4
       thresh= 3.914E-08 alpha_mix =  0.700 |ddv_scf|^2 =  1.799E-14
 
-      iter #   7 total cpu time :     6.3 secs   av.it.:  15.2
-      thresh= 1.341E-09 alpha_mix =  0.700 |ddv_scf|^2 =  2.769E-16
+      iter #   7 total cpu time :     3.8 secs   av.it.:   9.9
+      thresh= 1.341E-09 alpha_mix =  0.700 |ddv_scf|^2 =  2.771E-16
 
-      iter #   8 total cpu time :     6.4 secs   av.it.:  16.8
-      thresh= 1.664E-10 alpha_mix =  0.700 |ddv_scf|^2 =  3.045E-18
+      iter #   8 total cpu time :     3.8 secs   av.it.:   9.8
+      thresh= 1.665E-10 alpha_mix =  0.700 |ddv_scf|^2 =  4.898E-18
 
-      iter #   9 total cpu time :     6.5 secs   av.it.:  18.2
-      thresh= 1.745E-11 alpha_mix =  0.700 |ddv_scf|^2 =  4.523E-19
+      iter #   9 total cpu time :     3.9 secs   av.it.:  10.2
+      thresh= 2.213E-11 alpha_mix =  0.700 |ddv_scf|^2 =  3.200E-18
 
-        iq =   7   iwann =   1   rPi_q =    -0.03551303    -0.00000000   uPi_q =     0.05689195    -0.00000000   SH_q =     0.03334707    -0.00000000
+      iter #  10 total cpu time :     3.9 secs   av.it.:   9.6
+      thresh= 1.789E-11 alpha_mix =  0.700 |ddv_scf|^2 =  1.342E-19
+
+        iq =   7   iwann =   1   rPi_q =     0.02137892    -0.00000000   uPi_q =     0.05689195    -0.00000000   SH_q =     0.03334707    -0.00000000
 
 
      ==============================================================================
@@ -1496,14 +1553,14 @@ weight =    7  0.12500000
 
         INFO: rhowan_q(r) RETRIEVED
 
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         295     295    109                 3287     3287     749
- 
+
      Using Slab Decomposition
- 
+
 
      Title: 
      KI Silicon                                                                 
@@ -1515,7 +1572,7 @@ weight =    7  0.12500000
      number of atoms/cell      =            2
      number of atomic types    =            1
      number of electrons       =         8.00
-     number of Kohn-Sham states=            6
+     number of Kohn-Sham states=            7
      kinetic-energy cutoff     =      20.0000  Ry
      charge density cutoff     =      80.0000  Ry
      Exchange-correlation= PZ
@@ -1545,7 +1602,7 @@ weight =    7  0.12500000
                 l(2) =   1
 
      atomic species   valence    mass     pseudopotential
-        Si             4.00    28.08500     Si( 1.00)
+     Si                4.00    28.08500     Si( 1.00)
 
      48 Sym. Ops., with inversion, found
 
@@ -1554,8 +1611,8 @@ weight =    7  0.12500000
    Cartesian axes
 
      site n.     atom                  positions (alat units)
-         1           Si  tau(   1) = (   0.0000000   0.0000000   0.0000000  )
-         2           Si  tau(   2) = (   0.2500000   0.2500000   0.2500000  )
+         1        Si     tau(   1) = (   0.0000000   0.0000000   0.0000000  )
+         2        Si     tau(   2) = (   0.2500000   0.2500000   0.2500000  )
 
      number of k points=    16
                        cart. coord. in units 2pi/alat
@@ -1578,7 +1635,7 @@ weight =    7  0.12500000
 
      Dense  grid:     3287 G-vectors     FFT dimensions: (  24,  24,  24)
 
-     Estimated max dynamical RAM per process >       1.84 MB
+     Estimated max dynamical RAM per process >       1.90 MB
 
      The potential is recalculated from file :
      ./out/kcw/q8/Si.save/charge-density
@@ -1588,7 +1645,7 @@ weight =    7  0.12500000
      Band Structure Calculation
      Davidson diagonalization with overlap
 
-     ethr =  1.25E-10,  avg # of iterations =  9.8
+     ethr =  1.25E-10,  avg # of iterations = 10.1
 
      total cpu time spent up to now is       -1.0 secs
 
@@ -1596,108 +1653,110 @@ weight =    7  0.12500000
 
           k = 0.0000 0.0000 0.0000 (   411 PWs)   bands (ev):
 
-    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730
+    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730   8.7730
 
           k =-0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-0.5000 0.5000-0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-1.0000 1.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k = 0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k = 0.0000 1.0000 1.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k = 0.0000 1.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-0.5000 1.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-0.5000-0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-1.0000 0.0000 1.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-1.0000 0.0000 0.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-1.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k = 0.0000 0.0000 1.0000 (   412 PWs)   bands (ev):
 
-    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163
+    -1.4879  -1.4879   3.4057   3.4057   6.8163   6.8163  16.2821
 
           k =-0.5000 0.5000 1.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-0.5000 0.5000 0.5000 (   410 PWs)   bands (ev):
 
-    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293
+    -3.2900  -0.7399   5.1127   5.1127   7.7560   9.5293   9.5293
 
           k =-1.0000 1.0000 1.0000 (   411 PWs)   bands (ev):
 
-    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730
+    -5.6677   6.3478   6.3478   6.3478   8.7730   8.7730   8.7730
 
      highest occupied, lowest unoccupied level (ev):     6.3478    6.8163
 
-     Writing all to output data dir ./out/kcw/q8/Si.save/
+     Writing all to output data dir ./out/kcw/q8/Si.save/ :
+     XML data file, pseudopotentials, collected wavefunctions
 
         INFO: NSCF calculation DONE
 
         INFO: kcw_q initialization DONE
 
-weight =    8  0.12500000
 
-        Start linear response calculation for the wannier #  1    spin =  1
+        Start LR calculation for the wannier #  1   iq =  8   spin =  1
 
-      iter #   1 total cpu time :     6.8 secs   av.it.:  11.9
+        SYM : iwann=     1 iq =     8 weight =   0.12500000
+
+      iter #   1 total cpu time :     4.1 secs   av.it.:  11.9
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  5.524E-06
 
-      iter #   2 total cpu time :     6.8 secs   av.it.:  10.9
+      iter #   2 total cpu time :     4.2 secs   av.it.:  12.0
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.693E-06
 
-      iter #   3 total cpu time :     6.9 secs   av.it.:  11.4
+      iter #   3 total cpu time :     4.2 secs   av.it.:  11.1
       thresh= 1.000E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.627E-09
 
-      iter #   4 total cpu time :     7.0 secs   av.it.:  11.9
+      iter #   4 total cpu time :     4.3 secs   av.it.:   9.5
       thresh= 4.033E-07 alpha_mix =  0.700 |ddv_scf|^2 =  3.061E-11
 
-      iter #   5 total cpu time :     7.1 secs   av.it.:  13.0
-      thresh= 5.533E-08 alpha_mix =  0.700 |ddv_scf|^2 =  2.090E-13
+      iter #   5 total cpu time :     4.3 secs   av.it.:   9.5
+      thresh= 5.533E-08 alpha_mix =  0.700 |ddv_scf|^2 =  2.089E-13
 
-      iter #   6 total cpu time :     7.2 secs   av.it.:  15.0
-      thresh= 4.571E-09 alpha_mix =  0.700 |ddv_scf|^2 =  1.112E-16
+      iter #   6 total cpu time :     4.3 secs   av.it.:   9.8
+      thresh= 4.571E-09 alpha_mix =  0.700 |ddv_scf|^2 =  1.107E-16
 
-      iter #   7 total cpu time :     7.3 secs   av.it.:  17.5
-      thresh= 1.055E-10 alpha_mix =  0.700 |ddv_scf|^2 =  1.803E-17
+      iter #   7 total cpu time :     4.4 secs   av.it.:  10.1
+      thresh= 1.052E-10 alpha_mix =  0.700 |ddv_scf|^2 =  1.052E-17
 
-      iter #   8 total cpu time :     7.4 secs   av.it.:  18.2
-      thresh= 4.247E-11 alpha_mix =  0.700 |ddv_scf|^2 =  1.858E-17
+      iter #   8 total cpu time :     4.4 secs   av.it.:  10.2
+      thresh= 3.244E-11 alpha_mix =  0.700 |ddv_scf|^2 =  2.093E-17
 
-      iter #   9 total cpu time :     7.5 secs   av.it.:  18.0
-      thresh= 4.310E-11 alpha_mix =  0.700 |ddv_scf|^2 =  2.054E-20
+      iter #   9 total cpu time :     4.5 secs   av.it.:   9.5
+      thresh= 4.575E-11 alpha_mix =  0.700 |ddv_scf|^2 =  2.245E-20
 
-        iq =   8   iwann =   1   rPi_q =    -0.03928317    -0.00000000   uPi_q =     0.07086647     0.00000000   SH_q =     0.04041725     0.00000000
+        iq =   8   iwann =   1   rPi_q =     0.03158330    -0.00000000   uPi_q =     0.07086647    -0.00000000   SH_q =     0.04041725    -0.00000000
 
 
      INFO: LR CALCULATION ... DONE
@@ -1706,130 +1765,108 @@ weight =    8  0.12500000
 
 
 
-        iwann  =     1   relaxed =      0.18777171   unrelaxed =      0.46765361   alpha =  0.40151879   self Hartree =  0.27339248
+        iwann  =     1   relaxed =      0.18777173   unrelaxed =      0.46765361   alpha =  0.40151884   self Hartree =  0.27339248
 
-        iwann* =     2   relaxed =      0.18777171   unrelaxed =      0.46765361   alpha =  0.40151879   self Hartree =  0.27339248
+        iwann* =     2   relaxed =      0.18777173   unrelaxed =      0.46765361   alpha =  0.40151884   self Hartree =  0.27339248
 
-        iwann* =     3   relaxed =      0.18777171   unrelaxed =      0.46765361   alpha =  0.40151879   self Hartree =  0.27339248
+        iwann* =     3   relaxed =      0.18777173   unrelaxed =      0.46765361   alpha =  0.40151884   self Hartree =  0.27339248
 
-        iwann* =     4   relaxed =      0.18777171   unrelaxed =      0.46765361   alpha =  0.40151879   self Hartree =  0.27339248
-
-
+        iwann* =     4   relaxed =      0.18777173   unrelaxed =      0.46765361   alpha =  0.40151884   self Hartree =  0.27339248
 
 
-        INFO: iq =     1   Structure Factor S(q) [Re, Im] =   8.00000000  0.00000000
 
-        INFO: iq =     2   Structure Factor S(q) [Re, Im] =   0.00000000 -0.00000000
 
-        INFO: iq =     3   Structure Factor S(q) [Re, Im] =   0.00000000 -0.00000000
 
-        INFO: iq =     4   Structure Factor S(q) [Re, Im] =   0.00000000  0.00000000
-
-        INFO: iq =     5   Structure Factor S(q) [Re, Im] =   0.00000000 -0.00000000
-
-        INFO: iq =     6   Structure Factor S(q) [Re, Im] =   0.00000000  0.00000000
-
-        INFO: iq =     7   Structure Factor S(q) [Re, Im] =   0.00000000  0.00000000
-
-        INFO: iq =     8   Structure Factor S(q) [Re, Im] =   0.00000000  0.00000000
-
-        iwann=   1   int rho_wann(r) [Re, Im] =    1.000000   -0.000000
-        iwann=   1   int Im[rho_wann(r)]      =    0.000000
-        iwann=   2   int rho_wann(r) [Re, Im] =    1.000000    0.000000
-        iwann=   2   int Im[rho_wann(r)]      =    0.000000
-        iwann=   3   int rho_wann(r) [Re, Im] =    1.000000   -0.000000
-        iwann=   3   int Im[rho_wann(r)]      =    0.000000
-        iwann=   4   int rho_wann(r) [Re, Im] =    1.000000   -0.000000
-        iwann=   4   int Im[rho_wann(r)]      =    0.000000
- 
-     init_run     :      0.06s CPU      0.07s WALL (       7 calls)
-     electrons    :      1.26s CPU      1.30s WALL (       7 calls)
+     init_run     :      0.03s CPU      0.03s WALL (       7 calls)
+     electrons    :      1.07s CPU      1.09s WALL (       7 calls)
 
      Called by init_run:
      wfcinit      :      0.00s CPU      0.00s WALL (       7 calls)
      wfcinit:atom :      0.00s CPU      0.00s WALL (     112 calls)
-     wfcinit:wfcr :      0.14s CPU      0.14s WALL (     112 calls)
+     wfcinit:wfcr :      0.09s CPU      0.10s WALL (     112 calls)
      potinit      :      0.00s CPU      0.00s WALL (       7 calls)
-     hinit0       :      0.04s CPU      0.05s WALL (       7 calls)
+     hinit0       :      0.02s CPU      0.02s WALL (       7 calls)
 
      Called by electrons:
-     c_bands      :      1.26s CPU      1.29s WALL (       7 calls)
+     c_bands      :      1.07s CPU      1.09s WALL (       7 calls)
      v_of_rho     :      0.00s CPU      0.00s WALL (       8 calls)
      v_h          :      0.00s CPU      0.00s WALL (       8 calls)
      v_xc         :      0.00s CPU      0.00s WALL (       8 calls)
 
      Called by c_bands:
-     init_us_2    :      0.03s CPU      0.03s WALL (     656 calls)
-     init_us_2:cp :      0.02s CPU      0.03s WALL (     656 calls)
-     cegterg      :      1.09s CPU      1.12s WALL (     112 calls)
+     init_us_2    :      0.02s CPU      0.02s WALL (     680 calls)
+     cegterg      :      0.97s CPU      0.98s WALL (     112 calls)
 
      Called by sum_band:
 
      Called by *egterg:
-     cdiaghg      :      0.09s CPU      0.09s WALL (    1204 calls)
-     cegterg:over :      0.03s CPU      0.03s WALL (    1092 calls)
-     cegterg:upda :      0.03s CPU      0.03s WALL (    1092 calls)
-     cegterg:last :      0.02s CPU      0.02s WALL (     336 calls)
-     h_psi        :      5.41s CPU      5.64s WALL (    9369 calls)
-     g_psi        :      0.01s CPU      0.01s WALL (    1092 calls)
+     cdiaghg      :      0.07s CPU      0.07s WALL (    1246 calls)
+     cegterg:over :      0.09s CPU      0.09s WALL (    1134 calls)
+     cegterg:upda :      0.06s CPU      0.06s WALL (    1134 calls)
+     cegterg:last :      0.03s CPU      0.03s WALL (     336 calls)
+     h_psi        :      3.03s CPU      3.12s WALL (    7833 calls)
+     g_psi        :      0.01s CPU      0.01s WALL (    1134 calls)
 
      Called by h_psi:
-     h_psi:calbec :      0.09s CPU      0.10s WALL (    9369 calls)
-     vloc_psi     :      5.17s CPU      5.39s WALL (    9369 calls)
-     add_vuspsi   :      0.08s CPU      0.09s WALL (    9369 calls)
+     h_psi:calbec :      0.09s CPU      0.09s WALL (    7833 calls)
+     vloc_psi     :      2.84s CPU      2.92s WALL (    7833 calls)
+                                        0.00s GPU  (    7833 calls)
+     add_vuspsi   :      0.08s CPU      0.09s WALL (    7833 calls)
 
      General routines
-     calbec       :      0.13s CPU      0.13s WALL (   17422 calls)
-     fft          :      0.02s CPU      0.02s WALL (     240 calls)
-     ffts         :      0.01s CPU      0.01s WALL (     208 calls)
-     fftw         :      5.04s CPU      5.28s WALL (   83656 calls)
-     davcio       :      0.16s CPU      0.23s WALL (    3024 calls)
- 
+     calbec       :      0.08s CPU      0.09s WALL (    7833 calls)
+     fft          :      0.14s CPU      0.14s WALL (     237 calls)
+     ffts         :      0.00s CPU      0.01s WALL (      80 calls)
+     fftw         :      2.90s CPU      2.98s WALL (   74298 calls)
+     davcio       :      0.06s CPU      0.06s WALL (    3748 calls)
+
      Parallel routines
- 
-     KCW          :      7.00s CPU      7.50s WALL
+
+     KCW          :      4.35s CPU      4.48s WALL
 
      INITIALIZATION: 
- 
-     init_vloc    :      0.00s CPU      0.00s WALL (       8 calls)
-     init_us_1    :      0.02s CPU      0.03s WALL (       8 calls)
- 
-     solve_linter :      5.57s CPU      5.91s WALL (       8 calls)
-     kcw_run_nscf :      1.36s CPU      1.47s WALL (       7 calls)
- 
-     solve_linter :      5.57s CPU      5.91s WALL (       8 calls)
-     ortho        :      0.01s CPU      0.01s WALL (     544 calls)
-     cgsolve      :      4.69s CPU      4.91s WALL (     544 calls)
-     incdrhoscf   :      0.35s CPU      0.37s WALL (     544 calls)
-     dv_of_drho   :      0.02s CPU      0.02s WALL (      68 calls)
-     mix_pot      :      0.08s CPU      0.13s WALL (      68 calls)
- 
- 
-     cgsolve      :      4.69s CPU      4.91s WALL (     544 calls)
-     ch_psi       :      4.62s CPU      4.84s WALL (    8053 calls)
- 
-     ch_psi       :      4.62s CPU      4.84s WALL (    8053 calls)
-     h_psi        :      5.41s CPU      5.64s WALL (    9369 calls)
-     last         :      0.18s CPU      0.19s WALL (    8053 calls)
- 
-     h_psi        :      5.41s CPU      5.64s WALL (    9369 calls)
-     add_vuspsi   :      0.08s CPU      0.09s WALL (    9369 calls)
- 
-     incdrhoscf   :      0.35s CPU      0.37s WALL (     544 calls)
- 
- 
-      General routines
-     calbec       :      0.13s CPU      0.13s WALL (   17422 calls)
-     fft          :      0.02s CPU      0.02s WALL (     240 calls)
-     ffts         :      0.01s CPU      0.01s WALL (     208 calls)
-     fftw         :      5.04s CPU      5.28s WALL (   83656 calls)
-     davcio       :      0.16s CPU      0.23s WALL (    3024 calls)
- 
- 
-     KCW          :      7.01s CPU      7.50s WALL
 
- 
-   This run was terminated on:  15:17: 8  29Jan2022            
+     init_vloc    :      0.00s CPU      0.00s WALL (       8 calls)
+     init_us_1    :      0.00s CPU      0.00s WALL (       8 calls)
+
+     solve_linter :      3.07s CPU      3.17s WALL (       8 calls)
+     kcw_run_nscf :      1.12s CPU      1.14s WALL (       7 calls)
+
+     solve_linter :      3.07s CPU      3.17s WALL (       8 calls)
+     ortho        :      0.01s CPU      0.01s WALL (     568 calls)
+     cgsolve      :      2.42s CPU      2.50s WALL (     568 calls)
+     incdrhoscf   :      0.24s CPU      0.24s WALL (     568 calls)
+                                        0.00s GPU  (     568 calls)
+     dv_of_drho   :      0.02s CPU      0.02s WALL (      71 calls)
+     mix_pot      :      0.05s CPU      0.05s WALL (      71 calls)
+
+
+     cgsolve      :      2.42s CPU      2.50s WALL (     568 calls)
+     ch_psi       :      2.35s CPU      2.43s WALL (    6475 calls)
+
+     ch_psi       :      2.35s CPU      2.43s WALL (    6475 calls)
+     h_psi        :      3.03s CPU      3.12s WALL (    7833 calls)
+     last         :      0.09s CPU      0.09s WALL (    6475 calls)
+
+     h_psi        :      3.03s CPU      3.12s WALL (    7833 calls)
+     add_vuspsi   :      0.08s CPU      0.09s WALL (    7833 calls)
+
+     incdrhoscf   :      0.24s CPU      0.24s WALL (     568 calls)
+                                        0.00s GPU  (     568 calls)
+
+
+      General routines
+     calbec       :      0.08s CPU      0.09s WALL (    7833 calls)
+     fft          :      0.14s CPU      0.14s WALL (     237 calls)
+     ffts         :      0.00s CPU      0.01s WALL (      80 calls)
+     fftw         :      2.90s CPU      2.98s WALL (   74298 calls)
+     davcio       :      0.06s CPU      0.06s WALL (    3748 calls)
+
+
+     KCW          :      4.35s CPU      4.53s WALL
+
+
+   This run was terminated on:  13:45: 1  17Sep2025            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   ! Copyright (C) 2001-2008 Quantum-Espresso group
@@ -19,7 +20,7 @@
   IMPLICIT NONE
   SAVE
 
-  INTEGER :: igmin(3), igmin_qG(3)
+  INTEGER :: igmin(3)
   !!
   REAL(KIND = DP) :: qqcut
   !!
@@ -30,7 +31,7 @@
   CONTAINS
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE find_min_qG(q)
+    SUBROUTINE find_min_qG(q, igmin_qG)
     !-----------------------------------------------------------------------
     !!
     !! Find igmin_qG = min_{G}|q+G|
@@ -44,6 +45,9 @@
     !
     REAL(KIND = DP), INTENT(in) :: q(3)
     !! q-vector from the full coarse or fine grid, in crystal coords.
+    INTEGER, INTENT(out) :: igmin_qG(3)
+    !! Index of the G minimizing |q+G|. Returned as an argument (not a shared
+    !! module variable) so concurrent OpenMP-threaded callers do not race on it.
     !
     ! Local variables
     INTEGER         :: m1
@@ -313,6 +317,9 @@
     !! Dipole-dipole term
     COMPLEX(KIND = DP) :: facg
     !! Atomic position exponential
+    INTEGER :: igmin_qG(3)
+    !! Index of the G minimizing |q+G|. Local (set before the OpenMP region and
+    !! only read inside it), replacing the former shared module variable.
     COMPLEX(KIND = DP) :: dyn_tmp(3 * nat, 3 * nat)
     !! Temporary dyn. matrice
     !
@@ -379,28 +386,21 @@
     ! Distribute the cpu
     CALL para_bounds(mm_start, mm_stop, mmax)
     !
-    IF (ionode) THEN
-      diff = mm_stop - mm_start
-    ENDIF
-    CALL mp_bcast(diff, ionode_id, inter_pool_comm)
-    !
-    ! If you are the last cpu with less element
-    IF (mm_stop - mm_start /= diff) THEN
-      add = 1
-    ELSE
-      add = 0
-    ENDIF
-    !
     !JLB: Find igmin_qG = min_{G}|q+G|
     qtmp=q
     CALL cryst_to_cart(1, qtmp, at, -1)
-    CALL find_min_qG(qtmp)
+    CALL find_min_qG(qtmp, igmin_qG)
     !
     dyn_tmp(:, :) = czero
     !
-    ! DO mm = 1, mmax
-    DO mm = mm_start, mm_stop + add
-      IF (add == 1 .AND. mm == mm_stop + add) CYCLE
+    !$omp parallel do reduction(+:dyn_tmp) &
+    !$omp private(mm,m1,m2,m3,gg,geg,qnorm,f,alpha_para,alpha_perp) &
+    !$omp private(criteria,epsilon_para,epsilon_perp) &
+    !$omp private(grg,facgd,zag_para,zag_perp,na,i,ipol,jpol,fnat_para,fnat_perp) &
+    !$omp private(nb,arg,zcg_para,zcg_perp,j,zag,qag) &
+    !$omp private(fnat,qnat,zcg,qcg,kpol,Qdd,Qdq,Qqq) &
+    !$omp private(facg,zbg_para,zbg_perp)
+    DO mm = mm_start, mm_stop
       !
       m1 = -nr1x + FLOOR(1.0d0 * (mm - 1) / ((2 * nr3x + 1) * (2 * nr2x + 1)))
       m2 = -nr2x + MOD(FLOOR(1.0d0 * (mm - 1) / (2 * nr3x + 1)), (2 * nr2x + 1))
@@ -728,6 +728,7 @@
         ENDIF ! system_2d .AND. L > 0.001
       ENDIF ! criteria
     ENDDO ! mm
+    !$omp end parallel do
     !
     CALL mp_sum(dyn_tmp, inter_pool_comm)
     dyn(:, :) = dyn_tmp(:, :) + dyn(:, :)
@@ -821,6 +822,9 @@
     !! Counter on band index
     INTEGER :: mmin(3), mmax(3)
     !! Shifted G-loop to be centered around min_{G}|q+G|
+    INTEGER :: igmin_qG(3)
+    !! Index of the G minimizing |q+G|. Thread-private local: this routine is
+    !! called from inside an OpenMP region, so it must not use shared module state.
     REAL(KIND = DP):: metric
     !! (2*pi/a)^2
     REAL(KIND = DP) :: qeq
@@ -886,7 +890,9 @@
     COMPLEX(KIND = DP) :: coeff_r(3, nmodes)
     !! Coefficient of the rrk(3, iw, jw) term
     !
+    !$omp master
     CALL start_clock('rgd_blk_epw')
+    !$omp end master
     !
     ! Impose zero Born effective charge in case of non-polar materials with quadrupoles
     IF (.NOT. lpolar) zeu(:, :, :) = zero
@@ -942,7 +948,7 @@
     !JLB: Find igmin_qG = min_{G}|q+G|
     qtmp = q
     CALL cryst_to_cart(1, qtmp, at, -1)
-    CALL find_min_qG(qtmp)
+    CALL find_min_qG(qtmp, igmin_qG)
     ! shift G-sum and center around min_{G}|q+G|, to ensure periodicity
     mmin(1) = -nr1x + igmin_qG(1)
     mmax(1) =  nr1x + igmin_qG(1)
@@ -1154,7 +1160,9 @@
       epmat = SQRT(epmat * CONJG(epmat) - epmatl * CONJG(epmatl))
     ENDIF
     !
+    !$omp master
     CALL stop_clock('rgd_blk_epw')
+    !$omp end master
     !
     !-------------------------------------------------------------------------------
     END SUBROUTINE rgd_blk_epw
@@ -1414,6 +1422,9 @@
       nr3x = INT(SQRT(geg) / SQRT(bg(1, 3)**2 + bg(2, 3)**2 + bg(3, 3)**2)) + 1
     ENDIF
     !
+    !$omp parallel do collapse(3) reduction(+:dyn_der) &
+    !$omp private(m1,m2,m3,gg,geg,facgd,nb,zbg,zbg_der,na,zag,zag_der,arg) &
+    !$omp private(arg_no_g,facg,j,i,dyn_der_part,isum)
     DO m1 = -nr1x, nr1x
       DO m2 = -nr2x, nr2x
         DO m3 = -nr3x, nr3x
@@ -1466,6 +1477,7 @@
         ENDDO ! m3
       ENDDO ! m2
     ENDDO ! m1
+    !$omp end parallel do
     !
     !-------------------------------------------------------------------------------
     END SUBROUTINE rgd_blk_der
@@ -1555,12 +1567,12 @@
     IF (ABS(SUM(WI)) > eps6) CALL errore('epsi_thickn_2d', 'Eigenvalues of epsilon_inf are complex', 1)
     !
     DO I = 1, 3
-      sdot(1) = DDOT(3, VR(I,:), 1, UV(1,:), 1)
-      sdot(2) = DDOT(3, VR(I,:), 1, UV(2,:), 1)
-      sdot(3) = DDOT(3, VR(I,:), 1, UV(3,:), 1)
+      sdot(1) = DDOT(3, VR(:, I), 1, UV(1, :), 1)
+      sdot(2) = DDOT(3, VR(:, I), 1, UV(2, :), 1)
+      sdot(3) = DDOT(3, VR(:, I), 1, UV(3, :), 1)
       J = MAXLOC(ABS(sdot))
       epsi_xyz(J(1)) = WR(I)
-      epsi_vec(J(1),:) = VR(I,:)
+      epsi_vec(J(1),:) = VR(:, I)
     ENDDO
     WRITE(stdout, '(5x,a)') ' '
     WRITE(stdout, '(5x,a)') 'eigenvalues and eigenvectors of epsilon_inf'

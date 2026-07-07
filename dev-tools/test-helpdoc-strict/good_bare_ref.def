@@ -1,0 +1,45 @@
+# Test .def file: a fully-migrated, strict-valid input description that
+# exercises a *bare variable re-reference* -- a childless "var" node that
+# re-references an already-defined variable inside an alternate card
+# syntax/choose branch. Such childless nodes must NOT be flagged for a
+# missing <dimensionality>/<units> under --strict.
+# Used by run-tests.sh of the helpdoc --strict test harness.
+
+input_description -distribution {Quantum ESPRESSO} -package TEST -program test.x {
+
+    namelist TEST {
+
+        var ecutwfc -type REAL {
+            default { 25.0 }
+            dimensionality { energy }
+            units { Ry }
+            info { kinetic energy cutoff for wavefunctions }
+        }
+    }
+
+    card WFS {
+
+        choose {
+            when -test "rel < 2" {
+                syntax {
+                    line {
+                        # full definition of nwf, with mandatory metadata
+                        var nwf -type INTEGER {
+                            default { 1 }
+                            info { number of wavefunctions }
+                        }
+                    }
+                }
+            }
+            otherwise {
+                syntax {
+                    line {
+                        # bare re-reference of nwf: a childless var node.
+                        # This must pass --strict (no dimensionality needed).
+                        var nwf
+                    }
+                }
+            }
+        }
+    }
+}

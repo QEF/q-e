@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   !
@@ -47,7 +48,9 @@
             iekanu, iwfplrn, idtauplrn, ipsirplrn, idosplrn, ixsfplrn,         &
             iufilfelec, iufilnphon, iukmeshf, iuqmeshf, iuselecqfd, io_error,  &
             iufelecrestart, iunphonrestart, iunphindx, iun3rdfc, iurpa,        &
-            iuahcsth, iuahcgkk, iuahcet, iuahcdw, iusymk, iufilmu_meff
+            iuahcsth, iuahcgkk, iuahcet, iuahcdw, iusymk, iufilmu_meff,        &
+            iufilvkk, iufileigdiff, iufileigplrn,                              &  
+            iundnsbare, iunocc, iundnsscf                                 
   !
   ! Output of physically relevant quantities (60-100)
   !
@@ -85,6 +88,9 @@
   INTEGER :: iufildos        = 88  ! electronic DOS in Fermi windows [prefix.dos]
   INTEGER :: iunirobj        = 89  ! Unit with ir objects
   INTEGER :: iufilnscf       = 90  ! Unit for reading the nscf bands for the Eliashberg + coulomb calculation.
+  INTEGER :: iundnsscf       = 91  ! Unit for the dnsscf_q file
+  INTEGER :: iundnsbare      = 92  ! Unit for the dnsbare_q file
+  INTEGER :: iunocc          = 93  ! Unit for occupation number
   INTEGER :: iukgmap         = 96  ! Map of folding G-vector indexes [.kgmap]
   INTEGER :: iuwanep         = 97  ! Spatial decay of e-p matrix elements in wannier basis
                                    ! Electrons + phonons [epmat_wanep]
@@ -213,6 +219,9 @@
   INTEGER :: ipsirplrn       = 362 ! Polaron wf in real space
   INTEGER :: idosplrn        = 363 ! Polaron Ank DOS
   INTEGER :: ixsfplrn        = 364 ! Polaron xsf file for displacements
+  INTEGER :: iufilvkk        = 365 ! VME in Bloch basis 
+  INTEGER :: iufileigdiff    = 366 ! eigenvalues and their differences 
+  INTEGER :: iufileigplrn    = 367 ! all the polaron eignvalues 
   !
   ! Merging of files (400-450)
   INTEGER :: iunepmat_merge    = 400

@@ -67,12 +67,12 @@ subroutine random_matrix_new (irt, nsymq, minus_q, irotmq, nat, &
   wdyn (:, :, :, :) = (0d0, 0d0)
   do na = 1, nat
      do ipol = 1, 3
-        wdyn (ipol, ipol, na, na) = 2*__RANDOM_DBLE
+        wdyn (ipol, ipol, na, na) = __RANDOM_DBLE
         do jpol = ipol + 1, 3
            if (lgamma) then
-              wdyn (ipol, jpol, na, na) = __RANDOM_DBLE
+              wdyn (ipol, jpol, na, na) = __RANDOM_DBLE / SQRT(2.0_dp)
            else
-              wdyn (ipol, jpol, na, na) = __RANDOM_CMPLX
+              wdyn (ipol, jpol, na, na) = __RANDOM_CMPLX / SQRT(2.0_dp)
            endif
            wdyn (jpol, ipol, na, na) = CONJG(wdyn (ipol, jpol, na, na) )
         enddo
@@ -88,9 +88,9 @@ subroutine random_matrix_new (irt, nsymq, minus_q, irotmq, nat, &
               if ( (nb == ira) .or. (nb == iramq) ) then
                  do jpol = 1, 3
                     if (lgamma) then
-                       wdyn (ipol, jpol, na, nb) = __RANDOM_DBLE
+                       wdyn (ipol, jpol, na, nb) = __RANDOM_DBLE / SQRT(2.0_dp)
                     else
-                       wdyn (ipol, jpol, na, nb) = __RANDOM_CMPLX
+                       wdyn (ipol, jpol, na, nb) = __RANDOM_CMPLX / SQRT(2.0_dp)
                     endif
                     wdyn(jpol, ipol, nb, na) = CONJG(wdyn(ipol, jpol, na, nb))
                  enddo

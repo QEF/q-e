@@ -58,8 +58,6 @@ subroutine init_representations()
   IF ( .not. time_reversal ) minus_q = .false.
   ! if minus_q=.t. set_irr will search for Sq=-q+G symmetry.
   ! On output minus_q=.t. if such a symmetry has been found
-  write(stdout, '(/,5x,"Number and degeneracy of irreps per q-point" )')
-  write(stdout, '(5x,"  N         xq(1)         xq(2)         xq(3)   N irreps" )')
   DO iq=1, nqs
      xq(1:3)  = x_q(1:3,iq)
      lgamma = lgamma_iq(iq)
@@ -96,6 +94,10 @@ subroutine init_representations()
      CALL mp_bcast (num_rap_mode, root, world_comm)
 
      CALL ph_writefile('data_u',iq,0,ierr)
+     IF ( iq == 1) THEN
+        WRITE(stdout, '(/,5x,"Number and degeneracy of irreps per q-point" )')
+        WRITE(stdout, '(5x,"  N         xq(1)         xq(2)         xq(3)   N irreps" )')
+     END IF
      WRITE(stdout, '(5x,i3, 3f14.9,i8)') iq,x_q(1,iq),x_q(2,iq),x_q(3,iq),nirr
      IF ( ALL(npert(1:nirr) == 1) ) THEN
         WRITE(stdout, '(5x,"No degeneracy")')
@@ -196,7 +198,7 @@ subroutine initialize_grid_variables()
      write(stdout,'(/,5x, "The code stops because there is nothing to do")') 
      CALL clean_pw(.FALSE.)
      CALL close_files(.FALSE.)
-     CALL environment_end('PHONON')
+     CALL environment_end( )
      CALL mp_global_end()
      STOP
   ENDIF

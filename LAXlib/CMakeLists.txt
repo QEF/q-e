@@ -3,14 +3,17 @@ set(src_lax
     dspev_drv.f90
     la_error.f90
     la_helper.f90
+    la_module.f90
     la_param.f90
     la_types.f90
     mp_diag.f90
     ptoolkit.f90
     rdiaghg.f90
+    cdiaghg.f90
+    rdiagh.f90
+    cdiagh.f90
     transto.f90
-    zhpev_drv.f90
-    cdiaghg.f90)
+    zhpev_drv.f90)
 qe_enable_cuda_fortran("${src_lax}")
 
 qe_add_library(qe_lax ${src_lax})

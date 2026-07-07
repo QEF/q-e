@@ -1,5 +1,7 @@
 # Makefile for IR object files
 
+VPATH = @srcdir@
+
 default: irobjs
 
 all: irobjs
@@ -17,3 +19,4 @@ irobjs:
 	tar -zxvf irobjs.tar.gz
 	mv ./q-e-develop-EPW-irobjs/EPW/irobjs/ir_nlambda*_ndigit*.dat ./
 	rm -r q-e-develop-EPW-irobjs ; rm irobjs.tar.gz
+

@@ -864,6 +864,10 @@ PROGRAM pw2wannier90
        'Non-collinear and gamma_only not implemented',1)
   IF (gamma_only.and.scdm_proj) CALL errore('pw2wannier90',&
        'Gamma_only and SCDM not implemented',1)
+  IF (gamma_only .AND. ANY(atom_proj_frozen >= 0)) CALL errore('pw2wannier90',&
+       'gamma_only and atom_proj_frozen not implemented',1)
+  IF (gamma_only .AND. write_unkg) CALL errore('pw2wannier90',&
+       'gamma_only and write_unkg not implemented',1)
   IF (scdm_proj) then
     IF ((trim(scdm_entanglement) /= 'isolated') .AND. &
         (trim(scdm_entanglement) /= 'erfc') .AND. &
@@ -1099,7 +1103,7 @@ PROGRAM pw2wannier90
      CALL mp_barrier(world_comm)
      !
      ! not sure if this should be called also in 'library' mode or not !!
-     CALL environment_end ( 'PW2WANNIER' )
+     CALL environment_end( )
      IF ( ionode ) WRITE( stdout, *  )
      CALL stop_pp
      !
@@ -6865,6 +6869,7 @@ SUBROUTINE write_plot
          evc_r(:, :) = (0.d0, 0.d0)
          DO ipol = 1, npol
             evc_r(dffts%nl(igk_k(1:npw,ik)), ipol) = evc(1+npwx*(ipol-1):npw+npwx*(ipol-1), ibnd)
+            IF (gamma_only) evc_r(dffts%nlm(igk_k(1:npw,ik)), ipol) = CONJG(evc(1:npw, ibnd))
             CALL invfft('Wave', evc_r(:, ipol), dffts)
          ENDDO
          !

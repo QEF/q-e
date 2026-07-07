@@ -1,0 +1,13 @@
+# BAD: a conditional <default> whose last <case> still carries a "test"
+# (rule 5: the last case must be a testless fallback).
+input_description -distribution {Quantum ESPRESSO} -package TEST -program test.x {
+    namelist TEST {
+        var occupations -type CHARACTER {
+            default -kind conditional {
+                case -test "ltetra"   { tetrahedra }
+                case -test "lsmearing" { smearing }
+            }
+            info { occupation scheme }
+        }
+    }
+}

@@ -6,22 +6,21 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------
-SUBROUTINE adddvscf(ipert, ik)
-   USE lrus, ONLY : becp1
+SUBROUTINE adddvscf(ipert, ik, time_reversed)
+   USE uspp, ONLY : okvan
+   USE lrus, ONLY : becp1, becpt
    IMPLICIT NONE
    INTEGER, INTENT(IN) :: ik, ipert
-   CALL adddvscf_(ipert, ik, becp1(ik))
+   LOGICAL, INTENT(IN) :: time_reversed
+   IF (okvan) THEN
+      IF (time_reversed) THEN
+         !! Use becpt instead of becp1. Used for time reversed wave functions.
+         CALL adddvscf_(ipert, ik, becpt(ik))
+      ELSE
+         CALL adddvscf_(ipert, ik, becp1(ik))
+      ENDIF
+   ENDIF
 END SUBROUTINE adddvscf
-!----------------------------------------------------------------------
-!
-!----------------------------------------------------------------------
-SUBROUTINE adddvscf_ph_mag(ipert, ik)
-   !! Use becpt instead of becp1. Used for time reversed wave functions.
-   USE qpoint_aux, ONLY : becpt
-   IMPLICIT NONE
-   INTEGER, INTENT(IN) :: ik, ipert
-   CALL adddvscf_(ipert, ik, becpt(ik))
-END SUBROUTINE adddvscf_ph_mag
 !----------------------------------------------------------------------
 !
 !----------------------------------------------------------------------

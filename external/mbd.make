@@ -45,10 +45,6 @@ mbd_version.f90: mbd_version.f90.in
 	sed -i -e 's/@PROJECT_VERSION_PATCH@/0/' mbd_version.f90
 	sed -i -e 's/@PROJECT_VERSION_SUFFIX@/0/' mbd_version.f90
 
-.PHONY: clean distclean
+.PHONY: clean
 clean:
-	rm -f *.a *.o mbd_version.f90
-
-distclean: clean
-	rm -f *.mod
-	rm -f $(LIB)
+	rm -f *.a *.o *.mod mbd_version.f90

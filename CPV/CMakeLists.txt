@@ -5,6 +5,7 @@ set(src_cpv
     src/cg_sub.f90
     src/chargedensity.f90
     src/cp_autopilot.f90
+    src/cp_control.f90
     src/cp_emass.f90
     src/cp_interfaces.f90
     src/cp_restart_new.f90

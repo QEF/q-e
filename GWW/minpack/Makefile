@@ -2,6 +2,8 @@
 
 include ../../make.inc
 
+VPATH = @srcdir@
+
 MINOBJS = \
 dpmpar.o \
 fdjac2.o \

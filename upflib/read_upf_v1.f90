@@ -15,7 +15,7 @@
 ! ...   declare modules
         USE upf_kinds,    ONLY: DP
         USE upf_io,       ONLY: stdout
-        USE pseudo_types, ONLY: pseudo_upf
+        USE pseudo_types, ONLY: pseudo_upf, reset_upf
         USE upf_utils,    ONLY: matches
 !
         IMPLICIT NONE
@@ -43,6 +43,8 @@ SUBROUTINE read_upf_v1 ( file_pseudo, upf, ierr )
   INTEGER :: ios, iunps
   CHARACTER (len=80) :: dummy  
   !
+  CALL reset_upf(upf)
+  !
   ! Open the file
   !
   OPEN ( NEWUNIT = iunps, FILE = file_pseudo, STATUS = 'old', &
@@ -51,9 +53,6 @@ SUBROUTINE read_upf_v1 ( file_pseudo, upf, ierr )
   !
   ! First check if this pseudo-potential has spin-orbit or GIPAW information
   !
-  upf%q_with_l=.false.
-  upf%has_so=.false.
-  upf%has_gipaw = .false.
   addinfo_loop: do while (ios == 0)  
      read (iunps, *, iostat = ios, err = 200) dummy  
      if (matches ("<PP_ADDINFO>", dummy) ) then
@@ -89,10 +88,6 @@ SUBROUTINE read_upf_v1 ( file_pseudo, upf, ierr )
   
   call scan_end (iunps, "HEADER",ierr)  
   if (ierr > 0) GO TO 200
-
-  ! Compatibility with later formats:
-  upf%has_wfc = .false.
-
   !-------->Search for mesh information
   call scan_begin (iunps, "MESH", .true., ierr)  
   if ( ierr > 0 ) go to 200

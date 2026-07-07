@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2007-2011 Quantum ESPRESSO group
+! Copyright (C) 2017-2025 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -34,6 +34,15 @@ MODULE Coul_cut_2D
   REAL(DP), ALLOCATABLE :: lr_Vloc(:,:)
   !! The long-range part of the local part of the ionic potential
   !
+  PRIVATE
+  !! Next two variables public only because used in linear response codes
+  PUBLIC :: cutoff_2D, lr_Vloc
+  PUBLIC :: do_cutoff_2D, lz
+  PUBLIC :: cutoff_fact, cutoff_lr_Vloc, cutoff_local, cutoff_hartree, &
+       cutoff_ewald, cutoff_force_ew, cutoff_force_lc, cutoff_stres_evloc, &
+       cutoff_stres_sigmaloc, cutoff_stres_sigmahar, cutoff_stres_sigmaewa, &
+       deallocate_cutoff_2D
+  !
 CONTAINS
 !
 !----------------------------------------------------------------------
@@ -44,7 +53,7 @@ SUBROUTINE cutoff_fact()
   !! See Eq.(24) of PRB 96, 075448
   !
   USE io_global,    ONLY : stdout
-  USE gvect,        ONLY : g, ngm, ngmx
+  USE gvect,        ONLY : g, ngm
   USE cell_base,    ONLY : alat, celldm, at
   USE constants,    ONLY : tpi
   !
@@ -54,7 +63,8 @@ SUBROUTINE cutoff_fact()
   ! counter over G vectors, cartesian coord.
   REAL(DP) :: Gzlz, Gplz
   !
-  ALLOCATE( cutoff_2D(ngmx) ) 
+  ALLOCATE( cutoff_2D(ngm) ) 
+  !$acc enter data create(cutoff_2D)
   !
   ! Message to indicate that the cutoff is active. 
   WRITE(stdout, *) "----2D----2D----2D----2D----2D----2D----2D----2D----2D----2D----2D----2D"
@@ -73,11 +83,13 @@ SUBROUTINE cutoff_fact()
   ENDDO
   ! define cutoff distance and compute cutoff factor
   lz = 0.5d0*at(3,3)*alat
+  !$acc parallel loop present(g)
   DO ng = 1, ngm
      Gplz = SQRT( g(1,ng)**2 + g(2,ng)**2 )*tpi*lz/alat
      Gzlz = g(3,ng)*tpi*lz/alat
      cutoff_2D(ng) = 1.0d0 - EXP(-Gplz)*COS(Gzlz)
   ENDDO
+  !$acc update self(cutoff_2D)
   !
   RETURN
   !
@@ -92,7 +104,7 @@ SUBROUTINE cutoff_lr_Vloc( )
   !
   USE constants,    ONLY : fpi, e2, eps8
   USE fft_base,     ONLY : dfftp
-  USE gvect,        ONLY : ngm, gg, g, ngmx
+  USE gvect,        ONLY : ngm, gg, g
   ! gg is G^2 in increasing order (in units of tpiba2=(2pi/a)^2)
   USE ions_base,    ONLY : zv, nsp
   USE uspp_param,   ONLY : upf
@@ -100,29 +112,35 @@ SUBROUTINE cutoff_lr_Vloc( )
   !
   ! ... local variables
   !
-  INTEGER :: ng, nt, ng0 
-  REAL(DP) ::fac
+  INTEGER  :: ng, nt, ng0 
+  REAL(DP) :: fac(nsp)
   !
-  IF (.NOT. ALLOCATED(lr_Vloc)) ALLOCATE( lr_Vloc(ngmx,nsp) )
+  IF (.NOT. ALLOCATED(lr_Vloc)) THEN
+     ALLOCATE( lr_Vloc(ngm,nsp) )
+     !$acc enter data create( lr_Vloc )
+  END IF
   !
-  lr_Vloc(:,:) = 0.0d0
   ! set G=0 value to zero
   IF (gg(1)<eps8) THEN
+     !$acc kernels
      lr_Vloc(1,:) = 0.0d0
+     !$acc end kernels
      ng0 = 2
   ELSE
      ng0 = 1
   ENDIF
-  ! Set g.neq.0 values
+  ! Set G>0 values
   DO nt = 1, nsp
-     fac = upf(nt)%zp * e2 / tpiba2
+     fac(nt) = upf(nt)%zp * e2 / tpiba2
+  END DO
+  !$acc parallel loop collapse(2) present(gg,cutoff_2D) copyin(fac)
+  DO nt = 1, nsp
      DO ng = ng0, ngm
-        lr_Vloc(ng,nt) = - fpi / omega* fac * cutoff_2D(ng)* &
+        lr_Vloc(ng,nt) = - fpi / omega* fac(nt) * cutoff_2D(ng)* &
                        & EXP( -gg(ng) * tpiba2 * 0.25d0) / gg(ng)
      ENDDO
   ENDDO
-  !
-  RETURN
+  !$acc update self(lr_Vloc)
   !
 END SUBROUTINE cutoff_lr_Vloc
 !
@@ -176,6 +194,9 @@ SUBROUTINE cutoff_hartree( rhog, aux1, ehart )
   REAL(DP) :: fac
   REAL(DP) :: rgtot_re, rgtot_im
   !  
+  !$acc data copyin(rhog) copy(aux1)
+  !
+  !$acc parallel loop reduction(+:ehart) present(gg,cutoff_2D)
   DO ig = gstart, ngm
      !
      fac = 1.D0 / gg(ig) * cutoff_2D(ig)
@@ -189,6 +210,8 @@ SUBROUTINE cutoff_hartree( rhog, aux1, ehart )
      aux1(2,ig) = rgtot_im * fac
      !
   ENDDO
+  !
+  !$acc end data
   !
   RETURN
   !
@@ -233,8 +256,12 @@ FUNCTION cutoff_ewald( gamma_only, alpha, omega ) RESULT (ewaldg)
   !
   ewaldg = 0.0d0
   ! now the G.neq.0 terms
+  !
+  !$acc data present_or_copyin(strf)
+  !$acc parallel loop reduction(+:ewaldg) present(gg,cutoff_2D) copyin(zv)
   DO ng = gstart, ngm
      rhon = (0.d0, 0.d0)
+     !$acc loop seq reduction(+:rhon)
      DO nt = 1, nsp
         rhon = rhon + zv(nt) * CONJG(strf(ng,nt) )
      ENDDO
@@ -243,6 +270,7 @@ FUNCTION cutoff_ewald( gamma_only, alpha, omega ) RESULT (ewaldg)
   ENDDO
   ewaldg = fpi / omega * ewaldg
   IF ( gamma_only ) ewaldg = 2.0_dp*ewaldg
+  !$acc end data
   !
   ! ... here add the other constant term (Phi_self)
   !
@@ -279,10 +307,13 @@ SUBROUTINE cutoff_force_ew( aux, alpha )
   !
   INTEGER :: ig
   !
+  !$acc data present_or_copy(aux)
+  !$acc parallel loop present(gg,cutoff_2D) 
   DO ig = gstart, ngm
      aux(ig) = aux(ig) * EXP( - gg(ig) * tpiba2 / alpha / 4.d0) &
                / (gg(ig) * tpiba2) * cutoff_2D(ig)
-  ENDDO  
+  ENDDO
+  !$acc end data
   !
   RETURN
   !
@@ -378,7 +409,7 @@ SUBROUTINE cutoff_stres_evloc( gamma_only, rho_G, strf, evloc )
   ! ... If gstart=2, it means g(1) is G=0, but we have nothing to add for G=0
   !     So we start at gstart.
   !
-  !$acc parallel loop collapse(2) reduction(+:evloc) copyin(lr_Vloc)
+  !$acc parallel loop collapse(2) reduction(+:evloc)
   DO nt = 1, ntyp
     DO ng = gstart, ngm
        evloc = evloc + DBLE( CONJG(rho_G(ng)) * strf(ng,nt) ) &
@@ -436,7 +467,7 @@ SUBROUTINE cutoff_stres_sigmaloc( gamma_only, rho_G, strf, sigmaloc )
   !
   ! ... no G=0 contribution
   !
-  !$acc parallel loop collapse(2) copyin(lr_Vloc,cutoff_2D)         &
+  !$acc parallel loop collapse(2) present(lr_Vloc,cutoff_2D)&
   !$acc     reduction(+:sigmaloc11,sigmaloc21,sigmaloc22,sigmaloc31,&
   !$acc                 sigmaloc32,sigmaloc33)
   DO nt = 1, ntyp
@@ -516,7 +547,7 @@ SUBROUTINE cutoff_stres_sigmahar( rho_G, sigmahar )
   sigmahar21 = 0._DP  ;  sigmahar32 = 0._DP
   sigmahar22 = 0._DP  ;  sigmahar33 = 0._DP
   !
-  !$acc parallel loop copyin(cutoff_2D)                             &
+  !$acc parallel loop present(cutoff_2D)                            &
   !$acc     reduction(+:sigmahar11,sigmahar21,sigmahar22,sigmahar31,&
   !$acc                 sigmahar32,sigmahar33)
   DO ng = gstart, ngm
@@ -612,7 +643,7 @@ SUBROUTINE cutoff_stres_sigmaewa( gamma_only, alpha, sdewald, sigmaewa )
   !
   sdewald = 0._DP
   !
-  !$acc parallel loop copyin(cutoff_2D,tau,zv,ityp) &
+  !$acc parallel loop present(cutoff_2D) copyin(tau,zv,ityp) &
   !$acc& reduction(+:sigma11,sigma21,sigma22,sigma31,sigma32, &
   !$acc&             sigma33,sdewald)
   DO ng = gstart, ngm
@@ -664,5 +695,21 @@ SUBROUTINE cutoff_stres_sigmaewa( gamma_only, alpha, sdewald, sigmaewa )
   RETURN
   !
 END SUBROUTINE cutoff_stres_sigmaewa
+!----------------------------------------------------------------------
+SUBROUTINE deallocate_cutoff_2D()
+  !----------------------------------------------------------------------
+  !
+  IF ( ALLOCATED(cutoff_2D) ) THEN
+     !$acc exit data delete(cutoff_2D)
+     DEALLOCATE( cutoff_2D )
+  END IF
+  IF ( ALLOCATED(lr_Vloc) ) THEN
+     !$acc exit data delete(lr_Vloc)
+     DEALLOCATE( lr_Vloc )
+  END IF
+  !
+END SUBROUTINE deallocate_cutoff_2D
+!
+!----------------------------------------------------------------------
 !
 END MODULE Coul_cut_2D

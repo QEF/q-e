@@ -137,7 +137,7 @@ PROGRAM wannier2pw
       'wannier2pw currently works only when hubbard = .true.', 1)
   ENDIF
   !  
-  CALL environment_end ( 'WANNIER2PW' )
+  CALL environment_end( )
   !   
   CALL stop_pp
   !

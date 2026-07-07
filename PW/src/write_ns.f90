@@ -6,6 +6,37 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
+SUBROUTINE write_ns_hubbard ( noncolin )
+  !-----------------------------------------------------------------------
+  !! Wrapper routine for all write_ns* routines
+  !
+  USE ldaU,       ONLY : lda_plus_u_kind
+  !
+  IMPLICIT NONE
+  LOGICAL, INTENT(IN) :: noncolin
+  !
+  IF (lda_plus_u_kind.EQ.0) THEN
+     IF (noncolin) THEN
+        CALL write_ns_nc()
+     ELSE
+        CALL write_ns()
+     ENDIF
+  ELSEIF (lda_plus_u_kind.EQ.1) THEN
+     IF (noncolin) THEN
+        CALL write_ns_nc()
+     ELSE
+        CALL write_ns()
+     ENDIF
+  ELSEIF (lda_plus_u_kind.EQ.2) THEN
+     IF (noncolin) THEN
+        CALL write_nsg_nc()
+     ELSE
+        CALL write_nsg()
+     ENDIF
+  ENDIF
+  !
+END SUBROUTINE write_ns_hubbard
+!-----------------------------------------------------------------------
 SUBROUTINE write_ns
   !-----------------------------------------------------------------------
   !! Prints on output ns infos.
@@ -300,7 +331,7 @@ SUBROUTINE write_nsg
   USE ldaU,       ONLY : Hubbard_lmax, Hubbard_l, lda_plus_u_kind, &
                          iso_sys, is_hubbard, is_hubbard_back,     &
                          ldim_u, reserv, reserv_back, Hubbard_V,   &
-                         at_sc, neighood, nsgnew, backall, ldim_back
+                         at_sc, neighood, backall, ldim_back
   !
   IMPLICIT NONE
   INTEGER :: is, na, nt, m1, m2, ldim
@@ -364,7 +395,7 @@ SUBROUTINE write_nsg
                        DO viz = 1, neighood(na1)%num_neigh
                           IF (neighood(na1)%neigh(viz).EQ.na2) THEN
                              DO m2 = 1, ldim_u(nt2) ! TODO: Check 
-                                f(ldm1+m1,ldm2+m2) = nsgnew(m2,m1,viz,na1,is)
+                                f(ldm1+m1,ldm2+m2) = rho%nsg(m2,m1,viz,na1,is)
                              ENDDO
                              GO TO 3
                           ENDIF
@@ -463,8 +494,8 @@ SUBROUTINE write_nsg
                  nsuma = 0.d0
                  DO is = 1, nspin
                     DO m1 = 1, ldim1
-                       nsuma(is) = nsuma(is) + DBLE(nsgnew(m1,m1,viz,na1,is))
-                       IF (reserv(nt1)) rsrv = rsrv + DBLE(nsgnew(m1,m1,viz,na1,is))
+                       nsuma(is) = nsuma(is) + DBLE(rho%nsg(m1,m1,viz,na1,is))
+                       IF (reserv(nt1)) rsrv = rsrv + DBLE(rho%nsg(m1,m1,viz,na1,is))
                     ENDDO
                     nsum = nsum + nsuma(is)
                  ENDDO
@@ -491,7 +522,7 @@ SUBROUTINE write_nsg
                  IF (na2.EQ.na1) THEN
                     DO m1 = 1, ldim1
                        DO m2 = 1, ldim1
-                          f(m1,m2) = nsgnew(m2,m1,viz,na1,is)
+                          f(m1,m2) = rho%nsg(m2,m1,viz,na1,is)
                        ENDDO
                     ENDDO
                     GO TO 4
@@ -554,8 +585,8 @@ SUBROUTINE write_nsg
                  nsuma = 0.d0
                  DO is = 1, nspin
                     DO m1 = 1, ldim1
-                       nsuma(is) = nsuma(is) + DBLE(nsgnew(m1,m1,viz,na1,is))
-                       IF (reserv(nt1)) rsrv = rsrv + DBLE(nsgnew(m1,m1,viz,na1,is))
+                       nsuma(is) = nsuma(is) + DBLE(rho%nsg(m1,m1,viz,na1,is))
+                       IF (reserv(nt1)) rsrv = rsrv + DBLE(rho%nsg(m1,m1,viz,na1,is))
                     ENDDO
                     nsum = nsum + nsuma(is)
                  ENDDO
@@ -598,8 +629,8 @@ SUBROUTINE write_nsg
               nsuma = 0.d0
               DO is = 1, nspin
                  DO m1 = 2*Hubbard_l(nt1)+2, ldim_u(nt1)
-                    nsuma(is) = nsuma(is) + DBLE(nsgnew(m1,m1,viz,na1,is))
-                    IF (reserv_back(nt1)) rsrv = rsrv + DBLE(nsgnew(m1,m1,viz,na1,is))
+                    nsuma(is) = nsuma(is) + DBLE(rho%nsg(m1,m1,viz,na1,is))
+                    IF (reserv_back(nt1)) rsrv = rsrv + DBLE(rho%nsg(m1,m1,viz,na1,is))
                  ENDDO
                  nsum = nsum + nsuma(is)
               ENDDO
@@ -648,7 +679,7 @@ SUBROUTINE write_nsg_nc
    USE ldaU,       ONLY : Hubbard_lmax, Hubbard_l, lda_plus_u_kind, &
                           iso_sys, is_hubbard, is_hubbard_back,     &
                           ldim_u, reserv, reserv_back, Hubbard_V,   &
-                          at_sc, neighood, nsgnew, backall, ldim_back
+                          at_sc, neighood, backall, ldim_back
    USE noncollin_module,   ONLY : npol
    !
    IMPLICIT NONE
@@ -697,8 +728,8 @@ SUBROUTINE write_nsg_nc
                DO is = 1, npol
                   is1 = is**2
                   DO m1 = 1, ldim1
-                     nsuma(is) = nsuma(is) + DBLE(nsgnew(m1,m1,viz,na1,is1))
-                     IF (reserv(nt1)) rsrv = rsrv + DBLE(nsgnew(m1,m1,viz,na1,is))
+                     nsuma(is) = nsuma(is) + DBLE(rho%nsg(m1,m1,viz,na1,is1))
+                     IF (reserv(nt1)) rsrv = rsrv + DBLE(rho%nsg(m1,m1,viz,na1,is))
                   ENDDO
                ENDDO
                nsum = nsum + nsuma(1) + nsuma(2)
@@ -717,10 +748,10 @@ SUBROUTINE write_nsg_nc
             IF (na2.EQ.na1) THEN
                DO m1 = 1, ldim1
                   DO m2 = 1, ldim1
-                     f(m1,m2)              = nsgnew(m1,m2,viz,na1,1)
-                     f(m1, ldim1+m2)       = nsgnew(m1,m2,viz,na1,2)
-                     f(ldim1+m1, m2)       = nsgnew(m1,m2,viz,na1,3)
-                     f(ldim1+m1, ldim1+m2) = nsgnew(m1,m2,viz,na1,4)
+                     f(m1,m2)              = rho%nsg(m1,m2,viz,na1,1)
+                     f(m1, ldim1+m2)       = rho%nsg(m1,m2,viz,na1,2)
+                     f(ldim1+m1, m2)       = rho%nsg(m1,m2,viz,na1,3)
+                     f(ldim1+m1, ldim1+m2) = rho%nsg(m1,m2,viz,na1,4)
                   ENDDO
                ENDDO
                GO TO 4
@@ -757,9 +788,9 @@ SUBROUTINE write_nsg_nc
          my = 0.d0
          mz = 0.d0
          DO m1 = 1, ldim1
-           mx = mx + DBLE( nsgnew(m1,m1,viz,na1,2) + nsgnew(m1,m1,viz,na1,3) )
-           my = my + 2.d0 * AIMAG( nsgnew(m1,m1,viz,na1,2) )
-           mz = mz + DBLE( nsgnew(m1,m1,viz,na1,1) - nsgnew(m1,m1,viz,na1,4) )
+           mx = mx + DBLE( rho%nsg(m1,m1,viz,na1,2) + rho%nsg(m1,m1,viz,na1,3) )
+           my = my + 2.d0 * AIMAG( rho%nsg(m1,m1,viz,na1,2) )
+           mz = mz + DBLE( rho%nsg(m1,m1,viz,na1,1) - rho%nsg(m1,m1,viz,na1,4) )
          ENDDO
          WRITE(stdout,'(5x,"Atomic magnetic moment mx, my, mz = ",3f12.6)') mx, my, mz
          !
@@ -798,7 +829,7 @@ SUBROUTINE read_ns()
   USE mp_images,          ONLY : intra_image_comm
   USE io_global,          ONLY : ionode, ionode_id
   USE scf,                ONLY : rho, v
-  USE ldaU,               ONLY : lda_plus_u_kind, nsg, v_nsg, &
+  USE ldaU,               ONLY : lda_plus_u_kind, v_nsg, &
                                  hub_back, orbital_resolved
   USE noncollin_module,   ONLY : noncolin
   USE io_files,           ONLY : restart_dir
@@ -809,87 +840,48 @@ SUBROUTINE read_ns()
   REAL(DP) :: eth, eth1
   !
   dirname = restart_dir()
-  !
+  ! read and broadcast
   IF ( ionode ) THEN
-     !
      OPEN ( NEWUNIT=iunocc, FILE = TRIM(dirname) // 'occup.txt', &
-            FORM='formatted', STATUS='old', IOSTAT=ierr )
-     IF (lda_plus_u_kind.EQ.0) THEN
-        READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns
-        IF (hub_back) THEN
-           READ( UNIT = iunocc, FMT = * , iostat = ierr) rho%nsb
-        ENDIF
-     ELSEIF (lda_plus_u_kind.EQ.1) THEN
-        IF (noncolin) THEN
-           READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns_nc
-        ELSE
-           READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns
-        ENDIF
-     ELSEIF (lda_plus_u_kind.EQ.2) THEN
-        READ( UNIT = iunocc, FMT = * , iostat = ierr) nsg
-     ENDIF
-     CLOSE(UNIT=iunocc,STATUS='keep')
-     !
-  ELSE
-     !
-     IF (lda_plus_u_kind.EQ.0) THEN
-        IF (noncolin) THEN
-           rho%ns_nc(:,:,:,:) = 0.D0
-        ELSE
-           rho%ns(:,:,:,:) = 0.D0
-           IF (hub_back) rho%nsb(:,:,:,:) = 0.D0
-        ENDIF
-     ELSEIF (lda_plus_u_kind.EQ.1) THEN
-        IF (noncolin) THEN
-           rho%ns_nc(:,:,:,:) = 0.D0
-        ELSE
-           rho%ns(:,:,:,:) = 0.D0
-        ENDIF
-     ELSEIF (lda_plus_u_kind.EQ.2) THEN
-        nsg(:,:,:,:,:) = (0.d0, 0.d0)
-     ENDIF
-     !
-  ENDIF
-  !
-  CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+          FORM='formatted', STATUS='old', IOSTAT=ierr )
+  END IF
   !
   IF (lda_plus_u_kind.EQ.0) THEN
-     IF (noncolin) THEN
-        CALL mp_bcast(rho%ns_nc, ionode_id, intra_image_comm)
-        IF (orbital_resolved) THEN
-           CALL v_hubbard_resolved_nc (rho%ns_nc, v%ns_nc, eth) 
-        ELSE
-           CALL v_hubbard_nc (rho%ns_nc, v%ns_nc, eth)
-        ENDIF
-     ELSE
-        CALL mp_bcast(rho%ns, ionode_id, intra_image_comm)
-        IF (orbital_resolved) THEN
-           CALL v_hubbard_resolved (rho%ns, v%ns, eth)
-        ELSE
-           CALL v_hubbard (rho%ns, v%ns, eth)
-        ENDIF
-     ENDIF
+     IF ( ionode ) THEN
+        READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns
+     END IF
+     CALL mp_bcast(rho%ns_nc, ionode_id, intra_image_comm)
      IF (hub_back) THEN
+        IF ( ionode ) THEN
+           READ( UNIT = iunocc, FMT = * , iostat = ierr) rho%nsb
+        END IF
         CALL mp_bcast(rho%nsb, ionode_id, intra_image_comm)
-        CALL v_hubbard_b (rho%nsb, v%nsb, eth1)
-        eth = eth + eth1
      ENDIF
   ELSEIF (lda_plus_u_kind.EQ.1) THEN
      IF (noncolin) THEN
+        IF ( ionode ) THEN
+           READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns_nc
+        END IF
         CALL mp_bcast(rho%ns_nc, ionode_id, intra_image_comm)
-        CALL v_hubbard_full_nc (rho%ns_nc, v%ns_nc, eth)
      ELSE
+        IF ( ionode ) THEN
+           READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns
+        END IF
         CALL mp_bcast(rho%ns, ionode_id, intra_image_comm)
-        CALL v_hubbard_full (rho%ns, v%ns, eth)
      ENDIF
   ELSEIF (lda_plus_u_kind.EQ.2) THEN
-     CALL mp_bcast(nsg, ionode_id, intra_image_comm)
-     IF (noncolin) THEN
-        CALL v_hubbard_extended_nc (nsg, v_nsg, eth)
-     ELSE
-        CALL v_hubbard_extended (nsg, v_nsg, eth)
-     ENDIF
+     IF ( ionode ) THEN
+        READ( UNIT = iunocc, FMT = * , iostat = ierr) rho%nsg
+     END IF
+     CALL mp_bcast(rho%nsg, ionode_id, intra_image_comm)
   ENDIF
+  IF ( ionode ) THEN
+     CLOSE(UNIT=iunocc,STATUS='keep')
+  END IF
+  !
+  ! compute Hubbard potential
+  !
+  CALL v_hubbard( noncolin, rho, v, eth )
   !
   RETURN
   !

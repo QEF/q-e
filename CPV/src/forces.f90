@@ -44,7 +44,7 @@
       USE fft_base,               ONLY: dffts
       USE fft_interfaces,         ONLY: fwfft, invfft
       USE mp_global,              ONLY: me_bgrp
-      USE control_flags,          ONLY: lwfpbe0nscf
+      USE cp_control,             ONLY: lwfpbe0nscf
       USE exx_module,             ONLY: exx_potential
       USE fft_helper_subroutines
 !

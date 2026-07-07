@@ -154,15 +154,10 @@ CONTAINS
     USE upf_utils, ONLY: capital
     IMPLICIT NONE
     CHARACTER(LEN=*) :: strin
-    !
-    INTEGER :: n
     CHARACTER(LEN=:), ALLOCATABLE :: strout
     !
     IF ( v2 ) THEN
-       strout = ''
-       DO n = 1,LEN_TRIM(strin)
-          strout = strout // capital(strin(n:n))
-       END DO
+       strout = capital(TRIM(strin))
     ELSE
        strout = TRIM(strin)
     END IF
@@ -257,7 +252,7 @@ CONTAINS
     CALL get_attr ( 'mesh', mesh )
     if ( mesh == 0 ) THEN
 #if defined (__debug)
-       WRITE(stdout,'("read_pp_mesh: mesh size missing, using the one in header")'
+       WRITE(stdout,'("read_pp_mesh: mesh size missing, using the one in header")')
 #else
        continue
 #endif

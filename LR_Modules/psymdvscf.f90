@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE psymdvscf (dvtosym)
+SUBROUTINE psymdvscf (dvtosym, dfft)
   !-----------------------------------------------------------------------
   !! p-symmetrize the potential.
   !!
@@ -16,15 +16,17 @@ SUBROUTINE psymdvscf (dvtosym)
   !! and then scatter back.
   !
   USE kinds,            ONLY : DP
-  USE fft_base,         ONLY : dfftp
+  USE fft_base,         ONLY : fft_type_descriptor
   USE noncollin_module, ONLY : nspin_mag, noncolin, domag
   USE scatter_mod,      ONLY : cgather_sym
   USE lr_symm_base,     ONLY : nsymq, minus_q, lr_npert
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP) :: dvtosym(dfftp%nnr, nspin_mag, lr_npert)
-  !! the potential to symmetrize
+  TYPE(fft_type_descriptor), INTENT(IN) :: dfft
+  !! FFT descriptor for dvtosym (dfftp for hard grid, dffts for soft grid)
+  COMPLEX(DP), INTENT(INOUT) :: dvtosym(dfft%nnr, nspin_mag, lr_npert)
+  !! the potential or density to symmetrize
   !
   ! ... local variable
   !
@@ -33,17 +35,17 @@ SUBROUTINE psymdvscf (dvtosym)
   INTEGER :: i, is, iper, ir3, ioff, ioff_tg, nxyp
   !
   COMPLEX(DP), ALLOCATABLE :: ddvtosym (:,:,:)
-  ! the potential to symm
+  ! the potential to symmetrize, in gathered form
   IF (nsymq == 1 .AND. (.NOT.minus_q) ) RETURN
   CALL start_clock ('psymdvscf')
   !
-  ALLOCATE (ddvtosym ( dfftp%nr1x * dfftp%nr2x * dfftp%nr3x, nspin_mag, lr_npert))
+  ALLOCATE (ddvtosym ( dfft%nr1x * dfft%nr2x * dfft%nr3x, nspin_mag, lr_npert))
   !
   ! Gather real-space points
   !
   DO iper = 1, lr_npert
      DO is = 1, nspin_mag
-        CALL cgather_sym (dfftp, dvtosym (:, is, iper), ddvtosym (:, is, iper) )
+        CALL cgather_sym (dfft, dvtosym (:, is, iper), ddvtosym (:, is, iper) )
      ENDDO
   ENDDO
   !
@@ -57,17 +59,17 @@ SUBROUTINE psymdvscf (dvtosym)
   !                       symdvscf symmetrizes the first component (potential),
   !                       and sym_dmag symmetrizes the other three components (magnetic field).
   !
-  CALL symdvscf (ddvtosym)
-  IF (noncolin .AND. domag) CALL sym_dmag(ddvtosym)
+  CALL symdvscf (ddvtosym, dfft)
+  IF (noncolin .AND. domag) CALL sym_dmag(ddvtosym, dfft)
   !
   ! Scatter back the real-space points
   !
-  nxyp = dfftp%nr1x * dfftp%my_nr2p
+  nxyp = dfft%nr1x * dfft%my_nr2p
   DO iper = 1, lr_npert
      DO is = 1, nspin_mag
-        DO ir3 = 1, dfftp%my_nr3p
-           ioff    = dfftp%nr1x * dfftp%my_nr2p * (ir3-1)
-           ioff_tg = dfftp%nr1x * dfftp%nr2x    * (dfftp%my_i0r3p+ir3-1) + dfftp%nr1x * dfftp%my_i0r2p 
+        DO ir3 = 1, dfft%my_nr3p
+           ioff    = dfft%nr1x * dfft%my_nr2p * (ir3-1)
+           ioff_tg = dfft%nr1x * dfft%nr2x    * (dfft%my_i0r3p+ir3-1) + dfft%nr1x * dfft%my_i0r2p
            CALL zcopy (nxyp, ddvtosym (ioff_tg+1, is, iper), 1, dvtosym (ioff+1, is, iper), 1)
         END DO
      ENDDO
@@ -77,8 +79,8 @@ SUBROUTINE psymdvscf (dvtosym)
   CALL stop_clock ('psymdvscf')
 #else
   !
-  CALL symdvscf(dvtosym)
-  IF (noncolin .AND. domag) CALL sym_dmag(dvtosym)
+  CALL symdvscf(dvtosym, dfft)
+  IF (noncolin .AND. domag) CALL sym_dmag(dvtosym, dfft)
   !
 #endif
   !

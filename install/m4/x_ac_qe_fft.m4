@@ -17,12 +17,19 @@ if test "$fft_libs" = ""; then
    	 try_iflags="$try_iflags -I$MKLROOT/include"
   	  have_fft=1
 
-   elif test "$have_armpl" -eq 1; then 
+   elif test "$have_armpl" -eq 1; then
       # no check needed if ARM libraries have been detected
       try_dflags="$try_dflags -D__FFTW3"
-      have_fft=1 
+      have_fft=1
 
-   elif test "$have_essl" -eq 1; then 
+   elif test "$have_nvpl" -eq 1; then
+      # no check needed if NVPL libraries have been detected
+      # NVPL provides an FFTW3-compatible FFT interface
+      try_dflags="$try_dflags -D__FFTW3"
+      fft_libs="-L$NVPLROOT/lib -lnvpl_fftw"
+      have_fft=1
+
+   elif test "$have_essl" -eq 1; then
       # no check needed for ESSL on PPC64 machine: TO BE VERIFIED
      case "$arch" in
         ppc64* )

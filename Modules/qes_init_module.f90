@@ -131,6 +131,7 @@ MODULE qes_init_module
     MODULE PROCEDURE qes_init_cp_cellNose
     MODULE PROCEDURE qes_init_scalmags
     MODULE PROCEDURE qes_init_d3mags
+    MODULE PROCEDURE qes_init_pseudoPath
     MODULE PROCEDURE qes_init_integerMatrix_1
     MODULE PROCEDURE qes_init_integerMatrix_2
     MODULE PROCEDURE qes_init_integerMatrix_3
@@ -846,7 +847,7 @@ MODULE qes_init_module
     CHARACTER(LEN=*), INTENT(IN) :: tagname
     CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: name
     REAL(DP),OPTIONAL,INTENT(IN) :: mass
-    CHARACTER(LEN=*),INTENT(IN) :: pseudo_file
+    TYPE(pseudoPath_type),INTENT(IN) :: pseudo_file
     REAL(DP),OPTIONAL,INTENT(IN) :: starting_magnetization
     REAL(DP),OPTIONAL,INTENT(IN) :: spin_teta
     REAL(DP),OPTIONAL,INTENT(IN) :: spin_phi
@@ -1115,8 +1116,8 @@ MODULE qes_init_module
   !
   !
   SUBROUTINE qes_init_hybrid(obj, tagname, qpoint_grid, ecutfock, exx_fraction, screening_parameter,&
-                            exxdiv_treatment, x_gamma_extrapolation, ecutvcut, localization_threshold &
-                            )
+                            exxdiv_treatment, x_gamma_extrapolation, ecutvcut, localization_threshold,&
+                            use_ace, nbndproj)
     !
     IMPLICIT NONE
     !
@@ -1130,6 +1131,8 @@ MODULE qes_init_module
     LOGICAL,OPTIONAL,INTENT(IN) :: x_gamma_extrapolation
     REAL(DP),OPTIONAL,INTENT(IN) :: ecutvcut
     REAL(DP),OPTIONAL,INTENT(IN) :: localization_threshold
+    LOGICAL,OPTIONAL,INTENT(IN) :: use_ace
+    INTEGER,OPTIONAL,INTENT(IN) :: nbndproj
     !
     obj%tagname = TRIM(tagname)
     obj%lwrite = .TRUE.
@@ -1182,6 +1185,18 @@ MODULE qes_init_module
       obj%localization_threshold = localization_threshold
     ELSE
       obj%localization_threshold_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(use_ace)) THEN
+      obj%use_ace_ispresent = .TRUE. 
+      obj%use_ace = use_ace
+    ELSE
+      obj%use_ace_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(nbndproj)) THEN
+      obj%nbndproj_ispresent = .TRUE. 
+      obj%nbndproj = nbndproj
+    ELSE
+      obj%nbndproj_ispresent = .FALSE.
     END IF
     !
   END SUBROUTINE qes_init_hybrid
@@ -4982,6 +4997,51 @@ MODULE qes_init_module
     obj%SiteMagnetization = SiteMagnetization
     !
   END SUBROUTINE qes_init_d3mags
+  !
+  !
+  SUBROUTINE qes_init_pseudoPath(obj, tagname, Zval, mesh, nbeta, l, pseudoPath)
+    !
+    IMPLICIT NONE
+    !
+    TYPE(pseudoPath_type), INTENT(OUT) :: obj
+    CHARACTER(LEN=*), INTENT(IN) :: tagname
+    REAL(DP), OPTIONAL, INTENT(IN) :: Zval
+    INTEGER, OPTIONAL, INTENT(IN) :: mesh
+    INTEGER, OPTIONAL, INTENT(IN) :: nbeta
+    INTEGER, DIMENSION(:), OPTIONAL, INTENT(IN) :: l
+    CHARACTER(LEN=*), INTENT(IN) :: pseudoPath
+    !
+    obj%tagname = TRIM(tagname)
+    obj%lwrite = .TRUE.
+    obj%lread = .TRUE.
+    IF (PRESENT(Zval)) THEN
+      obj%Zval_ispresent = .TRUE.
+      obj%Zval = Zval
+    ELSE
+      obj%Zval_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(mesh)) THEN
+      obj%mesh_ispresent = .TRUE.
+      obj%mesh = mesh
+    ELSE
+      obj%mesh_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(nbeta)) THEN
+      obj%nbeta_ispresent = .TRUE.
+      obj%nbeta = nbeta
+    ELSE
+      obj%nbeta_ispresent = .FALSE.
+    END IF
+    IF (PRESENT(l)) THEN
+      obj%l_ispresent = .TRUE.
+      obj%l = l
+    ELSE
+      obj%l_ispresent = .FALSE.
+    END IF
+    !
+    obj%pseudoPath = pseudoPath
+    !
+  END SUBROUTINE qes_init_pseudoPath
   !
 
   !

@@ -75,7 +75,7 @@ SUBROUTINE addusdens_g(rho)
   !
   IF (.NOT.okvan) RETURN
   !
-  CALL start_clock_gpu( 'addusdens' )
+  CALL start_clock( 'addusdens' )
   !
   ALLOCATE( aux(ngm,nspin_mag) )
   !$acc data create(aux)
@@ -129,7 +129,7 @@ SUBROUTINE addusdens_g(rho)
         ALLOCATE( skk(ngm_l,nab), tbecsum(nij,nab,nspin_mag), aux2(ngm_l,nij) )
         !$acc data create(skk,tbecsum,aux2)
         !
-        CALL start_clock_gpu( 'addusd:skk' )
+        CALL start_clock( 'addusd:skk' )
         nb = 0
         DO na = 1, nat
            IF ( ityp(na) == nt ) THEN
@@ -151,7 +151,7 @@ SUBROUTINE addusdens_g(rho)
               ENDDO
            ENDIF
         ENDDO
-        CALL stop_clock_gpu( 'addusd:skk' )
+        CALL stop_clock( 'addusd:skk' )
         !
         DO is = 1, nspin_mag
            ! ... sum over atoms
@@ -200,7 +200,7 @@ SUBROUTINE addusdens_g(rho)
   !
   DEALLOCATE( aux )
   !
-  CALL stop_clock_gpu( 'addusdens' )
+  CALL stop_clock( 'addusdens' )
   !
   RETURN
   !

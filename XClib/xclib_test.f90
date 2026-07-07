@@ -509,9 +509,10 @@ PROGRAM xclib_test
       CYCLE
     ENDIF
 #if !defined(__LIBXC)
-    IF ( TRIM(dft)=='TB09'  .OR. TRIM(dft)=='SCAN' .OR. &
-         TRIM(dft)=='SCAN0' .OR. TRIM(dft)=='SCA0' .OR. &
-         TRIM(dft)=='R2SCAN'.OR. TRIM(dft)=='RSCAN') THEN
+    IF ( TRIM(dft)=='TB09'    .OR. TRIM(dft)=='SCAN' .OR. &
+         TRIM(dft)=='SCAN0'   .OR. TRIM(dft)=='SCA0' .OR. &
+         TRIM(dft)=='R2SCAN'  .OR. TRIM(dft)=='RSCAN'.OR. &
+         TRIM(dft)=='BEEF_LXC') THEN
       id_vec(6)=idterm
       IF (mype==root) CALL print_test_status( skipped3 )
       CYCLE
@@ -1073,8 +1074,9 @@ PROGRAM xclib_test
           ex1 = 0.d0  ;  ec1 = 0.d0
         ENDIF
         !
-        IF ( dft(1:3)=='BEE' ) CALL beefsetmode(-1) !** beeforder can be manually 
-        !                                           !   changed here for other checks
+        IF ( dft(1:3)=='BEE' .AND. dft(1:8)/='BEEF_LXC' ) &
+             CALL beefsetmode(-1) !** beeforder can be manually
+        !                         !   changed here for other checks
         !
         IF (mype==root) time(3) = get_wall_time()
         CALL xc_gcx( nnr, ns, rho, grho, exg1, ecg1, v1x1, v2x1, v1c1, &

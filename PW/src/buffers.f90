@@ -323,8 +323,16 @@ MODULE buiol
     IF(.not.associated(CURSOR%index(nrec)%data)) &
       ALLOCATE( CURSOR%index(nrec)%data(recl) )
     !
-    ! copy the data
+    !! copy array DATA - NOTE: for GPU execution, the following copy and
+    !! the symmetric one in buiol_read_record may take a significant time.
+    !! Using OMP on CPUs (if enabled) improves performances at zero cost.
+    !! Note that DATA is copied from GPU to CPU before calling this routine
+    !! (or copied from CPU to GPU after buiol_read_record is called).
+    !! Better solution: copy from GPU to CPU (or vice versa) here?
+    !
+    !$omp workshare
     CURSOR%index(nrec)%data = DATA
+    !$omp end workshare
     ierr = 0
     RETURN
     !
@@ -368,8 +376,10 @@ MODULE buiol
        ierr =-1
        RETURN
     END IF
-    !
+    !! See comment in buiol_write_record
+    !$omp workshare
     DATA = CURSOR%index(nrec)%data
+    !$omp end workshare
     ierr = 0
     RETURN
     !

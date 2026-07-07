@@ -1,0 +1,10 @@
+# BAD: a dimensionful var with no <units> (rule 2 violation under --strict).
+input_description -distribution {Quantum ESPRESSO} -package TEST -program test.x {
+    namelist TEST {
+        var ecutwfc -type REAL {
+            default { 25.0 }
+            dimensionality { energy }
+            info { kinetic energy cutoff }
+        }
+    }
+}

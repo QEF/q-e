@@ -179,7 +179,6 @@ set(src_modules
     xml_io_rism.f90
     # subroutines and functions (not modules) previously found in flib
     atom_weight.f90 
-    capital.f90 
     cryst_to_car.f90
     expint.f90 
     generate_k_along_lines.f90 
@@ -189,7 +188,6 @@ set(src_modules
     int_to_char.f90 
     latgen.f90 
     linpack.f90 
-    matches.f90 
     plot_io.f90 
     radial_gradients.f90 
     rgen.f90 
@@ -197,7 +195,6 @@ set(src_modules
     remove_tot_torque.f90
     sort.f90 
     trimcheck.f90 
-    test_input_file.f90 
     date_and_tim.f90 
     volume.f90 
     wgauss.f90 

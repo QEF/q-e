@@ -1,0 +1,507 @@
+                                                                                      
+                                       ``:oss/                                        
+                           `.+s+.     .+ys--yh+     `./ss+.                           
+                          -sh//yy+`   +yy   +yy    -+h+-oyy                           
+                          -yh- .oyy/.-sh.   .syo-.:sy-  /yh                           
+                 `.-.`    `yh+   -oyyyo.     `/syys:    oys      `.`                  
+               `/+ssys+-` `sh+      `                   oys`   .:osyo`                
+               -yh- ./syyooyo`                          .sys+/oyo--yh/                
+               `yy+    .-:-.                             `-/+/:`  -sh-                
+                /yh.                                              oys                 
+          ``..---hho---------`   .---------..`      `.-----.`    -hd+---.             
+       `./osmNMMMMMMMMMMMMMMMs. +NNMMMMMMMMNNmh+.   yNMMMMMNm-  oNMMMMMNmo++:`        
+       +sy--/sdMMMhyyyyyyyNMMh- .oyNMMmyyyyyhNMMm+` -yMMMdyyo:` .oyyNMMNhs+syy`       
+       -yy/   /MMM+.`-+/``mMMy-   `mMMh:`````.dMMN:` `MMMy-`-dhhy```mMMy:``+hs        
+        -yy+` /MMMo:-mMM+`-oo/.    mMMh:     `dMMN/`  dMMm:`dMMMMy..MMMo-.+yo`        
+         .sys`/MMMMNNMMMs-         mMMmyooooymMMNo:   oMMM/sMMMMMM++MMN//oh:          
+          `sh+/MMMhyyMMMs- `-`     mMMMMMMMMMNmy+-`   -MMMhMMMsmMMmdMMd/yy+           
+    `-/+++oyy-/MMM+.`/hh/.`mNm:`   mMMd+/////:-.`      NMMMMMd/:NMMMMMy:/yyo/:.`      
+   +os+//:-..-oMMMo:--:::-/MMMo. .-mMMd+---`           hMMMMN+. oMMMMMo. `-+osyso:`   
+   syo     `mNMMMMMNNNNNNNNMMMo.oNNMMMMMNNNN:`         +MMMMs:`  dMMMN/`     ``:syo   
+   /yh`     :syyyyyyyyyyyyyyyy+.`+syyyyyyyyo:`         .oyys:`   .oyys:`        +yh   
+   -yh-        ````````````````    `````````              ``        ``          oys   
+   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
+   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
+                                                                                      
+ Lee, H., Poncé, S., Bushick, K., Hajinazar, S., Lafuente-Bartolome, J.,Leveillee, J.,
+    Lian, C., Lihm, J., Macheda, F., Mori, H., Paudyal, H., Sio, W., Tiwari, S.,      
+ Zacharias, M., Zhang, X., Bonini, N., Kioupakis, E., Margine, E.R., and Giustino F., 
+                                                     npj Comput Mater 9, 156 (2023)   
+                                                                                      
+
+     Program EPW v.6.0 starts on 29Mar2026 at  5:45:48 
+        Git branch: develop
+        Last git commit: 3b832d4d6e4442244a748253ab4d7cc3d873b9b0-dirty
+        Last git commit date: Sun Mar 29 03:27:31 2026 -0500
+        Last git commit subject: fix
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     4 processors
+
+     MPI processes distributed on     1 nodes
+     K-points division:     npool     =       4
+     2154 MiB available memory on the printing compute node when the environment starts
+
+     Reading input from epw3.in
+
+     No temperature supplied. Setting temps(:) to 300 K.
+
+     Reading xml data from directory:
+
+     ./cdo.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         661     661    211                11113    11113    2085
+
+     Using Slab Decomposition
+
+
+     Check: negative core charge=   -0.000041
+     Reading collected, re-writing distributed wavefunctions
+
+     --                                                                         
+
+     bravais-lattice index     =            2
+     lattice parameter (a_0)   =       8.9150  a.u.
+     unit-cell volume          =     177.1349 (a.u.)^3
+     number of atoms/cell      =            2
+     number of atomic types    =            2
+     kinetic-energy cut-off    =      60.0000  Ry
+     charge density cut-off    =     240.0000  Ry
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
+
+
+     celldm(1)=    8.91500  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = ( -0.5000  0.0000  0.5000 )  
+               a(2) = (  0.0000  0.5000  0.5000 )  
+               a(3) = ( -0.5000  0.5000  0.0000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = ( -1.0000 -1.0000  1.0000 )  
+               b(2) = (  1.0000  1.0000  1.0000 )  
+               b(3) = ( -1.0000  1.0000 -1.0000 )  
+
+
+     Atoms inside the unit cell: 
+
+   Cartesian axes
+
+     site n.  atom      mass           positions (a_0 units)
+        1     Cd    112.4110   tau( 1) = (    0.00000    0.00000    0.00000  )
+        2     O      15.9994   tau( 2) = (   -0.50000    0.50000    0.50000  )
+
+     49 Sym.Ops. (with q -> -q+G )
+
+
+     G cutoff =  483.1636  (  11113 G-vectors)     FFT grid: ( 32, 32, 32)
+     number of k points=   64
+                       cart. coord. in units 2pi/a_0
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0312500
+        k(    2) = (  -0.2500000   0.2500000  -0.2500000), wk =   0.0312500
+        k(    3) = (  -0.5000000   0.5000000  -0.5000000), wk =   0.0312500
+        k(    4) = (  -0.7500000   0.7500000  -0.7500000), wk =   0.0312500
+        k(    5) = (   0.2500000   0.2500000   0.2500000), wk =   0.0312500
+        k(    6) = (   0.0000000   0.5000000   0.0000000), wk =   0.0312500
+        k(    7) = (  -0.2500000   0.7500000  -0.2500000), wk =   0.0312500
+        k(    8) = (  -0.5000000   1.0000000  -0.5000000), wk =   0.0312500
+        k(    9) = (   0.5000000   0.5000000   0.5000000), wk =   0.0312500
+        k(   10) = (   0.2500000   0.7500000   0.2500000), wk =   0.0312500
+        k(   11) = (   0.0000000   1.0000000   0.0000000), wk =   0.0312500
+        k(   12) = (  -0.2500000   1.2500000  -0.2500000), wk =   0.0312500
+        k(   13) = (   0.7500000   0.7500000   0.7500000), wk =   0.0312500
+        k(   14) = (   0.5000000   1.0000000   0.5000000), wk =   0.0312500
+        k(   15) = (   0.2500000   1.2500000   0.2500000), wk =   0.0312500
+        k(   16) = (   0.0000000   1.5000000   0.0000000), wk =   0.0312500
+        k(   17) = (  -0.2500000  -0.2500000   0.2500000), wk =   0.0312500
+        k(   18) = (  -0.5000000   0.0000000   0.0000000), wk =   0.0312500
+        k(   19) = (  -0.7500000   0.2500000  -0.2500000), wk =   0.0312500
+        k(   20) = (  -1.0000000   0.5000000  -0.5000000), wk =   0.0312500
+        k(   21) = (   0.0000000   0.0000000   0.5000000), wk =   0.0312500
+        k(   22) = (  -0.2500000   0.2500000   0.2500000), wk =   0.0312500
+        k(   23) = (  -0.5000000   0.5000000   0.0000000), wk =   0.0312500
+        k(   24) = (  -0.7500000   0.7500000  -0.2500000), wk =   0.0312500
+        k(   25) = (   0.2500000   0.2500000   0.7500000), wk =   0.0312500
+        k(   26) = (   0.0000000   0.5000000   0.5000000), wk =   0.0312500
+        k(   27) = (  -0.2500000   0.7500000   0.2500000), wk =   0.0312500
+        k(   28) = (  -0.5000000   1.0000000   0.0000000), wk =   0.0312500
+        k(   29) = (   0.5000000   0.5000000   1.0000000), wk =   0.0312500
+        k(   30) = (   0.2500000   0.7500000   0.7500000), wk =   0.0312500
+        k(   31) = (   0.0000000   1.0000000   0.5000000), wk =   0.0312500
+        k(   32) = (  -0.2500000   1.2500000   0.2500000), wk =   0.0312500
+        k(   33) = (  -0.5000000  -0.5000000   0.5000000), wk =   0.0312500
+        k(   34) = (  -0.7500000  -0.2500000   0.2500000), wk =   0.0312500
+        k(   35) = (  -1.0000000   0.0000000   0.0000000), wk =   0.0312500
+        k(   36) = (  -1.2500000   0.2500000  -0.2500000), wk =   0.0312500
+        k(   37) = (  -0.2500000  -0.2500000   0.7500000), wk =   0.0312500
+        k(   38) = (  -0.5000000   0.0000000   0.5000000), wk =   0.0312500
+        k(   39) = (  -0.7500000   0.2500000   0.2500000), wk =   0.0312500
+        k(   40) = (  -1.0000000   0.5000000   0.0000000), wk =   0.0312500
+        k(   41) = (   0.0000000   0.0000000   1.0000000), wk =   0.0312500
+        k(   42) = (  -0.2500000   0.2500000   0.7500000), wk =   0.0312500
+        k(   43) = (  -0.5000000   0.5000000   0.5000000), wk =   0.0312500
+        k(   44) = (  -0.7500000   0.7500000   0.2500000), wk =   0.0312500
+        k(   45) = (   0.2500000   0.2500000   1.2500000), wk =   0.0312500
+        k(   46) = (   0.0000000   0.5000000   1.0000000), wk =   0.0312500
+        k(   47) = (  -0.2500000   0.7500000   0.7500000), wk =   0.0312500
+        k(   48) = (  -0.5000000   1.0000000   0.5000000), wk =   0.0312500
+        k(   49) = (  -0.7500000  -0.7500000   0.7500000), wk =   0.0312500
+        k(   50) = (  -1.0000000  -0.5000000   0.5000000), wk =   0.0312500
+        k(   51) = (  -1.2500000  -0.2500000   0.2500000), wk =   0.0312500
+        k(   52) = (  -1.5000000   0.0000000   0.0000000), wk =   0.0312500
+        k(   53) = (  -0.5000000  -0.5000000   1.0000000), wk =   0.0312500
+        k(   54) = (  -0.7500000  -0.2500000   0.7500000), wk =   0.0312500
+        k(   55) = (  -1.0000000   0.0000000   0.5000000), wk =   0.0312500
+        k(   56) = (  -1.2500000   0.2500000   0.2500000), wk =   0.0312500
+        k(   57) = (  -0.2500000  -0.2500000   1.2500000), wk =   0.0312500
+        k(   58) = (  -0.5000000   0.0000000   1.0000000), wk =   0.0312500
+        k(   59) = (  -0.7500000   0.2500000   0.7500000), wk =   0.0312500
+        k(   60) = (  -1.0000000   0.5000000   0.5000000), wk =   0.0312500
+        k(   61) = (   0.0000000   0.0000000   1.5000000), wk =   0.0312500
+        k(   62) = (  -0.2500000   0.2500000   1.2500000), wk =   0.0312500
+        k(   63) = (  -0.5000000   0.5000000   1.0000000), wk =   0.0312500
+        k(   64) = (  -0.7500000   0.7500000   0.7500000), wk =   0.0312500
+
+     PseudoPot. # 1 for Cd read from file:
+     ../../pseudo/Cd_ONCV_PBE_SR.upf
+     MD5 check sum: cca7c8b9e36b74bc998c8b2c58cf1b88
+     Pseudo is Norm-conserving + core correction, Zval = 20.0
+     Generated using ONCVPSP code by D. R. Hamann
+     Using radial grid of 1368 points,  6 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+                l(5) =   2
+                l(6) =   2
+
+     PseudoPot. # 2 for O  read from file:
+     ../../pseudo/O_ONCV_PBE_SR.upf
+     MD5 check sum: 9db02a5ece9d56b81b65a73f8163743d
+     Pseudo is Norm-conserving + core correction, Zval =  6.0
+     Generated using ONCVPSP code by D. R. Hamann
+     Using radial grid of  936 points,  5 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+                l(5) =   2
+     EPW          :      0.78s CPU      1.04s WALL
+
+     EPW          :      0.78s CPU      1.04s WALL
+
+     -------------------------------------------------------------------
+     Wannierization on  4 x  4 x  4 electronic grid
+     -------------------------------------------------------------------
+
+     Spin CASE ( default = unpolarized )
+
+     Initializing Wannier90
+
+
+     Initial Wannier projections
+
+     (   0.00000   0.00000   0.00000) :  l =   2 mr =   1
+     (   0.00000   0.00000   0.00000) :  l =   2 mr =   2
+     (   0.00000   0.00000   0.00000) :  l =   2 mr =   3
+     (   0.00000   0.00000   0.00000) :  l =   2 mr =   4
+     (   0.00000   0.00000   0.00000) :  l =   2 mr =   5
+     (   0.50000   0.50000   0.50000) :  l =   1 mr =   1
+     (   0.50000   0.50000   0.50000) :  l =   1 mr =   2
+     (   0.50000   0.50000   0.50000) :  l =   1 mr =   3
+
+      - Number of bands is ( 15)
+      - Number of total bands is ( 20)
+      - Number of excluded bands is (  5)
+      - Number of wannier functions is (  8)
+      - All guiding functions are given 
+
+  Reading data about k-point neighbours 
+
+      - All neighbours are found 
+
+     AMN
+      k points =    64 in    4 pools
+            1 of   16 on ionode
+            2 of   16 on ionode
+            3 of   16 on ionode
+            4 of   16 on ionode
+            5 of   16 on ionode
+            6 of   16 on ionode
+            7 of   16 on ionode
+            8 of   16 on ionode
+            9 of   16 on ionode
+           10 of   16 on ionode
+           11 of   16 on ionode
+           12 of   16 on ionode
+           13 of   16 on ionode
+           14 of   16 on ionode
+           15 of   16 on ionode
+           16 of   16 on ionode
+
+     AMN calculated
+
+     MMN
+      k points =    64 in    4 pools
+            1 of   16 on ionode
+            2 of   16 on ionode
+            3 of   16 on ionode
+            4 of   16 on ionode
+            5 of   16 on ionode
+            6 of   16 on ionode
+            7 of   16 on ionode
+            8 of   16 on ionode
+            9 of   16 on ionode
+           10 of   16 on ionode
+           11 of   16 on ionode
+           12 of   16 on ionode
+           13 of   16 on ionode
+           14 of   16 on ionode
+           15 of   16 on ionode
+           16 of   16 on ionode
+     MMN calculated
+
+     Running Wannier90
+
+     Wannier Function centers (cartesian, alat) and spreads (ang):
+
+     (   0.00000   0.00000  -0.00000) :   0.59883
+     (   0.00000  -0.00000   0.00000) :   0.55444
+     (  -0.00000  -0.00000   0.00000) :   0.55444
+     (  -0.00000  -0.00000   0.00000) :   0.59883
+     (   0.00000  -0.00000  -0.00000) :   0.55444
+     (  -0.50000   0.50000   0.50000) :   1.03121
+     (  -0.50000   0.50000   0.50000) :   1.03121
+     (  -0.50000   0.50000   0.50000) :   1.03121
+
+     -------------------------------------------------------------------
+     WANNIER      :     14.12s CPU     14.38s WALL (       1 calls)
+     -------------------------------------------------------------------
+     HDF5 is NOT used in the current build. Exciton-phonon coupling calculations are disabled.
+
+     Dipole matrix elements calculated
+
+
+     Calculating kgmap
+
+     Progress kgmap: ########################################
+     kmaps        :      0.03s CPU      0.04s WALL (       1 calls)
+     Symmetries of Bravais lattice:  48
+     Symmetries of crystal:          48
+
+
+     ===================================================================
+     irreducible q point #    1
+     ===================================================================
+
+     Symmetries of small group of q: 48
+          in addition sym. q -> -q+G:
+
+     Number of q in the star =    1
+     List of q in the star:
+          1   0.000000000   0.000000000   0.000000000
+     Imposing acoustic sum rule on the dynamical matrix
+     Read dielectric tensor and effective charges
+
+        q(    1 ) = (   0.0000000   0.0000000   0.0000000 )
+
+
+     ===================================================================
+     irreducible q point #    2
+     ===================================================================
+
+     Symmetries of small group of q: 12
+          in addition sym. q -> -q+G:
+
+     Number of q in the star =    4
+     List of q in the star:
+          1   0.500000000  -0.500000000   0.500000000
+          2   0.500000000   0.500000000  -0.500000000
+          3  -0.500000000  -0.500000000  -0.500000000
+          4   0.500000000  -0.500000000  -0.500000000
+     Message from routine init_vloc:
+     Interpolation table for Vloc re-allocated
+
+        q(    2 ) = (   0.5000000  -0.5000000   0.5000000 )
+        q(    3 ) = (   0.5000000   0.5000000  -0.5000000 )
+        q(    4 ) = (  -0.5000000  -0.5000000  -0.5000000 )
+        q(    5 ) = (   0.5000000  -0.5000000  -0.5000000 )
+
+
+     ===================================================================
+     irreducible q point #    3
+     ===================================================================
+
+     Symmetries of small group of q: 16
+          in addition sym. q -> -q+G:
+
+     Number of q in the star =    3
+     List of q in the star:
+          1   0.000000000  -1.000000000   0.000000000
+          2  -1.000000000   0.000000000   0.000000000
+          3   0.000000000   0.000000000   1.000000000
+
+        q(    6 ) = (   0.0000000  -1.0000000   0.0000000 )
+        q(    7 ) = (  -1.0000000   0.0000000   0.0000000 )
+        q(    8 ) = (   0.0000000   0.0000000   1.0000000 )
+
+     Band disentanglement is used: nbndsub =    8
+
+     Computes the analytic long-range interaction for polar materials [lpolar]
+      
+     Construct the Wigner-Seitz cell using Wannier centers and atomic positions 
+     Number of WS vectors for electrons      153
+     Number of WS vectors for phonons       33
+     Number of WS vectors for electron-phonon       33
+     Maximum number of cores for efficient parallelization       66
+
+     Inside velocity step 1
+ 
+
+     Velocity matrix elements calculated
+ 
+ 
+     Bloch2wane:          1 /          8
+     Bloch2wane:          2 /          8
+     Bloch2wane:          3 /          8
+     Bloch2wane:          4 /          8
+     Bloch2wane:          5 /          8
+     Bloch2wane:          6 /          8
+     Bloch2wane:          7 /          8
+     Bloch2wane:          8 /          8
+     Bloch2wanp:          1 /          9
+     Bloch2wanp:          2 /          9
+     Bloch2wanp:          3 /          9
+     Bloch2wanp:          4 /          9
+     Bloch2wanp:          5 /          9
+     Bloch2wanp:          6 /          9
+     Bloch2wanp:          7 /          9
+     Bloch2wanp:          8 /          9
+     Bloch2wanp:          9 /          9
+
+     WARNING: Wannier bands might differ from DFT bands near the Fermi energy.
+
+
+     Writing Hamiltonian, Dynamical matrix and EP vertex in Wann rep to file
+
+     ===================================================================
+     Memory usage:  VmHWM =       651Mb
+                   VmPeak =  20976160Mb
+     ===================================================================
+     
+     Using q-mesh file: ./LGX.dat
+     WARNING: q-point weigths do not add up to 1 [loadqmesh_serial]
+     Size of q point mesh for interpolation:        101
+     Using k-mesh file: ./LGX.dat
+     WARNING: k-point weigths do not add up to 1 [loadkmesh_para]
+     Size of k point mesh for interpolation:        101
+     Max number of k points per pool:               26
+
+     Fermi energy coarse grid =  11.547485 eV
+
+     ===================================================================
+
+     Fermi energy corresponds to the coarse k-mesh
+
+     ===================================================================
+
+              ibndmin =     1  ebndmin =     3.970 eV
+              ibndmax =     8  ebndmax =    11.547 eV
+
+
+     Number of ep-matrix elements per pool :         9984 ~=   78.00 Kb (@ 8 bytes/ DP)
+      
+     A selecq.fmt file was found but re-created because selecqread == .FALSE.  
+     Number selected, total         100         100
+     We only need to compute      101 q-points
+      
+     Progression iq (fine) =        100/       101
+     ===================================================================
+     Memory usage:  VmHWM =       661Mb
+                   VmPeak =  20976160Mb
+     ===================================================================
+
+
+     Unfolding on the coarse grid
+     elphon_wrap  :     32.29s CPU     49.86s WALL (       1 calls)
+     dvqpsi_us3   :      9.32s CPU     11.15s WALL (     768 calls)
+     com_dvloc    :      0.31s CPU      0.54s WALL (     768 calls)
+                                        0.00s GPU  (     768 calls)
+     dvqpsi_us_on :      2.05s CPU      2.13s WALL (     768 calls)
+     calbec       :      2.53s CPU      3.04s WALL (   15808 calls)
+     fft          :      0.19s CPU      0.32s WALL (      14 calls)
+     ffts         :      0.08s CPU      0.12s WALL (     768 calls)
+     fftw         :      4.92s CPU      5.33s WALL (   24745 calls)
+
+     INITIALIZATION: 
+
+     set_drhoc    :      0.07s CPU      0.07s WALL (       9 calls)
+     init_vloc    :      0.09s CPU      0.09s WALL (       1 calls)
+     init_us_1    :      0.00s CPU      0.00s WALL (       1 calls)
+
+
+
+     Electron-Phonon interpolation
+     ep-interp    :      3.15s CPU      3.88s WALL (     101 calls)
+
+     Ham: step 1  :      0.00s CPU      0.00s WALL (       1 calls)
+     Ham: step 2  :      0.01s CPU      0.03s WALL (       1 calls)
+     ep: step 1   :      0.00s CPU      0.00s WALL (       8 calls)
+     ep: step 2   :      0.03s CPU      0.04s WALL (       8 calls)
+     wigner_seitz :      0.01s CPU      0.01s WALL (       1 calls)
+     DynW2B       :      0.07s CPU      0.07s WALL (     101 calls)
+     HamW2B       :      0.21s CPU      0.22s WALL (    5448 calls)
+     ephW2Bp      :      1.23s CPU      1.83s WALL (     101 calls)
+     ephW2B       :      0.70s CPU      0.75s WALL (    2626 calls)
+     vmeW2B       :      0.64s CPU      0.68s WALL (    5252 calls)
+     rgd_blk_epw  :      0.42s CPU      0.44s WALL (    2754 calls)
+
+
+
+     Total program execution
+     EPW          :     51.04s CPU   1m10.15s WALL
+
+     % Copyright (C) 2016-2023 EPW-Collaboration                                    
+                                                                                    
+     ===============================================================================
+     Please consider citing the following papers.                                   
+                                                                                                 
+     % Paper describing the method on which EPW relies                                           
+       F. Giustino and M. L. Cohen and S. G. Louie, Phys. Rev. B 76, 165108 (2007)               
+                                                                                                 
+     % Papers describing the EPW software                                                        
+       H. Lee et al., npj Comput. Mater. 9, 156 (2023)                                           
+       S. Ponc\'e, E.R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
+       J. Noffsinger et al., Comput. Phys. Commun. 181, 2140 (2010)                              
+                                                                                                 
+                                                                                             
+     % Since you used the [lpolar] input,     please consider also citing                        
+       C. Verdi and F. Giustino, Phys. Rev. Lett. 115, 176401 (2015)                         
+                                                                                             
+     % Since you used the dft+u file,     please consider also citing                        
+       W. Yang et al, Phys. Rev. B 112, 075203 (2025)                                        
+                                                                                    
+     For your convenience, this information is also reported in the                 
+     functionality-dependent EPW.bib file.                                          
+     ===============================================================================
+                                                                                    

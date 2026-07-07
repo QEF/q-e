@@ -51,7 +51,7 @@ PROGRAM oscdft_pp
    CALL oscdft_close_files(f)
 
    CALL oscdft_pp_print_clock()
-   CALL environment_end("OSCDFT_PP")
+   CALL environment_end( )
    CALL stop_pp
 #endif
 END PROGRAM oscdft_pp

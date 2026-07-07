@@ -4,13 +4,13 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program q2r.
 
     intro {
         @b {Purpose of q2r.x:}
-        
+
         It reads force constant matrices C(q) produced by the @b ph.x code
         for a grid of q-points and calculates the corresponding set
         of interatomic force constants (IFC), C(R)
 
-        @b {Input data format:} [ ] = it depends        
-        
+        @b {Input data format:} [ ] = it depends
+
         @b {Structure of the input data:}
 	========================================================================
 
@@ -30,18 +30,18 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program q2r.
         var fildyn -type CHARACTER {
             status { REQUIRED }
             info {
-                
+
                 Input file name (must be specified).
-                
+
                 @b "fildyn"0 contains information on the q-point grid
-                
+
                 @b "fildyn"1-N contain force constants C_n = C(q_n),
                      where @b {n = 1,...N}, where N is the number of
                      q-points in the irreducible brillouin zone.
-                
+
                 Normally this should be the same as specified on input
                 to the phonon code.
-                
+
                 In the non collinear/spin-orbit case the files
                 produced by @b ph.x are in .xml format. In this case
                 @ref fildyn is the same as in the phonon code + the
@@ -49,14 +49,14 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program q2r.
             }
         }
 
-        
+
         var flfrc -type CHARACTER {
             status { REQUIRED }
             info {
                 Output file containing the IFC in real space (must be specified)
             }
         }
-        
+
         var zasr -type CHARACTER {
             default { 'no' }
             options {
@@ -67,7 +67,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program q2r.
                     Allowed values:
                 }
                 opt -val 'no' {
-                    no Acoustic Sum Rules imposed (default)
+                    no Acoustic Sum Rules imposed
                 }
                 opt -val 'simple' {
                     previous implementation of the asr used
@@ -103,14 +103,15 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program q2r.
                 set to @b .true. to activate two-dimensional treatment
                 of LO-TO splitting.
             }
+            default { .false. }
         }
         var write_lr -type LOGICAL {
-            default { @tt .false. }
+            default { .false. }
             info {
                 set to @b .true. to write long-range IFC into q2r IFC file.
                 This is required when enforcing asr='all' for infrared-
                 active solids in matdyn. An additional column will be written
-                for long-range part of IFC for text format, while a tag named 
+                for long-range part of IFC for text format, while a tag named
                 IFC_LR will be created for xml format.
             }
         }
@@ -149,7 +150,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program q2r.
                                     names of the files containing C(q_n), n=1,@ref nfile
 
                                     Note that the name and order of files is not important as
-                                    long as @b {q=0 is the first}.                                
+                                    long as @b {q=0 is the first}.
                                 }
                             }
                         }
@@ -159,4 +160,3 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program q2r.
         }
     }
 }
-                        

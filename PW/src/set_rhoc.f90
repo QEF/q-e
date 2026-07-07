@@ -26,9 +26,9 @@ SUBROUTINE set_rhoc
   USE vlocal,    ONLY : strf
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum, mp_max
-  USE scf,       ONLY : rho_core, rhog_core
+  USE scf,       ONLY : rho_core, rhog_core, tau_core, taug_core
   USE cellmd,    ONLY : cell_factor
-  USE rhoc_mod,  ONLY : init_tab_rhc, interp_rhc
+  USE rhoc_mod,  ONLY : init_tab_rhc, interp_rhc ,interp_tac
   !
   IMPLICIT NONE
   !
@@ -42,9 +42,17 @@ SUBROUTINE set_rhoc
   ! counter on g vectors
 
   rhog_core(:) = 0.0_DP
-  rho_core(:)  = 0.0_DP
+  taug_core(:) = 0.0_DP
+  !$acc parallel loop present(rho_core)
+  DO ir = 1, dfftp%nnr
+     rho_core(ir) = 0.0_DP
+  END DO
+  !$acc parallel loop present(tau_core)
+  DO ir = 1, SIZE(tau_core)
+     tau_core(ir) = 0.0_DP
+  END DO
 
-  IF ( ANY( upf(1:ntyp)%nlcc ) ) THEN
+  IF ( ANY( upf(1:ntyp)%nlcc ) .OR. ANY( upf(1:ntyp)%with_metagga_info ) ) THEN
      !
      qmax = tpiba2 * MAXVAL ( gl )
      CALL mp_max (qmax, intra_bgrp_comm)
@@ -54,10 +62,12 @@ SUBROUTINE set_rhoc
      !! re-allocations of the interpolation table
      !
      qmax = MAX (sqrt(qmax), sqrt(ecutrho)*cell_factor)
-     CALL init_tab_rhc  ( qmax, omega, intra_bgrp_comm, ir )
+     IF (ANY( upf(1:ntyp)%nlcc) .OR. ANY( upf(1:ntyp)%with_metagga_info)) THEN
+         CALL init_tab_rhc  ( qmax, omega, intra_bgrp_comm, ir )
+      ENDIF
      !
      ALLOCATE (rhocg( ngl))
-     !$acc data create(rhocg) copyin(gl, strf, rhog_core, rho_core) present(igtongl)
+     !$acc data create(rhocg) copyin(gl, strf, rhog_core, taug_core) present(igtongl, rho_core, tau_core)
      !
      !    the sum is on atom types
      !
@@ -75,9 +85,25 @@ SUBROUTINE set_rhoc
               rhog_core(ng) = rhog_core(ng) + strf(ng,nt) * rhocg(igtongl(ng))
            END DO
         ENDIF
+        IF ( upf(nt)%with_metagga_info) THEN
+            !
+            ! interp_tac computes the kinetic energy density fourier transform for each shell of g vec
+            !
+            CALL interp_tac (nt, ngl, gl, tpiba2, rhocg)
+            !
+            !     multiply by the structure factor and sum
+            !
+            !$acc parallel loop
+            DO ng = 1, ngm
+               taug_core(ng) = taug_core(ng) + strf(ng,nt) * rhocg(igtongl(ng))
+            END DO
+        ENDIF
      ENDDO
      !
-     CALL rho_g2r( dfftp, rhog_core, rho_core )
+     IF (ANY( upf(1:ntyp)%nlcc)) &
+         CALL rho_g2r( dfftp, rhog_core, rho_core )
+     IF (ANY( upf(1:ntyp)%with_metagga_info)) &
+         CALL rho_g2r( dfftp, taug_core, tau_core )
      !
      !    test on the charge and computation of the core energy
      !
@@ -120,10 +146,11 @@ SUBROUTINE set_rhoc
      ! 9000 format (5x,'core-only xc energy         = ',f15.8,' Ry')
      !   WRITE( stdout,  * ) 'BEWARE it will be subtracted from total energy !'
      !
-     !$acc exit data copyout(rho_core, rhog_core)
+   !$acc exit data copyout(rhog_core, taug_core)
      !$acc end data
      DEALLOCATE (rhocg)
   END IF
+  !$acc update host(rho_core, tau_core)
   !
   RETURN
 

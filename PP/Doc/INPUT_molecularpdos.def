@@ -3,7 +3,7 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program molec
     toc {}
 
     intro {
-	@b {Purpose of molecularpdos.x:} 
+	@b {Purpose of molecularpdos.x:}
 	    Takes the projections onto orthogonalized atomic wavefunctions
 	    as computed by projwfc.x (see outdir/prefix.save/atomic_proj.xml)
 	    to build an LCAO-like representation of the eigenvalues of a system
@@ -27,7 +27,7 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program molec
     }
 
     namelist INPUTMOPDOS {
-         
+
 	vargroup -type CHARACTER {
 	    var xmlfile_full
 	    var xmlfile_part
@@ -42,15 +42,18 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program molec
 		first atomic wavefunction of the full system
 	        considered for the projection
             }
-	}       
+	}
 
 	var i_atmwfc_end_full -type INTEGER {
-	    default { 0, i.e., all atomic wavefunctions }
+	    default -kind conditional {
+		case -test "@ref i_atmwfc_end_full < 1" { natomwfc_full (all atomic wavefunctions) }
+		case { 0 }
+	    }
             info {
 		last atomic wavefunction of the full system
 	        considered for the projection
             }
-	}       
+	}
 
 	var i_atmwfc_beg_part -type INTEGER {
 	    default { 1 }
@@ -58,15 +61,18 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program molec
 		first atomic wavefunction of the molecular part
 	        considered for the projection
             }
-	}       
+	}
 
 	var i_atmwfc_end_part -type INTEGER {
-	    default { 0, i.e., all atomic wavefunctions }
+	    default -kind conditional {
+		case -test "@ref i_atmwfc_end_part < 1" { natomwfc_part (all atomic wavefunctions) }
+		case { 0 }
+	    }
             info {
 		last atomic wavefunction of the molecular part
 	        considered for the projection
             }
-	}       
+	}
 
 	var i_bnd_beg_full -type INTEGER {
 	    default { 1 }
@@ -74,15 +80,18 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program molec
 		first eigenstate of the full system to be taken
 	        into account for the projection
             }
-	}       
+	}
 
 	var i_bnd_end_full -type INTEGER {
-	    default { 0, i.e., all eigenstates }
+	    default -kind conditional {
+		case -test "@ref i_bnd_end_full < 1" { nbnd_full (all eigenstates) }
+		case { 0 }
+	    }
             info {
 		last eigenstate of the full system to be taken
 	        into account for the projection
             }
-	}       
+	}
 
 	var i_bnd_beg_part -type INTEGER {
 	    default { 1 }
@@ -90,18 +99,21 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program molec
 		first eigenstate of the molecular part to be taken
 	        into account for the projection
             }
-	}       
+	}
 
 	var i_bnd_end_part -type INTEGER {
-	    default { 0, i.e., all eigenstates }
+	    default -kind conditional {
+		case -test "@ref i_bnd_end_part < 1" { nbnd_part (all eigenstates) }
+		case { 0 }
+	    }
             info {
 		last eigenstate of the molecular part to be taken
 	        into account for the projection
             }
-	}       
+	}
 
 	var fileout -type CHARACTER {
-	    info { prefix for output files containing molecular PDOS(E) } 
+	    info { prefix for output files containing molecular PDOS(E) }
 	    default { 'molecularpdos' }
 	}
 
@@ -109,27 +121,34 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program molec
 	    default { 0 }
 	    info {
 		Type of gaussian broadening:
-		    0 ... Simple Gaussian (default)
+		    0 ... Simple Gaussian
 		    1 ... Methfessel-Paxton of order 1
 		   -1 ... "cold smearing" (Marzari-Vanderbilt-DeVita-Payne)
 		  -99 ... Fermi-Dirac function
 	    }
 	}
-	
+
 	var degauss -type REAL {
-	    default { 0.0 } 
-	    info { gaussian broadening, Ry (not eV!) }
+	    default { 0.0 }
+	    dimensionality { energy }
+	    units { Ry }
+	    info { gaussian broadening (not eV!) }
 	}
 
 	vargroup -type REAL {
 	    var Emin
 	    var Emax
-	    info { min & max energy (eV) for DOS plot }
-	    default { (band extrema) }
+	    dimensionality { energy }
+	    units { eV }
+	    info { min & max energy for DOS plot.
+		If not specified, the band extrema are used. }
+	    default -kind computed { internal }
 	}
 	var DeltaE -type REAL {
-	    default { 0.01 } 
-	    info { energy grid step (eV) }
+	    default { 0.01 }
+	    dimensionality { energy }
+	    units { eV }
+	    info { energy grid step }
 	}
 
 	var kresolveddos -type LOGICAL {
@@ -146,24 +165,24 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program molec
 	subsection -title {Format of output files} {
 	    text {
 	        Projections are written to standard output.
-	        
+
 	        The molecular projected DOS is written to the file "fileout".mopdos.
-	        
+
 	        * The format for the spin-unpolarized case is:
 	              index_of_molecular_orbital E MOPDOS(E)
 	              ...
-	        
+
 	        * The format for the collinear, spin-polarized case is:
 	              index_of_molecular_orbital E MOPDOSup(E) MOPDOSdw(E)
 	              ...
-     	        
+
 	        The file "fileout".mopdos_tot contains the sum
 		over the molecular orbitals.
-	        
+
 	        * The format for the spin-unpolarized case is:
 	              E MOPDOS(E)
 	              ...
-	        
+
 	        * The format for the collinear, spin-polarized case is:
 	              E MOPDOSup(E) MOPDOSdw(E)
 	              ...
@@ -186,7 +205,7 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program molec
 		  unless you really know what you are doing.
 
 		* The tetrahedron method is presently not implemented.
-		
+
 		* Gaussian broadening is used in all cases
 		  (with ngauss and degauss values from input).
 	    }

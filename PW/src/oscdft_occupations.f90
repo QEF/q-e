@@ -369,7 +369,7 @@ MODULE oscdft_occupations
 
          orbs => idx%orbs
 
-         CALL start_clock_gpu("oscdft_ns")
+         CALL start_clock("oscdft_ns")
          CALL check_bec_type_unallocated(proj)
          CALL allocate_bec_type_acc(wfcS%n, nbnd, proj)
 
@@ -467,7 +467,7 @@ MODULE oscdft_occupations
          CALL oscdft_fill_nr_upper(inp, idx, nr)
          CALL oscdft_symmetrize_ns(inp, idx, nst%ns, nr)
          DEALLOCATE(nr)
-         CALL stop_clock_gpu("oscdft_ns")
+         CALL stop_clock("oscdft_ns")
       END SUBROUTINE new_ns_normal_gpu
 
       FUNCTION get_occ_sum(numbers, index_sum, ioscdft) RESULT(res)

@@ -65,7 +65,7 @@ PROGRAM rism1d
   CALL deallocate_solVs()
   WRITE(stdout, '(/,5X,"1D-RISM routines")')
   CALL rism1d_print_clock()
-  CALL environment_end('RISM1D')
+  CALL environment_end( )
   CALL mp_global_end()
   !
   IF (.NOT. conv_rism1d) THEN

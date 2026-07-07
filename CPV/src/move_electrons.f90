@@ -13,7 +13,7 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
   !! This routine updates the electronic degrees of freedom.
   !
   USE kinds,                ONLY : DP
-  USE control_flags,        ONLY : lwf, tfor, tprnfor, thdyn
+  USE cp_control,           ONLY : lwf, tfor, thdyn, lwfpbe0nscf  ! exx_wf related
   USE cg_module,            ONLY : tcg
   USE cp_main_variables,    ONLY : eigr, irb, eigrb, rhog, rhos, rhor, drhor, &
                                    drhog, sfac, ema0bg, bec_bgrp, becdr_bgrp,  &
@@ -37,11 +37,10 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
                                    interpolate_lambda
   USE gvecw,                ONLY : ngw
   USE orthogonalize_base,   ONLY : calphi_bgrp
-  USE control_flags,        ONLY : force_pairing
+  USE cp_control,           ONLY : force_pairing
   USE cp_interfaces,        ONLY : rhoofr, compute_stress, vofrho, nlfl_bgrp, prefor, nlfq_bgrp
   USE electrons_module,     ONLY : distribute_c, collect_c, distribute_b
   USE gvect,                ONLY : eigts1, eigts2, eigts3 
-  USE control_flags,        ONLY : lwfpbe0nscf  ! exx_wf related
   USE cp_wavefunctions,     ONLY : cv0, c0_bgrp, cm_bgrp, phi, c0_d, cm_d
   USE xc_lib,               ONLY : xclib_dft_is, exx_is_active
   USE device_memcpy_m,        ONLY : dev_memcpy
@@ -180,7 +179,7 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
      !
      ! ... nlfq needs deeq bec
      !
-     IF ( tfor .OR. ( tprnfor .AND. tprint ) ) THEN
+     IF ( tfor .OR. tprint ) THEN
 #if defined (__CUDA)
         !$acc data present(vkb)
         !$acc host_data use_device(vkb)
@@ -192,9 +191,9 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
 #endif
      END IF
      !
-     IF ( (tfor.or.(tprnfor.AND.tprint)) .AND. tefield ) &
+     IF ( (tfor.or.tprint) .AND. tefield ) &
         CALL bforceion( fion, .TRUE. , ipolp, qmat, bec_bgrp, becdr_bgrp, gqq, evalue )
-     IF ( (tfor.or.(tprnfor.AND.tprint)) .AND. tefield2 ) &
+     IF ( (tfor.or.tprint) .AND. tefield2 ) &
         CALL bforceion( fion, .TRUE. , ipolp2, qmat2, bec_bgrp, becdr_bgrp, gqq2, evalue2 )
      !
      IF( force_pairing ) THEN
@@ -226,7 +225,7 @@ SUBROUTINE move_electrons_x( nfi, tprint, tfirst, tlast, b1, b2, b3, fion, &
      !
      ! ... nlfl and nlfh need: lambda (guessed) becdr
      !
-     IF ( tfor .OR. (tprnfor .AND. tprint) ) THEN
+     IF ( tfor .OR. tprint ) THEN
         CALL nlfl_bgrp( bec_bgrp, becdr_bgrp, lambda, idesc, fion )
      END IF
      !

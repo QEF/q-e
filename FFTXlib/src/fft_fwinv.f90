@@ -344,6 +344,7 @@ SUBROUTINE invfft_y_gpu( fft_kind, f_d, dfft, howmany, stream )
   !
   INTEGER                          :: howmany_ = 1
   INTEGER(kind = cuda_stream_kind) :: stream_  = 0
+  INTEGER                          :: ierr
 
   CHARACTER(LEN=12) :: clock_label
 
@@ -368,7 +369,7 @@ SUBROUTINE invfft_y_gpu( fft_kind, f_d, dfft, howmany, stream )
   END IF
   IF (clock_label == ' ') CALL fftx_error__( ' invfft ', ' uninitialized fft kind : '//fft_kind , 1 )
 
-  CALL start_clock_gpu(clock_label)
+  CALL start_clock(clock_label)
 
   IF( dfft%lpara .and. dfft%use_pencil_decomposition ) THEN
 
@@ -424,7 +425,8 @@ SUBROUTINE invfft_y_gpu( fft_kind, f_d, dfft, howmany, stream )
 
   END IF
 
-  CALL stop_clock_gpu( clock_label )
+  ierr = cudaStreamSynchronize(stream_)
+  CALL stop_clock( clock_label )
 
   RETURN
 
@@ -465,6 +467,7 @@ SUBROUTINE fwfft_y_gpu( fft_kind, f_d, dfft, howmany, stream )
 
   INTEGER                          :: howmany_ = 1
   INTEGER(kind = cuda_stream_kind) :: stream_  = 0
+  INTEGER                          :: ierr
 
   CHARACTER(LEN=12) :: clock_label
   !
@@ -489,7 +492,7 @@ SUBROUTINE fwfft_y_gpu( fft_kind, f_d, dfft, howmany, stream )
   END IF
   IF (clock_label == ' ') CALL fftx_error__( ' fwfft ', ' uninitialized fft kind : '//fft_kind , 1 )
 
-  CALL start_clock_gpu(clock_label)
+  CALL start_clock(clock_label)
 
   IF( dfft%lpara .and. dfft%use_pencil_decomposition ) THEN
 
@@ -545,8 +548,9 @@ SUBROUTINE fwfft_y_gpu( fft_kind, f_d, dfft, howmany, stream )
 
   END IF
 
-  CALL stop_clock_gpu( clock_label )
-  
+  ierr = cudaStreamSynchronize(stream_)
+  CALL stop_clock( clock_label )
+
   RETURN
   !
 END SUBROUTINE fwfft_y_gpu

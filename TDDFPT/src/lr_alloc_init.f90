@@ -126,7 +126,11 @@ SUBROUTINE lr_alloc_init()
     sevc1(:,:,:) = (0.0d0,0.0d0)
   ENDIF
   !
-  ALLOCATE(d0psi(npwx*npol,nbnd,nksq,n_ipol))
+  IF (magnons .or. eels) THEN
+     ALLOCATE(d0psi(npwx*npol,nbnd,nksq,n_ipol))
+  ELSE
+     ALLOCATE(d0psi(npwx*npol,nbnd,nksq,n_op))
+  ENDIF
   !
   evc0(:,:,:)       = (0.0d0,0.0d0)
   evc1_old(:,:,:,:) = (0.0d0,0.0d0)

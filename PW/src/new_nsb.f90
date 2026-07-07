@@ -10,7 +10,7 @@
 SUBROUTINE new_nsb( ns )
   !-----------------------------------------------------------------------
   !! This routine computes the new value for ns (the occupation numbers of
-  !! ortogonalized atomic wfcs) for background states.
+  !! orthogonalized atomic wfcs) for background states.
   !! These quantities are defined as follows: 
   !! 
   !! ns_{I,s,m1,m2} = \sum_{k,v}

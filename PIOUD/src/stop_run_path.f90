@@ -34,7 +34,7 @@ SUBROUTINE stop_run_path( lflag )
   !
   stdout=iunpath
   !
-  CALL environment_end( 'PIOUD' )  !!! <----my mod. 
+  CALL environment_end( )  !!! <----my mod. 
   !
   CALL clean_pw( .TRUE. )
   !

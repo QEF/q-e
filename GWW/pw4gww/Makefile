@@ -4,6 +4,8 @@
 
 include ../../make.inc
 
+VPATH = @srcdir@
+
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src
@@ -56,18 +58,17 @@ QEMODS = $(BASEMODS)
 PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a
 PHOBJS = ../../PHonon/Gamma/libphcg.a ../../LR_Modules/liblrmod.a 
 
-TLDEPS= phlibs 
+# TLDEPS should contain the same list of dependencies as in the main Makefile
+TLDEPS= phlibs
+# Ensure that "make" run in this subdirectory builds the needed dependencies
+include ../../install/tldeps
 
-all : tldeps pw4gww.x
+all : pw4gww.x
 
 pw4gww.x : pw4gww.o libpw4gww.a  $(PW4GWWOBJS) $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
 	pw4gww.o libpw4gww.a $(PHOBJS) $(PWOBJS) $(QEMODS) $(QELIBS) 
 	- ( cd ../../bin ; ln -fs ../GWW/pw4gww/$@ . )
-
-tldeps :
-	if test -n "$(TLDEPS)" ; then \
-	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 libpw4gww.a : $(PW4GWWOBJS)
 	$(AR) $(ARFLAGS) $@ $?
@@ -77,4 +78,3 @@ clean :
 	- /bin/rm -f *.x *.o *~ *_tmp.f90 *.d *.mod *.i *.L libpw4gww.a
 
 include make.depend
-# DO NOT DELETE

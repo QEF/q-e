@@ -1,0 +1,982 @@
+MPI startup(): Warning: I_MPI_PMI_LIBRARY will be ignored since the hydra process manager was found
+
+     Program turboEELS v.7.5 starts on 31Jul2025 at 12:41:41 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+     100912 MiB available memory on the printing compute node when the environment starts
+ 
+
+     Reading xml data from directory:
+
+     ./Al_uspp.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         253     121     55                 2733      941     259
+ 
+     Using Slab Decomposition
+ 
+     Reading collected, re-writing distributed wavefunctions
+     Subspace diagonalization in iterative solution of the eigenvalue problem:
+     a serial algorithm will be used
+
+
+     --------------------------------------------------------------------------
+
+     Please cite this project as:
+
+     I. Timrov, N. Vast, R. Gebauer, and S. Baroni,
+     Electron energy loss and inelastic x-ray scattering cross sections
+     from time-dependent density-functional perturbation theory
+     Phys. Rev. B 88, 064301 (2013); ibid. 91, 139901 (2015). 
+
+     I. Timrov, N. Vast, R. Gebauer, and S. Baroni,
+     turboEELS - A code for the simulation of the electron energy loss and
+     inelastic X-ray scattering spectra using the Liouville - Lanczos approach
+     to time-dependent density-functional perturbation theory
+     Comp. Phys. Commun. 196, 460 (2015). 
+
+     O. Motornyi, N. Vast, I. Timrov, O. Baseggio, S. Baroni, and A. Dal Corso
+     Electron energy loss spectroscopy of bulk gold with ultrasoft
+     pseudopotentials and the Liouville-Lanczos method
+     Phys. Rev. B  102, 035156 (2020). 
+
+     --------------------------------------------------------------------------
+
+     Using the TDDFT approximation
+
+     Ultrasoft (Vanderbilt) Pseudopotentials
+
+     Transferred momentum: q = (   0.62100   0.00000   0.00000  ) in units 2*pi/a
+
+     ---------------------------- NSCF calculation ----------------------------
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         253     121     61                 2733      941     331
+ 
+     Using Slab Decomposition
+ 
+
+
+     bravais-lattice index     =            2
+     lattice parameter (alat)  =       7.6000  a.u.
+     unit-cell volume          =     109.7440 (a.u.)^3
+     number of atoms/cell      =            1
+     number of atomic types    =            1
+     number of electrons       =         3.00
+     number of Kohn-Sham states=           12
+     kinetic-energy cutoff     =      16.0000  Ry
+     charge density cutoff     =     128.0000  Ry
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
+     Non magnetic calculation with spin-orbit
+
+
+     celldm(1)=   7.600000  celldm(2)=   0.000000  celldm(3)=   0.000000
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (  -0.500000   0.000000   0.500000 )  
+               a(2) = (   0.000000   0.500000   0.500000 )  
+               a(3) = (  -0.500000   0.500000   0.000000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = ( -1.000000 -1.000000  1.000000 )  
+               b(2) = (  1.000000  1.000000  1.000000 )  
+               b(3) = ( -1.000000  1.000000 -1.000000 )  
+
+
+     PseudoPot. # 1 for Al read from file:
+     ../../pseudo/Al.rel-pbe-nl-rrkjus_psl.1.0.0.UPF
+     MD5 check sum: 49f37f8fe9babba23f1e8de5949893df
+     Pseudo is Ultrasoft + core correction, Zval =  3.0
+     Generated using &quot;atomic&quot; code by A. Dal Corso  v.6.3
+     Using radial grid of 1135 points,  6 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+                l(5) =   1
+                l(6) =   1
+     Q(r) pseudized with 0 coefficients 
+
+
+     atomic species   valence    mass     pseudopotential
+     Al                3.00    26.98154     Al( 1.00)
+
+     48 Sym. Ops., with inversion, found
+
+
+
+   Cartesian axes
+
+     site n.     atom                  positions (alat units)
+         1        Al     tau(   1) = (   0.0000000   0.0000000   0.0000000  )
+
+     number of k points=    36  Methfessel-Paxton smearing, width (Ry)=  0.0200
+                       cart. coord. in units 2pi/alat
+        k(    1) = (  -0.1666667   0.1666667   0.1666667), wk =   0.0370370
+        k(    2) = (   0.4543333   0.1666667   0.1666667), wk =   0.0000000
+        k(    3) = (   0.5000000  -0.5000000   0.8333333), wk =   0.0740741
+        k(    4) = (   1.1210000  -0.5000000   0.8333333), wk =   0.0000000
+        k(    5) = (   0.1666667  -0.1666667   0.5000000), wk =   0.0740741
+        k(    6) = (   0.7876667  -0.1666667   0.5000000), wk =   0.0000000
+        k(    7) = (  -0.1666667  -1.1666667   0.1666667), wk =   0.0740741
+        k(    8) = (   0.4543333  -1.1666667   0.1666667), wk =   0.0000000
+        k(    9) = (  -0.5000000  -0.8333333  -0.1666667), wk =   0.0740741
+        k(   10) = (   0.1210000  -0.8333333  -0.1666667), wk =   0.0000000
+        k(   11) = (   0.5000000  -0.5000000  -0.5000000), wk =   0.0370370
+        k(   12) = (   1.1210000  -0.5000000  -0.5000000), wk =   0.0000000
+        k(   13) = (   0.1666667  -0.1666667  -0.1666667), wk =   0.0370370
+        k(   14) = (   0.7876667  -0.1666667  -0.1666667), wk =   0.0000000
+        k(   15) = (   0.8333333   0.5000000   0.5000000), wk =   0.0370370
+        k(   16) = (   1.4543333   0.5000000   0.5000000), wk =   0.0000000
+        k(   17) = (  -0.8333333   0.5000000  -0.5000000), wk =   0.0370370
+        k(   18) = (  -0.2123333   0.5000000  -0.5000000), wk =   0.0000000
+        k(   19) = (  -0.5000000   0.8333333  -0.5000000), wk =   0.0740741
+        k(   20) = (   0.1210000   0.8333333  -0.5000000), wk =   0.0000000
+        k(   21) = (   0.5000000   0.1666667   0.1666667), wk =   0.0370370
+        k(   22) = (   1.1210000   0.1666667   0.1666667), wk =   0.0000000
+        k(   23) = (  -0.5000000   0.1666667  -0.1666667), wk =   0.0370370
+        k(   24) = (   0.1210000   0.1666667  -0.1666667), wk =   0.0000000
+        k(   25) = (  -0.1666667   0.5000000  -0.1666667), wk =   0.0740741
+        k(   26) = (   0.4543333   0.5000000  -0.1666667), wk =   0.0000000
+        k(   27) = (   0.1666667   1.1666667  -0.1666667), wk =   0.0740741
+        k(   28) = (   0.7876667   1.1666667  -0.1666667), wk =   0.0000000
+        k(   29) = (  -1.1666667   0.1666667  -0.1666667), wk =   0.0370370
+        k(   30) = (  -0.5456667   0.1666667  -0.1666667), wk =   0.0000000
+        k(   31) = (   1.1666667   0.1666667   0.1666667), wk =   0.0370370
+        k(   32) = (   1.7876667   0.1666667   0.1666667), wk =   0.0000000
+        k(   33) = (  -0.1666667   0.8333333  -0.5000000), wk =   0.0740741
+        k(   34) = (   0.4543333   0.8333333  -0.5000000), wk =   0.0000000
+        k(   35) = (   0.1666667   0.8333333   0.5000000), wk =   0.0740741
+        k(   36) = (   0.7876667   0.8333333   0.5000000), wk =   0.0000000
+
+     Dense  grid:     2733 G-vectors     FFT dimensions: (  20,  20,  20)
+
+     Smooth grid:      941 G-vectors     FFT dimensions: (  15,  15,  15)
+
+     Estimated max dynamical RAM per process >       7.36 MB
+
+     The potential is recalculated from file :
+     ./tmp_eels/Al_uspp.save/charge-density
+
+     Starting wfcs are    8 atomic +    4 random wfcs
+
+     Band Structure Calculation
+     Davidson diagonalization with overlap
+
+     ethr =  1.00E-11,  avg # of iterations = 18.8
+
+     total cpu time spent up to now is       -1.0 secs
+
+     End of band structure calculation
+
+          k =-0.1667 0.1667 0.1667 (   122 PWs)   bands (ev):
+
+    -2.4173  -2.4173  14.8071  14.8071  19.5923  19.5923  19.6099  19.6099
+    22.8388  22.8388  24.3618  24.3618
+
+          k = 0.4543 0.1667 0.1667 (   124 PWs)   bands (ev):
+
+    -0.8002  -0.8002  11.5142  11.5142  16.5036  16.5036  17.9242  17.9242
+    18.2625  18.2625  23.1098  23.1098
+
+          k = 0.5000-0.5000 0.8333 (   121 PWs)   bands (ev):
+
+     1.5741   1.5741   7.3657   7.3657  13.2485  13.2485  17.9033  17.9033
+    19.8691  19.8691  23.2293  23.2293
+
+          k = 1.1210-0.5000 0.8333 (   122 PWs)   bands (ev):
+
+    -0.5263  -0.5263  11.7428  11.7428  15.7402  15.7402  16.7952  16.7952
+    17.9225  17.9225  22.0642  22.0642
+
+          k = 0.1667-0.1667 0.5000 (   120 PWs)   bands (ev):
+
+    -0.4081  -0.4081  11.1129  11.1129  16.1290  16.1290  16.8735  16.8735
+    17.8245  17.8245  22.7935  22.7935
+
+          k = 0.7877-0.1667 0.5000 (   116 PWs)   bands (ev):
+
+     4.7823   4.7823   5.6222   5.6222  11.4541  11.4541  12.4124  12.4124
+    21.8993  21.8993  22.7972  22.7972
+
+          k =-0.1667-1.1667 0.1667 (   114 PWs)   bands (ev):
+
+     3.5048   3.5048   9.1076   9.1076   9.6182   9.6182  14.3788  14.3788
+    15.9454  15.9454  21.2015  21.2015
+
+          k = 0.4543-1.1667 0.1667 (   115 PWs)   bands (ev):
+
+     5.0345   5.0345   5.8820   5.8820  10.9375  10.9375  11.9229  11.9229
+    21.4541  21.4541  23.6881  23.6881
+
+          k =-0.5000-0.8333-0.1667 (   114 PWs)   bands (ev):
+
+     5.2855   5.2855   5.5963   5.5963  11.1025  11.1025  11.7272  11.7272
+    22.2801  22.2801  22.8586  22.8586
+
+          k = 0.1210-0.8333-0.1667 (   118 PWs)   bands (ev):
+
+     3.3899   3.3899   9.2953   9.2953   9.9457   9.9457  13.9852  13.9852
+    16.0551  16.0551  20.4423  20.4423
+
+          k = 0.5000-0.5000-0.5000 (   120 PWs)   bands (ev):
+
+     3.4032   3.4032   3.6759   3.6759  19.5948  19.5948  19.6337  19.6337
+    19.7321  19.7321  19.7321  19.7321
+
+          k = 1.1210-0.5000-0.5000 (   119 PWs)   bands (ev):
+
+     1.4576   1.4576   8.0054   8.0054  12.4122  12.4122  17.8003  17.8003
+    19.7845  19.7845  23.8604  23.8604
+
+          k = 0.1667-0.1667-0.1667 (   122 PWs)   bands (ev):
+
+    -2.4173  -2.4173  14.8071  14.8071  19.5923  19.5923  19.6099  19.6099
+    22.8388  22.8388  24.3618  24.3618
+
+          k = 0.7877-0.1667-0.1667 (   118 PWs)   bands (ev):
+
+     2.8674   2.8674   9.3370   9.3370  10.4433  10.4433  14.5148  14.5148
+    16.0908  16.0908  21.3280  21.3280
+
+          k = 0.8333 0.5000 0.5000 (   121 PWs)   bands (ev):
+
+     1.5741   1.5741   7.3657   7.3657  13.2485  13.2485  17.9033  17.9033
+    19.8691  19.8691  23.2293  23.2293
+
+          k = 1.4543 0.5000 0.5000 (   120 PWs)   bands (ev):
+
+     3.1342   3.1342   3.9804   3.9804  18.9573  18.9573  19.3200  19.3200
+    20.0594  20.0594  20.1422  20.1422
+
+          k =-0.8333 0.5000-0.5000 (   121 PWs)   bands (ev):
+
+     1.5741   1.5741   7.3657   7.3657  13.2485  13.2485  17.9033  17.9033
+    19.8691  19.8691  23.2293  23.2293
+
+          k =-0.2123 0.5000-0.5000 (   121 PWs)   bands (ev):
+
+     1.7273   1.7273   6.7449   6.7449  14.1266  14.1266  18.0412  18.0412
+    19.9750  19.9750  22.6395  22.6395
+
+          k =-0.5000 0.8333-0.5000 (   121 PWs)   bands (ev):
+
+     1.5741   1.5741   7.3657   7.3657  13.2485  13.2485  17.9033  17.9033
+    19.8691  19.8691  23.2293  23.2293
+
+          k = 0.1210 0.8333-0.5000 (   114 PWs)   bands (ev):
+
+     5.2967   5.2967   6.1174   6.1174  10.4399  10.4399  11.4292  11.4292
+    22.3656  22.3656  23.2547  23.2547
+
+          k = 0.5000 0.1667 0.1667 (   120 PWs)   bands (ev):
+
+    -0.4081  -0.4081  11.1129  11.1129  16.1290  16.1290  16.8735  16.8735
+    17.8245  17.8245  22.7935  22.7935
+
+          k = 1.1210 0.1667 0.1667 (   116 PWs)   bands (ev):
+
+     4.1636   4.1636   8.5325   8.5325   9.2121   9.2121  14.2751  14.2751
+    15.8279  15.8279  21.0973  21.0973
+
+          k =-0.5000 0.1667-0.1667 (   120 PWs)   bands (ev):
+
+    -0.4081  -0.4081  11.1129  11.1129  16.1290  16.1290  16.8735  16.8735
+    17.8245  17.8245  22.7935  22.7935
+
+          k = 0.1210 0.1667-0.1667 (   122 PWs)   bands (ev):
+
+    -2.5369  -2.5369  15.4305  15.4305  19.1310  19.1310  20.1905  20.1905
+    23.0071  23.0071  23.8952  23.8952
+
+          k =-0.1667 0.5000-0.1667 (   120 PWs)   bands (ev):
+
+    -0.4081  -0.4081  11.1129  11.1129  16.1290  16.1290  16.8735  16.8735
+    17.8245  17.8245  22.7935  22.7935
+
+          k = 0.4543 0.5000-0.1667 (   119 PWs)   bands (ev):
+
+     1.1876   1.1876   7.7750   7.7750  13.6407  13.6407  18.0334  18.0334
+    20.4967  20.4967  22.7033  22.7033
+
+          k = 0.1667 1.1667-0.1667 (   114 PWs)   bands (ev):
+
+     3.5048   3.5048   9.1076   9.1076   9.6182   9.6182  14.3788  14.3788
+    15.9454  15.9454  21.2015  21.2015
+
+          k = 0.7877 1.1667-0.1667 (   116 PWs)   bands (ev):
+
+     3.6555   3.6555   8.5716   8.5716   9.6865   9.6865  14.2285  14.2285
+    16.4179  16.4179  22.0103  22.0103
+
+          k =-1.1667 0.1667-0.1667 (   114 PWs)   bands (ev):
+
+     3.5048   3.5048   9.1076   9.1076   9.6182   9.6182  14.3788  14.3788
+    15.9454  15.9454  21.2015  21.2015
+
+          k =-0.5457 0.1667-0.1667 (   120 PWs)   bands (ev):
+
+     0.0197   0.0197  10.7431  10.7431  15.7750  15.7750  15.7922  15.7922
+    17.4627  17.4627  22.4943  22.4943
+
+          k = 1.1667 0.1667 0.1667 (   114 PWs)   bands (ev):
+
+     3.5048   3.5048   9.1076   9.1076   9.6182   9.6182  14.3788  14.3788
+    15.9454  15.9454  21.2015  21.2015
+
+          k = 1.7877 0.1667 0.1667 (   122 PWs)   bands (ev):
+
+    -2.2598  -2.2598  14.2054  14.2054  19.0315  19.0315  19.8106  19.8106
+    22.9431  22.9431  23.7595  23.7595
+
+          k =-0.1667 0.8333-0.5000 (   114 PWs)   bands (ev):
+
+     5.2855   5.2855   5.5963   5.5963  11.1025  11.1025  11.7272  11.7272
+    22.2801  22.2801  22.8586  22.8586
+
+          k = 0.4543 0.8333-0.5000 (   119 PWs)   bands (ev):
+
+     1.9961   1.9961   6.9917   6.9917  12.8887  12.8887  17.3045  17.3045
+    19.7666  19.7666  23.4383  23.4383
+
+          k = 0.1667 0.8333 0.5000 (   114 PWs)   bands (ev):
+
+     5.2855   5.2855   5.5963   5.5963  11.1025  11.1025  11.7272  11.7272
+    22.2801  22.2801  22.8586  22.8586
+
+          k = 0.7877 0.8333 0.5000 (   120 PWs)   bands (ev):
+
+    -0.2528  -0.2528  10.5019  10.5019  15.9848  15.9848  17.0356  17.0356
+    18.2468  18.2468  23.5557  23.5557
+
+     the Fermi energy is     8.9471 ev
+     (compare with:     8.9471 eV, computed in scf)
+
+     Writing all to output data dir ./tmp_eels/Al_uspp.save/ :
+     XML data file, pseudopotentials, collected wavefunctions
+
+                                                                                
+
+     bravais-lattice index     =            2
+     lattice parameter (a_0)   =       7.6000  a.u.
+     unit-cell volume          =     109.7440 (a.u.)^3
+     number of atoms/cell      =            1
+     number of atomic types    =            1
+     kinetic-energy cut-off    =      16.0000  Ry
+     charge density cut-off    =     128.0000  Ry
+     Exchange-correlation= PBE
+                           (   1   4   3   4   0   0   0)
+     Non magnetic calculation with spin-orbit
+
+     celldm(1)=    7.60000  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = ( -0.5000  0.0000  0.5000 )  
+               a(2) = (  0.0000  0.5000  0.5000 )  
+               a(3) = ( -0.5000  0.5000  0.0000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = ( -1.0000 -1.0000  1.0000 )  
+               b(2) = (  1.0000  1.0000  1.0000 )  
+               b(3) = ( -1.0000  1.0000 -1.0000 )  
+
+
+     Atoms inside the unit cell: 
+
+   Cartesian axes
+
+     site n.  atom      mass           positions (a_0 units)
+        1     Al     26.9815   tau( 1) = (    0.00000    0.00000    0.00000  )
+ 
+      8 Sym.Ops. (no q -> -q+G )
+
+                                    s                        frac. trans.
+
+      isym =  1     identity                                     
+
+ cryst.   s( 1) = (     1          0          0      )
+                  (     0          1          0      )
+                  (     0          0          1      )
+
+ cart.    s( 1) = (  1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  1.0000000  0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+
+
+      isym =  2     180 deg rotation - cart. axis [1,0,0]        
+
+ cryst.   s( 2) = (     0         -1          1      )
+                  (     0         -1          0      )
+                  (     1         -1          0      )
+
+ cart.    s( 2) = (  1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000 -1.0000000  0.0000000 )
+                  (  0.0000000  0.0000000 -1.0000000 )
+
+
+      isym =  3      90 deg rotation - cart. axis [-1,0,0]       
+
+ cryst.   s( 3) = (     0          0          1      )
+                  (    -1          0          1      )
+                  (     0         -1          1      )
+
+ cart.    s( 3) = (  1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+                  (  0.0000000 -1.0000000  0.0000000 )
+
+
+      isym =  4      90 deg rotation - cart. axis [1,0,0]        
+
+ cryst.   s( 4) = (     1         -1          0      )
+                  (     1          0         -1      )
+                  (     1          0          0      )
+
+ cart.    s( 4) = (  1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  0.0000000 -1.0000000 )
+                  (  0.0000000  1.0000000  0.0000000 )
+
+
+      isym =  5     inv. 180 deg rotation - cart. axis [0,0,1]   
+
+ cryst.   s( 5) = (     0         -1          1      )
+                  (    -1          0          1      )
+                  (     0          0          1      )
+
+ cart.    s( 5) = (  1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  1.0000000  0.0000000 )
+                  (  0.0000000  0.0000000 -1.0000000 )
+
+
+      isym =  6     inv. 180 deg rotation - cart. axis [0,1,0]   
+
+ cryst.   s( 6) = (     1          0          0      )
+                  (     1          0         -1      )
+                  (     1         -1          0      )
+
+ cart.    s( 6) = (  1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000 -1.0000000  0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+
+
+      isym =  7     inv. 180 deg rotation - cart. axis [0,1,1]   
+
+ cryst.   s( 7) = (     1         -1          0      )
+                  (     0         -1          0      )
+                  (     0         -1          1      )
+
+ cart.    s( 7) = (  1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  0.0000000 -1.0000000 )
+                  (  0.0000000 -1.0000000  0.0000000 )
+
+
+      isym =  8     inv. 180 deg rotation - cart. axis [0,1,-1]  
+
+ cryst.   s( 8) = (     0          0          1      )
+                  (     0          1          0      )
+                  (     1          0          0      )
+
+ cart.    s( 8) = (  1.0000000  0.0000000  0.0000000 )
+                  (  0.0000000  0.0000000  1.0000000 )
+                  (  0.0000000  1.0000000  0.0000000 )
+
+
+     G cutoff =  187.2740  (   2733 G-vectors)     FFT grid: ( 20, 20, 20)
+     G cutoff =   93.6370  (    941 G-vectors)  smooth grid: ( 15, 15, 15)
+
+     number of k points=    36  Methfessel-Paxton smearing, width (Ry)=  0.0200
+                       cart. coord. in units 2pi/a_0
+        k(    1) = (  -0.1666667   0.1666667   0.1666667), wk =   0.0370370
+        k(    2) = (   0.4543333   0.1666667   0.1666667), wk =   0.0000000
+        k(    3) = (   0.5000000  -0.5000000   0.8333333), wk =   0.0740741
+        k(    4) = (   1.1210000  -0.5000000   0.8333333), wk =   0.0000000
+        k(    5) = (   0.1666667  -0.1666667   0.5000000), wk =   0.0740741
+        k(    6) = (   0.7876667  -0.1666667   0.5000000), wk =   0.0000000
+        k(    7) = (  -0.1666667  -1.1666667   0.1666667), wk =   0.0740741
+        k(    8) = (   0.4543333  -1.1666667   0.1666667), wk =   0.0000000
+        k(    9) = (  -0.5000000  -0.8333333  -0.1666667), wk =   0.0740741
+        k(   10) = (   0.1210000  -0.8333333  -0.1666667), wk =   0.0000000
+        k(   11) = (   0.5000000  -0.5000000  -0.5000000), wk =   0.0370370
+        k(   12) = (   1.1210000  -0.5000000  -0.5000000), wk =   0.0000000
+        k(   13) = (   0.1666667  -0.1666667  -0.1666667), wk =   0.0370370
+        k(   14) = (   0.7876667  -0.1666667  -0.1666667), wk =   0.0000000
+        k(   15) = (   0.8333333   0.5000000   0.5000000), wk =   0.0370370
+        k(   16) = (   1.4543333   0.5000000   0.5000000), wk =   0.0000000
+        k(   17) = (  -0.8333333   0.5000000  -0.5000000), wk =   0.0370370
+        k(   18) = (  -0.2123333   0.5000000  -0.5000000), wk =   0.0000000
+        k(   19) = (  -0.5000000   0.8333333  -0.5000000), wk =   0.0740741
+        k(   20) = (   0.1210000   0.8333333  -0.5000000), wk =   0.0000000
+        k(   21) = (   0.5000000   0.1666667   0.1666667), wk =   0.0370370
+        k(   22) = (   1.1210000   0.1666667   0.1666667), wk =   0.0000000
+        k(   23) = (  -0.5000000   0.1666667  -0.1666667), wk =   0.0370370
+        k(   24) = (   0.1210000   0.1666667  -0.1666667), wk =   0.0000000
+        k(   25) = (  -0.1666667   0.5000000  -0.1666667), wk =   0.0740741
+        k(   26) = (   0.4543333   0.5000000  -0.1666667), wk =   0.0000000
+        k(   27) = (   0.1666667   1.1666667  -0.1666667), wk =   0.0740741
+        k(   28) = (   0.7876667   1.1666667  -0.1666667), wk =   0.0000000
+        k(   29) = (  -1.1666667   0.1666667  -0.1666667), wk =   0.0370370
+        k(   30) = (  -0.5456667   0.1666667  -0.1666667), wk =   0.0000000
+        k(   31) = (   1.1666667   0.1666667   0.1666667), wk =   0.0370370
+        k(   32) = (   1.7876667   0.1666667   0.1666667), wk =   0.0000000
+        k(   33) = (  -0.1666667   0.8333333  -0.5000000), wk =   0.0740741
+        k(   34) = (   0.4543333   0.8333333  -0.5000000), wk =   0.0000000
+        k(   35) = (   0.1666667   0.8333333   0.5000000), wk =   0.0740741
+        k(   36) = (   0.7876667   0.8333333   0.5000000), wk =   0.0000000
+
+     PseudoPot. # 1 for Al read from file:
+     ../../pseudo/Al.rel-pbe-nl-rrkjus_psl.1.0.0.UPF
+     MD5 check sum: 49f37f8fe9babba23f1e8de5949893df
+     Pseudo is Ultrasoft + core correction, Zval =  3.0
+     Generated using &quot;atomic&quot; code by A. Dal Corso  v.6.3
+     Using radial grid of 1135 points,  6 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+                l(5) =   1
+                l(6) =   1
+     Q(r) pseudized with 0 coefficients 
+
+
+
+
+     STERNHEIMER LINEAR-RESPONSE SPECTRUM CALCULATION
+
+     Number of frequencies =     11
+
+     ----------------------------------------------------------------------
+
+                     Step     1  /   11
+
+             Frequency = (  0.0000,   0.1000) Ry
+
+      iter #   1 total cpu time :     0.1 secs   av.it.:   3.5
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  1.945E-04
+
+      iter #   2 total cpu time :     0.3 secs   av.it.:   5.0
+      thresh= 1.395E-03 alpha_mix =  0.700 |ddv_scf|^2 =  4.035E-04
+
+      iter #   3 total cpu time :     0.5 secs   av.it.:   4.8
+      thresh= 1.395E-03 alpha_mix =  0.700 |ddv_scf|^2 =  4.813E-11
+
+      iter #   4 total cpu time :     0.7 secs   av.it.:   7.2
+      thresh= 6.938E-07 alpha_mix =  0.700 |ddv_scf|^2 =  1.491E-11
+
+      iter #   5 total cpu time :     0.9 secs   av.it.:   5.1
+      thresh= 3.861E-07 alpha_mix =  0.700 |ddv_scf|^2 =  3.994E-13
+
+      Inverse dielectric constant at frequency   0.0000 +   0.1000 i Ry
+                                                 0.0000 +   1.3606 i eV
+
+      epsilon^-1(q,w) =       0.226097       0.000000
+
+      Charge-charge susceptibility:
+
+      chirr(q,w) =      -0.008116       0.000000
+
+     ----------------------------------------------------------------------
+
+                     Step     2  /   11
+
+             Frequency = (  0.3600,   0.1000) Ry
+
+      iter #   1 total cpu time :     1.1 secs   av.it.:   4.0
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  3.022E-04
+
+      iter #   2 total cpu time :     1.3 secs   av.it.:   5.6
+      thresh= 1.738E-03 alpha_mix =  0.700 |ddv_scf|^2 =  1.111E-03
+
+      iter #   3 total cpu time :     1.5 secs   av.it.:   5.4
+      thresh= 1.738E-03 alpha_mix =  0.700 |ddv_scf|^2 =  2.080E-04
+
+      iter #   4 total cpu time :     1.7 secs   av.it.:   5.0
+      thresh= 1.442E-03 alpha_mix =  0.700 |ddv_scf|^2 =  3.586E-10
+
+      iter #   5 total cpu time :     1.9 secs   av.it.:   7.5
+      thresh= 1.894E-06 alpha_mix =  0.700 |ddv_scf|^2 =  4.914E-11
+
+      iter #   6 total cpu time :     2.2 secs   av.it.:   6.1
+      thresh= 7.010E-07 alpha_mix =  0.700 |ddv_scf|^2 =  1.633E-12
+
+      iter #   7 total cpu time :     2.4 secs   av.it.:   6.4
+      thresh= 1.278E-07 alpha_mix =  0.700 |ddv_scf|^2 =  2.945E-14
+
+      Inverse dielectric constant at frequency   0.3600 +   0.1000 i Ry
+                                                 4.8980 +   1.3606 i eV
+
+      epsilon^-1(q,w) =       0.158459      -0.120534
+
+      Charge-charge susceptibility:
+
+      chirr(q,w) =      -0.008826      -0.001264
+
+     ----------------------------------------------------------------------
+
+                     Step     3  /   11
+
+             Frequency = (  0.7200,   0.1000) Ry
+
+      iter #   1 total cpu time :     2.5 secs   av.it.:   4.5
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  3.206E-04
+
+      iter #   2 total cpu time :     2.8 secs   av.it.:   6.5
+      thresh= 1.790E-03 alpha_mix =  0.700 |ddv_scf|^2 =  1.683E-03
+
+      iter #   3 total cpu time :     3.0 secs   av.it.:   5.2
+      thresh= 1.790E-03 alpha_mix =  0.700 |ddv_scf|^2 =  1.609E-03
+
+      iter #   4 total cpu time :     3.2 secs   av.it.:   6.5
+      thresh= 1.790E-03 alpha_mix =  0.700 |ddv_scf|^2 =  6.605E-10
+
+      iter #   5 total cpu time :     3.5 secs   av.it.:   8.3
+      thresh= 2.570E-06 alpha_mix =  0.700 |ddv_scf|^2 =  4.516E-11
+
+      iter #   6 total cpu time :     3.8 secs   av.it.:   6.9
+      thresh= 6.720E-07 alpha_mix =  0.700 |ddv_scf|^2 =  2.508E-13
+
+      Inverse dielectric constant at frequency   0.7200 +   0.1000 i Ry
+                                                 9.7961 +   1.3606 i eV
+
+      epsilon^-1(q,w) =      -0.013331      -0.328129
+
+      Charge-charge susceptibility:
+
+      chirr(q,w) =      -0.010627      -0.003441
+
+     ----------------------------------------------------------------------
+
+                     Step     4  /   11
+
+             Frequency = (  1.0800,   0.1000) Ry
+
+      iter #   1 total cpu time :     4.0 secs   av.it.:   5.1
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  8.995E-05
+
+      iter #   2 total cpu time :     4.2 secs   av.it.:   7.9
+      thresh= 9.484E-04 alpha_mix =  0.700 |ddv_scf|^2 =  1.902E-04
+
+      iter #   3 total cpu time :     4.5 secs   av.it.:   7.8
+      thresh= 9.484E-04 alpha_mix =  0.700 |ddv_scf|^2 =  1.499E-04
+
+      iter #   4 total cpu time :     4.8 secs   av.it.:   8.2
+      thresh= 9.484E-04 alpha_mix =  0.700 |ddv_scf|^2 =  3.319E-09
+
+      iter #   5 total cpu time :     5.2 secs   av.it.:   9.6
+      thresh= 5.761E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.106E-10
+
+      iter #   6 total cpu time :     5.5 secs   av.it.:   9.1
+      thresh= 1.052E-06 alpha_mix =  0.700 |ddv_scf|^2 =  6.515E-12
+
+      iter #   7 total cpu time :     5.9 secs   av.it.:   9.2
+      thresh= 2.552E-07 alpha_mix =  0.700 |ddv_scf|^2 =  4.099E-14
+
+      Inverse dielectric constant at frequency   1.0800 +   0.1000 i Ry
+                                                14.6941 +   1.3606 i eV
+
+      epsilon^-1(q,w) =      -0.585344      -0.978514
+
+      Charge-charge susceptibility:
+
+      chirr(q,w) =      -0.016626      -0.010262
+
+     ----------------------------------------------------------------------
+
+                     Step     5  /   11
+
+             Frequency = (  1.4400,   0.1000) Ry
+
+      iter #   1 total cpu time :     6.1 secs   av.it.:   5.8
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  1.529E-05
+
+      iter #   2 total cpu time :     6.4 secs   av.it.:   9.1
+      thresh= 3.910E-04 alpha_mix =  0.700 |ddv_scf|^2 =  9.246E-06
+
+      iter #   3 total cpu time :     6.8 secs   av.it.:  10.1
+      thresh= 3.041E-04 alpha_mix =  0.700 |ddv_scf|^2 =  2.076E-06
+
+      iter #   4 total cpu time :     7.2 secs   av.it.:   9.9
+      thresh= 1.441E-04 alpha_mix =  0.700 |ddv_scf|^2 =  5.982E-08
+
+      iter #   5 total cpu time :     7.6 secs   av.it.:  10.6
+      thresh= 2.446E-05 alpha_mix =  0.700 |ddv_scf|^2 =  3.748E-09
+
+      iter #   6 total cpu time :     8.0 secs   av.it.:  10.6
+      thresh= 6.122E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.086E-10
+
+      iter #   7 total cpu time :     8.4 secs   av.it.:  10.8
+      thresh= 1.042E-06 alpha_mix =  0.700 |ddv_scf|^2 =  5.683E-13
+
+      iter #   8 total cpu time :     8.8 secs   av.it.:  11.1
+      thresh= 7.539E-08 alpha_mix =  0.700 |ddv_scf|^2 =  1.289E-14
+
+      Inverse dielectric constant at frequency   1.4400 +   0.1000 i Ry
+                                                19.5922 +   1.3606 i eV
+
+      epsilon^-1(q,w) =       2.476772      -1.377518
+
+      Charge-charge susceptibility:
+
+      chirr(q,w) =       0.015488      -0.014447
+
+     ----------------------------------------------------------------------
+
+                     Step     6  /   11
+
+             Frequency = (  1.8000,   0.1000) Ry
+
+      iter #   1 total cpu time :     9.0 secs   av.it.:   6.7
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  5.118E-06
+
+      iter #   2 total cpu time :     9.4 secs   av.it.:  10.9
+      thresh= 2.262E-04 alpha_mix =  0.700 |ddv_scf|^2 =  1.686E-06
+
+      iter #   3 total cpu time :     9.9 secs   av.it.:  11.4
+      thresh= 1.299E-04 alpha_mix =  0.700 |ddv_scf|^2 =  2.835E-08
+
+      iter #   4 total cpu time :    10.3 secs   av.it.:  11.9
+      thresh= 1.684E-05 alpha_mix =  0.700 |ddv_scf|^2 =  1.255E-09
+
+      iter #   5 total cpu time :    10.7 secs   av.it.:  11.8
+      thresh= 3.543E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.744E-11
+
+      iter #   6 total cpu time :    11.2 secs   av.it.:  12.4
+      thresh= 6.118E-07 alpha_mix =  0.700 |ddv_scf|^2 =  8.332E-12
+
+      iter #   7 total cpu time :    11.6 secs   av.it.:  11.7
+      thresh= 2.887E-07 alpha_mix =  0.700 |ddv_scf|^2 =  4.061E-14
+
+      Inverse dielectric constant at frequency   1.8000 +   0.1000 i Ry
+                                                24.4902 +   1.3606 i eV
+
+      epsilon^-1(q,w) =       1.676124      -0.220182
+
+      Charge-charge susceptibility:
+
+      chirr(q,w) =       0.007091      -0.002309
+
+     ----------------------------------------------------------------------
+
+                     Step     7  /   11
+
+             Frequency = (  2.1600,   0.1000) Ry
+
+      iter #   1 total cpu time :    11.9 secs   av.it.:   7.1
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  2.238E-06
+
+      iter #   2 total cpu time :    12.3 secs   av.it.:  12.2
+      thresh= 1.496E-04 alpha_mix =  0.700 |ddv_scf|^2 =  4.894E-07
+
+      iter #   3 total cpu time :    12.8 secs   av.it.:  12.6
+      thresh= 6.995E-05 alpha_mix =  0.700 |ddv_scf|^2 =  2.803E-09
+
+      iter #   4 total cpu time :    13.3 secs   av.it.:  13.7
+      thresh= 5.294E-06 alpha_mix =  0.700 |ddv_scf|^2 =  3.668E-10
+
+      iter #   5 total cpu time :    13.8 secs   av.it.:  13.1
+      thresh= 1.915E-06 alpha_mix =  0.700 |ddv_scf|^2 =  2.657E-11
+
+      iter #   6 total cpu time :    14.3 secs   av.it.:  13.3
+      thresh= 5.155E-07 alpha_mix =  0.700 |ddv_scf|^2 =  9.791E-13
+
+      iter #   7 total cpu time :    14.8 secs   av.it.:  13.9
+      thresh= 9.895E-08 alpha_mix =  0.700 |ddv_scf|^2 =  5.875E-15
+
+      Inverse dielectric constant at frequency   2.1600 +   0.1000 i Ry
+                                                29.3883 +   1.3606 i eV
+
+      epsilon^-1(q,w) =       1.375808      -0.074665
+
+      Charge-charge susceptibility:
+
+      chirr(q,w) =       0.003941      -0.000783
+
+     ----------------------------------------------------------------------
+
+                     Step     8  /   11
+
+             Frequency = (  2.5200,   0.1000) Ry
+
+      iter #   1 total cpu time :    15.1 secs   av.it.:   7.8
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  1.039E-06
+
+      iter #   2 total cpu time :    15.6 secs   av.it.:  13.5
+      thresh= 1.019E-04 alpha_mix =  0.700 |ddv_scf|^2 =  1.916E-07
+
+      iter #   3 total cpu time :    16.1 secs   av.it.:  13.7
+      thresh= 4.378E-05 alpha_mix =  0.700 |ddv_scf|^2 =  2.311E-10
+
+      iter #   4 total cpu time :    16.6 secs   av.it.:  15.0
+      thresh= 1.520E-06 alpha_mix =  0.700 |ddv_scf|^2 =  4.331E-12
+
+      iter #   5 total cpu time :    17.1 secs   av.it.:  14.2
+      thresh= 2.081E-07 alpha_mix =  0.700 |ddv_scf|^2 =  1.470E-13
+
+      Inverse dielectric constant at frequency   2.5200 +   0.1000 i Ry
+                                                34.2863 +   1.3606 i eV
+
+      epsilon^-1(q,w) =       1.237630      -0.038636
+
+      Charge-charge susceptibility:
+
+      chirr(q,w) =       0.002492      -0.000405
+
+     ----------------------------------------------------------------------
+
+                     Step     9  /   11
+
+             Frequency = (  2.8800,   0.1000) Ry
+
+      iter #   1 total cpu time :    17.4 secs   av.it.:   8.5
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  6.175E-07
+
+      iter #   2 total cpu time :    18.0 secs   av.it.:  15.0
+      thresh= 7.858E-05 alpha_mix =  0.700 |ddv_scf|^2 =  9.150E-08
+
+      iter #   3 total cpu time :    18.6 secs   av.it.:  15.2
+      thresh= 3.025E-05 alpha_mix =  0.700 |ddv_scf|^2 =  2.049E-10
+
+      iter #   4 total cpu time :    19.2 secs   av.it.:  16.4
+      thresh= 1.432E-06 alpha_mix =  0.700 |ddv_scf|^2 =  1.368E-11
+
+      iter #   5 total cpu time :    19.8 secs   av.it.:  15.4
+      thresh= 3.698E-07 alpha_mix =  0.700 |ddv_scf|^2 =  2.300E-13
+
+      Inverse dielectric constant at frequency   2.8800 +   0.1000 i Ry
+                                                39.1844 +   1.3606 i eV
+
+      epsilon^-1(q,w) =       1.169835      -0.033663
+
+      Charge-charge susceptibility:
+
+      chirr(q,w) =       0.001781      -0.000353
+
+     ----------------------------------------------------------------------
+
+                     Step    10  /   11
+
+             Frequency = (  3.2400,   0.1000) Ry
+
+      iter #   1 total cpu time :    20.1 secs   av.it.:   9.2
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  3.781E-07
+
+      iter #   2 total cpu time :    20.7 secs   av.it.:  16.2
+      thresh= 6.149E-05 alpha_mix =  0.700 |ddv_scf|^2 =  5.061E-08
+
+      iter #   3 total cpu time :    21.3 secs   av.it.:  15.7
+      thresh= 2.250E-05 alpha_mix =  0.700 |ddv_scf|^2 =  3.880E-11
+
+      iter #   4 total cpu time :    21.9 secs   av.it.:  17.9
+      thresh= 6.229E-07 alpha_mix =  0.700 |ddv_scf|^2 =  2.955E-12
+
+      iter #   5 total cpu time :    22.5 secs   av.it.:  15.7
+      thresh= 1.719E-07 alpha_mix =  0.700 |ddv_scf|^2 =  7.697E-15
+
+      Inverse dielectric constant at frequency   3.2400 +   0.1000 i Ry
+                                                44.0824 +   1.3606 i eV
+
+      epsilon^-1(q,w) =       1.129969      -0.021542
+
+      Charge-charge susceptibility:
+
+      chirr(q,w) =       0.001363      -0.000226
+
+     ----------------------------------------------------------------------
+
+                     Step    11  /   11
+
+             Frequency = (  3.6000,   0.1000) Ry
+
+      iter #   1 total cpu time :    22.8 secs   av.it.:   8.8
+      thresh= 1.000E-02 alpha_mix =  0.700 |ddv_scf|^2 =  2.622E-07
+
+      iter #   2 total cpu time :    23.5 secs   av.it.:  17.9
+      thresh= 5.121E-05 alpha_mix =  0.700 |ddv_scf|^2 =  2.987E-08
+
+      iter #   3 total cpu time :    24.1 secs   av.it.:  16.9
+      thresh= 1.728E-05 alpha_mix =  0.700 |ddv_scf|^2 =  5.529E-11
+
+      iter #   4 total cpu time :    24.8 secs   av.it.:  18.4
+      thresh= 7.436E-07 alpha_mix =  0.700 |ddv_scf|^2 =  1.039E-12
+
+      iter #   5 total cpu time :    25.4 secs   av.it.:  18.2
+      thresh= 1.019E-07 alpha_mix =  0.700 |ddv_scf|^2 =  9.547E-16
+
+      Inverse dielectric constant at frequency   3.6000 +   0.1000 i Ry
+                                                48.9805 +   1.3606 i eV
+
+      epsilon^-1(q,w) =       1.104767      -0.015704
+
+      Charge-charge susceptibility:
+
+      chirr(q,w) =       0.001099      -0.000165
+
+     Finished linear response calculation...
+ 
+     lr_eels_main :     26.73s CPU     29.55s WALL (       1 calls)
+     lr_solve_e   :      0.01s CPU      0.07s WALL (       1 calls)
+ 
+ 
+     h_psi        :     21.38s CPU     23.20s WALL (   54339 calls)
+     incdrhoscf   :      0.54s CPU      0.60s WALL (    1206 calls)
+                                        0.00s GPU  (    1206 calls)
+     lr_dv_setup  :      0.01s CPU      0.01s WALL (       1 calls)
+     dv_of_drho   :      0.05s CPU      0.05s WALL (      67 calls)
+     ortho        :      0.10s CPU      0.11s WALL (    2430 calls)
+ 
+ 
+     US routines
+     s_psi        :      0.65s CPU      0.72s WALL (  110355 calls)
+     addusdbec_nc :      0.03s CPU      0.03s WALL (    1206 calls)
+     lr_addus_dvp :      0.00s CPU      0.00s WALL (      18 calls)
+     lr_compute_i :      0.00s CPU      0.00s WALL (       2 calls)
+ 
+     General routines
+     calbec       :      0.49s CPU      0.54s WALL (  111579 calls)
+     fft          :      0.06s CPU      0.11s WALL (    1060 calls)
+     ffts         :      0.00s CPU      0.00s WALL (     142 calls)
+     fftw         :     19.38s CPU     21.14s WALL (  789972 calls)
+     interpolate  :      0.01s CPU      0.02s WALL (     142 calls)
+     davcio       :      0.13s CPU      0.58s WALL (    8624 calls)
+ 
+     Parallel routines
+ 
+     EELS routines
+     lr_run_nscf  :      1.07s CPU      1.23s WALL (       1 calls)
+     lr_setup_nsc :      0.00s CPU      0.00s WALL (       1 calls)
+     lr_dvpsi_eel :      0.01s CPU      0.01s WALL (      18 calls)
+     lr_smallgq   :      0.00s CPU      0.00s WALL (       1 calls)
+     lr_summary   :      0.00s CPU      0.00s WALL (       1 calls)
+ 
+ 
+     turboEELS    :     26.73s CPU     29.56s WALL
+
+ 
+   This run was terminated on:  12:42:11  31Jul2025            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

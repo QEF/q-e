@@ -34,13 +34,13 @@ SUBROUTINE potinit()
   USE gvect,                ONLY : ngm, gstart, g, gg, ig_l2g
   USE gvecs,                ONLY : doublegrid
   USE control_flags,        ONLY : lscf, gamma_only, restart, sic
-  USE scf,                  ONLY : rho, rho_core, rhog_core, &
+  USE scf,                  ONLY : rho, rho_core, rhog_core, tau_core, &
                                    vltot, v, vrs, kedtau
   USE xc_lib,               ONLY : xclib_dft_is
   USE ener,                 ONLY : ehart, etxc, vtxc, epaw, esol, vsol
-  USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, eth, &
+  USE ldaU,                 ONLY : lda_plus_u, eth, &
                                    niter_with_fixed_ns, lda_plus_u_kind, &
-                                   nsg, nsgnew, apply_U, hub_pot_fix, &
+                                   apply_U, hub_pot_fix, &
                                    orbital_resolved
   USE noncollin_module,     ONLY : noncolin, domag, report, lforcet
   USE io_files,             ONLY : restart_dir, input_drho, check_file_exist
@@ -59,6 +59,7 @@ SUBROUTINE potinit()
   USE pwcom,                ONLY : report_mag 
   USE rism_module,          ONLY : lrism, rism_init3d, rism_calc3d
   !
+  USE extfield,             ONLY : dipfield, emaxpos, eopreg, edir
 #if defined (__ENVIRON)
   USE plugin_flags,         ONLY : use_environ
   USE environ_pw_module,    ONLY : calc_environ_potential
@@ -171,23 +172,10 @@ SUBROUTINE potinit()
               WRITE( stdout, '(/,5X,47("="))')
               !
            ENDIF
-           IF (noncolin) THEN
-              CALL init_ns_nc() 
-           ELSE 
-              CALL init_ns()
-           ENDIF   
-        ELSEIF (lda_plus_u_kind == 1) THEN
-           IF (noncolin) THEN
-              CALL init_ns_nc()
-           ELSE
-              CALL init_ns()
-           ENDIF
-        ELSEIF (lda_plus_u_kind == 2) THEN
-           CALL init_nsg()
         ENDIF
+        CALL init_ns_hubbard ( noncolin ) 
         !
      ENDIF
-
      ! ... in the paw case uses atomic becsum
      IF ( okpaw )      CALL PAW_atomic_becsum()
      !
@@ -269,6 +257,11 @@ SUBROUTINE potinit()
      ENDIF
      !
   END IF
+  ! ... if a dipolar field is present, store it into rho for later usage
+  ! ... in self-consistency mixing
+  !
+  IF (dipfield) &
+      CALL compute_el_dip(emaxpos, eopreg, edir, rho%of_r(:,1), rho%el_dipole)
   !
   ! ... initialize 3D-RISM
   !
@@ -285,7 +278,7 @@ SUBROUTINE potinit()
   !
   ! ... compute the potential and store it in v
   !
-  CALL v_of_rho( rho, rho_core, rhog_core, &
+  CALL v_of_rho( rho, rho_core, rhog_core, tau_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
   IF (okpaw) CALL PAW_potential(rho%bec, ddd_paw, epaw)
   !
@@ -307,26 +300,7 @@ SUBROUTINE potinit()
      ! ... info about starting occupations
      WRITE( stdout, '(/5X,"STARTING HUBBARD OCCUPATIONS:")')
      !
-     IF (lda_plus_u_kind == 0) THEN
-        IF (noncolin) THEN
-           CALL write_ns_nc() 
-        ELSE   
-           CALL write_ns()
-        ENDIF
-     ELSEIF (lda_plus_u_kind == 1) THEN
-        IF (noncolin) THEN
-           CALL write_ns_nc()
-        ELSE
-           CALL write_ns()
-        ENDIF
-     ELSEIF (lda_plus_u_kind == 2) THEN
-        nsgnew = nsg
-        IF(noncolin) THEN
-           CALL write_nsg_nc()
-        ELSE
-           CALL write_nsg()
-        ENDIF
-     ENDIF
+     CALL write_ns_hubbard( noncolin )
      !
   END IF
   !

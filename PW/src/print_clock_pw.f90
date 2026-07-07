@@ -193,6 +193,20 @@ SUBROUTINE print_clock_pw()
       END IF
    ELSE IF ( isolve == 4 ) THEN
       WRITE( stdout, '(/5x,"Called by *rmmdiagg:")' )
+   ELSEIF ( isolve == 5 ) THEN
+      WRITE( stdout, '(/5x,"Called by direct diagonalization:")' )
+      CALL print_clock( 'diag_direct' )
+      CALL print_clock( 'direct_kin' )
+      CALL print_clock( 'direct_vloc' )
+      CALL print_clock( 'direct_vnl' )
+      CALL print_clock( 'direct_diag' )
+      CALL print_clock( 'direct_distrib' )
+      CALL print_clock( 'cdiagh' )
+      CALL print_clock( 'cdiagh-1' )
+      CALL print_clock( 'cdiagh-2' )
+      CALL print_clock( 'cdiagh-3' )
+      CALL print_clock( 'direct_check' )
+      CALL print_clock( 'direct_collect' )
    END IF
    !
    CALL print_clock( 'h_psi' )

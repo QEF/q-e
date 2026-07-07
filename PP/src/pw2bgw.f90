@@ -125,16 +125,17 @@ PROGRAM pw2bgw
   USE mp_world, ONLY : world_comm
   USE mp_global, ONLY : mp_startup
   USE paw_variables, ONLY : okpaw
-  USE scf, ONLY : rho_core, rhog_core
+  USE scf, ONLY : rho_core, rhog_core, tau_core
   USE uspp, ONLY : okvan
   !USE funct, ONLY : dft_is_hybrid, dft_is_meta, dft_is_gradient !FZ: for hybrid functional, metaGGA, add dft_is_gradient for spinors
   USE xc_lib, ONLY : xclib_dft_is  !FZ: for qe6.7, for hybrid functional, metaGGA, add dft_is_gradient for spinors
   USE ldaU, ONLY : lda_plus_u
-  USE scf,   ONLY : rho, rho_core, rhog_core, v, vrs!FZ: test spinors added vrs 
+  USE scf,   ONLY : rho, rho_core, rhog_core, tau_core, v, vrs!FZ: test spinors added vrs 
   USE fft_rho,  ONLY : rho_g2r  
   USE fft_base,  ONLY : dfftp    
   USE noncollin_module,   ONLY : noncolin, npol, m_loc, ux, angle1, angle2  !FZ: test for spinors
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv  !FZ: test for spinors
+  USE upf_utils, ONLY : lowercase
 
   IMPLICIT NONE
 
@@ -212,7 +213,6 @@ PROGRAM pw2bgw
   logical :: allow_spinors
 
   character (len=256), external :: trimcheck
-  character (len=1), external :: lowercase
   REAL(DP) :: etxc, vtxc  !FZ: change062320
   INTEGER  :: na   !FZ: test for spinors
 
@@ -439,7 +439,7 @@ PROGRAM pw2bgw
   !IF (dft_is_meta()) then                           !FZ:  for metaGGA change062320
   IF (xclib_dft_is('meta')) then                           !FZ:  for qe6.7
      CALL rho_g2r ( dfftp, rho%kin_g, rho%kin_r )   !FZ:  for metaGGA
-     CALL v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v%of_r, v%kin_r )
+     CALL v_xc_meta( rho, rho_core, rhog_core, tau_core, etxc, vtxc, v%of_r, v%kin_r )
   ENDIF
   ! FZ: end modify
 
@@ -618,7 +618,7 @@ PROGRAM pw2bgw
     CALL print_clock ( 'real_wfng' )
   ENDIF
 
-  CALL environment_end ( codename )
+  CALL environment_end( )
 
   CALL stop_pp ( )
 
@@ -2260,9 +2260,9 @@ SUBROUTINE write_vxcg_meta ( output_file_name, real_or_complex, symm_type, &
   !
   !IF (dft_is_meta() .and. (get_meta() /= 4)) then         !FZ: for metaGGA
   IF (xclib_dft_is('meta')) then         !FZ: for qe6.7
-     CALL v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, vxcr_g, kedtaur )    !FZ: for metaGGA
+     CALL v_xc_meta( rho, rho_core, rhog_core, tau_core, etxc, vtxc, vxcr_g, kedtaur )    !FZ: for metaGGA
   ELSE                           
-     CALL v_xc ( rho, rho_core, rhog_core, etxc, vtxc, vxcr_g )
+     CALL v_xc ( rho, rho_core, rhog_core, tau_core, etxc, vtxc, vxcr_g )
   ENDIF                         
   !
   DO is = 1, ns
@@ -2474,9 +2474,9 @@ SUBROUTINE write_vxc0_meta ( output_file_name, vxc_zero_rho_core )
   !
   !IF (dft_is_meta() .and. (get_meta() /= 4)) then         !FZ: for metaGGA
   IF (xclib_dft_is('meta')) then         !FZ: for qe6.7
-     CALL v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, vxcr_g, kedtaur )    !FZ: for metaGGA
+     CALL v_xc_meta( rho, rho_core, rhog_core, tau_core, etxc, vtxc, vxcr_g, kedtaur )    !FZ: for metaGGA
   ELSE                          
-     CALL v_xc ( rho, rho_core, rhog_core, etxc, vtxc, vxcr_g )  
+     CALL v_xc ( rho, rho_core, rhog_core, tau_core, etxc, vtxc, vxcr_g )  
   ENDIF                          
   !
   DO is = 1, ns
@@ -3032,9 +3032,9 @@ SUBROUTINE write_vxc_r_meta (output_file_name, diag_nmin, diag_nmax, &
   !
   !IF (dft_is_meta() .and. (get_meta() /= 4)) then         !FZ: for metaGGA
   IF (xclib_dft_is('meta')) then         !FZ: for qe6.7
-     CALL v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, vxcr, kedtaur )    !FZ: for metaGGA
+     CALL v_xc_meta( rho, rho_core, rhog_core, tau_core, etxc, vtxc, vxcr, kedtaur )    !FZ: for metaGGA
   ELSE                          
-     CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxcr)
+     CALL v_xc (rho, rho_core, rhog_core, tau_core, etxc, vtxc, vxcr)
   ENDIF                        
   !
   DO ik = iks, ike
@@ -3623,9 +3623,9 @@ SUBROUTINE write_vxc_g_meta (output_file_name, diag_nmin, diag_nmax, &
   !
   !IF (dft_is_meta() .and. (get_meta() /= 4)) then         !FZ: for metaGGA
   IF (xclib_dft_is('meta')) then         !FZ: for qe6.7
-     CALL v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, vxcr, kedtaur )    !FZ: for metaGGA
+     CALL v_xc_meta( rho, rho_core, rhog_core, tau_core, etxc, vtxc, vxcr, kedtaur )    !FZ: for metaGGA
   ELSE                         
-     CALL v_xc(rho, rho_core, rhog_core, etxc, vtxc, vxcr)
+     CALL v_xc(rho, rho_core, rhog_core, tau_core, etxc, vtxc, vxcr)
   ENDIF                       
   !
 
@@ -3911,16 +3911,16 @@ SUBROUTINE write_kih (kih_file_name, vxc_hybrid_file_name, diag_nmin, diag_nmax,
   rhog_core ( : ) = ( 0.0D0, 0.0D0 )
   !IF (dft_is_meta() .and. (get_meta() /= 4)) then         !FZ: for metaGGA
   IF (xclib_dft_is('meta')) then         !FZ: for qe6.7
-     CALL v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, vxcr, kedtaur )    !FZ: for metaGGA
+     CALL v_xc_meta( rho, rho_core, rhog_core, tau_core, etxc, vtxc, vxcr, kedtaur )    !FZ: for metaGGA
   ELSE                      
-     CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxcr)
+     CALL v_xc (rho, rho_core, rhog_core, tau_core, etxc, vtxc, vxcr)
   ENDIF
   CALL set_rhoc()    
   !IF (dft_is_meta() .and. (get_meta() /= 4)) then         !FZ: for metaGGA
   IF (xclib_dft_is('meta')) then         !FZ: for qe6.7
-     CALL v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, vxcr_2, kedtaur )    !FZ: for metaGGA
+     CALL v_xc_meta( rho, rho_core, rhog_core, tau_core, etxc, vtxc, vxcr_2, kedtaur )    !FZ: for metaGGA
   ELSE                       
-     CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxcr_2)
+     CALL v_xc (rho, rho_core, rhog_core, tau_core, etxc, vtxc, vxcr_2)
   ENDIF
 
   CALL v_h (rho%of_g(:,1), ehart, charge, v_har)   
@@ -5054,15 +5054,9 @@ SUBROUTINE write_vhub_g (output_file_name, diag_nmin, diag_nmax, offdiag_nmin, o
     CALL davcio (evc, 2*nwordwfc, iunwfc, ik - iks + 1, -1)
     IF ( lda_plus_u .AND. (Hubbard_projectors .NE. 'pseudo') ) THEN
       CALL get_buffer ( wfcU, nwordwfcU, iunhub, ikk )
+      CALL vhpsi( npwx, npw, nbnd, evc, hpsi )
     ENDIF
 
-    IF ( lda_plus_u .AND. Hubbard_projectors.NE."pseudo" ) THEN
-      IF (noncolin) THEN
-        CALL vhpsi_nc( npwx, npw, nbnd, evc, hpsi )
-      ELSE
-        CALL vhpsi( npwx, npw, nbnd, evc, hpsi )
-      ENDIF
-    ENDIF
 
     ! MW: Use MATMUL instead of ZGEMM
     ! CALL ZGEMM( 'C', 'N', nbnd, nbnd, kdim, ( 1.D0, 0.D0 ), evc, kdmx,  hpsi, kdmx, ( 0.D0, 0.D0 ), hc, nbnd )

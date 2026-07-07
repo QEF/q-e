@@ -297,7 +297,11 @@ CONTAINS
     upf%tvanp = .false.
     upf%tcoulombp = .false.
     upf%nlcc = .false.
+    upf%has_so = .false.
+    upf%is_gth = .false.
+    upf%is_multiproj = .false.
     upf%dft = ' '
+    upf%with_metagga_info = .false.
     upf%zp = 0.0
     upf%etotps = 0.0
     upf%ecutwfc = 0.0
@@ -324,7 +328,6 @@ CONTAINS
     upf%tpawp = .false.
     upf%has_gipaw = .false.
     upf%paw_as_gipaw = .false.
-    upf%with_metagga_info = .false.
     upf%gipaw_data_format = 0
     upf%gipaw_ncore_orbitals = 0
     upf%gipaw_wfs_nchannels = 0

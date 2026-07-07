@@ -1,0 +1,11 @@
+&inputph
+prefix = 'fe',
+fildyn = 'fe.dyn.xml',
+reduce_io = .true.
+fildvscf = 'dvscf',
+ldisp = .true.,
+nq1 = 3,
+nq2 = 3,
+nq3 = 3,
+tr2_ph = 1.0d-16
+/

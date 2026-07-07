@@ -75,7 +75,7 @@ program test_code
     input%numgrad = .false.
 
 ! initialize dftd3
-    call dftd3_init(dftd3, input)
+    call dftd3_init(dftd3, input, intra_image_comm)
 
 ! choose functional
     call dftd3_set_functional(dftd3, func='pbe',version=3, tz=.false.)

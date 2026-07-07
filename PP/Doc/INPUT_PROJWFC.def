@@ -4,10 +4,10 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program projw
 
     intro {
         @b {Purpose of projwfc.x:}
-            projects wavefunctions onto orthogonalized atomic wavefunctions, 
-            calculates Lowdin charges, spilling parameter, projected DOS 
+            projects wavefunctions onto orthogonalized atomic wavefunctions,
+            calculates Lowdin charges, spilling parameter, projected DOS
             (separated into up and down components for LSDA). Alternatively:
-            computes the local DOS(E) integrated in volumes given in input 
+            computes the local DOS(E) integrated in volumes given in input
             (see @ref tdosinboxes) or k-resolved DOS (see @ref kresolveddos).
             Atomic projections are written to file "atomic_proj.xml".
 
@@ -20,9 +20,9 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program projw
     }
 
     namelist PROJWFC {
-         
-        var prefix -type CHARACTER { 
-            info { 
+
+        var prefix -type CHARACTER {
+            info {
                 prefix of input file produced by @b pw.x (wavefunctions are needed)
             }
             default { 'pwscf' }
@@ -32,44 +32,50 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program projw
             info {
                 directory containing the input data, i.e. the same as in @b pw.x
             }
-            default {
-		value of the ESPRESSO_TMPDIR environment variable if set;
-		current directory ('./') otherwise
-	    }
+            default -kind conditional {
+                case -test {ESPRESSO_TMPDIR is set} { from_environment }
+                case { './' }
+            }
         }
 
         var ngauss -type INTEGER {
             default { 0 }
             info {
                 Type of gaussian broadening:
-                    0 ... Simple Gaussian (default)
+                    0 ... Simple Gaussian
                     1 ... Methfessel-Paxton of order 1
                    -1 ... "cold smearing" (Marzari-Vanderbilt-DeVita-Payne)
                   -99 ... Fermi-Dirac function
             }
         }
-        
+
         var degauss -type REAL {
-            default { 0.0 } 
+            default { 0.0 }
+            dimensionality { energy }
+            units { Ry }
             info { gaussian broadening, Ry (not eV!) }
         }
 
         vargroup -type REAL {
             var Emin
             var Emax
-            info { min & max energy (eV) for DOS plot }
-            default { (band extrema) }
+            info { min & max energy for DOS plot. Default: band extrema (computed at runtime). }
+            default -kind computed { internal }
+            dimensionality { energy }
+            units { eV }
         }
         var DeltaE -type REAL {
-            info { energy grid step (eV) }
+            info { energy grid step }
+            dimensionality { energy }
+            units { eV }
         }
-        
+
         var lsym -type LOGICAL {
             default { .true. }
             info {
                 if @b .true.  the projections are symmetrized,
                            the partial density of states are computed
-                if @b .false. the projections are not symmetrized, the partial 
+                if @b .false. the projections are not symmetrized, the partial
                            DOS can be computed only in the k-resolved case
             }
         }
@@ -83,7 +89,7 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program projw
                 if @b .true. the projections of Kohn-Sham states are
                              done on the orthogonalized atomic orbitals
                              that are rotated to the basis in which the
-                             atomic occupation matrix is diagonal 
+                             atomic occupation matrix is diagonal
                              (i.e. local XYZ coordinate frame).
             }
         }
@@ -92,8 +98,8 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program projw
             default { .false. }
             info {
                 if @b .true. use PAW projectors and all-electron PAW basis
-                functions to calculate weight factors for the partial 
-                densities of states. Following Bloechl, PRB 50, 17953 (1994), 
+                functions to calculate weight factors for the partial
+                densities of states. Following Bloechl, PRB 50, 17953 (1994),
                 Eq. (4 & 6), the weight factors thus approximate the real
                 charge within the augmentation sphere of each atom.
                 Only for PAW, not implemented in the noncolinear case.
@@ -101,14 +107,15 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program projw
         }
 
         var filpdos -type CHARACTER {
-            info { prefix for output files containing PDOS(E) } 
-            default { (value of @ref prefix variable) }
+            info { prefix for output files containing PDOS(E) }
+            default -kind ref { @ref prefix }
         }
-        
+
         var filproj -type CHARACTER {
-            default { (standard output) }
+            default -kind computed { internal }
             info {
-                file containing the projections
+                File containing the projections. If unset, projections are
+                written to standard output.
             }
         }
 
@@ -143,7 +150,7 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program projw
             default { .false. }
             info {
                 if @b .true. compute the local DOS integrated in volumes
-		
+
                 Volumes are defined as boxes with edges parallel to the unit cell,
 		containing the points of the (charge density) FFT grid included within
 		@ref irmin and @ref irmax, in the three dimensions:
@@ -158,36 +165,36 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program projw
                 number of boxes where the local DOS is computed
             }
         }
-        
+
         multidimension irmin -start 1,1 -end 3,n_proj_boxes -indexes i,n_proj_boxes -type INTEGER {
-            default { 1 for each box }
+            default { 1 }
             info {
-                
+
                 first point of the given box
 
                 BEWARE: @ref irmin is a 2D array of the form: @ref irmin(3,@ref n_proj_boxes)
             }
-        }       
+        }
 
         multidimension irmax -start 1,1 -end 3,n_proj_boxes -indexes i,n_proj_boxes -type INTEGER {
-            default { 0 for each box }
+            default { 0 }
             info {
-                
+
                 last point of the given box;
                 ( 0 stands for the last point in the FFT grid )
 
                 BEWARE: @ref irmax is a 2D array of the form: @ref irmax(3,@ref n_proj_boxes)
             }
-        }       
+        }
 
         var plotboxes -type LOGICAL {
             default { .false. }
             info {
-                if @b .true., the boxes are written in output as @b xsf files with 
+                if @b .true., the boxes are written in output as @b xsf files with
                 3D datagrids, valued 1.0 inside the box volume and 0 outside
                 (visualize them as isosurfaces with isovalue 0.5)
             }
-        }       
+        }
     }
 
     section -title Notes {
@@ -195,41 +202,41 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program projw
             text {
                 Projections are written to standard output, and also to file
                 @ref filproj if given as input.
-                
-                The total DOS and the sum of projected DOS are written to file 
+
+                The total DOS and the sum of projected DOS are written to file
                 "filpdos".pdos_tot.
-                
+
                 * The format for the collinear, spin-unpolarized case and the
                   non-collinear, spin-orbit case is:
                       E DOS(E) PDOS(E)
                       ...
-                
+
                 * The format for the collinear, spin-polarized case is:
-                      E DOSup(E) DOSdw(E)  PDOSup(E) PDOSdw(E) 
+                      E DOSup(E) DOSdw(E)  PDOSup(E) PDOSdw(E)
                       ...
-                
+
                 * The format for the non-collinear, non spin-orbit case is:
-                      E DOS(E) PDOSup(E) PDOSdw(E) 
+                      E DOS(E) PDOSup(E) PDOSdw(E)
                       ...
-                
+
                 In the collinear case and the non-collinear, non spin-orbit case
                 projected DOS are written to file "filpdos".pdos_atm#N(X)_wfc#M(l),
                 where N = atom number , X = atom symbol, M = wfc number, l=s,p,d,f
-                (one file per atomic wavefunction found in the pseudopotential file) 
-                
+                (one file per atomic wavefunction found in the pseudopotential file)
+
                 * The format for the collinear, spin-unpolarized case is:
                       E LDOS(E) PDOS_1(E) ... PDOS_2l+1(E)
-                      ...	        
+                      ...
 	          where LDOS = \sum m=1,2l+1 PDOS_m(E)
 	          and PDOS_m(E) = projected DOS on atomic wfc with component m
-	        
-	        * The format for the collinear, spin-polarized case and the 
+
+	        * The format for the collinear, spin-polarized case and the
 	          non-collinear, non spin-orbit case is as above with
 	          two components for both  LDOS(E) and PDOS_m(E)
-      	        
+
 	        In the non-collinear, spin-orbit case (i.e. if there is at least one
 	        fully relativistic pseudopotential) wavefunctions are projected
-	        onto eigenstates of the total angular-momentum. 
+	        onto eigenstates of the total angular-momentum.
 	        Projected DOS are written to file "filpdos".pdos_atm#N(X)_wfc#M(l_j),
 		where N = atom number , X = atom symbol, M = wfc number, l=s,p,d,f
 		and j is the value of the total angular momentum.
@@ -248,9 +255,9 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program projw
 	subsection -title {Orbital Order} {
 	    text {
 		Order of m-components for each l in the output:
-		
+
 		    1, cos(phi), sin(phi), cos(2*phi), sin(2*phi), .., cos(l*phi), sin(l*phi)
-		
+
 		where phi is the azimuthal angle: x=r cos(theta)cos(phi), y=r cos(theta)sin(phi)
 		This is determined in file upflib/ylmr2.f90 that calculates spherical harmonics.
 
@@ -258,7 +265,7 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program projw
 	          1 pz     (m=0)
 	          2 px     (real combination of m=+/-1 with cosine)
 	          3 py     (real combination of m=+/-1 with sine)
-	        
+
 	        for l=2:
 	          1 dz2    (m=0)
 	          2 dzx    (real combination of m=+/-1 with cosine)
@@ -271,15 +278,15 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program projw
 	subsection -title {Defining boxes for the Local DOS(E)} {
 	    text {
 		Boxes are specified using the variables @ref irmin and @ref irmax:
-		
+
 		FFT grid points are included from irmin(j,n) to irmax(j,n)
 		for j=1,2,3 and n=1,...,@ref n_proj_boxes
-		
+
 		@ref irmin and @ref irmax range from 1 to nr1 or nr2 or nr3
-		
+
 		Values larger than nr1/2/3 or smaller than 1 are folded
 		to the unit cell.
-		
+
 		If @ref irmax<@ref irmin FFT grid points are included from 1 to irmax
 		and from irmin to nr1/2/3.
 	    }
@@ -293,20 +300,20 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program projw
 		      occupations='tetrahedra', AND
 
 		    - a value for degauss is not given as input to namelist &projwfc
-		
+
 		* Gaussian broadening is used in all other cases:
 
 		    - if @ref degauss is set to some value in namelist &PROJWFC, that value
 		      (and the optional value for ngauss) is used
 
-		    - if @ref degauss is NOT set to any value in namelist &PROJWFC, the 
+		    - if @ref degauss is NOT set to any value in namelist &PROJWFC, the
 		      value of @ref degauss and of @ref ngauss are read from the input data
 		      file (they will be the same used in the pw.x calculations)
 
 		    - if @ref degauss is NOT set to any value in namelist &PROJWFC, AND
 		      there is no value of @ref degauss and of @ref ngauss in the input data
 		      file, @ref degauss=@ref DeltaE (in Ry) and @ref ngauss=0 will be used
-		
+
 
 		Obsolete variables, ignored:
 		    io_choice

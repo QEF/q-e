@@ -44,7 +44,7 @@ SUBROUTINE vloc_psi_gamma_acc( lda, n, m, psi, v, hpsi )
   !
   IF ( dffts%has_task_groups ) CALL errore('Vloc_psi_acc','no task groups!',1)
   !
-  CALL start_clock_gpu( 'vloc_psi' )
+  CALL start_clock( 'vloc_psi' )
   !
   incr = 2*many_fft
   dffts_nnr = dffts%nnr
@@ -139,7 +139,7 @@ SUBROUTINE vloc_psi_gamma_acc( lda, n, m, psi, v, hpsi )
   DEALLOCATE( psi1 )
   DEALLOCATE( psic )
   !
-  CALL stop_clock_gpu ('vloc_psi')
+  CALL stop_clock ('vloc_psi')
   !
   RETURN
 END SUBROUTINE vloc_psi_gamma_acc
@@ -183,7 +183,7 @@ SUBROUTINE vloc_psi_k_acc( lda, n, m, psi, v, hpsi )
   !
   IF ( dffts%has_task_groups ) CALL errore('Vloc_psi_acc','no task groups!',2)
   !
-  CALL start_clock_gpu ('vloc_psi')
+  CALL start_clock ('vloc_psi')
   !
   incr = many_fft
   dffts_nnr = dffts%nnr
@@ -259,7 +259,7 @@ SUBROUTINE vloc_psi_k_acc( lda, n, m, psi, v, hpsi )
   DEALLOCATE( psic )
   DEALLOCATE( psi1 )
   !
-  CALL stop_clock_gpu( 'vloc_psi' )
+  CALL stop_clock( 'vloc_psi' )
   !
   RETURN
   !
@@ -303,7 +303,7 @@ SUBROUTINE vloc_psi_nc_acc( lda, n, m, psi, v, hpsi )
   !
   IF ( dffts%has_task_groups ) CALL errore('Vloc_psi_acc','no task groups!',3)
   !
-  CALL start_clock_gpu ('vloc_psi')
+  CALL start_clock ('vloc_psi')
   !
   incr = 1
   dffts_nnr = dffts%nnr
@@ -362,7 +362,7 @@ SUBROUTINE vloc_psi_nc_acc( lda, n, m, psi, v, hpsi )
   DEALLOCATE( psic )
   DEALLOCATE( psi1 )
   !
-  CALL stop_clock_gpu ('vloc_psi')
+  CALL stop_clock ('vloc_psi')
   !
   RETURN
   !

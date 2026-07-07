@@ -9,49 +9,6 @@
 !
 ! ... Common variables for LR_Modules routines
 !
-MODULE qpoint
-  !
-  USE kinds,      ONLY : DP
-  !
-  ! ... The variables needed to specify various indices,
-  ! ... number of plane waves and k points and their coordiantes.
-  !
-  SAVE
-  !
-  INTEGER, POINTER :: igkq(:)     ! npwx)
-  ! correspondence k+q+G <-> G
-  INTEGER :: nksq, npwq, nksqtot
-  ! the real number of k points
-  ! the number of plane waves for q
-  ! the total number of q points
-  INTEGER, ALLOCATABLE :: ikks(:), ikqs(:)
-  ! the index of k point in the list of k
-  ! the index of k+q point in the list of k
-  REAL (DP) :: xq(3)
-  ! the coordinates of the q point
-  COMPLEX (DP), ALLOCATABLE :: eigqts(:) ! nat)
-  ! the phases associated to the q
-  REAL (DP), ALLOCATABLE :: xk_col(:,:)
-  !
-END MODULE qpoint
-!
-!
-!
-MODULE qpoint_aux
-  USE kinds,      ONLY : DP
-  USE becmod,     ONLY : bec_type
- 
-  SAVE
-  
-  INTEGER, ALLOCATABLE :: ikmks(:)    ! index of -k for magnetic calculations
-
-  INTEGER, ALLOCATABLE :: ikmkmqs(:)  ! index of -k-q for magnetic calculations
-
-  TYPE(bec_type), ALLOCATABLE :: becpt(:), alphapt(:,:)
-
-END MODULE qpoint_aux
-!
-!
 MODULE control_lr
   !
   USE kinds,      ONLY : DP
@@ -69,9 +26,10 @@ MODULE control_lr
   ! Sternheimer case 
   LOGICAL :: lgamma_gamma
   !! if TRUE this is a q=0 computation with k=0 only
-  LOGICAL :: ext_recover, &! if .TRUE. there is a recover file
-             lnoloc        ! if .TRUE. calculates the dielectric constant
-                           ! neglecting local field effects
+  LOGICAL :: ext_recover
+  !! if .TRUE. there is a recover file
+  LOGICAL :: lnoloc
+  !! if .TRUE. neglect local field effects, i.e. ignore the induced potential
   !
   ! Variables for recover
   !
@@ -102,9 +60,7 @@ MODULE control_lr
   REAL(DP) :: alpha_mix(maxter)
   !! the mixing parameter
   !
-  LOGICAL :: lmultipole=.FALSE.   
-  !! if TRUE macroscopic density response to q-potential perturbation is written as output
-  LOGICAL :: lnolr=.FALSE.   
+  LOGICAL :: lnolr = .FALSE.
   !! if TRUE G=0 component of the Hartree term is not added in dv_of_drho
   !
 END MODULE control_lr
@@ -122,8 +78,6 @@ MODULE eqv
   COMPLEX (DP), ALLOCATABLE :: dvpsi(:,:), dpsi(:,:)
   ! the product of dV psi
   ! the change of the wavefunctions
-  COMPLEX (DP), ALLOCATABLE :: drhos(:,:,:)
-  !! the change of the density (smooth part only, dffts)
   REAL (DP), ALLOCATABLE :: dmuxc(:,:,:)        ! nrxx, nspin, nspin)
   ! the derivative of the xc potential
   REAL (DP), ALLOCATABLE, TARGET :: vlocq(:,:)  ! ngm, ntyp)
@@ -230,6 +184,10 @@ MODULE lrus
   ! bbg/bbk/bbnc are the scalar products of beta functions 
   ! localized on atoms N and P.
   !
+  ! Variables needed for magnetic calculations
+  TYPE(bec_type), ALLOCATABLE :: becpt(:)
+  TYPE(bec_type), ALLOCATABLE :: alphapt(:,:)
+  !
 END MODULE lrus
 !
 MODULE units_lr
@@ -275,5 +233,8 @@ MODULE ldaU_lr
   !! If true, add lr_dnsorth to dnsscf.
   COMPLEX(DP), ALLOCATABLE :: lr_dnsorth(:, :, :, :, :)
   !! Fixed term to be added to dnsscf. Size (ldim, ldim, nspin, nat, 3*nat)
+  !
+  COMPLEX (DP), ALLOCATABLE :: proj1(:,:), proj2(:,:)
+  !! Arrays to store scalar products between vectors
   !
 END MODULE ldaU_lr

@@ -1,6 +1,6 @@
 # Check compiler version
-if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 4.9)
-  message(FATAL_ERROR "Requires GCC 4.9 or higher ")
+if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 9.0)
+  message(FATAL_ERROR "Requires GCC 9.0 or higher ")
 endif()
 
 if(CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL 10.0)
@@ -8,8 +8,9 @@ if(CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL 10.0)
 endif()
 
 if(QE_ENABLE_OFFLOAD)
-  if(NOT DEFINED QE_GPU_ARCHS)
-    message(FATAL_ERROR "Requires QE_GPU_ARCHS option. For example, sm_80 for NVIDIA A100 or gfx90a for AMD MI250X.")
+  if(NOT QE_GPU_ARCHS)
+      message(FATAL_ERROR "Requires QE_GPU_ARCHS option set to the target GPU architecture when using GCC. "
+                          "For example, sm_80 for NVIDIA A100 or gfx90a for AMD MI250X.")
   endif()
 
   if(QE_GPU_ARCHS MATCHES "sm_")
@@ -30,6 +31,7 @@ if(QE_ENABLE_OFFLOAD)
   target_link_options(qe_openmp_fortran INTERFACE "$<$<LINK_LANGUAGE:Fortran>:${OpenMP_Fortran_FLAGS}>")
 else()
   target_compile_options(qe_openmp_fortran INTERFACE "$<$<COMPILE_LANGUAGE:Fortran>:-foffload=disable>")
+  target_link_options(qe_openmp_fortran INTERFACE "$<$<LINK_LANGUAGE:Fortran>:-foffload=disable>")
 endif()
 
 ############################################################

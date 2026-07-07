@@ -1,0 +1,44 @@
+--------
+&inputepw
+  prefix        = 'lif'
+  dvscf_dir     = '../ph/save/'
+  outdir        = './tmp'
+
+  elph          = .true.
+  epwread       = .true.
+  epwwrite      = .false.
+  lpolar        = .true.
+  use_ws        = .true.
+  nbndsub       =  3
+
+  plrn              = .true.
+  restart_plrn      = .false.
+  type_plrn         = 1
+  init_plrn         = 1
+  init_sigma_plrn   = 2
+  niter_plrn        = 50   !! the number of iterations
+  conv_thr_plrn     = 1E-5
+  ethrdg_plrn       = 1E-6
+
+  full_diagon_plrn  = .true.
+  nstate_plrn       = 10      !! the number of excited-state polarons saved into the files
+  !eigen_solver_plrn = 'elpa' !! calling ELPA eigensolver when it is integrated
+  !istate_relax_plrn = 1      !! the index of the relaxed polaron
+  !iverbosity        = 5      !! print out more info
+  !prtvkk            = .true. !! save the volecity matrix elements
+
+  nk1      = 4
+  nk2      = 4
+  nk3      = 4
+  nq1      = 4
+  nq2      = 4
+  nq3      = 4
+
+  nkf1     = 4
+  nkf2     = 4
+  nkf3     = 4
+  nqf1     = 4
+  nqf2     = 4
+  nqf3     = 4
+
+/

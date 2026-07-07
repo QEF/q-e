@@ -1,7 +1,7 @@
 VERSION := $(shell awk -F\' '/version_number/{print $$2}' ../../include/qe_version.h )
 #VERSION = git
 HELPDOC = ../../dev-tools/helpdoc -version $(VERSION)
-LATEX   = pdflatex
+LATEX   = pdflatex -interaction=nonstopmode -halt-on-error
 LATEX2HTML = latex2html
 
 PDFS = user_guide.pdf

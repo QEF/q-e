@@ -22,7 +22,7 @@ SUBROUTINE vol_clu( rho_real, rho_g, flag )
       USE ions_positions, ONLY: tau0
       USE gvect,          ONLY: g, gg
       USE cp_main_variables, only: drhor
-      USE control_flags,  ONLY: tpre
+      USE cp_control,     ONLY: tpre
       USE fft_base,       ONLY: dfftp
       USE fft_interfaces, ONLY: invfft
       USE pres_ai_mod,    ONLY: rho_thr, n_cntr, cntr, step_rad, fill_vac, &

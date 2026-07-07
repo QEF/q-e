@@ -1,0 +1,30 @@
+--------
+&inputepw
+  prefix        = 'lif'
+  dvscf_dir     = '../ph/save/'
+  outdir        = './tmp'
+
+  elph          = .true.
+  epwread       = .true.
+  lpolar        = .true.
+  use_ws        = .true.
+  nbndsub       =  3
+
+  plrn              = .true.
+  restart_plrn      = .true.
+  type_plrn         = 1
+  interp_Ank_plrn   = .false.
+  interp_Bqu_plrn   = .false.
+  cal_psir_plrn     = .true.
+  plot_psir_plrn    = 2   !! the index of the excited-state polaron wavefunction 
+  nstate_plrn       = 10
+  step_wf_grid_plrn = 2
+  lsign_psir_plrn   = .true.
+
+  nkf1      = 4
+  nkf2      = 4
+  nkf3      = 4
+  nqf1      = 4
+  nqf2      = 4
+  nqf3      = 4
+/

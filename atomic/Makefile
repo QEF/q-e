@@ -2,7 +2,9 @@
 
 sinclude ../make.inc
 
-default: all
+# see comments in file tldeps for explanations
+TLDEPS=mods
+include ../install/tldeps
 
 all:
 	( cd src ; $(MAKE) all || exit 1 )
@@ -23,6 +25,4 @@ doc_clean:
 	( cd Doc ; $(MAKE) clean )
 
 distclean: clean doc_clean
-
-
 

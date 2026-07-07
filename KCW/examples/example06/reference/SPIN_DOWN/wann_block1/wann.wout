@@ -1,4 +1,4 @@
- 
+
              +---------------------------------------------------+
              |                                                   |
              |                   WANNIER90                       |
@@ -70,7 +70,7 @@
              | 675 Mass Ave, Cambridge, MA 02139, USA.           |
              |                                                   |
              +---------------------------------------------------+
-             |    Execution started on  5Jun2024 at 10:53:43     |
+             |    Execution started on 16Sep2025 at 20:53:09     |
              +---------------------------------------------------+
  
  ******************************************************************************
@@ -81,18 +81,18 @@
  
 
  Running in serial (with serial executable)
- 
+
                                     ------
                                     SYSTEM
                                     ------
- 
+
                               Lattice Vectors (Ang)
                     a_1     3.433500   1.982332   6.602333
                     a_2    -3.433500   1.982332   6.602333
                     a_3     0.000000  -3.964664   6.602333
- 
+
                    Unit Cell Volume:     269.62625  (Ang^3)
- 
+
                         Reciprocal-Space Vectors (Ang^-1)
                     b_1     0.914983   0.528265   0.317220
                     b_2    -0.914983   0.528265   0.317220
@@ -157,7 +157,7 @@
  |    From: L       0.500  0.000  0.000     To: F       0.500  0.000  0.500   |
  |    From: F       0.500  0.000  0.500     To: G       0.000  0.000  0.000   |
  *----------------------------------------------------------------------------*
- Time to read parameters        0.003 (sec)
+ Time to read parameters        0.005 (sec)
 
  *---------------------------------- K-MESH ----------------------------------*
  +----------------------------------------------------------------------------+
@@ -235,7 +235,7 @@
  |             4         0.457491    0.264133    0.158610                     |
  +----------------------------------------------------------------------------+
   
- Time to get kmesh              0.007 (sec)
+ Time to get kmesh              0.012 (sec)
  *============================================================================*
  |                              MEMORY ESTIMATE                               |
  |         Maximum RAM allocated during each phase of the calculation         |
@@ -247,51 +247,51 @@
  Starting a new Wannier90 calculation ...
 
 
- Reading overlaps from wann.mmn    :  Created on  5Jun2024 at 10:53:43
+ Reading overlaps from wann.mmn    :  Created on 16Sep2025 at 20:53: 9
 
- Reading projections from wann.amn :  Created on  5Jun2024 at 10:53:43
+ Reading projections from wann.amn :  Created on 16Sep2025 at 20:53: 8
 
- Time to read overlaps          0.000 (sec)
+ Time to read overlaps          0.001 (sec)
 
  Writing checkpoint file wann.chk... done
 
- 
+
  *------------------------------- WANNIERISE ---------------------------------*
  +--------------------------------------------------------------------+<-- CONV
  | Iter  Delta Spread     RMS Gradient      Spread (Ang^2)      Time  |<-- CONV
  +--------------------------------------------------------------------+<-- CONV
- 
+
  ------------------------------------------------------------------------------
  Initial State
-  WF centre and spread    1  ( -0.000000,  3.964664,  0.006803 )     0.25293839
-  WF centre and spread    2  (  0.000000,  3.964664,  6.595531 )     0.25293839
-  Sum of centres and spreads ( -0.000000,  7.929329,  6.602333 )     0.50587678
- 
-      0     0.506E+00     0.0000000000        0.5058767775       0.00  <-- CONV
-        O_D=      0.0000000 O_OD=      0.0000000 O_TOT=      0.5058768 <-- SPRD
+  WF centre and spread    1  ( -0.000000,  3.964664,  0.006803 )     0.25293846
+  WF centre and spread    2  (  0.000000,  3.964664,  6.595531 )     0.25293846
+  Sum of centres and spreads ( -0.000000,  7.929329,  6.602333 )     0.50587692
+
+      0     0.506E+00     0.0000000000        0.5058769191       0.00  <-- CONV
+        O_D=      0.0000000 O_OD=      0.0000000 O_TOT=      0.5058769 <-- SPRD
  ------------------------------------------------------------------------------
  Cycle:      1
-  WF centre and spread    1  ( -0.000000,  3.964664,  0.006803 )     0.25293839
-  WF centre and spread    2  (  0.000000,  3.964664,  6.595531 )     0.25293839
-  Sum of centres and spreads ( -0.000000,  7.929329,  6.602333 )     0.50587678
- 
-      1     0.000E+00     0.0000000065        0.5058767775       0.00  <-- CONV
-        O_D=      0.0000000 O_OD=      0.0000000 O_TOT=      0.5058768 <-- SPRD
- Delta: O_D= -0.1826680E-18 O_OD= -0.1471905E-17 O_TOT=  0.0000000E+00 <-- DLTA
+  WF centre and spread    1  ( -0.000000,  3.964664,  0.006803 )     0.25293846
+  WF centre and spread    2  (  0.000000,  3.964664,  6.595531 )     0.25293846
+  Sum of centres and spreads ( -0.000000,  7.929329,  6.602333 )     0.50587692
+
+      1     0.000E+00     0.0000000023        0.5058769191       0.00  <-- CONV
+        O_D=      0.0000000 O_OD=      0.0000000 O_TOT=      0.5058769 <-- SPRD
+ Delta: O_D= -0.9653410E-20 O_OD= -0.1995615E-18 O_TOT=  0.0000000E+00 <-- DLTA
  ------------------------------------------------------------------------------
 
              <<<     Delta < 1.000E-10  over  5 iterations     >>>
              <<< Wannierisation convergence criteria satisfied >>>
 
  Final State
-  WF centre and spread    1  ( -0.000000,  3.964664,  0.006803 )     0.25293839
-  WF centre and spread    2  (  0.000000,  3.964664,  6.595531 )     0.25293839
-  Sum of centres and spreads ( -0.000000,  7.929329,  6.602333 )     0.50587678
- 
-         Spreads (Ang^2)       Omega I      =     0.505876774
+  WF centre and spread    1  ( -0.000000,  3.964664,  0.006803 )     0.25293846
+  WF centre and spread    2  (  0.000000,  3.964664,  6.595531 )     0.25293846
+  Sum of centres and spreads ( -0.000000,  7.929329,  6.602333 )     0.50587692
+
+         Spreads (Ang^2)       Omega I      =     0.505876915
         ================       Omega D      =     0.000000000
                                Omega OD     =     0.000000004
-    Final Spread (Ang^2)       Omega Total  =     0.505876778
+    Final Spread (Ang^2)       Omega Total  =     0.505876919
  ------------------------------------------------------------------------------
 
  Wannier centres written to file wann_centres.xyz
@@ -302,25 +302,25 @@
  *---------------------------------------------------------------------------*
  |                               PLOTTING                                    |
  *---------------------------------------------------------------------------*
- 
- 
+
+
  Calculating interpolated band-structure
- 
- Time to calculate interpolated band structure       0.005 (sec)
- 
- Time for plotting              0.006 (sec)
- Total Execution Time           0.018 (sec)
+
+ Time to calculate interpolated band structure       0.007 (sec)
+
+ Time for plotting              0.011 (sec)
+ Total Execution Time           0.030 (sec)
 
  *===========================================================================*
  |                             TIMING INFORMATION                            |
  *===========================================================================*
  |    Tag                                                Ncalls      Time (s)|
  |---------------------------------------------------------------------------|
- |kmesh: get                                        :         1         0.007|
+ |kmesh: get                                        :         1         0.012|
  |overlap: allocate                                 :         1         0.000|
- |overlap: read                                     :         1         0.000|
+ |overlap: read                                     :         1         0.001|
  |wann: main                                        :         1         0.001|
- |plot: main                                        :         1         0.006|
+ |plot: main                                        :         1         0.011|
  *---------------------------------------------------------------------------*
- 
+
  All done: wannier90 exiting

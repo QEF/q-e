@@ -14,7 +14,8 @@ MODULE open_close_input_file
   !
   !! Input file management.
   !
-  USE io_global,     ONLY : stdin, stdout, qestdin
+  USE io_global, ONLY : stdin, stdout, qestdin
+  USE upf_utils, ONLY : capital
   !
   CHARACTER(LEN=256), SAVE :: input_file = ' '
   PRIVATE
@@ -86,7 +87,6 @@ CONTAINS
   LOGICAL :: is_xml_, is_tmp
   INTEGER :: length
   CHARACTER(LEN=512) :: dummy
-  LOGICAL, EXTERNAL :: test_input_xml
   !
   ! copy file to be opened into input_file
   !
@@ -190,5 +190,43 @@ FUNCTION close_input_file ( ) RESULT ( ierr )
   ENDIF 
   !
   END FUNCTION close_input_file
+
+  LOGICAL FUNCTION test_input_xml (myunit)
+   !
+   !! Check if file opened as unit "myunit" is a xml file or not.
+   !
+   IMPLICIT NONE
+   !
+   INTEGER, INTENT(in) :: myunit
+   !
+   CHARACTER(LEN=256) :: dummy
+   INTEGER :: i, j 
+   LOGICAL :: exst
+   !
+   test_input_xml = .false.
+   INQUIRE ( UNIT=myunit, EXIST=exst )
+   IF ( .NOT. exst ) GO TO 10
+   
+   ! read until a non-empty line is found
+
+   dummy = ' '
+   DO WHILE ( LEN_TRIM(dummy) < 1 )
+      READ ( myunit,'(A)', ERR=10, END=10) dummy
+   END DO
+
+   ! convert to capital, clean trailing characters
+
+   dummy = capital(TRIM(dummy))
+
+   ! check for string "<?xml" or "<xml" in the beginning, ">" at the end
+
+   j = LEN_TRIM (dummy)
+   test_input_xml = ( (dummy(1:5) == "<?XML") .OR. (dummy(1:4) == "<XML") ) &
+                      .AND. (dummy(j:j) == ">")
+   RETURN
+
+10 WRITE (0,"('from test_input_xml: input file not opened or empty')")
+
+END FUNCTION test_input_xml
 !
 END MODULE open_close_input_file

@@ -52,6 +52,9 @@ SUBROUTINE run_nscf(do_band, iq)
   IMPLICIT NONE
   !
   LOGICAL, INTENT(IN) :: do_band
+  !! If .TRUE., run the NSCF band structure calculation. It writes the wavefunctions to
+  !! buffer prefix.wfc#, which is later read by the PHonon code on unit iuwfc.
+  !! If .FALSE., skip the NSCF calculation.
   INTEGER, INTENT(IN) :: iq
   !
   LOGICAL :: exst

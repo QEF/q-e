@@ -107,7 +107,26 @@ rootelement input_description {
 #
 
 element info    { text }
-element default { text }
+
+#
+# default value of an entry. The optional "kind" attribute classifies the
+# content (literal/ref/expr/computed/conditional, see vocabularies.tcl). A
+# bare "default { ... }" is a literal. A "default" has either a text body
+# or "case" children, never both (enforced by --strict).
+#
+element default {
+    optional { attribute kind { word } }
+    text
+    * { ref case }
+}
+
+# one conditional branch of a "default"/"dimensionality"/"units"; the
+# optional "test" holds the condition, a testless "case" is the fallback.
+element case {
+    optional { attribute test { string } }
+    text
+}
+
 element status  { text }
 element label   { text }
 element message { text }
@@ -115,6 +134,25 @@ element see     { clist }
 element keyword { ident }
 element constant { word }
 element etc     { empty }
+
+#
+# physical dimensionality and units of an entry; <units> is mandatory under
+# --strict when the dimensionality is dimensionful. The content is a keyed
+# comma-list: an unkeyed term is the default for all indices, "<i>:term" and
+# "<lo>-<hi>:term" override a single index or range. Like "default", both may
+# carry a "kind" attribute and, when kind="conditional", "case" children
+# instead of a text body.
+#
+element dimensionality {
+    optional { attribute kind { word } }
+    text
+    * { ref case }
+}
+element units {
+    optional { attribute kind { word } }
+    text
+    * { ref case }
+}
 
 #
 # define what elements are used within var, dimension, ...
@@ -127,6 +165,8 @@ define varTags {
 	    ref status
 	    ref default
 	    ref see
+	    ref dimensionality
+	    ref units
 	}
     }
     interleave {
@@ -148,6 +188,7 @@ element options {
 	+ {
 	    element opt {
 		attribute val { clist }
+		optional { attribute alias { clist } }
 		text
 	    }
 	}

@@ -520,12 +520,12 @@ END MODULE ortho_module
       USE ions_base,      ONLY: nsp
       USE electrons_base, ONLY: f, nbsp_bgrp, iupdwn_bgrp, nupdwn_bgrp, nbsp, nspin, nupdwn, iupdwn
       USE gvecw,          ONLY: ngw
-      USE control_flags,  ONLY: iprint, iverbosity, ortho_max
-      USE control_flags,  ONLY: force_pairing
+      USE control_flags,  ONLY: iprint, iverbosity
+      USE cp_control,     ONLY: ortho_max, force_pairing
       USE io_global,      ONLY: stdout, ionode
       USE cp_interfaces,  ONLY: c_bgrp_expand, c_bgrp_pack, nlsm1, collect_bec, nlsm1us
-      USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, inter_bgrp_comm! DEBUG
-      USE mp_world,           ONLY: mpime
+      USE mp_global,      ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, inter_bgrp_comm! DEBUG
+      USE mp_world,       ONLY: mpime
       USE orthogonalize_base, ONLY: bec_bgrp2ortho
       USE mp,                 ONLY : mp_sum
       USE ortho_module

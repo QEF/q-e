@@ -2,6 +2,9 @@
 
 include ../../make.inc
 
+srcdir = @srcdir@
+VPATH = @srcdir@
+
 #
 # use recursive definitions in Makefile to modify the PATH for modules
 #
@@ -10,7 +13,7 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src \
           $(MOD_FLAG)../../PHonon/PH \
           $(MOD_FLAG)../../LR_Modules \
-          $(MOD_FLAG)../../external/wannier90/src/obj \
+          $(MOD_FLAG)../../wannier90/obj \
           $(MOD_FLAG)../../dft-d3
 
 #
@@ -82,17 +85,23 @@ tdbe_mod.o \
 tdbe_common.o \
 phph.o \
 utilities/screening.o \
+global_setups.o \
+qe_wrappers.o \
+dvqhub.o \
+onemkl_wrappers.f90 \
 #default : epw
 
 PHOBJS = ../../PHonon/PH/libph.a
-W90LIB = ../../external/wannier90/libwannier.a
+W90LIB = ../../wannier90/lib/libwannier.a
 LRMODS = ../../LR_Modules/liblrmod.a
 PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a
 QEMODS = $(BASEMODS)
 
-TLDEPS= pw ph pp
+# see comments in file tldeps for explanations
+TLDEPS=phlibs libw90 pp
+include ../../install/tldeps
 
-all : pw ph pp wannier libepw.a epw.x nscf2supercond.x
+all : iodir utildir bindir libepw.a epw.x nscf2supercond.x
 
 libepw.a : $(EPWOBJS)
 	$(AR) $(ARFLAGS) $@ $?
@@ -109,22 +118,23 @@ nscf2supercond.x : utilities/nscf2supercond.o $(PWOBJS) $(QEMODS)
 	- ( cd ../bin ; ln -fs ../src/$@ . )
 	- ( cd ../../bin ; ln -fs ../EPW/src/$@ . )
 
-pw :
-	cd ../../ ; make pw
 
-ph :
-	cd ../../ ; make ph
+iodir :
+	if test ! -d io ; then mkdir io ; fi
 
-pp :
-	cd ../../ ; make pp
+utildir :
+	if test ! -d utilities ; then mkdir utilities ; fi
 
-wannier :
-	cd ../../ ; make w90
-
-ld1 :
-	cd ../../ ; make ld1
+# for out-of-source build
+bindir :
+	if test ! $(TOPDIR) -ef $(BUILDDIR) ; then \
+	cp -r $(TOPDIR)/EPW/bin $(BUILDDIR)/EPW/bin ; fi
 
 clean :
 	- /bin/rm -f  *.o *~ *.d *.mod *.i io/*.mod io/*.o utilities/*.mod utilities/*.o libepw.a liblr.a
 
+
+
 include make.depend
+
+

@@ -1,0 +1,12 @@
+# BAD: a <units> product-of-powers expression with a malformed exponent
+# (not an integer and not a p/q rational).
+input_description -distribution {Quantum ESPRESSO} -package TEST -program test.x {
+    namelist TEST {
+        var dt -type REAL {
+            default { 20.0 }
+            dimensionality { time }
+            units { bohr electron_mass^half Ry^-1/2 }
+            info { malformed exponent "half" }
+        }
+    }
+}

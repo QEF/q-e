@@ -1,0 +1,813 @@
+                                                                                      
+                                       ``:oss/                                        
+                           `.+s+.     .+ys--yh+     `./ss+.                           
+                          -sh//yy+`   +yy   +yy    -+h+-oyy                           
+                          -yh- .oyy/.-sh.   .syo-.:sy-  /yh                           
+                 `.-.`    `yh+   -oyyyo.     `/syys:    oys      `.`                  
+               `/+ssys+-` `sh+      `                   oys`   .:osyo`                
+               -yh- ./syyooyo`                          .sys+/oyo--yh/                
+               `yy+    .-:-.                             `-/+/:`  -sh-                
+                /yh.                                              oys                 
+          ``..---hho---------`   .---------..`      `.-----.`    -hd+---.             
+       `./osmNMMMMMMMMMMMMMMMs. +NNMMMMMMMMNNmh+.   yNMMMMMNm-  oNMMMMMNmo++:`        
+       +sy--/sdMMMhyyyyyyyNMMh- .oyNMMmyyyyyhNMMm+` -yMMMdyyo:` .oyyNMMNhs+syy`       
+       -yy/   /MMM+.`-+/``mMMy-   `mMMh:`````.dMMN:` `MMMy-`-dhhy```mMMy:``+hs        
+        -yy+` /MMMo:-mMM+`-oo/.    mMMh:     `dMMN/`  dMMm:`dMMMMy..MMMo-.+yo`        
+         .sys`/MMMMNNMMMs-         mMMmyooooymMMNo:   oMMM/sMMMMMM++MMN//oh:          
+          `sh+/MMMhyyMMMs- `-`     mMMMMMMMMMNmy+-`   -MMMhMMMsmMMmdMMd/yy+           
+    `-/+++oyy-/MMM+.`/hh/.`mNm:`   mMMd+/////:-.`      NMMMMMd/:NMMMMMy:/yyo/:.`      
+   +os+//:-..-oMMMo:--:::-/MMMo. .-mMMd+---`           hMMMMN+. oMMMMMo. `-+osyso:`   
+   syo     `mNMMMMMNNNNNNNNMMMo.oNNMMMMMNNNN:`         +MMMMs:`  dMMMN/`     ``:syo   
+   /yh`     :syyyyyyyyyyyyyyyy+.`+syyyyyyyyo:`         .oyys:`   .oyys:`        +yh   
+   -yh-        ````````````````    `````````              ``        ``          oys   
+   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
+   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
+                                                                                      
+ Lee, H., Poncé, S., Bushick, K., Hajinazar, S., Lafuente-Bartolome, J.,Leveillee, J.,
+    Lian, C., Lihm, J., Macheda, F., Mori, H., Paudyal, H., Sio, W., Tiwari, S.,      
+ Zacharias, M., Zhang, X., Bonini, N., Kioupakis, E., Margine, E.R., and Giustino F., 
+                                                     npj Comput Mater 9, 156 (2023)   
+                                                                                      
+
+     Program EPW v.6.0 starts on 29Mar2026 at  5:46:59 
+        Git branch: develop
+        Last git commit: 3b832d4d6e4442244a748253ab4d7cc3d873b9b0-dirty
+        Last git commit date: Sun Mar 29 03:27:31 2026 -0500
+        Last git commit subject: fix
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     4 processors
+
+     MPI processes distributed on     1 nodes
+     K-points division:     npool     =       4
+     2223 MiB available memory on the printing compute node when the environment starts
+
+     Reading input from epw4.in
+      Title line not specified: using 'default'.
+
+     Reading supplied temperature list.
+                      
+     ------------------------------------------------------------------------ 
+                   RESTART - RESTART - RESTART - RESTART                         
+     Restart is done without reading PWSCF save file.                  
+     Be aware that some consistency checks are therefore not done.                  
+     ------------------------------------------------------------------------ 
+                      
+
+     default                                                                    
+
+     bravais-lattice index     =            0
+     lattice parameter (a_0)   =       0.0000  a.u.
+     unit-cell volume          =       0.0000 (a.u.)^3
+     number of atoms/cell      =            0
+     number of atomic types    =            0
+     kinetic-energy cut-off    =       0.0000  Ry
+     charge density cut-off    =       0.0000  Ry
+     Exchange-correlation= not set
+                           (  -1  -1  -1  -1  -1  -1  -1)
+
+
+     celldm(1)=    0.00000  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = (  0.0000  0.0000  0.0000 )  
+               a(2) = (  0.0000  0.0000  0.0000 )  
+               a(3) = (  0.0000  0.0000  0.0000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = (  0.0000  0.0000  0.0000 )  
+               b(2) = (  0.0000  0.0000  0.0000 )  
+               b(3) = (  0.0000  0.0000  0.0000 )  
+
+
+     Atoms inside the unit cell: 
+
+   Cartesian axes
+
+     site n.  atom      mass           positions (a_0 units)
+
+
+     No symmetry!
+
+     G cutoff =    0.0000  (      0 G-vectors)     FFT grid: (  0,  0,  0)
+     number of k points=    0
+                       cart. coord. in units 2pi/a_0
+     EPW          :      0.00s CPU      0.00s WALL
+
+     EPW          :      0.00s CPU      0.00s WALL
+
+
+     -------------------------------------------------------------------
+     Using cdo.ukk from disk
+     -------------------------------------------------------------------
+
+     HDF5 is NOT used in the current build. Exciton-phonon coupling calculations are disabled.
+     Symmetries of Bravais lattice:  48
+     Symmetries of crystal:          48
+
+     Do not need to read .epb files; read .fmt files
+
+
+     Band disentanglement is used: nbndsub =    8
+
+     Computes the analytic long-range interaction for polar materials [lpolar]
+      
+     Construct the Wigner-Seitz cell using Wannier centers and atomic positions 
+     Number of WS vectors for electrons      153
+     Number of WS vectors for phonons       33
+     Number of WS vectors for electron-phonon       33
+     Maximum number of cores for efficient parallelization       66
+
+     Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file
+
+
+     Finished reading Wann rep data from file
+
+     ===================================================================
+     Memory usage:  VmHWM =       151Mb
+                   VmPeak =  20975907Mb
+     ===================================================================
+     
+     Add time reversal symmetry into k grid.
+     Using uniform q-mesh:    20   20   20
+     Size of q point mesh for interpolation:       8000
+     Using uniform MP k-mesh:    20   20   20
+     Size of k point mesh for interpolation:        256
+     Max number of k points per pool:               64
+
+     Fermi energy coarse grid =  11.547485 eV
+
+     ===================================================================
+
+     Fermi energy is read from the input file: Ef =  11.547500 eV
+
+     ===================================================================
+
+     Skipping    5 occupied bands:
+
+     The Fermi level will be determined with  16.00000 electrons
+
+              ibndmin =     7  ebndmin =    11.249 eV
+              ibndmax =     8  ebndmax =    11.547 eV
+
+
+     Number of ep-matrix elements per pool :         1536 ~=   12.00 Kb (@ 8 bytes/ DP)
+      
+     A selecq.fmt file was found but re-created because selecqread == .FALSE.  
+     Number selected, total             50             83
+     Number selected, total            100            167
+     Number selected, total            150            251
+     Number selected, total            200            336
+     Number selected, total            250            403
+     Number selected, total            300            482
+     Number selected, total            350            555
+     Number selected, total            400            634
+     Number selected, total            450            719
+     Number selected, total            500            783
+     Number selected, total            550            846
+     Number selected, total            600            935
+     Number selected, total            650           1009
+     Number selected, total            700           1089
+     Number selected, total            750           1158
+     Number selected, total            800           1218
+     Number selected, total            850           1282
+     Number selected, total            900           1366
+     Number selected, total            950           1431
+     Number selected, total           1000           1503
+     Number selected, total           1050           1576
+     Number selected, total           1100           1632
+     Number selected, total           1150           1692
+     Number selected, total           1200           1759
+     Number selected, total           1250           1826
+     Number selected, total           1300           1895
+     Number selected, total           1350           1961
+     Number selected, total           1400           2015
+     Number selected, total           1450           2083
+     Number selected, total           1500           2151
+     Number selected, total           1550           2220
+     Number selected, total           1600           2302
+     Number selected, total           1650           2362
+     Number selected, total           1700           2431
+     Number selected, total           1750           2513
+     Number selected, total           1800           2581
+     Number selected, total           1850           2685
+     Number selected, total           1900           2750
+     Number selected, total           1950           2829
+     Number selected, total           2000           2915
+     Number selected, total           2050           2981
+     Number selected, total           2100           3084
+     Number selected, total           2150           3153
+     Number selected, total           2200           3234
+     Number selected, total           2250           3333
+     Number selected, total           2300           3403
+     Number selected, total           2350           3504
+     Number selected, total           2400           3584
+     Number selected, total           2450           3676
+     Number selected, total           2500           3762
+     Number selected, total           2550           3845
+     Number selected, total           2600           3945
+     Number selected, total           2650           4029
+     Number selected, total           2700           4123
+     Number selected, total           2750           4204
+     Number selected, total           2800           4290
+     Number selected, total           2850           4388
+     Number selected, total           2900           4477
+     Number selected, total           2950           4565
+     Number selected, total           3000           4645
+     Number selected, total           3050           4747
+     Number selected, total           3100           4825
+     Number selected, total           3150           4934
+     Number selected, total           3200           5002
+     Number selected, total           3250           5084
+     Number selected, total           3300           5169
+     Number selected, total           3350           5237
+     Number selected, total           3400           5344
+     Number selected, total           3450           5416
+     Number selected, total           3500           5486
+     Number selected, total           3550           5573
+     Number selected, total           3600           5637
+     Number selected, total           3650           5719
+     Number selected, total           3700           5797
+     Number selected, total           3750           5859
+     Number selected, total           3800           5929
+     Number selected, total           3850           5995
+     Number selected, total           3900           6066
+     Number selected, total           3950           6131
+     Number selected, total           4000           6206
+     Number selected, total           4050           6265
+     Number selected, total           4100           6321
+     Number selected, total           4150           6385
+     Number selected, total           4200           6447
+     Number selected, total           4250           6522
+     Number selected, total           4300           6588
+     Number selected, total           4350           6660
+     Number selected, total           4400           6725
+     Number selected, total           4450           6791
+     Number selected, total           4500           6867
+     Number selected, total           4550           6941
+     Number selected, total           4600           7010
+     Number selected, total           4650           7097
+     Number selected, total           4700           7157
+     Number selected, total           4750           7223
+     Number selected, total           4800           7309
+     Number selected, total           4850           7385
+     Number selected, total           4900           7456
+     Number selected, total           4950           7535
+     Number selected, total           5000           7597
+     Number selected, total           5050           7669
+     Number selected, total           5100           7753
+     Number selected, total           5150           7834
+     Number selected, total           5200           7921
+     Number selected, total           5250           7994
+     We only need to compute     5256 q-points
+      
+     Valence band maximum    =  11.547485 eV
+
+     Temperature  300.000 K
+     Mobility VB Fermi level =  12.006418 eV
+
+     ===================================================================
+     Scattering rate for IBTE
+     ===================================================================
+
+     No intermediate mobility will be shown.
+
+     Fermi Surface thickness =   0.300000 eV
+     This is computed with respect to the fine Fermi level  11.547500 eV
+     Only states between  11.247500 eV and  11.847500 eV will be included
+
+     Save matrix elements larger than threshold:   0.390625000000E-24
+      
+     Progression iq (fine) =         50/      5256
+       Adaptative smearing el-ph = Min:     5.453374 meV
+                                   Max:   142.616847 meV
+     Progression iq (fine) =        100/      5256
+       Adaptative smearing el-ph = Min:     1.414214 meV
+                                   Max:   106.052425 meV
+     Progression iq (fine) =        150/      5256
+       Adaptative smearing el-ph = Min:     5.656235 meV
+                                   Max:   140.644381 meV
+     Progression iq (fine) =        200/      5256
+       Adaptative smearing el-ph = Min:     1.414214 meV
+                                   Max:   140.862454 meV
+     Progression iq (fine) =        250/      5256
+       Adaptative smearing el-ph = Min:     4.181248 meV
+                                   Max:   131.992791 meV
+     Progression iq (fine) =        300/      5256
+       Adaptative smearing el-ph = Min:    26.728004 meV
+                                   Max:   142.463771 meV
+     Progression iq (fine) =        350/      5256
+       Adaptative smearing el-ph = Min:    10.012978 meV
+                                   Max:   108.184256 meV
+     Progression iq (fine) =        400/      5256
+       Adaptative smearing el-ph = Min:    18.835678 meV
+                                   Max:   134.551116 meV
+     Progression iq (fine) =        450/      5256
+       Adaptative smearing el-ph = Min:    10.765682 meV
+                                   Max:   142.846439 meV
+     Progression iq (fine) =        500/      5256
+       Adaptative smearing el-ph = Min:     7.935920 meV
+                                   Max:   116.993551 meV
+     Progression iq (fine) =        550/      5256
+       Adaptative smearing el-ph = Min:    26.616499 meV
+                                   Max:   131.969623 meV
+     Progression iq (fine) =        600/      5256
+       Adaptative smearing el-ph = Min:    23.970193 meV
+                                   Max:   112.310053 meV
+     Progression iq (fine) =        650/      5256
+       Adaptative smearing el-ph = Min:    11.150329 meV
+                                   Max:   142.499366 meV
+     Progression iq (fine) =        700/      5256
+       Adaptative smearing el-ph = Min:    39.492326 meV
+                                   Max:   124.000555 meV
+     Progression iq (fine) =        750/      5256
+       Adaptative smearing el-ph = Min:    14.340683 meV
+                                   Max:   130.232121 meV
+     Progression iq (fine) =        800/      5256
+       Adaptative smearing el-ph = Min:     8.364679 meV
+                                   Max:   117.455301 meV
+     Progression iq (fine) =        850/      5256
+       Adaptative smearing el-ph = Min:    34.268934 meV
+                                   Max:   112.684009 meV
+     Progression iq (fine) =        900/      5256
+       Adaptative smearing el-ph = Min:    17.812854 meV
+                                   Max:   142.592783 meV
+     Progression iq (fine) =        950/      5256
+       Adaptative smearing el-ph = Min:    17.959899 meV
+                                   Max:   142.492669 meV
+     Progression iq (fine) =       1000/      5256
+       Adaptative smearing el-ph = Min:    31.571803 meV
+                                   Max:   117.096048 meV
+     Progression iq (fine) =       1050/      5256
+       Adaptative smearing el-ph = Min:     8.587088 meV
+                                   Max:   132.414323 meV
+     Progression iq (fine) =       1100/      5256
+       Adaptative smearing el-ph = Min:    27.901988 meV
+                                   Max:   132.475656 meV
+     Progression iq (fine) =       1150/      5256
+       Adaptative smearing el-ph = Min:     3.896063 meV
+                                   Max:   131.223891 meV
+     Progression iq (fine) =       1200/      5256
+       Adaptative smearing el-ph = Min:    29.789880 meV
+                                   Max:   131.428364 meV
+     Progression iq (fine) =       1250/      5256
+       Adaptative smearing el-ph = Min:     7.070707 meV
+                                   Max:   140.429098 meV
+     Progression iq (fine) =       1300/      5256
+       Adaptative smearing el-ph = Min:    32.350529 meV
+                                   Max:   116.910949 meV
+     Progression iq (fine) =       1350/      5256
+       Adaptative smearing el-ph = Min:     6.971099 meV
+                                   Max:   140.838356 meV
+     Progression iq (fine) =       1400/      5256
+       Adaptative smearing el-ph = Min:     4.286713 meV
+                                   Max:   132.420719 meV
+     Progression iq (fine) =       1450/      5256
+       Adaptative smearing el-ph = Min:    13.955071 meV
+                                   Max:   145.493405 meV
+     Progression iq (fine) =       1500/      5256
+       Adaptative smearing el-ph = Min:     4.106335 meV
+                                   Max:   147.941866 meV
+     Progression iq (fine) =       1550/      5256
+       Adaptative smearing el-ph = Min:    31.533775 meV
+                                   Max:   145.743405 meV
+     Progression iq (fine) =       1600/      5256
+       Adaptative smearing el-ph = Min:     6.862355 meV
+                                   Max:   130.713066 meV
+     Progression iq (fine) =       1650/      5256
+       Adaptative smearing el-ph = Min:     7.100532 meV
+                                   Max:   128.921530 meV
+     Progression iq (fine) =       1700/      5256
+       Adaptative smearing el-ph = Min:    35.689924 meV
+                                   Max:   128.968685 meV
+     Progression iq (fine) =       1750/      5256
+       Adaptative smearing el-ph = Min:     4.450093 meV
+                                   Max:   154.675057 meV
+     Progression iq (fine) =       1800/      5256
+       Adaptative smearing el-ph = Min:    45.856492 meV
+                                   Max:   151.430282 meV
+     Progression iq (fine) =       1850/      5256
+       Adaptative smearing el-ph = Min:    10.801212 meV
+                                   Max:   154.594887 meV
+     Progression iq (fine) =       1900/      5256
+       Adaptative smearing el-ph = Min:    21.728434 meV
+                                   Max:   123.956022 meV
+     Progression iq (fine) =       1950/      5256
+       Adaptative smearing el-ph = Min:    35.779679 meV
+                                   Max:   130.528582 meV
+     Progression iq (fine) =       2000/      5256
+       Adaptative smearing el-ph = Min:     5.685878 meV
+                                   Max:   154.568303 meV
+     Progression iq (fine) =       2050/      5256
+       Adaptative smearing el-ph = Min:    34.966547 meV
+                                   Max:   151.422457 meV
+     Progression iq (fine) =       2100/      5256
+       Adaptative smearing el-ph = Min:    18.734414 meV
+                                   Max:   154.670611 meV
+     Progression iq (fine) =       2150/      5256
+       Adaptative smearing el-ph = Min:    11.028703 meV
+                                   Max:   129.139072 meV
+     Progression iq (fine) =       2200/      5256
+       Adaptative smearing el-ph = Min:     5.731586 meV
+                                   Max:   135.951090 meV
+     Progression iq (fine) =       2250/      5256
+       Adaptative smearing el-ph = Min:    13.274928 meV
+                                   Max:   151.620646 meV
+     Progression iq (fine) =       2300/      5256
+       Adaptative smearing el-ph = Min:    34.525713 meV
+                                   Max:   154.494927 meV
+     Progression iq (fine) =       2350/      5256
+       Adaptative smearing el-ph = Min:     7.740072 meV
+                                   Max:   151.428319 meV
+     Progression iq (fine) =       2400/      5256
+       Adaptative smearing el-ph = Min:    34.273804 meV
+                                   Max:   142.749669 meV
+     Progression iq (fine) =       2450/      5256
+       Adaptative smearing el-ph = Min:     4.100683 meV
+                                   Max:   148.014800 meV
+     Progression iq (fine) =       2500/      5256
+       Adaptative smearing el-ph = Min:     1.414214 meV
+                                   Max:   151.372178 meV
+     Progression iq (fine) =       2550/      5256
+       Adaptative smearing el-ph = Min:    14.173712 meV
+                                   Max:   154.444646 meV
+     Progression iq (fine) =       2600/      5256
+       Adaptative smearing el-ph = Min:     7.557150 meV
+                                   Max:   123.199635 meV
+     Progression iq (fine) =       2650/      5256
+       Adaptative smearing el-ph = Min:     7.508379 meV
+                                   Max:   119.087426 meV
+     Progression iq (fine) =       2700/      5256
+       Adaptative smearing el-ph = Min:    42.332187 meV
+                                   Max:   151.384540 meV
+     Progression iq (fine) =       2750/      5256
+       Adaptative smearing el-ph = Min:     1.414214 meV
+                                   Max:   147.834430 meV
+     Progression iq (fine) =       2800/      5256
+       Adaptative smearing el-ph = Min:    43.951472 meV
+                                   Max:   123.294467 meV
+     Progression iq (fine) =       2850/      5256
+       Adaptative smearing el-ph = Min:     1.414214 meV
+                                   Max:   122.859685 meV
+     Progression iq (fine) =       2900/      5256
+       Adaptative smearing el-ph = Min:    26.821249 meV
+                                   Max:   151.457448 meV
+     Progression iq (fine) =       2950/      5256
+       Adaptative smearing el-ph = Min:    13.342763 meV
+                                   Max:   135.876503 meV
+     Progression iq (fine) =       3000/      5256
+       Adaptative smearing el-ph = Min:     4.572870 meV
+                                   Max:   140.519715 meV
+     Progression iq (fine) =       3050/      5256
+       Adaptative smearing el-ph = Min:     7.602658 meV
+                                   Max:   142.741941 meV
+     Progression iq (fine) =       3100/      5256
+       Adaptative smearing el-ph = Min:    26.676048 meV
+                                   Max:   142.687080 meV
+     Progression iq (fine) =       3150/      5256
+       Adaptative smearing el-ph = Min:    26.743849 meV
+                                   Max:   151.702039 meV
+     Progression iq (fine) =       3200/      5256
+       Adaptative smearing el-ph = Min:     8.970853 meV
+                                   Max:   151.265645 meV
+     Progression iq (fine) =       3250/      5256
+       Adaptative smearing el-ph = Min:    21.329508 meV
+                                   Max:   130.329242 meV
+     Progression iq (fine) =       3300/      5256
+       Adaptative smearing el-ph = Min:    14.087883 meV
+                                   Max:   142.688026 meV
+     Progression iq (fine) =       3350/      5256
+       Adaptative smearing el-ph = Min:    26.652442 meV
+                                   Max:   132.312871 meV
+     Progression iq (fine) =       3400/      5256
+       Adaptative smearing el-ph = Min:    15.883867 meV
+                                   Max:   154.681627 meV
+     Progression iq (fine) =       3450/      5256
+       Adaptative smearing el-ph = Min:     4.654704 meV
+                                   Max:   154.695953 meV
+     Progression iq (fine) =       3500/      5256
+       Adaptative smearing el-ph = Min:    35.816929 meV
+                                   Max:   131.184627 meV
+     Progression iq (fine) =       3550/      5256
+       Adaptative smearing el-ph = Min:     8.506348 meV
+                                   Max:   140.538517 meV
+     Progression iq (fine) =       3600/      5256
+       Adaptative smearing el-ph = Min:    32.096137 meV
+                                   Max:   130.954651 meV
+     Progression iq (fine) =       3650/      5256
+       Adaptative smearing el-ph = Min:    34.227111 meV
+                                   Max:   147.948711 meV
+     Progression iq (fine) =       3700/      5256
+       Adaptative smearing el-ph = Min:     4.477979 meV
+                                   Max:   147.894461 meV
+     Progression iq (fine) =       3750/      5256
+       Adaptative smearing el-ph = Min:     4.170504 meV
+                                   Max:   147.979337 meV
+     Progression iq (fine) =       3800/      5256
+       Adaptative smearing el-ph = Min:     7.043870 meV
+                                   Max:   131.287877 meV
+     Progression iq (fine) =       3850/      5256
+       Adaptative smearing el-ph = Min:     8.862672 meV
+                                   Max:   130.815328 meV
+     Progression iq (fine) =       3900/      5256
+       Adaptative smearing el-ph = Min:    19.883080 meV
+                                   Max:   140.672142 meV
+     Progression iq (fine) =       3950/      5256
+       Adaptative smearing el-ph = Min:    34.289419 meV
+                                   Max:   134.545495 meV
+     Progression iq (fine) =       4000/      5256
+       Adaptative smearing el-ph = Min:     4.310041 meV
+                                   Max:   131.085164 meV
+     Progression iq (fine) =       4050/      5256
+       Adaptative smearing el-ph = Min:    21.412333 meV
+                                   Max:   130.284804 meV
+     Progression iq (fine) =       4100/      5256
+       Adaptative smearing el-ph = Min:    34.278805 meV
+                                   Max:   140.437615 meV
+     Progression iq (fine) =       4150/      5256
+       Adaptative smearing el-ph = Min:    32.037326 meV
+                                   Max:   140.807077 meV
+     Progression iq (fine) =       4200/      5256
+       Adaptative smearing el-ph = Min:     6.961213 meV
+                                   Max:   140.690336 meV
+     Progression iq (fine) =       4250/      5256
+       Adaptative smearing el-ph = Min:     6.064285 meV
+                                   Max:   142.683198 meV
+     Progression iq (fine) =       4300/      5256
+       Adaptative smearing el-ph = Min:     8.538311 meV
+                                   Max:   111.225546 meV
+     Progression iq (fine) =       4350/      5256
+       Adaptative smearing el-ph = Min:    22.565964 meV
+                                   Max:   106.025615 meV
+     Progression iq (fine) =       4400/      5256
+       Adaptative smearing el-ph = Min:     2.121823 meV
+                                   Max:   140.484529 meV
+     Progression iq (fine) =       4450/      5256
+       Adaptative smearing el-ph = Min:    31.752873 meV
+                                   Max:   143.053345 meV
+     Progression iq (fine) =       4500/      5256
+       Adaptative smearing el-ph = Min:     8.529005 meV
+                                   Max:   143.059819 meV
+     Progression iq (fine) =       4550/      5256
+       Adaptative smearing el-ph = Min:    37.268030 meV
+                                   Max:   142.652147 meV
+     Progression iq (fine) =       4600/      5256
+       Adaptative smearing el-ph = Min:     8.531811 meV
+                                   Max:   109.437132 meV
+     Progression iq (fine) =       4650/      5256
+       Adaptative smearing el-ph = Min:     7.536262 meV
+                                   Max:   112.346065 meV
+     Progression iq (fine) =       4700/      5256
+       Adaptative smearing el-ph = Min:    10.967321 meV
+                                   Max:   142.542118 meV
+     Progression iq (fine) =       4750/      5256
+       Adaptative smearing el-ph = Min:    32.189920 meV
+                                   Max:   143.039108 meV
+     Progression iq (fine) =       4800/      5256
+       Adaptative smearing el-ph = Min:    10.790843 meV
+                                   Max:   132.092677 meV
+     Progression iq (fine) =       4850/      5256
+       Adaptative smearing el-ph = Min:     7.440136 meV
+                                   Max:   142.547554 meV
+     Progression iq (fine) =       4900/      5256
+       Adaptative smearing el-ph = Min:    35.677181 meV
+                                   Max:   132.364843 meV
+     Progression iq (fine) =       4950/      5256
+       Adaptative smearing el-ph = Min:     7.560136 meV
+                                   Max:   127.722992 meV
+     Progression iq (fine) =       5000/      5256
+       Adaptative smearing el-ph = Min:    10.967108 meV
+                                   Max:   142.860974 meV
+     Progression iq (fine) =       5050/      5256
+       Adaptative smearing el-ph = Min:     5.449130 meV
+                                   Max:   116.922775 meV
+     Progression iq (fine) =       5100/      5256
+       Adaptative smearing el-ph = Min:     3.612496 meV
+                                   Max:   142.615256 meV
+     Progression iq (fine) =       5150/      5256
+       Adaptative smearing el-ph = Min:    11.044718 meV
+                                   Max:   142.532863 meV
+     Progression iq (fine) =       5200/      5256
+       Adaptative smearing el-ph = Min:    14.152327 meV
+                                   Max:   132.574208 meV
+     Progression iq (fine) =       5250/      5256
+       Adaptative smearing el-ph = Min:    32.055318 meV
+                                   Max:   123.930093 meV
+      300.000     12.0064       0.100001E+14
+      
+     epmatkqread automatically changed to .TRUE. as all scattering have been computed.
+      
+     ===================================================================
+     Memory usage:  VmHWM =       473Mb
+                   VmPeak =  20976048Mb
+     ===================================================================
+
+     Number of elements per core      20014
+     Symmetry mapping finished
+      
+     =============================================================================================
+     BTE in the self-energy relaxation time approximation (SERTA)
+     =============================================================================================
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.0064   0.10000E+14   0.16703E-22    0.826731E+01   -0.163207E-16    0.664285E-16
+                                       0.33087E-23   -0.329810E-16    0.826731E+01   -0.329355E-16
+                                      -0.20114E-22    0.162675E-16    0.397380E-18    0.826731E+01
+      
+     =============================================================================================
+     Start solving iterative Boltzmann Transport Equation
+     =============================================================================================
+
+     Iteration number:         1
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.0064   0.10000E+14   0.74446E-23    0.875849E+01    0.172740E-16    0.150728E-15
+                                       0.00000E+00    0.163657E-19    0.875849E+01   -0.104945E-17
+                                       0.19847E-22    0.187879E-16    0.172730E-16    0.875849E+01
+
+                                                      0.875849E+01    Max error
+     Iteration number:         2
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.0064   0.10000E+14  -0.92638E-23    0.903469E+01    0.165948E-16   -0.156784E-16
+                                      -0.33083E-23   -0.695543E-18    0.903469E+01    0.325269E-18
+                                       0.59332E-23   -0.774917E-16    0.166358E-16    0.903469E+01
+
+                                                      0.276193E+00    Max error
+     Iteration number:         3
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.0064   0.10000E+14  -0.15929E-22    0.909151E+01    0.324737E-16   -0.118324E-15
+                                       0.40390E-27   -0.161612E-16    0.909151E+01   -0.161080E-16
+                                       0.92872E-23   -0.517321E-16   -0.991149E-18    0.909151E+01
+
+                                                      0.568241E-01    Max error
+     Iteration number:         4
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.0064   0.10000E+14   0.19739E-22    0.912087E+01   -0.330383E-16    0.696034E-16
+                                       0.00000E+00   -0.425509E-18    0.912087E+01    0.331754E-16
+                                      -0.19485E-22    0.135901E-15   -0.330598E-16    0.912087E+01
+
+                                                      0.293605E-01    Max error
+     Iteration number:         5
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.0064   0.10000E+14   0.16721E-24    0.912933E+01    0.339425E-16    0.131908E-16
+                                      -0.67208E-23    0.177977E-16    0.912933E+01    0.175400E-16
+                                      -0.89948E-24    0.226174E-16   -0.116606E-18    0.912933E+01
+
+                                                      0.845726E-02    Max error
+     Iteration number:         6
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.0064   0.10000E+14   0.22390E-22    0.913348E+01   -0.507665E-16    0.118422E-15
+                                      -0.10340E-24    0.118652E-17    0.913348E+01   -0.327642E-16
+                                       0.28438E-23    0.480825E-16   -0.167738E-16    0.913348E+01
+
+                                                      0.414779E-02    Max error
+     Iteration number:         7
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.0064   0.10000E+14  -0.95126E-23    0.913480E+01    0.329688E-16   -0.822950E-16
+                                       0.33095E-23    0.333452E-16    0.913480E+01    0.333288E-16
+                                      -0.13619E-22   -0.333697E-16   -0.172965E-16    0.913480E+01
+
+                                                      0.132465E-02    Max error
+     Iteration number:         8
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.0064   0.10000E+14  -0.99795E-23    0.913542E+01    0.168362E-16    0.485244E-16
+                                       0.00000E+00   -0.646446E-18    0.913542E+01   -0.642355E-18
+                                       0.17017E-22    0.503573E-16    0.168015E-16    0.913542E+01
+
+                                                      0.623108E-03    Max error
+     Iteration number:         9
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.0064   0.10000E+14  -0.20356E-24    0.913563E+01   -0.167012E-16    0.679996E-16
+                                       0.00000E+00    0.165703E-16    0.913563E+01    0.166562E-16
+                                       0.20599E-25    0.664285E-16   -0.167329E-16    0.913563E+01
+
+                                                      0.209645E-03    Max error
+     Iteration number:        10
+
+     =============================================================================================
+       Temp     Fermi   Hole density  Population SR            Drift Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]                    [cm^2/Vs]
+     =============================================================================================
+
+      300.000  12.0064   0.10000E+14  -0.13905E-22    0.913573E+01    0.188206E-18   -0.275762E-17
+                                       0.80779E-27    0.340734E-16    0.913573E+01   -0.332920E-16
+                                      -0.60451E-23    0.132906E-15    0.131949E-18    0.913573E+01
+
+                                                      0.952174E-04    Max error
+     Iteration number:        11
+     =============================================================================================
+     The iteration reached the maximum but did not converge.
+     =============================================================================================
+
+
+     Unfolding on the coarse grid
+     elphon_wrap  :      0.00s CPU      0.00s WALL (       1 calls)
+
+     INITIALIZATION: 
+
+
+
+
+     Electron-Phonon interpolation
+     ep-interp    :    113.68s CPU    142.34s WALL (    5256 calls)
+
+     wigner_seitz :      0.01s CPU      0.01s WALL (       1 calls)
+     DynW2B       :      1.33s CPU      1.42s WALL (    5256 calls)
+     HamW2B       :     21.59s CPU     23.79s WALL (  672960 calls)
+     ephW2Bp      :     65.56s CPU     89.88s WALL (    5256 calls)
+     ephW2B       :      3.90s CPU      4.12s WALL (   14036 calls)
+     vmeW2B       :      3.31s CPU      3.53s WALL (   28072 calls)
+     vmeW2Bp      :      0.57s CPU      0.65s WALL (    5256 calls)
+     rgd_blk_epw  :      2.18s CPU      2.29s WALL (   14036 calls)
+     print_ibte   :      5.77s CPU      6.16s WALL (    5256 calls)
+
+
+
+     Total program execution
+     EPW          :   1m54.76s CPU   2m23.53s WALL
+
+     % Copyright (C) 2016-2023 EPW-Collaboration                                    
+                                                                                    
+     ===============================================================================
+     Please consider citing the following papers.                                   
+                                                                                                 
+     % Paper describing the method on which EPW relies                                           
+       F. Giustino and M. L. Cohen and S. G. Louie, Phys. Rev. B 76, 165108 (2007)               
+                                                                                                 
+     % Papers describing the EPW software                                                        
+       H. Lee et al., npj Comput. Mater. 9, 156 (2023)                                           
+       S. Ponc\'e, E.R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
+       J. Noffsinger et al., Comput. Phys. Commun. 181, 2140 (2010)                              
+                                                                                                 
+                                                                                             
+     % Since you used the [lpolar] input,     please consider also citing                        
+       C. Verdi and F. Giustino, Phys. Rev. Lett. 115, 176401 (2015)                         
+                                                                                             
+     % Since you used the [scattering/iterative_bte] input,     please consider also citing      
+       S. Ponc\'e, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)             
+       F. Macheda and N. Bonini, Phys. Rev. B 98, 201201 (2018)                              
+                                                                                             
+     % Since you used the [adapt_smearing] input,     please consider also citing            
+       F. Macheda and N. Bonini, Phys. Rev. B 98, 201201 (2018)                              
+                                                                                    
+     For your convenience, this information is also reported in the                 
+     functionality-dependent EPW.bib file.                                          
+     ===============================================================================
+                                                                                    

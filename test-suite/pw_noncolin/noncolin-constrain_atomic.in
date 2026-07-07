@@ -10,10 +10,10 @@
     angle1(1) = 85.0
     angle2(1) =  0.0
     constrained_magnetization='atomic'
-    !lambda = 1
-    lambda = 0.005
+    lambda = 1
  /
  &electrons
+    conv_thr=1.0e-7
     mixing_beta = 0.2
  /
 ATOMIC_SPECIES

@@ -266,7 +266,7 @@ SUBROUTINE revert_mag_u (ns_nc)
    USE ions_base,            ONLY : nat, ityp
    USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, Hubbard_U
    USE lsda_mod,             ONLY : nspin
-   USE control_flags,        ONLY : iverbosity, dfpt_hub
+   USE control_flags,        ONLY : iverbosity
    USE io_global,            ONLY : stdout
    !
    IMPLICIT NONE
@@ -407,7 +407,7 @@ SUBROUTINE revert_mag_u (ns_nc)
                                  ldim_u, ldmx_tot, max_num_neighbors, at_sc, neighood, &
                                  Hubbard_V, Hubbard_alpha_back, is_hubbard, is_hubbard_back
    USE lsda_mod,          ONLY : nspin
-   USE control_flags,     ONLY : iverbosity, dfpt_hub
+   USE control_flags,     ONLY : iverbosity
    USE io_global,         ONLY : stdout
    USE noncollin_module,  ONLY : npol
    !

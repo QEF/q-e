@@ -1,0 +1,47 @@
+&inputepw
+prefix = 'fe',
+amass(1) = 55.8457
+dvscf_dir = 'save'
+etf_mem = 1
+
+elph = .true.
+epwwrite = .false.
+epwread = .true.
+
+lsda = 'up'
+temps = 1
+interpolate = .true.
+wannierize = .false.
+use_ws = .false.
+nbndsub = 9
+
+fsthick = 6
+degaussw = 0.05
+degaussq = 0.05
+assume_metal = .true.
+ngaussw = -99
+
+phonselfen = .true.
+a2f = .true.
+delta_approx = .true.
+nc = 4.0
+mp_mesh_q = .true.
+
+
+
+nkf1 = 15
+nkf2 = 15
+nkf3 = 15
+ 
+nqf1 = 15
+nqf2 = 15
+nqf3 = 15
+
+nq1 = 3
+nq2 = 3
+nq3 = 3
+
+nk1 = 3
+nk2 = 3
+nk3 = 3
+/

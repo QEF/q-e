@@ -46,9 +46,8 @@ SUBROUTINE dvqhub_barepsi_us (ik, uact)
   USE klist,         ONLY : xk, ngk, igk_k
   USE ldaU,          ONLY : Hubbard_l, is_hubbard, Hubbard_J0, offsetU, nwfcU
   USE ldaU_ph,       ONLY : wfcatomk, wfcatomkpq, dwfcatomkpq, &
-                            sdwfcatomk, sdwfcatomkpq, dvkb, vkbkpq, dvkbkpq, &
-                            proj1, proj2, dnsbare
-  USE ldaU_lr,       ONLY : effU, swfcatomk, swfcatomkpq
+                            sdwfcatomk, sdwfcatomkpq, dvkb, vkbkpq, dvkbkpq, dnsbare
+  USE ldaU_lr,       ONLY : effU, swfcatomk, swfcatomkpq, proj1, proj2
   USE wvfct,         ONLY : npwx, nbnd
   USE uspp,          ONLY : vkb, nkb, ofsbeta
   USE qpoint,        ONLY : nksq, ikks, ikqs

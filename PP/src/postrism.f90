@@ -34,7 +34,7 @@ PROGRAM pprism
   !
   CALL solvdens(filplot, lpunch)
   !
-  CALL environment_end('POST-RISM')
+  CALL environment_end( )
   !
   CALL stop_pp()
   !

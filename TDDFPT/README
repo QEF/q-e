@@ -90,3 +90,37 @@ src      : The source files
 Doc      : The manual
 Examples : Examples and tests. Each example has its own seperate Makefile. 
            Refer to the README under this subdirectory for further information. 
+
+-------------------------------------------------------------------------------------------------------------
+
+RESTART in turbo_eels.x and turbo_magnon.x
+
+To use the restart functionality in turbo_eels.x and turbo_magnon.x, a modification to the FFT library 
+interface is currently required. Specifically, edit the file:
+
+￼
+q-e/FFTXlib/src/fft_scalar.FFTW3.f90
+
+and replace all occurrences of:
+
+FFTW_MEASURE
+
+with:
+￼
+FFTW_ESTIMATE
+
+After applying this change, recompile all the codes and run the calculation from scratch. 
+Under these conditions, the restart feature in turbo_eels.x and turbo_magnon.x will produce results identical 
+to those obtained from a single uninterrupted run.
+
+Before starting production calculations, you are strongly advised to verify that the restart works correctly 
+in your setup by performing a test run and comparing results with and without restart.
+
+Additional details about this issue are available here:
+https://gitlab.com/QEF/q-e/-/work_items/843
+
+This modification is not applied by default because FFTW_ESTIMATE generally leads to slower performance 
+compared to FFTW_MEASURE. Since the issue affects only the restart functionality in TDDFPT modules, 
+enforcing this change globally would unnecessarily degrade performance for other parts of the code.
+If a more efficient solution becomes available, contributions are welcome. In that case, please reopen 
+the issue linked above on GitLab and provide a description of the proposed improvement.

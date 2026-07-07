@@ -17,6 +17,7 @@ program fd_raman
   USE fft_base, ONLY : dfftp
 
   USE parser,    ONLY : field_count, read_line, get_field, parse_unit
+  USE upf_utils, ONLY : capital
 
   implicit none
   character(len=9) :: code = 'FD_RAMAN'
@@ -48,7 +49,6 @@ program fd_raman
   CHARACTER(len=2)           :: prog   ! calling program ( PW, CP, WA )
   CHARACTER(len=256)         :: input_line
   CHARACTER(len=80)          :: card
-  CHARACTER(len=1), EXTERNAL :: capital
   LOGICAL                    :: tend, verbose
 
   NAMELIST /inputfd/ prefix,npol_rm, npol_eps, npol_zeu, ndiag,noffd,nmod,npol1,lpuma, &
@@ -167,9 +167,7 @@ program fd_raman
       !
       READ (input_line, *) card
       !
-      DO i = 1, len_trim( input_line )
-         input_line( i : i ) = capital( input_line( i : i ) )
-      ENDDO
+      input_line = capital( TRIM(input_line) )
 
   IF ( trim(card) == 'RAMAN_TENSOR') THEN
 

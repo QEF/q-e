@@ -1,37 +1,43 @@
 
-     Program Q2R v.6.5 starts on  9Apr2020 at 16:53:12 
+     Program Q2R v.7.6-dev starts on  6Jul2026 at 10:27:17 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
          "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     1 processors
+     Parallel version (MPI), running on     4 processors
 
      MPI processes distributed on     1 nodes
-     Fft bands division:     nmany     =       1
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+     8207 MiB available memory on the printing compute node when the environment starts
 
-     reading grid info from file diam.dyn0
+
+  reading grid info from file diam.dyn0    
+
   reading force constants from file diam.dyn1
  macroscopic fields = T
-   6.08339   0.00000   0.00000
-   0.00000   6.08339   0.00000
-   0.00000   0.00000   6.08339
+   6.08339  -0.00000  -0.00000
+  -0.00000   6.08339  -0.00000
+  -0.00000  -0.00000   6.08339
   na=            1
-  -0.00227   0.00000   0.00000
-   0.00000  -0.00227   0.00000
+  -0.00227  -0.00000   0.00000
+  -0.00000  -0.00227   0.00000
    0.00000   0.00000  -0.00227
   na=            2
-  -0.00227   0.00000   0.00000
-   0.00000  -0.00227   0.00000
-   0.00000   0.00000  -0.00227
-Norm of the difference between old and new effective charges:    0.00556960328827456070
+  -0.00227   0.00000  -0.00000
+  -0.00000  -0.00227  -0.00000
+   0.00000  -0.00000  -0.00227
+  Norm of the difference between old and new effective charges:    0.00556950123273391821
+  alpha Ewald:    1.1168026145793040     
   nqs=            1
  q=   0.00000000  0.00000000  0.00000000
   reading force constants from file diam.dyn2
+  alpha Ewald:    1.1168026145793040     
   nqs=            8
  q=  -0.33333333  0.33333333 -0.33333333
  q=   0.33333333  0.33333333 -0.33333333
@@ -42,6 +48,7 @@ Norm of the difference between old and new effective charges:    0.0055696032882
  q=   0.33333333 -0.33333333 -0.33333333
  q=  -0.33333333 -0.33333333  0.33333333
   reading force constants from file diam.dyn3
+  alpha Ewald:    1.1168026145793040     
   nqs=            6
  q=   0.00000000  0.66666667  0.00000000
  q=  -0.66666667  0.00000000  0.00000000
@@ -50,6 +57,7 @@ Norm of the difference between old and new effective charges:    0.0055696032882
  q=   0.00000000  0.00000000 -0.66666667
  q=   0.66666667  0.00000000  0.00000000
   reading force constants from file diam.dyn4
+  alpha Ewald:    1.1168026145793040     
   nqs=           12
  q=   0.66666667  0.00000000  0.66666667
  q=   0.66666667  0.00000000 -0.66666667
@@ -67,11 +75,11 @@ Norm of the difference between old and new effective charges:    0.0055696032882
       q-space grid ok, #points =   27
 
       fft-check success (sum of imaginary terms < 10^-12)
- 
+
      Q2R          :      0.02s CPU      0.02s WALL
 
- 
-   This run was terminated on:  16:53:12   9Apr2020            
+
+   This run was terminated on:  10:27:17   6Jul2026            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

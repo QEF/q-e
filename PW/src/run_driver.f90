@@ -46,7 +46,7 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   USE mp,               ONLY : mp_bcast
   USE mp_images,        ONLY : intra_image_comm
   USE control_flags,    ONLY : gamma_only, conv_elec, istep, ethr, lscf, lmd, &
-       treinit_gvecs, lensemb, lforce => tprnfor, tstress
+       treinit_gvecs, lensemb, lforce, tstress
   USE ions_base,        ONLY : tau
   USE cell_base,        ONLY : alat, at, omega, bg
   USE cellmd,           ONLY : omega_old, at_old, calc, lmovecell

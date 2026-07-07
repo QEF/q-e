@@ -1,0 +1,76 @@
+# Copyright (C) 2026 Quantum ESPRESSO Foundation
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License. See the file `License' in the root directory
+# of the present distribution.
+#
+# Makefile for deprecated libraries: FoX, LAPACK
+
+include ../make.inc
+include install_utils
+
+###################################
+# LAPACK (includes BLAS)
+###################################
+
+liblapack:
+	$(call update_submodule,external,lapack)
+	if test ! -e $(BUILDDIR)/external/lapack/liblapack.a && test -e make_lapack.inc; then \
+	  (cp make_lapack.inc $(TOPDIR)/external/lapack/make.inc; \
+	   cd $(TOPDIR)/external/lapack; $(MAKE) blaslib lapacklib); \
+	   cd $(BUILDDIR)/install && make -f extlibs_makefile lapack_install ; else \
+      (echo "no configuration file found for lapack"; \
+       echo "run configure from main QE dir"; exit) ; fi 
+
+lapack_clean:
+	if test -d $(TOPDIR)/external/lapack; then cd $(TOPDIR)/external/lapack; \
+          (if test -f make.inc; then $(MAKE) clean; fi); fi
+
+lapack_install:
+	if test ! $(TOPDIR) -ef $(BUILDDIR) ; then \
+	   mkdir -p $(BUILDDIR)/external/lapack/BLAS/SRC ; \
+	   mkdir -p $(BUILDDIR)/external/lapack/INSTALL ; \
+	   mkdir -p $(BUILDDIR)/external/lapack/SRC ; \
+	   mv $(TOPDIR)/external/lapack/BLAS/SRC/*.o $(BUILDDIR)/external/lapack/BLAS/SRC/ ; \
+	   mv $(TOPDIR)/external/lapack/INSTALL/*.o  $(BUILDDIR)/external/lapack/INSTALL/ ; \
+	   mv $(TOPDIR)/external/lapack/SRC/*.o      $(BUILDDIR)/external/lapack/SRC/ ; \
+	   mv $(TOPDIR)/external/lapack/*.a          $(BUILDDIR)/external/lapack/ ; \
+	fi
+
+###################################
+# FoX
+###################################
+
+libfox:
+	$(call update_submodule,external,fox)
+	if test ! -d $(BUILDDIR)/FoX ; then \
+  cd $(TOPDIR)/external/fox; \
+    ./configure --prefix=$(BUILDDIR)/FoX FC=$(F90) FCFLAGS="$(FOX_FLAGS)"; \
+    touch cp_test; \
+    if cp -p cp_test cp_test_1; then \
+        rm cp_test_1; \
+        echo "cp -p works"; \
+    else \
+        find -type f | xargs sed -i 's/cp -p/cp/g'; \
+    fi; \
+    rm cp_test; \
+    $(MAKE) install && make clean; \
+ cd -; \
+fi
+fox_clean:
+	if test -d $(BUILDDIR)/FoX; then (rm -R -f $(BUILDDIR)/FoX); fi
+	if test -d $(TOPDIR)/external/fox; then cd $(TOPDIR)/external/fox; \
+          (if test -f FoX-config; then $(MAKE) clean; fi); fi
+
+
+###################################
+# cleaning
+###################################
+
+clean: lapack_clean fox_clean
+
+veryclean: clean 
+
+distlean: clean

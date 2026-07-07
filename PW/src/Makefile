@@ -2,6 +2,8 @@
 
 include ../../make.inc
 
+VPATH = @srcdir@
+
 # location of needed modules and included files (if any)
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../dft-d3/
@@ -53,10 +55,10 @@ compute_rho.o \
 compute_qdipol.o \
 compute_qdipol_so.o \
 compute_ux.o \
-coset.o \
 Coul_cut_2D.o \
 d_matrix.o \
 data_structure.o \
+diag_direct.o \
 divide_class.o \
 divide_class_so.o \
 divide_et_impera.o \
@@ -79,8 +81,10 @@ ewald.o \
 ewald_dipole.o \
 extfield.o \
 exx_base.o \
-exx_band.o \
 exx.o \
+exx_std.o \
+exx_bp_utils.o \
+exx_bp.o \
 fcp_capacitance.o \
 fcp_dyn_calcavg.o \
 fcp_dyn_printavg.o \
@@ -125,11 +129,10 @@ init_us_2.o \
 init_vloc.o \
 input.o \
 io_rho_xml.o \
-irrek.o \
+irreducible_BZ.o \
 iweights.o \
 intersite_V.o \
 init_nsg.o \
-nsg_adj.o \
 start_k.o \
 kpoint_grid.o \
 lchk_tauxk.o \
@@ -177,6 +180,7 @@ plus_u_full.o \
 potinit.o \
 print_clock_pw.o \
 print_ks_energies.o \
+printpot.o \
 punch.o \
 pw_restart_new.o \
 add_qexsd_step.o \
@@ -198,7 +202,6 @@ ruotaijk.o \
 run_pwscf.o \
 s_1psi.o \
 s_psi.o \
-s_psi_acc.o \
 save_in_cbands.o \
 save_in_electrons.o \
 scale_h.o \
@@ -244,10 +247,12 @@ two_chem.o\
 update_pot.o \
 us_exx.o \
 usnldiag.o \
+v_hubbard.o \
 v_of_rho.o \
 vcsmd.o \
 vcsubs.o \
 vhpsi.o \
+vhpsi_U.o \
 vloc_psi_tg.o \
 vloc_psi_acc.o \
 utils.o \
@@ -279,22 +284,16 @@ d3hess_mod.o
 
 # CUDA Fortran versions of routines
 PWLIBS += \
-  h_psi_gpu.o \
-  vhpsi_gpu.o \
-  rotate_wfc_gpu.o \
-  hs_1psi_gpu.o \
-  hs_psi_gpu.o \
-  s_1psi_gpu.o \
   utils_gpu.o \
   oscdft_functions_gpu.o
 
-
-
 QEMODS=../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a $(BASEMODS)
 
-TLDEPS= bindir pwlibs mods libks_solvers dftd3
+# see comments in file tldeps for explanations
+TLDEPS= bindir mods libks_solvers dftd3
+include ../../install/tldeps
 
-all : tldeps pw.x
+all : pw.x
 
 pw.x : $(PWOBJS) libpw.a $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
@@ -307,13 +306,7 @@ libpw.a : $(PWLIBS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
-tldeps :
-	if test -n "$(TLDEPS)" ; then \
-	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
-
 clean :
 	- /bin/rm -f *.x *.o *.a *~ *_tmp.f90 *.d *.mod *.i *.L
 
 include make.depend
-
-# DO NOT DELETE

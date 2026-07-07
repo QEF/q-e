@@ -1,5 +1,9 @@
 
-     Program PW2WANNIER v.7.3.1 starts on  5Jun2024 at 10:54:22 
+     Program PW2WANNIER v.7.5 starts on 16Sep2025 at 20:54:34 
+        Git branch: develop
+        Last git commit: 7e86c4d7f8b367fcfbff0156d653f13ca55b1b03-dirty
+        Last git commit date: Tue Sep 16 17:33:36 2025 +0000
+        Last git commit subject: Merge branch 'vhpsi' into 'develop'
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -10,18 +14,18 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     8 processors
+     Parallel version (MPI), running on     4 processors
 
      MPI processes distributed on     1 nodes
-     R & G space division:  proc/nbgrp/npool/nimage =       8
-     240369 MiB available memory on the printing compute node when the environment starts
- 
- 
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+     4341 MiB available memory on the printing compute node when the environment starts
+
+
      Reading nscf_save data
 
      Reading xml data from directory:
 
-     /home/colonna_n/CODES/q-e-kcw-soc/tempdir/cri3.save/
+     /home/nicola/CODES/q-e-kcw/tempdir/cri3.save/
 
      IMPORTANT: XC functional enforced from input :
      Exchange-correlation= PW
@@ -29,106 +33,106 @@
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
- 
+
      Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
-     Min         269     269     73                 7767     7767    1130
-     Max         270     270     74                 7768     7768    1134
+     Min         539     539    147                15534    15534    2263
+     Max         540     540    148                15535    15535    2267
      Sum        2159    2159    591                62139    62139    9063
- 
+
      Using Slab Decomposition
- 
+
 
      Check: negative core charge=   -0.000182
      Reading collected, re-writing distributed wavefunctions
- 
-  Spin CASE ( up )
- 
+
+      Spin CASE ( up )
+
   Wannier mode is: standalone     
- 
+
   -----------------
   *** Reading nnkp 
   -----------------
- 
+
   Checking info from wannier.nnkp file
- 
+
   - Real lattice is ok
   - Reciprocal lattice is ok
   - K-points are ok
   - Number of wannier functions is ok (  4)
   - All guiding functions are given 
- 
+
   Projections:
     0.000000    0.514807    0.000892  2  2  1    1.000000
     0.000000    0.514807    0.000892  2  3  1    1.000000
     0.000000    0.514807    0.856414  2  2  1    1.000000
     0.000000    0.514807    0.856414  2  3  1    1.000000
- 
+
   Reading data about k-point neighbours 
- 
+
   All neighbours are found 
- 
+
   Opening pp-files 
- 
- 
+
+
   --------------------------
   *** Compute  A projections
   --------------------------
- 
+
   Number of local k points =       16
        1       2       3       4       5       6       7       8       9      10
       11      12      13      14      15      16
   AMN calculated
- 
+
   ---------------
   *** Compute  M 
   ---------------
- 
+
   Number of local k points =       16
        1       2       3       4       5       6       7       8       9      10
       11      12      13      14      15      16
   MMN calculated
- 
+
   -----------------------------------
   *** Orbital terms are not computed 
   -----------------------------------
- 
+
   -----------------------------------
   *** SHC terms are not computed 
   -----------------------------------
- 
+
   ----------------
   *** Write bands 
   ----------------
- 
- 
+
+
   -----------------------------
   *** Plot info is not printed 
   -----------------------------
- 
+
   -----------------------------
   *** Parity info is not printed 
   -----------------------------
- 
+
   ------------
   *** Stop pp 
   ------------
- 
- 
-     init_pw2wan  :      0.13s CPU      0.16s WALL (       1 calls)
-     compute_amn  :      0.32s CPU      0.33s WALL (       1 calls)
-     compute_mmn  :      0.06s CPU      0.07s WALL (       1 calls)
+
+
+     init_pw2wan  :      0.37s CPU      0.39s WALL (       1 calls)
+     compute_amn  :      1.54s CPU      1.55s WALL (       1 calls)
+     compute_mmn  :      0.29s CPU      0.35s WALL (       1 calls)
 
      Internal routines:
-     compute_u_kb :      0.05s CPU      0.06s WALL (      64 calls)
- 
-     PW2WANNIER   :      0.51s CPU      0.56s WALL
+     compute_u_kb :      0.28s CPU      0.34s WALL (      64 calls)
 
- 
-   This run was terminated on:  10:54:22   5Jun2024            
+     PW2WANNIER   :      2.21s CPU      2.30s WALL
+
+
+   This run was terminated on:  20:54:36  16Sep2025            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
 =------------------------------------------------------------------------------=
- 
+

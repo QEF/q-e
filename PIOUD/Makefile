@@ -1,7 +1,9 @@
 # Makefile for PIOUD
 sinclude ../make.inc
 
-default: all
+# see comments in file tldeps for explanations
+include ../install/tldeps
+TLDEPS=pwlibs
 
 all:
 	if test -d src ; then \

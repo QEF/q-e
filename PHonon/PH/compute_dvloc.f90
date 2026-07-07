@@ -19,17 +19,14 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   USE ions_base,        ONLY : nat, ityp
   USE cell_base,        ONLY : tpiba
   USE fft_base,         ONLY : dfftp, dffts
-  USE fft_interfaces,   ONLY : fwfft, invfft
+  USE fft_interfaces,   ONLY : invfft
   USE gvect,            ONLY : eigts1, eigts2, eigts3, mill, g, gg
   USE gvecs,            ONLY : ngms
-  USE lsda_mod,         ONLY : lsda, current_spin
-  USE noncollin_module, ONLY : nspin_mag
   USE uspp,             ONLY : nlcc_any
   USE eqv,              ONLY : vlocq
   USE qpoint,           ONLY : xq, eigqts
   USE modes,            ONLY : nmodes
-  USE dv_of_drho_lr,    ONLY : dv_of_drho_xc
-  USE control_lr,       ONLY : lmultipole
+  USE control_ph,       ONLY : lmultipole
   !
   IMPLICIT NONE
   !
@@ -54,28 +51,21 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   INTEGER :: nnr, nnp, itmp, itmpp
   !!
   complex(DP) :: gtau, gu, fact, u1, u2, u3, gu0
-  complex(DP), allocatable :: aux (:,:)
-  complex(DP), pointer :: auxs (:)
-  COMPLEX(DP), ALLOCATABLE :: drhoc(:)
   COMPLEX(DP), EXTERNAL :: Vaeps_dvloc
   COMPLEX(DP) :: pot
   !
 #if defined(__CUDA)
-  INTEGER, POINTER, DEVICE :: nl_d(:), nlp_d(:)
+  INTEGER, POINTER, DEVICE :: nl_d(:)
   !
   nl_d  => dffts%nl_d
-  nlp_d  => dfftp%nl_d
 #else
   INTEGER, ALLOCATABLE :: nl_d(:)
-  INTEGER, ALLOCATABLE :: nlp_d(:)
   !
   ALLOCATE( nl_d(dffts%ngm) )
-  ALLOCATE( nlp_d(dfftp%ngm) )
   nl_d  = dffts%nl
-  nlp_d  = dfftp%nl
 #endif
   !
-  call start_clock_gpu ('com_dvloc')
+  call start_clock ('com_dvloc')
   !
   !    We start by computing the contribution of the local potential.
   !    The computation of the derivative of the local potential is done in
@@ -84,7 +74,7 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   !
   nnr = dffts%nnr
   !
-  !$acc data present_or_copy(dvlocin(1:nnr)) copyin(vlocq) deviceptr(nl_d, nlp_d)
+  !$acc data present_or_copy(dvlocin(1:nnr)) copyin(vlocq) deviceptr(nl_d)
   !$acc kernels present(dvlocin)
   dvlocin(:) = (0.d0, 0.d0)
   !$acc end kernels
@@ -109,21 +99,104 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
      endif
   enddo
   !
+  if (nlcc_any.and.addnlcc) CALL errore('compute_dvloc','volentieri!',1)
+  !
+  IF (lmultipole .AND. gg(1) < 1d-8) THEN
+    ! FM: refer potential to all-electron calculation, see routine description
+    pot = Vaeps_dvloc(uact, dffts%nl(1))
+    !$acc kernels
+    dvlocin(dffts%nl(1)) = dvlocin(dffts%nl(1)) + pot
+    !$acc end kernels
+  ENDIF
+  !
+  ! Now we compute dV_loc/dtau in real space
+  !
+  !$acc host_data use_device(dvlocin)
+  CALL invfft ('Rho', dvlocin, dffts)
+  !$acc end host_data
+  !
+  !$acc end data
+  !
+#if !defined(__CUDA)
+  DEALLOCATE(nl_d)
+#endif
+  !
+  call stop_clock ('com_dvloc')
+  !
+end subroutine compute_dvloc
+!----------------------------------------------------------------------
+subroutine compute_dvloc_cc (uact, dvlocin)
+  !----------------------------------------------------------------------
+  !! This routine adds to \(dV_\text{bare}/\text{dtau}\), in real space,
+  !! the core correction contribution for one perturbation with a given q.
+  !! Moved out from compute_dvloc
+  !
+  USE kinds,            ONLY : DP
+  USE ions_base,        ONLY : nat, ityp
+  USE cell_base,        ONLY : tpiba
+  USE fft_base,         ONLY : dfftp, dffts
+  USE fft_interfaces,   ONLY : fwfft, invfft
+  USE gvecs,            ONLY : ngms
+  USE lsda_mod,         ONLY : lsda, current_spin
+  USE noncollin_module, ONLY : nspin_mag
+  USE uspp,             ONLY : nlcc_any
+  USE modes,            ONLY : nmodes
+  USE dv_of_drho_lr,    ONLY : dv_of_drho_xc
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP), INTENT(IN) :: uact(nmodes)
+  !! input: the pattern of displacements
+  COMPLEX(DP), INTENT(INOUT) :: dvlocin(dffts%nnr)
+  !! output: the change of the local potential
+  !
+  ! ... local variables
+  !
+  INTEGER :: mu
+  !! counter on modes
+  INTEGER :: ig
+  !! counter on G vectors
+  INTEGER :: nt
+  !! the type of atom
+  !!
+  INTEGER :: nnr, nnp, itmp, itmpp
+  !!
+  complex(DP), allocatable :: aux (:,:)
+  complex(DP), pointer :: auxs (:)
+  COMPLEX(DP), ALLOCATABLE :: drhoc(:)
+#if defined(__CUDA)
+  INTEGER, POINTER, DEVICE :: nl_d(:), nlp_d(:)
+  !
+  nl_d  => dffts%nl_d
+  nlp_d  => dfftp%nl_d
+#else
+  INTEGER, ALLOCATABLE :: nl_d(:)
+  INTEGER, ALLOCATABLE :: nlp_d(:)
+  !
+  ALLOCATE( nl_d(dffts%ngm) )
+  ALLOCATE( nlp_d(dfftp%ngm) )
+  nl_d  = dffts%nl
+  nlp_d  = dfftp%nl
+#endif
+  !
   ! add NLCC when present
   !
-  if (nlcc_any.and.addnlcc) then
-     allocate (drhoc( dfftp%nnr))
+  !$acc data present_or_copy(dvlocin) deviceptr(nl_d, nlp_d)
+  if (nlcc_any) then
      allocate (aux( dfftp%nnr,nspin_mag))
-     nnp=dfftp%nnr
-     !$acc enter data create(drhoc(1:nnp),aux(1:nnp,1:nspin_mag))
+     !$acc data create(aux)
+     allocate (drhoc( dfftp%nnr))
+     !$acc data create(drhoc)
      !
      CALL addcore (uact, drhoc)
      !
+     !$acc kernels
      aux(:,:) = (0.0_dp, 0.0_dp)
-     CALL dv_of_drho_xc(aux, drhoc = drhoc)
-     !$acc update device(aux) 
+     !$acc end kernels
      !
-     !$acc exit data delete (drhoc)
+     CALL dv_of_drho_xc(aux, drhoc = drhoc)
+     !
+     !$acc end data
      deallocate (drhoc)
      !
      !$acc host_data use_device(aux)
@@ -133,13 +206,13 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
         CALL fwfft ('Rho', aux(:,1), dfftp)
      ENDIF
      !$acc end host_data
-!
-!  This is needed also when the smooth and the thick grids coincide to
-!  cut the potential at the cut-off
-!
+     !
+     !  This is needed also when the smooth and the thick grids coincide to
+     !  cut the potential at the cut-off - PG: does not make sense to me
+     !
      allocate (auxs(dffts%nnr))
-     !$acc enter data create(auxs(1:nnr))
-     !$acc kernels present(auxs)
+     !$acc data create(auxs)
+     !$acc kernels
      auxs(:) = (0.d0, 0.d0)
      !$acc end kernels
      IF (lsda) THEN
@@ -157,26 +230,19 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
           auxs(itmp) = aux(itmpp,1)
        enddo
      ENDIF
+     !
+     !$acc host_data use_device(auxs)
+     CALL invfft ('Rho', auxs, dffts)
+     !$acc end host_data
      !$acc kernels present(dvlocin,auxs)
      dvlocin(:) = dvlocin(:) + auxs(:)
      !$acc end kernels
-     !$acc exit data delete(aux, auxs)
-     deallocate (aux)
+     !
+     !$acc end data
      deallocate (auxs)
+     !$acc end data
+     deallocate (aux)
   endif
-  !
-  IF (lmultipole .AND. gg(1) < 1d-8) THEN !FM: refer potential to all-electron calculation, see routine description
-    pot = Vaeps_dvloc(uact, dffts%nl(1))
-    !$acc kernels
-    dvlocin(dffts%nl(1)) = dvlocin(dffts%nl(1)) + pot
-    !$acc end kernels
-  ENDIF
-  !
-  ! Now we compute dV_loc/dtau in real space
-  !
-  !$acc host_data use_device(dvlocin)
-  CALL invfft ('Rho', dvlocin, dffts)
-  !$acc end host_data
   !
   !$acc end data
   !
@@ -185,6 +251,4 @@ subroutine compute_dvloc (uact, addnlcc, dvlocin)
   DEALLOCATE(nlp_d)
 #endif
   !
-  call stop_clock_gpu ('com_dvloc')
-  !
-end subroutine compute_dvloc
+end subroutine compute_dvloc_cc

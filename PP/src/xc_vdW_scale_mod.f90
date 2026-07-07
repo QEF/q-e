@@ -305,11 +305,6 @@ CONTAINS
   rho_down  = ( rho%of_r(:,1) - rho%of_r(:,2) + rho_core(:) ) * 0.5_dp
   total_rho = rho_up + rho_down
 
-#if defined (__SPIN_BALANCED)
-     rho_up   = total_rho*0.5D0
-     rho_down = rho_up
-     write(stdout,'(/,/,"     Performing spin-balanced Ecnl calculation!")')
-#endif
 
   ! --------------------------------------------------------------------
   ! Here we calculate the gradient in reciprocal space using FFT.
@@ -366,7 +361,8 @@ CONTAINS
 
   SUBROUTINE get_q0cc_on_grid (cc,lecnl_qx,total_rho, grad_rho, q0, thetas)
 
-  USE vdW_DF,               ONLY : spline_interpolation, pw
+  USE vdW_DF,               ONLY : spline_interpolation
+  USE corr_lda,             ONLY : pw
 
   implicit none
 
@@ -426,7 +422,8 @@ CONTAINS
 
      ! -----------------------------------------------------------------
      ! This is the q value defined in equations 11 and 12 of DION.
-     ! Use pw() from flib/functionals.f90 to get qc = kf/eps_x * eps_c.
+     ! Use pw() from XClib/qe_funct_corr_lda_lsda.f90 to get
+     ! qc = kf/eps_x * eps_c.
 
      call pw( cc*r_s, 1, ec, dqc_drho)
      !
@@ -491,7 +488,8 @@ CONTAINS
   SUBROUTINE get_q0cc_on_grid_spin (cc,lecnl_qx,total_rho, rho_up, rho_down, grad_rho, &
              grad_rho_up, grad_rho_down, q0, thetas)
 
-  USE vdW_DF,               ONLY : spline_interpolation, pw_spin
+  USE vdW_DF,               ONLY : spline_interpolation
+  USE corr_lda,             ONLY : pw_spin
 
   implicit none
 

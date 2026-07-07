@@ -24,17 +24,15 @@ MODULE dftd3_qe
   CONTAINS
 
     !---------------------------------------------------------------------------
-    SUBROUTINE print_dftd3_hessian( mat, n, label )
-      USE kinds,            ONLY: DP
-      USE io_global,        ONLY: stdout
+    SUBROUTINE print_dftd3_hessian( stdout, mat, n, label )
     
       IMPLICIT NONE
-      INTEGER, INTENT(IN) :: n
-      COMPLEX(DP), INTENT(IN) :: mat(3,n,3,n)
+      INTEGER, INTENT(IN) :: stdout, n
+      COMPLEX(wp), INTENT(IN) :: mat(3,n,3,n)
       CHARACTER(LEN=*), INTENT(IN) :: label
       !
       INTEGER :: i, iat, ixyz, j, jat, jxyz
-      COMPLEX(DP), ALLOCATABLE :: buffer(:)
+      COMPLEX(wp), ALLOCATABLE :: buffer(:)
       CHARACTER(LEN=256):: formt, filout, string
       !
       WRITE(formt,'(A,I9,A)') '(', 2*3*n, 'f24.16)'
@@ -85,7 +83,6 @@ MODULE dftd3_qe
     FUNCTION dftd3_xc ( dft )
       CHARACTER(LEN=*), INTENT(in) :: dft
       CHARACTER(LEN=256) :: dftd3_xc
-      CHARACTER(LEN=1), EXTERNAL :: lowercase
       integer :: i
        
       dftd3_xc = ''
@@ -310,7 +307,7 @@ MODULE dftd3_qe
 
 
   subroutine dftd3_printout(this, input_dftd3, stdout, nsp, atm, nat, ityp,&
-                  tau, at, alat )
+                  coord, lat )
     !
     ! Added subroutine to original interface, which computes things for printout. 
     ! Could also be done in subroutine dftd3_init.
@@ -322,14 +319,11 @@ MODULE dftd3_qe
     integer, intent(in) :: nat
     character(len=*), intent(in) :: atm(nsp)
     integer, intent(in) :: ityp(nat)
-    real*8, intent(in) :: tau(3,nat)
-    real*8, intent(in) :: at(3,3)
-    real*8, intent(in) :: alat
+    real(wp), intent(in) :: coord(3,nat)
+    real(wp), intent(in) :: lat(3,3)
 
-    integer :: i,j,ata,z,iz(nat)
-    real*8  :: cn(nat),rtmp3(3),c6,c8,dum,x
-    real*8 :: tau_(3,nat)
-    real*8 :: at_(3,3)
+    integer :: i,j,ata,iz(nat)
+    real(wp)  :: cn(nat),rtmp3(3),c6,c8,dum,x
     !
     !
     write(stdout,'( /, 5X, "--------------------------------------------" )' )
@@ -361,17 +355,14 @@ MODULE dftd3_qe
         iz(ata)=get_atomic_number(trim(atm(ityp(ata))))
     end do
     !
-    tau_(:,:) = tau(:,:) * alat
-    at_(:,:) = at(:,:) * alat
-    CALL set_criteria(this%rthr, at_, rtmp3)
+    CALL set_criteria(this%rthr, lat, rtmp3)
     this%rep_vdw(:) = int(rtmp3) + 1
-    CALL set_criteria(this%cn_thr, at_, rtmp3)
+    CALL set_criteria(this%cn_thr, lat, rtmp3)
     this%rep_cn(:) = int(rtmp3) + 1
-    CALL pbcncoord(nat, rcov, iz, tau_, cn, at_, this%rep_cn, this%cn_thr)
+    CALL pbcncoord(nat, rcov, iz, coord, cn, lat, this%rep_cn, this%cn_thr)
     !    
     x = 0.d0
     do ata = 1, nat
-        z = get_atomic_number(trim(atm(ityp(ata))))
         CALL getc6(maxc,max_elem,this%c6ab,this%mxc, &
                               &  iz(ata),iz(ata),cn(ata),cn(ata),c6)
         c8=r2r4(iz(ata))**2*3.0d0*c6
@@ -381,11 +372,36 @@ MODULE dftd3_qe
           x = x + dum
         enddo
         write(stdout,'( 9X, A3 , 7X, F6.3, 10X, F7.3, F10.2, F10.2)') &
-                atm(ityp(ata)), cn(ata), 0.5*this%r0ab(z,z),c6*2.d0,c8*2.d0
+                atm(ityp(ata)), cn(ata), 0.5*this%r0ab(iz(ata),iz(ata)), &
+                c6*2.d0,c8*2.d0
     end do
     write(stdout,'(/, 9X, "Molecular C6 ( Ry / a.u.^6 ) = ",F12.2,/)') x*2.d0
 
   end subroutine dftd3_printout
 
-
+!
+!-----------------------------------------------------------------------
+FUNCTION lowercase( in_char )  
+  !-----------------------------------------------------------------------
+  !
+  ! ... converts character to lowercase if capital
+  ! ... copy character to output in all other cases
+  !
+  IMPLICIT NONE  
+  !
+  CHARACTER(LEN=1), INTENT(IN) :: in_char
+  CHARACTER(LEN=1)             :: lowercase
+  CHARACTER(LEN=26), PARAMETER :: lower = 'abcdefghijklmnopqrstuvwxyz', &
+                                  upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  INTEGER                      :: i
+  !
+  i = SCAN( upper, in_char )
+  IF ( i /= 0 ) THEN
+     lowercase = lower(i:i)
+  ELSE
+     lowercase = in_char
+  END IF
+  !
+END FUNCTION lowercase
+  !
 END MODULE dftd3_qe

@@ -26,7 +26,7 @@ SUBROUTINE forces()
   !
   USE kinds,             ONLY : DP
   USE io_global,         ONLY : stdout
-  USE cell_base,         ONLY : at, bg, alat, omega  
+  USE cell_base,         ONLY : at, bg, alat, omega, pbc
   USE ions_base,         ONLY : nat, ntyp => nsp,nsp, ityp, tau, zv, amass, extfor, atm
   USE gvect,             ONLY : ngm, gstart, ngl, igtongl, g, gg, gcutm
   USE lsda_mod,          ONLY : nspin
@@ -39,7 +39,7 @@ SUBROUTINE forces()
   USE extfield,          ONLY : tefield, forcefield, gate, forcegate, relaxz
   USE control_flags,     ONLY : gamma_only, remove_rigid_rot, textfor, &
                                 iverbosity, llondon, ldftd3, lxdm, ts_vdw, &
-                                mbd_vdw, lforce => tprnfor, istep
+                                mbd_vdw, lforce, istep
   USE bp,                ONLY : lelfield, gdir, l3dstring, efield_cart, &
                                 efield_cry,efield
   USE uspp,              ONLY : okvan
@@ -78,20 +78,15 @@ SUBROUTINE forces()
                            forcelc(:,:),         &
                            forcecc(:,:),         &
                            forceion(:,:),        &
+                           forcescc(:,:),        &
+                           forceh(:,:), &
                            force_disp(:,:),      &
                            force_d3(:,:),        &
                            force_disp_xdm(:,:),  &
                            force_mt(:,:),        &
-                           forcescc(:,:),        &
                            forces_bp_efield(:,:),&
-                           forceh(:,:), &
                            force_sol(:,:)
-  ! nonlocal, local, core-correction, ewald, scf correction terms, and hubbard
-  !
-  ! aux is used to store a possible additional density
-  ! now defined in real space
-  !
-  COMPLEX(DP), ALLOCATABLE :: auxg(:), auxr(:)
+  ! Each force term has its own array
   !
   REAL(DP) :: sumscf, sum_mm
   REAL(DP), PARAMETER :: eps = 1.e-12_dp
@@ -102,6 +97,7 @@ SUBROUTINE forces()
   REAL(DP), ALLOCATABLE :: taupbc(:,:)
   INTEGER :: atnum(1:nat)
   REAL(DP) :: stress_dftd3(3,3)
+  ! Auxiliary variables for DFT-D3
   !
   INTEGER :: ierr
   !
@@ -177,13 +173,12 @@ SUBROUTINE forces()
     ALLOCATE( force_d3(3, nat) )
     force_d3(:,:) = 0.0_DP
     ! taupbc are atomic positions in alat units, centered around r=0
-    ALLOCATE ( taupbc(3,nat) )
-    taupbc(:,:) = tau(:,:)
-    CALL cryst_to_cart( nat, taupbc, bg, -1 ) 
-    taupbc(:,:) = taupbc(:,:) - NINT(taupbc(:,:))
-    CALL cryst_to_cart( nat, taupbc, at,  1 ) 
-    atnum(:) = get_atomic_number(atm(ityp(:)))
-    CALL dftd3_pbc_gdisp( dftd3, alat*taupbc, atnum, alat*at, &
+    ALLOCATE ( taupbc (3,nat) )
+    DO na=1,nat
+       taupbc(:,na) = pbc( tau(:,na)*alat )
+       atnum(na) = get_atomic_number(atm(ityp(na)))
+    END DO
+    CALL dftd3_pbc_gdisp( dftd3, taupbc, atnum, alat*at, &
                           force_d3, stress_dftd3 )
     force_d3 = -2.d0*force_d3
     DEALLOCATE( taupbc)

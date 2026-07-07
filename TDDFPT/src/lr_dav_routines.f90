@@ -1197,6 +1197,7 @@ contains
     !-------------------------------------------------------------------------------
     ! This routine try to interpret physical information from the solution of
     ! casider's equation
+    use constants,            only : RYTOEV, EVTONM
     use kinds,                only : dp
     use lr_variables,         only : evc0, sevc0,R, nbnd_total,evc0_virt
     use lr_dav_variables
@@ -1256,7 +1257,8 @@ contains
           ia = eign_value_order(ieign)
           if (message=="END")&
           write(stdout,'(/7x,"! The",I5,1x,"-th eigen state. The transition&
-          & energy is: ", 5x, F12.8)') ieign, tr_energy(ia)
+          & energy is: ", 5x, F12.8, " Ry (", F6.4, " eV, ", F6.2, " nm)")') &
+                  ieign, tr_energy(ia), tr_energy(ia)* RYTOEV, EVTONM / (tr_energy(ia)* RYTOEV) 
           ! Please see Documentation for the explaination of the next four steps
           ! In short it gets the right components of X and Y
           ! Apply C to the right eigen state in order to calculate the right omega
@@ -1723,6 +1725,7 @@ contains
     use io_files,      only : prefix
     use kinds,         only : dp
     use io_global,     only : stdout
+    use constants,     only : RYTOEV, EVTONM
 
     implicit none
     character(len=*) :: message
@@ -1734,10 +1737,13 @@ contains
     if(message=="END") filename = trim(prefix)  // ".eigen"
     if(message=="10") filename = trim(prefix)  // ".eigen-quasi-conv"
     OPEN(18,file=filename,status="unknown")
-    write(18,'("#",7x,"Energy(Ry)",12x,"Total",17x,"X",18x,"Y",19x,"Z")')
+    write(18,'("#",5x,"Energy(Ry)",10x,"Energy(eV)",10x,"Wavelengh(nm)",7x,"Total",15x,"X",19x,"Y",19x,"Z")')
  
     do ieign=1, num_eign
-      write(18,'(5E20.8)') tr_energy(eign_value_order(ieign)),total_chi(ieign),&
+      write(18,'(7E20.8)') tr_energy(eign_value_order(ieign)),&
+                           tr_energy(eign_value_order(ieign)) * RYTOEV, &
+                           EVTONM / (tr_energy(eign_value_order(ieign)) * RYTOEV), &
+                           total_chi(ieign),&
                            chi_dav(1,ieign),chi_dav(2,ieign),chi_dav(3,ieign)
     enddo
 

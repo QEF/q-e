@@ -47,4 +47,3 @@ f2cp.o: f2cp.f90
 
 c2cp.o: c2cp.cpp ../include/libqecouple.h
 
-# DO NOT DELETE

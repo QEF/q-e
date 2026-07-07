@@ -1417,7 +1417,7 @@ CONTAINS
     !
     !
     !--------------------------------------------------------------------------
-    CHARACTER FUNCTION chem_symb( symbol )
+    CHARACTER(2) FUNCTION chem_symb( symbol )
       !------------------------------------------------------------------------
       !! Returns the chemical symbol used to identify the symmetry
       !

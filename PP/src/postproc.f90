@@ -346,7 +346,7 @@ PROGRAM pp
   !
   CALL chdens (plot_files, plot_num, nc)
   !
-  CALL environment_end ( 'POST-PROC' )
+  CALL environment_end( )
   !
   CALL stop_pp()
   !

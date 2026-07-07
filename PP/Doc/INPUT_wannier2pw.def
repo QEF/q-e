@@ -24,18 +24,19 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program wanni
     namelist INPUTPP {
 
         var prefix -type CHARACTER {
-            info { 
+            info {
                 prefix of files saved by program pw.x
             }
+            default { ' ' }
         }
 
         var outdir -type CHARACTER {
             info {
                 directory containing the input data, i.e. the same as in pw.x
             }
-            default {
-                value of the @tt ESPRESSO_TMPDIR environment variable if set;
-                current directory ('./') otherwise
+            default -kind conditional {
+                case -test {ESPRESSO_TMPDIR is set} { from_environment }
+                case { ./ }
             }
         }
 
@@ -84,7 +85,7 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program wanni
                 Wannier90 calculations and see in which oredr the Wannier functions were generated.
             }
             default { .FALSE. }
-        } 
+        }
 
     }
 }

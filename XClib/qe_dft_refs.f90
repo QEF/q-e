@@ -283,6 +283,9 @@ MODULE qe_dft_refs
   DATA dft_GGAx(50)%ref / 'Short-ranged pbesol exchange as set by Henderson et al, &
                            & J. Chem. Phys. 128, 194105 (2008); Compare PBESOL-AH' /
   DATA dft_GGAx(50)%wrn / 'none' /
+  ! W3MC  vdW-DF3-MC exchange
+  DATA dft_GGAx(51)%ref / 'T. Jenkins, K. Berland, and T. Thonhauser, PRB 112, 235121 (2025)' /
+  DATA dft_GGAx(51)%wrn / 'none' /
   !
   !
   ! ---- GGA correlation ----
@@ -452,6 +455,8 @@ MODULE qe_dft_refs
   DATA dft_full_descr(41) / 'PBESOL-AH: HJS implementation (PBEsol params).' /
   ! RSCAN
   DATA dft_full_descr(42) / 'RSCAN Meta-GGA - needs Libxc.' /
+  ! BEEF_LXC
+  DATA dft_full_descr(43) / 'BEEF-vdW GGA XC via Libxc (XC_GGA_XC_BEEFVDW, ID 286) - needs Libxc.' /
   !
 END MODULE qe_dft_refs
 

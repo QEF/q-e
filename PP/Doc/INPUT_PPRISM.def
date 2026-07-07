@@ -48,14 +48,14 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program ppris
             info {
                 directory containing the input data, i.e. the same as in pw.x
             }
-            default {
-                value of the @tt ESPRESSO_TMPDIR environment variable if set;
-                current directory ('./') otherwise
+            default -kind conditional {
+                case -test {ESPRESSO_TMPDIR is set} { from_environment }
+                case { ./ }
             }
         }
 
         var filplot -type CHARACTER {
-            default { "@ref prefix".pprism }
+            default -kind expr { "@ref prefix".pprism }
             info {
                 file "filplot" contains solvent's quantities
                 (can be saved for further processing)
@@ -86,30 +86,43 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program ppris
 
         var output_format -type INTEGER {
             status { REQUIRED }
-            info {
-                (ignored on 1D plot)
+            options {
+                info {
+                    Output format for the plot (ignored on 1D plot).
+                }
 
-                0  = format suitable for gnuplot   (1D)
+                opt -val 0 {
+                    Format suitable for gnuplot (1D).
+                }
 
-                1  = obsolete format no longer supported
+                opt -val 2 {
+                    Format suitable for plotrho (2D).
+                }
 
-                2  = format suitable for plotrho   (2D)
+                opt -val 3 {
+                    Format suitable for XCRYSDEN (2D or user-supplied 3D region).
+                }
 
-                3  = format suitable for XCRYSDEN  (2D or user-supplied 3D region)
+                opt -val 5 {
+                    Format suitable for XCRYSDEN (3D, using entire FFT grid).
+                }
 
-                4  = obsolete format no longer supported
+                opt -val 6 {
+                    Format as gaussian cube file (3D)
+                    (can be read by many programs).
+                }
 
-                5  = format suitable for XCRYSDEN  (3D, using entire FFT grid)
-
-                6  = format as gaussian cube file  (3D)
-                     (can be read by many programs)
-
-                7  = format suitable for gnuplot   (2D) x, y, f(x,y)
+                opt -val 7 {
+                    Format suitable for gnuplot (2D) x, y, f(x,y).
+                }
             }
         }
 
         var fileout -type CHARACTER {
-            default { "@ref prefix".3drism }
+            default -kind conditional {
+                case -test "0 <= @ref output_format <= 7" { "@ref prefix".3drism_* with a format-dependent extension }
+                case { "@ref prefix".3drism }
+            }
             info {
                 name of the file to which the plot is written
             }
@@ -132,9 +145,10 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program ppris
                 label { the following variables are REQUIRED: }
 
                 dimension x0 -start 1 -end 3  -type REAL {
+                    dimensionality { length }
+                    units { alat }
                     info {
                         3D vector, origin of the line
-                        (in alat units)
                     }
                 }
 
@@ -156,15 +170,18 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program ppris
                 label { the following variables are REQUIRED: }
 
                 dimension e1 -start 1 -end 3 -type REAL {
+                    dimensionality { length }
+                    units { alat }
                     info {
                         3D vector which determines the plotting line
-                        (in alat units)
                     }
                 }
 
                 dimension x0 -start 1 -end 3  -type REAL {
+                    dimensionality { length }
+                    units { alat }
                     info {
-                        3D vector, origin of the line (in alat units)
+                        3D vector, origin of the line
                     }
                 }
 
@@ -183,16 +200,20 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program ppris
                 dimensiongroup -start 1 -end 3 -type REAL {
                     dimension e1
                     dimension e2
+                    dimensionality { length }
+                    units { alat }
                     info {
-                        3D vectors which determine the plotting plane (in alat units)
+                        3D vectors which determine the plotting plane
 
                         BEWARE: @b e1 and @b e2 must be orthogonal
                     }
                 }
 
                 dimension x0 -start 1 -end 3 -type REAL {
+                    dimensionality { length }
+                    units { alat }
                     info {
-                        3D vector, origin of the plane (in alat units)
+                        3D vector, origin of the plane
                     }
                 }
 
@@ -215,19 +236,20 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program ppris
                     dimension e1
                     dimension e2
                     dimension e3
+                    dimensionality { length }
+                    units { alat }
                     info {
                         3D vectors which determine the plotting parallelepiped
                         (if present, must be orthogonal)
-
-                        @ref e1, @ref e2, and @ref e3 are in alat units !
                     }
                 }
 
                 dimension x0 -start 1 -end 3 -type REAL {
+                    default { 0.0 }
+                    dimensionality { length }
+                    units { alat }
                     info {
                         3D vector, origin of the parallelepiped
-
-                        @ref x0 is in alat units !
                     }
                 }
 
@@ -250,11 +272,11 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program ppris
                           are ignored, the entire FFT grid is written in the
                           XCRYSDEN format - works for any crystal axis (VERY FAST)
 
-                        - If @ref e1, @ref e2, @ref e3, @ref x0 are present, 
-                          and @ref e1, @ref e2, @ref e3 are parallel to xyz 
-                          and parallel to crystal axis, a subset of the FFT 
+                        - If @ref e1, @ref e2, @ref e3, @ref x0 are present,
+                          and @ref e1, @ref e2, @ref e3 are parallel to xyz
+                          and parallel to crystal axis, a subset of the FFT
                           grid that approximately covers the parallelepiped
-                          defined by @ref e1, @ref e2, @ref e3, @ref x0, is 
+                          defined by @ref e1, @ref e2, @ref e3, @ref x0, is
                           written - untested, might be obsolete
 
                         - Otherwise, the required 3D grid is generated from the
@@ -267,8 +289,10 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program ppris
                 label { the following variables are REQUIRED: }
 
                 var radius -type REAL {
+                    dimensionality { length }
+                    units { alat }
                     info {
-                        Radius of the sphere (alat units), centered at (0,0,0)
+                        Radius of the sphere, centered at (0,0,0)
                     }
                 }
 

@@ -1,0 +1,23 @@
+if(QE_ENABLE_OFFLOAD)
+    set(OPENMP_OFFLOAD_COMPILE_OPTIONS "-fopenmp-version=50")
+
+    check_fortran_compiler_flag(-Wno-experimental-option HAVE_WARNING_NO_EXP)
+    if(HAVE_WARNING_NO_EXP)
+        list(APPEND OPENMP_OFFLOAD_COMPILE_OPTIONS "-Wno-experimental-option")
+    endif()
+
+    if(OFFLOAD_TARGET)
+        list(APPEND OPENMP_OFFLOAD_COMPILE_OPTIONS "-fopenmp-targets=${OFFLOAD_TARGET}")
+        if(OFFLOAD_ARCH)
+            list(APPEND OPENMP_OFFLOAD_COMPILE_OPTIONS "-Xopenmp-target=${OFFLOAD_TARGET};-march=${OFFLOAD_ARCH}")
+        endif()
+    elseif(QE_GPU_ARCHS)
+        string(REGEX REPLACE ";" "," QE_GPU_ARCHS_COMMA_SEPARATED "${QE_GPU_ARCHS}")
+        list(APPEND OPENMP_OFFLOAD_COMPILE_OPTIONS "--offload-arch=${QE_GPU_ARCHS_COMMA_SEPARATED}")
+    else()
+      message(FATAL_ERROR "Require QE_GPU_ARCHS or OFFLOAD_TARGET set for OpenMP offload using Clang.")
+    endif()
+
+    target_compile_options(qe_openmp_fortran INTERFACE "$<$<COMPILE_LANGUAGE:Fortran>:${OPENMP_OFFLOAD_COMPILE_OPTIONS}>")
+    target_link_options(qe_openmp_fortran INTERFACE "$<$<LINK_LANGUAGE:Fortran>:${OpenMP_Fortran_FLAGS};${OPENMP_OFFLOAD_COMPILE_OPTIONS}>")
+endif()

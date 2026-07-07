@@ -1,0 +1,528 @@
+                                                                                      
+                                       ``:oss/                                        
+                           `.+s+.     .+ys--yh+     `./ss+.                           
+                          -sh//yy+`   +yy   +yy    -+h+-oyy                           
+                          -yh- .oyy/.-sh.   .syo-.:sy-  /yh                           
+                 `.-.`    `yh+   -oyyyo.     `/syys:    oys      `.`                  
+               `/+ssys+-` `sh+      `                   oys`   .:osyo`                
+               -yh- ./syyooyo`                          .sys+/oyo--yh/                
+               `yy+    .-:-.                             `-/+/:`  -sh-                
+                /yh.                                              oys                 
+          ``..---hho---------`   .---------..`      `.-----.`    -hd+---.             
+       `./osmNMMMMMMMMMMMMMMMs. +NNMMMMMMMMNNmh+.   yNMMMMMNm-  oNMMMMMNmo++:`        
+       +sy--/sdMMMhyyyyyyyNMMh- .oyNMMmyyyyyhNMMm+` -yMMMdyyo:` .oyyNMMNhs+syy`       
+       -yy/   /MMM+.`-+/``mMMy-   `mMMh:`````.dMMN:` `MMMy-`-dhhy```mMMy:``+hs        
+        -yy+` /MMMo:-mMM+`-oo/.    mMMh:     `dMMN/`  dMMm:`dMMMMy..MMMo-.+yo`        
+         .sys`/MMMMNNMMMs-         mMMmyooooymMMNo:   oMMM/sMMMMMM++MMN//oh:          
+          `sh+/MMMhyyMMMs- `-`     mMMMMMMMMMNmy+-`   -MMMhMMMsmMMmdMMd/yy+           
+    `-/+++oyy-/MMM+.`/hh/.`mNm:`   mMMd+/////:-.`      NMMMMMd/:NMMMMMy:/yyo/:.`      
+   +os+//:-..-oMMMo:--:::-/MMMo. .-mMMd+---`           hMMMMN+. oMMMMMo. `-+osyso:`   
+   syo     `mNMMMMMNNNNNNNNMMMo.oNNMMMMMNNNN:`         +MMMMs:`  dMMMN/`     ``:syo   
+   /yh`     :syyyyyyyyyyyyyyyy+.`+syyyyyyyyo:`         .oyys:`   .oyys:`        +yh   
+   -yh-        ````````````````    `````````              ``        ``          oys   
+   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
+   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
+                                                                                      
+ Lee, H., Poncé, S., Bushick, K., Hajinazar, S., Lafuente-Bartolome, J.,Leveillee, J.,
+    Lian, C., Lihm, J., Macheda, F., Mori, H., Paudyal, H., Sio, W., Tiwari, S.,      
+ Zacharias, M., Zhang, X., Bonini, N., Kioupakis, E., Margine, E.R., and Giustino F., 
+                                                     npj Comput Mater 9, 156 (2023)   
+                                                                                      
+
+     Program EPW v.6.0 starts on 22Oct2025 at 19: 0:44 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+     679 MiB available memory on the printing compute node when the environment starts
+
+     Reading input from epw1_dn.in
+      Title line not specified: using 'default'.
+
+     No temperature supplied. Setting temps(:) to 300 K.
+
+     Reading xml data from directory:
+
+     ./fe.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation= PW
+                           (   1   4   0   0   0   0   0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         367     367    139                 4417     4417    1061
+
+     Using Slab Decomposition
+
+     Reading collected, re-writing distributed wavefunctions
+
+     default                                                                    
+
+     bravais-lattice index     =            3
+     lattice parameter (a_0)   =       5.2019  a.u.
+     unit-cell volume          =      70.3802 (a.u.)^3
+     number of atoms/cell      =            1
+     number of atomic types    =            1
+     kinetic-energy cut-off    =      60.0000  Ry
+     charge density cut-off    =     240.0000  Ry
+     Exchange-correlation= PW
+                           (   1   4   0   0   0   0   0)
+     Collinear magnetic calculation without spin-orbit
+
+     SPIN CHANNEL: down                                                                            
+     celldm(1)=    5.20188  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = (  0.5000  0.5000  0.5000 )  
+               a(2) = ( -0.5000  0.5000  0.5000 )  
+               a(3) = ( -0.5000 -0.5000  0.5000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = (  1.0000  0.0000  1.0000 )  
+               b(2) = ( -1.0000  1.0000  0.0000 )  
+               b(3) = (  0.0000 -1.0000  1.0000 )  
+
+
+     Atoms inside the unit cell: 
+
+   Cartesian axes
+
+     site n.  atom      mass           positions (a_0 units)
+        1     Fe     55.8457   tau( 1) = (    0.00000    0.00000    0.00000  )
+
+     49 Sym.Ops. (with q -> -q+G )
+
+
+     G cutoff =  164.5023  (   4417 G-vectors)     FFT grid: ( 24, 24, 24)
+     number of k points=   54  gaussian broad. (Ry)=  0.0250     ngauss =  -1
+                       cart. coord. in units 2pi/a_0
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0370370
+        k(    2) = (   0.0000000  -0.3333333   0.3333333), wk =   0.0370370
+        k(    3) = (   0.0000000  -0.6666667   0.6666667), wk =   0.0370370
+        k(    4) = (  -0.3333333   0.3333333   0.0000000), wk =   0.0370370
+        k(    5) = (  -0.3333333   0.0000000   0.3333333), wk =   0.0370370
+        k(    6) = (  -0.3333333  -0.3333333   0.6666667), wk =   0.0370370
+        k(    7) = (  -0.6666667   0.6666667   0.0000000), wk =   0.0370370
+        k(    8) = (  -0.6666667   0.3333333   0.3333333), wk =   0.0370370
+        k(    9) = (  -0.6666667   0.0000000   0.6666667), wk =   0.0370370
+        k(   10) = (   0.3333333   0.0000000   0.3333333), wk =   0.0370370
+        k(   11) = (   0.3333333  -0.3333333   0.6666667), wk =   0.0370370
+        k(   12) = (   0.3333333  -0.6666667   1.0000000), wk =   0.0370370
+        k(   13) = (   0.0000000   0.3333333   0.3333333), wk =   0.0370370
+        k(   14) = (   0.0000000   0.0000000   0.6666667), wk =   0.0370370
+        k(   15) = (   0.0000000  -0.3333333   1.0000000), wk =   0.0370370
+        k(   16) = (  -0.3333333   0.6666667   0.3333333), wk =   0.0370370
+        k(   17) = (  -0.3333333   0.3333333   0.6666667), wk =   0.0370370
+        k(   18) = (  -0.3333333   0.0000000   1.0000000), wk =   0.0370370
+        k(   19) = (   0.6666667   0.0000000   0.6666667), wk =   0.0370370
+        k(   20) = (   0.6666667  -0.3333333   1.0000000), wk =   0.0370370
+        k(   21) = (   0.6666667  -0.6666667   1.3333333), wk =   0.0370370
+        k(   22) = (   0.3333333   0.3333333   0.6666667), wk =   0.0370370
+        k(   23) = (   0.3333333   0.0000000   1.0000000), wk =   0.0370370
+        k(   24) = (   0.3333333  -0.3333333   1.3333333), wk =   0.0370370
+        k(   25) = (   0.0000000   0.6666667   0.6666667), wk =   0.0370370
+        k(   26) = (   0.0000000   0.3333333   1.0000000), wk =   0.0370370
+        k(   27) = (   0.0000000   0.0000000   1.3333333), wk =   0.0370370
+
+     PseudoPot. # 1 for Fe read from file:
+     ../../pseudo/Fe.pz.upf
+     MD5 check sum: b1fb9d3cb1d156aba92c681262384fac
+     Pseudo is Norm-conserving + core correction, Zval = 16.0
+     Generated using ONCVPSP code by D. R. Hamann
+     Using radial grid of 1408 points,  6 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+                l(5) =   2
+                l(6) =   2
+     EPW          :      0.20s CPU      0.20s WALL
+
+     EPW          :      0.20s CPU      0.20s WALL
+
+     -------------------------------------------------------------------
+     Wannierization on  3 x  3 x  3 electronic grid
+     -------------------------------------------------------------------
+
+     Spin CASE ( down )
+
+     Initializing Wannier90
+
+
+     Initial Wannier projections
+
+     (   0.00000   0.00000   0.00000) :  l =  -5 mr =   1
+     (   0.00000   0.00000   0.00000) :  l =  -5 mr =   2
+     (   0.00000   0.00000   0.00000) :  l =  -5 mr =   3
+     (   0.00000   0.00000   0.00000) :  l =  -5 mr =   4
+     (   0.00000   0.00000   0.00000) :  l =  -5 mr =   5
+     (   0.00000   0.00000   0.00000) :  l =  -5 mr =   6
+     (   0.00000   0.00000   0.00000) :  l =   2 mr =   2
+     (   0.00000   0.00000   0.00000) :  l =   2 mr =   3
+     (   0.00000   0.00000   0.00000) :  l =   2 mr =   5
+
+      - Number of bands is ( 28)
+      - Number of total bands is ( 32)
+      - Number of excluded bands is (  4)
+      - Number of wannier functions is (  9)
+      - All guiding functions are given 
+
+  Reading data about k-point neighbours 
+
+      - All neighbours are found 
+
+     AMN
+      k points =    27 in    1 pools
+            1 of   27 on ionode
+            2 of   27 on ionode
+            3 of   27 on ionode
+            4 of   27 on ionode
+            5 of   27 on ionode
+            6 of   27 on ionode
+            7 of   27 on ionode
+            8 of   27 on ionode
+            9 of   27 on ionode
+           10 of   27 on ionode
+           11 of   27 on ionode
+           12 of   27 on ionode
+           13 of   27 on ionode
+           14 of   27 on ionode
+           15 of   27 on ionode
+           16 of   27 on ionode
+           17 of   27 on ionode
+           18 of   27 on ionode
+           19 of   27 on ionode
+           20 of   27 on ionode
+           21 of   27 on ionode
+           22 of   27 on ionode
+           23 of   27 on ionode
+           24 of   27 on ionode
+           25 of   27 on ionode
+           26 of   27 on ionode
+           27 of   27 on ionode
+
+     AMN calculated
+
+     MMN
+      k points =    27 in    1 pools
+            1 of   27 on ionode
+            2 of   27 on ionode
+            3 of   27 on ionode
+            4 of   27 on ionode
+            5 of   27 on ionode
+            6 of   27 on ionode
+            7 of   27 on ionode
+            8 of   27 on ionode
+            9 of   27 on ionode
+           10 of   27 on ionode
+           11 of   27 on ionode
+           12 of   27 on ionode
+           13 of   27 on ionode
+           14 of   27 on ionode
+           15 of   27 on ionode
+           16 of   27 on ionode
+           17 of   27 on ionode
+           18 of   27 on ionode
+           19 of   27 on ionode
+           20 of   27 on ionode
+           21 of   27 on ionode
+           22 of   27 on ionode
+           23 of   27 on ionode
+           24 of   27 on ionode
+           25 of   27 on ionode
+           26 of   27 on ionode
+           27 of   27 on ionode
+     MMN calculated
+
+     Running Wannier90
+
+     Wannier Function centers (cartesian, alat) and spreads (ang):
+
+     (  -0.22568  -0.00000   0.00000) :   0.77437
+     (   0.22568  -0.00000   0.00000) :   0.77437
+     (   0.00000  -0.22568   0.00000) :   0.77437
+     (   0.00000   0.22568   0.00000) :   0.77437
+     (   0.00000  -0.00000  -0.22568) :   0.77437
+     (   0.00000  -0.00000   0.22568) :   0.77437
+     (  -0.00000  -0.00000  -0.00000) :   0.40316
+     (   0.00000   0.00000  -0.00000) :   0.40316
+     (  -0.00000   0.00000  -0.00000) :   0.40316
+
+    Writing out Wannier function cube files
+
+nr1s =   24, nr2s =   24, nr3s =   24
+write_plot: wannier_plot_supercell =    5    5    5
+      Wannier Function Num:    1       Maximum Im/Re Ratio =    0.000001
+      Wannier Function Num:    2       Maximum Im/Re Ratio =    0.000000
+      Wannier Function Num:    3       Maximum Im/Re Ratio =    0.000000
+      Wannier Function Num:    4       Maximum Im/Re Ratio =    0.000000
+      Wannier Function Num:    5       Maximum Im/Re Ratio =    0.000000
+      Wannier Function Num:    6       Maximum Im/Re Ratio =    0.000001
+      Wannier Function Num:    7       Maximum Im/Re Ratio =    0.000000
+      Wannier Function Num:    8       Maximum Im/Re Ratio =    0.000001
+      Wannier Function Num:    9       Maximum Im/Re Ratio =    0.000000
+
+
+  cube files written
+     -------------------------------------------------------------------
+     WANNIER      :      3.92s CPU      3.61s WALL (       1 calls)
+     -------------------------------------------------------------------
+     HDF5 is NOT used in the current build. Exciton-phonon coupling calculations are disabled.
+
+     Dipole matrix elements calculated
+
+
+     Calculating kgmap
+
+     Progress kgmap: ########################################
+     kmaps        :      0.03s CPU      0.01s WALL (       1 calls)
+     Symmetries of Bravais lattice:  48
+     Symmetries of crystal:          48
+
+
+     ===================================================================
+     irreducible q point #    1
+     ===================================================================
+
+     Symmetries of small group of q: 48
+          in addition sym. q -> -q+G:
+
+     Number of q in the star =    1
+     List of q in the star:
+          1   0.000000000   0.000000000   0.000000000
+     Imposing acoustic sum rule on the dynamical matrix
+
+        q(    1 ) = (   0.0000000   0.0000000   0.0000000 )
+
+
+     ===================================================================
+     irreducible q point #    2
+     ===================================================================
+
+     Symmetries of small group of q:  4
+
+     Number of q in the star =   12
+     List of q in the star:
+          1   0.000000000  -0.333333333   0.333333333
+          2   0.000000000   0.333333333   0.333333333
+          3  -0.333333333   0.000000000   0.333333333
+          4   0.333333333   0.000000000   0.333333333
+          5   0.333333333   0.333333333   0.000000000
+          6  -0.333333333   0.333333333   0.000000000
+          7   0.333333333  -0.333333333   0.000000000
+          8  -0.333333333  -0.333333333   0.000000000
+          9   0.000000000   0.333333333  -0.333333333
+         10   0.000000000  -0.333333333  -0.333333333
+         11  -0.333333333   0.000000000  -0.333333333
+         12   0.333333333   0.000000000  -0.333333333
+     Message from routine init_vloc:
+     Interpolation table for Vloc re-allocated
+
+        q(    2 ) = (   0.0000000  -0.3333333   0.3333333 )
+        q(    3 ) = (   0.0000000   0.3333333   0.3333333 )
+        q(    4 ) = (  -0.3333333   0.0000000   0.3333333 )
+        q(    5 ) = (   0.3333333   0.0000000   0.3333333 )
+        q(    6 ) = (   0.3333333   0.3333333   0.0000000 )
+        q(    7 ) = (  -0.3333333   0.3333333   0.0000000 )
+        q(    8 ) = (   0.3333333  -0.3333333   0.0000000 )
+        q(    9 ) = (  -0.3333333  -0.3333333   0.0000000 )
+        q(   10 ) = (   0.0000000   0.3333333  -0.3333333 )
+        q(   11 ) = (   0.0000000  -0.3333333  -0.3333333 )
+        q(   12 ) = (  -0.3333333   0.0000000  -0.3333333 )
+        q(   13 ) = (   0.3333333   0.0000000  -0.3333333 )
+
+
+     ===================================================================
+     irreducible q point #    3
+     ===================================================================
+
+     Symmetries of small group of q:  6
+
+     Number of q in the star =    8
+     List of q in the star:
+          1  -0.333333333   0.666666667  -0.333333333
+          2  -0.333333333  -0.666666667  -0.333333333
+          3  -0.666666667   0.333333333  -0.333333333
+          4   0.333333333  -0.666666667   0.333333333
+          5  -0.333333333   0.666666667   0.333333333
+          6   0.333333333   0.666666667  -0.333333333
+          7  -0.666666667  -0.333333333   0.333333333
+          8   0.666666667   0.333333333   0.333333333
+
+        q(   14 ) = (  -0.3333333   0.6666667  -0.3333333 )
+        q(   15 ) = (  -0.3333333  -0.6666667  -0.3333333 )
+        q(   16 ) = (  -0.6666667   0.3333333  -0.3333333 )
+        q(   17 ) = (   0.3333333  -0.6666667   0.3333333 )
+        q(   18 ) = (  -0.3333333   0.6666667   0.3333333 )
+        q(   19 ) = (   0.3333333   0.6666667  -0.3333333 )
+        q(   20 ) = (  -0.6666667  -0.3333333   0.3333333 )
+        q(   21 ) = (   0.6666667   0.3333333   0.3333333 )
+
+
+     ===================================================================
+     irreducible q point #    4
+     ===================================================================
+
+     Symmetries of small group of q:  8
+
+     Number of q in the star =    6
+     List of q in the star:
+          1   0.000000000   0.000000000   0.666666667
+          2   0.666666667   0.000000000   0.000000000
+          3  -0.666666667   0.000000000   0.000000000
+          4   0.000000000   0.666666667   0.000000000
+          5   0.000000000  -0.666666667   0.000000000
+          6   0.000000000   0.000000000  -0.666666667
+
+        q(   22 ) = (   0.0000000   0.0000000   0.6666667 )
+        q(   23 ) = (   0.6666667   0.0000000   0.0000000 )
+        q(   24 ) = (  -0.6666667   0.0000000   0.0000000 )
+        q(   25 ) = (   0.0000000   0.6666667   0.0000000 )
+        q(   26 ) = (   0.0000000  -0.6666667   0.0000000 )
+        q(   27 ) = (   0.0000000   0.0000000  -0.6666667 )
+
+     Band disentanglement is used: nbndsub =    9
+     Use zone-centred Wigner-Seitz cells 
+     Number of WS vectors for electrons       27
+     Number of WS vectors for phonons       27
+     Number of WS vectors for electron-phonon       27
+     Maximum number of cores for efficient parallelization       81
+     Results may improve by using use_ws == .TRUE. 
+
+     Inside velocity step 1
+ 
+
+     Velocity matrix elements calculated
+ 
+ 
+     Bloch2wane:          1 /         27
+     Bloch2wane:          2 /         27
+     Bloch2wane:          3 /         27
+     Bloch2wane:          4 /         27
+     Bloch2wane:          5 /         27
+     Bloch2wane:          6 /         27
+     Bloch2wane:          7 /         27
+     Bloch2wane:          8 /         27
+     Bloch2wane:          9 /         27
+     Bloch2wane:         10 /         27
+     Bloch2wane:         11 /         27
+     Bloch2wane:         12 /         27
+     Bloch2wane:         13 /         27
+     Bloch2wane:         14 /         27
+     Bloch2wane:         15 /         27
+     Bloch2wane:         16 /         27
+     Bloch2wane:         17 /         27
+     Bloch2wane:         18 /         27
+     Bloch2wane:         19 /         27
+     Bloch2wane:         20 /         27
+     Bloch2wane:         21 /         27
+     Bloch2wane:         22 /         27
+     Bloch2wane:         23 /         27
+     Bloch2wane:         24 /         27
+     Bloch2wane:         25 /         27
+     Bloch2wane:         26 /         27
+     Bloch2wane:         27 /         27
+     Bloch2wanp:          1 /         27
+     Bloch2wanp:          2 /         27
+     Bloch2wanp:          3 /         27
+     Bloch2wanp:          4 /         27
+     Bloch2wanp:          5 /         27
+     Bloch2wanp:          6 /         27
+     Bloch2wanp:          7 /         27
+     Bloch2wanp:          8 /         27
+     Bloch2wanp:          9 /         27
+     Bloch2wanp:         10 /         27
+     Bloch2wanp:         11 /         27
+     Bloch2wanp:         12 /         27
+     Bloch2wanp:         13 /         27
+     Bloch2wanp:         14 /         27
+     Bloch2wanp:         15 /         27
+     Bloch2wanp:         16 /         27
+     Bloch2wanp:         17 /         27
+     Bloch2wanp:         18 /         27
+     Bloch2wanp:         19 /         27
+     Bloch2wanp:         20 /         27
+     Bloch2wanp:         21 /         27
+     Bloch2wanp:         22 /         27
+     Bloch2wanp:         23 /         27
+     Bloch2wanp:         24 /         27
+     Bloch2wanp:         25 /         27
+     Bloch2wanp:         26 /         27
+     Bloch2wanp:         27 /         27
+
+     Writing Hamiltonian, Dynamical matrix and EP vertex in Wann rep to file
+
+     ===================================================================
+     Memory usage:  VmHWM =        76Mb
+                   VmPeak =      1944Mb
+     ===================================================================
+     
+
+     Unfolding on the coarse grid
+     elphon_wrap  :     68.77s CPU     15.40s WALL (       1 calls)
+     dvqpsi_us3   :     59.61s CPU     13.42s WALL (    2187 calls)
+     com_dvloc    :      1.56s CPU      0.33s WALL (    2187 calls)
+                                        0.00s GPU  (    2187 calls)
+     dvqpsi_us_on :      7.10s CPU      1.64s WALL (    2187 calls)
+     calbec       :      1.95s CPU      0.40s WALL (    7128 calls)
+     fft          :      0.12s CPU      0.12s WALL (       5 calls)
+     ffts         :      1.11s CPU      0.23s WALL (    2187 calls)
+     fftw         :     38.72s CPU      9.06s WALL (  130923 calls)
+
+     INITIALIZATION: 
+
+     set_drhoc    :      0.08s CPU      0.02s WALL (      28 calls)
+     init_vloc    :      0.01s CPU      0.01s WALL (       1 calls)
+     init_us_1    :      0.00s CPU      0.00s WALL (       1 calls)
+
+
+
+     Electron-Phonon interpolation
+
+     Ham: step 1  :      0.00s CPU      0.00s WALL (       1 calls)
+     Ham: step 2  :      0.00s CPU      0.00s WALL (       1 calls)
+     ep: step 1   :      0.01s CPU      0.01s WALL (      27 calls)
+     ep: step 2   :      0.01s CPU      0.01s WALL (      27 calls)
+     wigner_seitz :      0.00s CPU      0.00s WALL (       1 calls)
+
+
+
+     Total program execution
+     EPW          :   1m13.59s CPU     19.59s WALL
+
+     % Copyright (C) 2016-2023 EPW-Collaboration                                    
+                                                                                    
+     ===============================================================================
+     Please consider citing the following papers.                                   
+                                                                                                 
+     % Paper describing the method on which EPW relies                                           
+       F. Giustino and M. L. Cohen and S. G. Louie, Phys. Rev. B 76, 165108 (2007)               
+                                                                                                 
+     % Papers describing the EPW software                                                        
+       H. Lee et al., npj Comput. Mater. 9, 156 (2023)                                           
+       S. Ponc\'e, E.R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
+       J. Noffsinger et al., Comput. Phys. Commun. 181, 2140 (2010)                              
+                                                                                                 
+                                                                                             
+     % Since you used the [lsda] input,     please consider also citing                      
+       \'A. A. Carrasco \'Alvarez et al, arXiv:2510.11350 (2025)                             
+                                                                                    
+     For your convenience, this information is also reported in the                 
+     functionality-dependent EPW.bib file.                                          
+     ===============================================================================
+                                                                                    

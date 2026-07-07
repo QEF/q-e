@@ -15,7 +15,7 @@ subroutine kcw_setup_ham
   !
   USE kinds,             ONLY : DP
   USE ions_base,         ONLY : nat, ityp
-  USE io_files,          ONLY : tmp_dir
+  USE io_files,          ONLY : tmp_dir, restart_dir
   USE scf,               ONLY : v, vrs, vltot,  kedtau
   USE fft_base,          ONLY : dfftp, dffts
   USE fft_interfaces,    ONLY : invfft
@@ -47,7 +47,8 @@ subroutine kcw_setup_ham
   USE mp,                ONLY : mp_bcast
   USE eqv,               ONLY : dmuxc
   !
-  USE io_kcw,            ONLY : read_rhowann, read_mlwf, read_rhowann_g
+  USE io_kcw,            ONLY : read_rhowann, read_rhowann_g
+  USE pw_restart_new,    ONLY : read_collected_wfc
   USE lsda_mod,          ONLY : lsda, isk, nspin, current_spin, starting_magnetization
   !
   USE coulomb,           ONLY : setup_coulomb
@@ -199,7 +200,7 @@ subroutine kcw_setup_ham
     CALL rotate_ks () 
     !
   ELSE 
-    dirname = TRIM (tmp_dir_kcw) 
+    dirname = restart_dir ()
     WRITE(stdout,'(/,5X, "INFO: MLWF read from file: &
                   Reading collected, re-writing distributed wavefunctions")')
     DO ik = 1, nks
@@ -209,7 +210,7 @@ subroutine kcw_setup_ham
         IF ( lsda .AND. isk(ik) /= spin_component) CYCLE
         npw = ngk(ik)
         IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
-        CALL read_mlwf ( dirname, ik, evc0 )
+        CALL read_collected_wfc ( dirname, ik, evc0, "wan")
         ik_eff = ik-(spin_component-1)*nkstot_eff
         CALL save_buffer ( evc0, lrwfc, iuwfc_wann, ik_eff )
         CALL ks_hamiltonian(evc0, ik, num_wann) 

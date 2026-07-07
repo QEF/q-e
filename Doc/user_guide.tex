@@ -422,7 +422,7 @@ other settings may break them. Use \texttt{export LC\_ALL=C} (sh/bash)
 or \texttt{setenv LC\_ALL C} (csh/tcsh) to prevent any problem
 when running those scripts.
 
-If you are not compiling a stable releasei from tarballs,
+If you are not compiling a stable release from tarballs,
 you will also need \texttt{git} v.2.13 or later to get the 
 external libraries.
 You will need either CMake v.3.20 or later, or the \configure\ 
@@ -462,9 +462,7 @@ See \texttt{https://gitlab.com/QEF/q-e/-/wikis/Developers/CMake-build-system}.
 
 \subsubsection{Generalities}
 To build the \qe\ source package using \make, run the \configure\
-script first. This is actually a wrapper to the true \configure,
-located in the \texttt{install/} subdirectory (\configure\ -h for help).
-\configure\ will (try to) detect available compilers and libraries for
+script first. \configure\ will (try to) detect available compilers and libraries for
 your machine, and set up things accordingly.
 
 IMPORTANT: \configure\ will likely work only if your desired Fortran and 
@@ -475,41 +473,55 @@ environment variable OMPI\_FC to the serial compiler you want, if you are
 using \texttt{mpif90} from OpenMPI. Most compiler suites come with a script
 or a "module" file that properly defines all the needed environment variables. 
 
+\configure\ supports out-of-source builds, i.e., it allows to compile the 
+binaries in
+directories other than the one containing the source tree. This is the preferred installation
+method as it allows to build and manage different installations (eg cpu and gpu ones)
+without duplicating the source code.
+
 Instructions for the impatient:
 \begin{verbatim}
     cd qe-X.Y.Z/
-    ./configure
+    mkdir build && cd build
+    ../configure
      make all
 \end{verbatim}
 This will (try to) produce parallel (MPI) executable if a proper parallel
 environment is detected, serial executables otherwise. For OpenMP executables,
 specify \texttt{./configure --enable-openmp}. For  GPUs, see GPU-specific
-instructions. Symlinks to executable programs appear in the \texttt{bin/} 
+instructions. Symlinks to executable programs appear in the \texttt{build/bin/} 
 subdirectory.
+\texttt{NB:} the usage of a \texttt{build} directory, even though advised for, 
+is not mandatory, the traditional build workflow
+\begin{verbatim}
+    cd qe-X.Y.Z/
+    ./configure
+     make all
+\end{verbatim}
+is still supported.
 
-\noindent \configure\ generates the following files:
+\noindent \configure\ generates the following files in the build directory:
 
 \begin{tabular}{ll}
 \texttt{make.inc} &      compilation rules and flags (used by \texttt{Makefile})\\
-\texttt{install/configure.msg} & a report of the configuration run (not needed for compilation)\\
-\texttt{install/config.log} & detailed log of the configuration run (useful for debugging)\\
-\texttt{include/configure.h} &  optional: info on compilation flags
-	(to enable it, uncomment \\ &
-	\verb|#define __HAVE_CONFIG_INFO|
-	 in Modules/environment.f90)\\
+\texttt{configure.msg} & a report of the configuration run (not needed for compilation)\\
+\texttt{config.log} & detailed log of the configuration run (useful for debugging)\\
 \end{tabular}\\
 In addition, \configure\ generates (since v.7) files \texttt{make.depend},
 containing dependencies upon modules, in the various subdirectories.
 If you add/remove/move/rename modules, or change the list of objects
-in any \texttt{Makefile}, type \texttt{make depend}, or run 
-\texttt{./install/makedeps.sh}, to update files \texttt{make.depend}.
+in any of the \texttt{Makefile}'s, run \texttt{configure} again in
+order to ensure that all \texttt{Makefile}'s and \texttt{make.depend}
+are aligned to the current state of the distribution.
 
 It is convenient to use "parallel make" to speed up compilation:
-\texttt{make -jN} compiles in parallel on N processors. Note that
-if you interrupt \make\ while unpacking and compiling an external 
+\texttt{make -j [N]} compiles in parallel on N processors if N is
+specified, on all available processors otherwise.
+
+Note that if you interrupt \make\ while unpacking and compiling an external 
 library, you may run into trouble the next time you type \make. 
 If so, run \texttt{make veryclean}, or even \texttt{make distclean}, 
-before running \make\ again.
+from the top directory, before running \make\ again.
 
 You should always be able to compile the \qe\ suite
 of programs without having to edit any of the generated files. However you

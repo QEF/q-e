@@ -1,0 +1,14 @@
+# BAD: a <dimensionality> product-of-powers expression whose base token is
+#      not in vocab(dim_base). Here "luminosity" is not a base dimension;
+#      the rest of the expression ("length^-2") is well-formed. --strict
+#      must reject the offending base token.
+input_description -distribution {Quantum ESPRESSO} -package TEST -program test.x {
+    namelist TEST {
+        var some_flux -type REAL {
+            default { 0.0 }
+            dimensionality { luminosity length^-2 }
+            units { Ry bohr^-2 }
+            info { a quantity with an out-of-vocab base dimension }
+        }
+    }
+}

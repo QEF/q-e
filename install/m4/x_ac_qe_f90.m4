@@ -111,6 +111,9 @@ arm:armflang )
         if test "$use_pedantic" -eq 1; then
             try_fflags="-O2 -g -pedantic -Wall -Wextra -Wconversion -fimplicit-none -fbacktrace -ffree-line-length-0 -fcheck=all"
         fi
+        if test "$f90_major_version" -lt "9" ; then
+           AC_MSG_ERROR([Compiler version too old, use at least 9.0])
+        fi
         if test "$f90_major_version" -ge "10"; then
  	   try_fflags="$try_fflags -fallow-argument-mismatch"
         fi

@@ -2,6 +2,8 @@
 
 include ../make.inc
 
+VPATH = @srcdir@
+
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS)
 
@@ -23,11 +25,12 @@ core.o \
 api.o \
 dftd3_qe.o 
 
-
-TLDEPS=mods
+# TLDEPS should contain the same list of dependencies as in the main Makefile
+TLDEPS= mods
+# Ensure that "make" run in this subdirectory builds the needed dependencies
+include ../install/tldeps
 
 all : libdftd3qe.a 
-
 
 libdftd3qe.a: $(DFTD3OBJ)
 	$(AR) $(ARFLAGS) $@ $(DFTD3OBJ)        
@@ -37,12 +40,10 @@ test.x : tldeps $(TESTOBJ) $(TESTMODS)
 	$(LD) $(LDFLAGS) $(MODFLAGS) -o $@ \
         $(TESTOBJ) $(TESTMODS) $(QELIBS) 
 
-tldeps :
-	if test -n "$(TLDEPS)" ; then \
-	( cd ../; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
-
-
 clean :
 	( /bin/rm -f *.o *.a *.d *.i *.x *~ *_tmp.f90 *.mod *.L ); \
 
+
 include make.depend
+
+

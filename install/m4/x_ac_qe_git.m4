@@ -9,9 +9,11 @@ AC_DEFUN([X_AC_QE_GIT], [
 
   if test -d $topdir/.git ; then
     echo Source files are cloned from a git repository.
-    echo On git branch `$git rev-parse --abbrev-ref HEAD`
-    echo On git commit hash `$git describe --always --dirty --abbrev=40 --match="NoTagWithThisName"`
-    git submodule init
+    gitbranch=`(cd $topdir && $git rev-parse --abbrev-ref HEAD)`
+    echo On git branch $gitbranch
+    githash=`(cd $topdir && $git describe --always --dirty --abbrev=40 --match="NoTagWithThisName")` 
+    echo On git commit hash $githash
+    (cd $topdir && $git submodule init)
   fi
 
   AC_SUBST(git)

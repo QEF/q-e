@@ -187,6 +187,10 @@ MODULE wannier_subroutines
   !
   IMPLICIT NONE
   SAVE
+  PRIVATE
+  PUBLIC :: wannier_startup, wf_closing_options, ef_enthalpy, &
+       get_wannier_center, wf_options, write_charge_and_exit, &
+       ef_tune, ef_potential
   !
   CONTAINS
   !
@@ -466,7 +470,7 @@ MODULE wannier_subroutines
     USE electrons_base,         ONLY : nbsp, nspin, nupdwn, f, ispin
     USE cell_base,              ONLY : ainv, alat, at
     USE gvect,                  ONLY : gstart
-    USE control_flags,          ONLY : tsde
+    USE cp_control,             ONLY : tsde
     USE wave_base,              ONLY : wave_steepest, wave_verlet
     USE cp_interfaces,          ONLY : dforce
     USE fft_base,               ONLY : dffts
@@ -587,6 +591,7 @@ MODULE wannier_subroutines
     DEALLOCATE( c3 )
 
     RETURN
+
   END SUBROUTINE ef_potential
   !
   !--------------------------------------------------------------------
@@ -673,7 +678,7 @@ MODULE wannier_subroutines
     USE wannier_module, ONLY : what1, wfc, utwf
     USE electrons_base, ONLY : nbsp
     USE gvecw,          ONLY : ngw
-    USE control_flags,  ONLY : ndw
+    USE cp_control,     ONLY : ndw
     USE cell_base,      ONLY : h, hold
     USE uspp,           ONLY : nkbus
     USE cp_interfaces,  ONLY : writefile
@@ -748,4 +753,40 @@ MODULE wannier_subroutines
     !
   END SUBROUTINE wf_closing_options
   !
+  !-----------------------------------------------------------------------
+  SUBROUTINE pbc(rin,a1,a2,a3,ainv,rout)
+      !-----------------------------------------------------------------------
+      !! Brings atoms inside the unit cell.
+      !
+      USE kinds,  ONLY: DP
+
+      IMPLICIT NONE
+! input
+      REAL(DP) rin(3), a1(3),a2(3),a3(3), ainv(3,3)
+! output
+      REAL(DP) rout(3)
+! local
+      REAL(DP) x,y,z
+!
+! bring atomic positions to crystal axis
+!
+      x = ainv(1,1)*rin(1)+ainv(1,2)*rin(2)+ainv(1,3)*rin(3)
+      y = ainv(2,1)*rin(1)+ainv(2,2)*rin(2)+ainv(2,3)*rin(3)
+      z = ainv(3,1)*rin(1)+ainv(3,2)*rin(2)+ainv(3,3)*rin(3)
+!
+! bring x,y,z in the range between -0.5 and 0.5
+!
+      x = x - NINT(x)
+      y = y - NINT(y)
+      z = z - NINT(z)
+!
+! bring atomic positions back in cartesian axis
+!
+      rout(1) = x*a1(1)+y*a2(1)+z*a3(1)
+      rout(2) = x*a1(2)+y*a2(2)+z*a3(2)
+      rout(3) = x*a1(3)+y*a2(3)+z*a3(3)
+!
+      RETURN
+    END SUBROUTINE pbc
+    !
 END MODULE wannier_subroutines

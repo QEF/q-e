@@ -2,6 +2,8 @@
 
 include ../../make.inc
 
+VPATH = @srcdir@
+
 # location of needed modules and included files (if any)
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src \
@@ -37,24 +39,25 @@ writedyn.o
 PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a 
 QEMODS = ../../LR_Modules/liblrmod.a $(BASEMODS) 
 
-TLDEPS= pwlibs
+# see comments in file tldeps for explanations
+TLDEPS=pwlibs
+include ../../install/tldeps
 
-all : tldeps phcg.x
+all : phcg.x
 
 phcg.x : phcg.o libphcg.a $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
 		phcg.o libphcg.a $(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/Gamma/phcg.x . )
-tldeps :
-	if test -n "$(TLDEPS)" ; then \
-	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
-
-clean :
-	- /bin/rm -f *.x *.o *.d *.i *~ *_tmp.f90 *.mod *.L *.a
-	- /bin/rm -f ../../bin/phcg.x
 
 libphcg.a : $(CGOBJS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
+clean :
+	- /bin/rm -f *.x *.o *.d *.i *~ *_tmp.f90 *.mod *.L *.a
+	- /bin/rm -f ../../bin/phcg.x
+
 include make.depend
+
+

@@ -36,7 +36,7 @@ SUBROUTINE beef_energies( )
   USE io_global,         ONLY  : stdout, ionode
   USE xc_lib,            ONLY  : xclib_dft_is
   USE ener,                 ONLY : vtxc, etxc
-  USE scf,                  ONLY : rho, rho_core, rhog_core, v
+  USE scf,                  ONLY : rho, rho_core, rhog_core, tau_core, v
   !
   USE beef_interface, ONLY: beefsetmode, beefrandinitdef, beefensemble
   !
@@ -71,20 +71,20 @@ SUBROUTINE beef_energies( )
         !calculate exchange contributions in Legendre polynomial
         !basis
         call beefsetmode(i-1)
-        CALL v_xc_meta( rho, rho_core, rhog_core, beefxc(i), vtxc,v%of_r,v%kin_r )
+        CALL v_xc_meta( rho, rho_core, rhog_core, tau_core, beefxc(i), vtxc,v%of_r,v%kin_r )
      enddo
        !calculate lda correlation contribution
        call beefsetmode(-3)
-       CALL v_xc_meta( rho, rho_core, rhog_core, beefxc(31), vtxc,v%of_r,v%kin_r )
+       CALL v_xc_meta( rho, rho_core, rhog_core, tau_core, beefxc(31), vtxc,v%of_r,v%kin_r )
        !calculate pbe correlation contribution
        call beefsetmode(-2)
-       CALL v_xc_meta( rho, rho_core, rhog_core, beefxc(32), vtxc,v%of_r,v%kin_r )
+       CALL v_xc_meta( rho, rho_core, rhog_core, tau_core, beefxc(32), vtxc,v%of_r,v%kin_r )
        !calculate ldaxc energy
        call beefsetmode(-4)
-       CALL v_xc_meta( rho, rho_core, rhog_core, ldaxc, vtxc,v%of_r,v%kin_r )
+       CALL v_xc_meta( rho, rho_core, rhog_core, tau_core, ldaxc, vtxc,v%of_r,v%kin_r )
        !restore original, unperturbed xc potential and energy
        call beefsetmode(-1)
-       CALL v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc,v%of_r,v%kin_r )
+       CALL v_xc_meta( rho, rho_core, rhog_core, tau_core, etxc, vtxc,v%of_r,v%kin_r )
   endif
   call beefrandinitdef
   !subtract LDA xc from exchange contributions

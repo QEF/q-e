@@ -882,7 +882,7 @@ deallocate (phid_symm3)
 END IF
 
 
-   CALL environment_end( 'FD_IFC' )
+   CALL environment_end( )
 
 end program fd_ifc
 

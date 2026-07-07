@@ -19,7 +19,7 @@ SUBROUTINE hp_ns_trace
   USE lsda_mod,      ONLY : nspin
   USE ions_base,     ONLY : nat, ityp, ntyp => nsp
   USE ldaU,          ONLY : Hubbard_l, is_hubbard, lda_plus_u_kind, & 
-                            ldim_u, nsg, neighood
+                            ldim_u, neighood
   USE ldaU_hp,       ONLY : ns, magn
   USE noncollin_module, ONLY : noncolin, npol
   !
@@ -81,7 +81,7 @@ SUBROUTINE hp_ns_trace
               IF (na2==na1) THEN
                  DO is = 1, nspin
                     DO m1 = 1, ldim
-                       nsaux(na1,is) = nsaux(na1,is) + DBLE(nsg(m1,m1,viz,na1,is))
+                       nsaux(na1,is) = nsaux(na1,is) + DBLE(rho%nsg(m1,m1,viz,na1,is))
                     ENDDO
                  ENDDO
                  IF (nspin==1) THEN

@@ -3,6 +3,8 @@
 #
 include ../../make.inc
 
+VPATH = @srcdir@
+
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../pw4gww
@@ -47,9 +49,12 @@ QEMODS = ../../KS_Solvers/libks_solvers.a $(BASEMODS)
 
 LIBMIN= ../minpack/minpacklib.a
 
-TLDEPS=phlibs
+# TLDEPS should contain the same list of dependencies as in the main Makefile
+TLDEPS= phlibs
+# Ensure that "make" run in this subdirectory builds the needed dependencies
+include ../../install/tldeps
 
-all : tldeps gww.x gww_fit.x libgww.a
+all : gww.x gww_fit.x libgww.a
 
 gww.x : gww.o $(GWWOBJS) $(QEMODS)  $(LIBMIN)
 	$(MPIF90) $(LDFLAGS) -o $@ \
@@ -64,13 +69,7 @@ gww_fit.x : gww_fit.o $(GWWOBJS) $(QEMODS) $(LIBMIN)
 libgww.a : $(GWWOBJS)
 	$(AR) $(ARFLAGS) $@ $(GWWOBJS)
 
-tldeps :
-	if test -n "$(TLDEPS)" ; then \
-	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
-
 clean :
 	- /bin/rm -f -v gww.x gww_fit.x *.o *~ *_tmp.f90 *.d *.mod *.i *.a
 
 include make.depend
-
-# DO NOT DELETE

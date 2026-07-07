@@ -309,7 +309,8 @@ SUBROUTINE term_one (ik, icart, jcart, na, nap, nah, ihubst1, ihubst2, &
     USE wvfct,      ONLY : npwx, nbnd, wg 
     USE uspp_param, ONLY : nh
     USE ions_base,  ONLY : ityp
-    USE ldaU_ph,    ONLY : proj1, projpb, projpdb
+    USE ldaU_ph,    ONLY : projpb, projpdb
+    USE ldau_lr,    ONLY : proj1
     USE klist,      ONLY : ngk, igk_k
     USE qpoint,     ONLY : ikks, ikqs
     USE doubleprojqq_module
@@ -498,7 +499,8 @@ SUBROUTINE term_one_diag (ik, icart, jcart, na, nap, nah, ihubst1, ihubst2, &
     USE wvfct,      ONLY : npwx, nbnd, wg 
     USE uspp_param, ONLY : nh
     USE ions_base,  ONLY : ityp
-    USE ldaU_ph,    ONLY : proj1, projpb, projpdb
+    USE ldaU_ph,    ONLY : projpb, projpdb
+    USE ldaU_lr,    ONLY : proj1
     USE klist,      ONLY : ngk, igk_k
     USE qpoint,     ONLY : ikks, ikqs
     USE doubleprojqq_module
@@ -1064,8 +1066,8 @@ SUBROUTINE d2nsq_bare_k (ik, icart, jcart, na, nap, nah, &
     USE ions_base,     ONLY : nat, ityp, ntyp => nsp
     USE klist,         ONLY : xk, ngk, igk_k
     USE ldaU_ph,       ONLY : wfcatomk, wfcatomkpq, dwfcatomk, dwfcatomkpq, &
-                              dvkb, vkbkpq, dvkbkpq, proj1, d2ns_type
-    USE ldaU_lr,       ONLY : swfcatomk
+                              dvkb, vkbkpq, dvkbkpq, d2ns_type
+    USE ldaU_lr,       ONLY : swfcatomk, proj1
     USE wvfct,         ONLY : npwx, nbnd, wg
     USE uspp,          ONLY : vkb, nkb
     USE qpoint,        ONLY : nksq, ikks, ikqs
@@ -1245,8 +1247,8 @@ SUBROUTINE d2nsq_bare_k_diag (ik, icart, jcart, na, nap, nah, &
     USE ions_base,       ONLY : nat, ityp, ntyp => nsp
     USE klist,           ONLY : xk, ngk, igk_k
     USE ldaU_ph,         ONLY : wfcatomk, wfcatomkpq, dwfcatomk, dwfcatomkpq, &
-                                dvkb, vkbkpq, dvkbkpq, proj1, d2ns_type
-    USE ldaU_lr,         ONLY : swfcatomk
+                                dvkb, vkbkpq, dvkbkpq, d2ns_type
+    USE ldaU_lr,         ONLY : swfcatomk, proj1
     USE wvfct,           ONLY : npwx, nbnd, wg
     USE uspp,            ONLY : vkb, nkb
     USE qpoint,          ONLY : nksq, ikks, ikqs

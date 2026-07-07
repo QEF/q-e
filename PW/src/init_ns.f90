@@ -7,13 +7,34 @@
 !
 !
 !-----------------------------------------------------------------------
+SUBROUTINE init_ns_hubbard ( noncolin )
+   !-----------------------------------------------------------------------
+   USE ldaU, ONLY : lda_plus_u_kind
+   !!
+   !! Wrapper routine for all init_ns* cases 
+   !!
+   IMPLICIT NONE
+   LOGICAL, INTENT(IN) :: noncolin
+   !
+   IF (lda_plus_u_kind == 0 .OR. lda_plus_u_kind == 1 ) THEN
+      IF (noncolin) THEN
+         CALL init_ns_nc()
+      ELSE
+         CALL init_ns()
+      ENDIF
+   ELSEIF (lda_plus_u_kind == 2) THEN
+      CALL init_nsg()
+   ENDIF
+   !
+END SUBROUTINE init_ns_hubbard
+!-----------------------------------------------------------------------
 SUBROUTINE init_ns
    !-----------------------------------------------------------------------
    !! This routine computes the starting ns (for DFT+U calculation) filling
    !! up the Hubbard manifold (we are only interested in the on-site potential 
-   !! for the moment) according to the Hund's rule (valid for the isolated atoms i
+   !! for the moment) according to the Hund's rule (valid for the isolated atoms
    !! on which starting potential is built), and to the starting_magnetization:
-   !! majority spin levels are populated first, THEN the remaining electrons
+   !! majority spin levels are populated first, then the remaining electrons
    !! are equally distributed among the minority spin states.
    !
    USE kinds,        ONLY : DP

@@ -21,9 +21,9 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program dos.x
     namelist DOS {
 
 	var prefix -type CHARACTER {
-	    default { 'pwscf' } 
+	    default { 'pwscf' }
 	    info {
-		prefix of input file produced by pw.x   
+		prefix of input file produced by pw.x
 		(wavefunctions are not needed)
 	    }
 	}
@@ -32,9 +32,10 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program dos.x
             info {
 		directory containing the input data, i.e. the same as in pw.x
 	    }
-            default {
-                      value of the @tt ESPRESSO_TMPDIR environment variable if set;
-                      current directory ('./') otherwise }
+            default -kind conditional {
+                case -test {ESPRESSO_TMPDIR is set} { from_environment }
+                case { './' }
+            }
         }
  
         var bz_sum -type CHARACTER {
@@ -60,53 +61,74 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program dos.x
                     see M. Kawamura, PRB 89, 094515 (2014).
                 }
               }
-              default { 'smearing' if degauss is given in input; 
-                         options read from the xml data file otherwise. }  
+              default { '' }
+              info {
+                  By default this is set to 'smearing' if degauss is given
+                  in input; otherwise the method is read from the xml data file.
+              }
                }
 
-	var ngauss -type INTEGER {       
+	var ngauss -type INTEGER {
 	    default { 0 }
 	    status { optional }
-	    info {
-		Type of gaussian broadening: 
+	    options {
+		info {
+		    Type of gaussian broadening.
+		}
 
-		    =  0  Simple Gaussian (default)
-		
-		    =  1  Methfessel-Paxton of order 1
-		    
-		    = -1  "cold smearing" (Marzari-Vanderbilt-DeVita-Payne)
-		    
-		    =-99  Fermi-Dirac function
+		opt -val 0 {
+		    Simple Gaussian.
+		}
+
+		opt -val 1 {
+		    Methfessel-Paxton of order 1.
+		}
+
+		opt -val -1 {
+		    "cold smearing" (Marzari-Vanderbilt-DeVita-Payne).
+		}
+
+		opt -val -99 {
+		    Fermi-Dirac function.
+		}
 	    }
 	}
 
-	var degauss -type REAL {       
+	var degauss -type REAL {
+	    default { 0.0 }
+	    dimensionality { energy }
+	    units { Ry }
 	    info {
 		gaussian broadening, Ry (not eV!)
 		(see below)
 	    }
 	}
-	
+
 	vargroup -type REAL {
 	    var Emin
-	    var Emax    
-	    default { band extrema }
+	    var Emax
+	    default -kind computed { internal }
+	    dimensionality { energy }
+	    units { eV }
 	    info {
-		min, max energy (eV) for DOS plot. If unspecified, the
+		min, max energy for DOS plot. If unspecified, the
                 lower and/or upper band value, plus/minus 3 times the
                 value of the gaussian smearing if present, will be used.
-                
+
 	    }
 	}
-	
-	var DeltaE -type REAL {       
+
+	var DeltaE -type REAL {
+	    default { 0.01 }
+	    dimensionality { energy }
+	    units { eV }
 	    info {
-		energy grid step (eV)
+		energy grid step
 	    }
 	}
 
 	var fildos -type CHARACTER {
-	    default { '@ref prefix.dos' }
+	    default -kind expr { @ref prefix // '.dos' }
 	    info {
 		output file containing DOS(E)
 	    }

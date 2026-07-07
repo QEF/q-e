@@ -95,7 +95,7 @@ PROGRAM pw2gt
      !
   END IF
   !  
-  CALL environment_end ( 'PW2GT' )
+  CALL environment_end( )
   !
   CALL mp_global_end ()
   !

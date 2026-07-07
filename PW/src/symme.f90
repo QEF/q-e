@@ -775,8 +775,7 @@ gloop:    DO jg=iig,ngm_
     !
     ! ... local variables
     !
-    REAL(DP), ALLOCATABLE :: g0(:,:), g_(:,:), gg_(:) 
-    REAL(DP) :: gg0_, gg1_
+    REAL(DP), ALLOCATABLE :: g_(:,:)
     COMPLEX(DP), ALLOCATABLE :: rhog_(:,:)
     INTEGER :: is, ig, igl, np, ierr, ngm_
     !

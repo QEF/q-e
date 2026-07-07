@@ -392,6 +392,7 @@ CONTAINS
        upf_out%has_wfc  = .false.
        upf_out%has_gipaw= .false.
        upf_out%paw_as_gipaw = .false.
+       upf_out%with_metagga_info = .false.
        !
        WRITE(upf_out%generated, '("From a Trail & Needs tabulated &
             &PP for CASINO")')

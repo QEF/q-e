@@ -1,0 +1,9 @@
+# BAD: a var with no <dimensionality> (rule 1 violation under --strict).
+input_description -distribution {Quantum ESPRESSO} -package TEST -program test.x {
+    namelist TEST {
+        var ecutwfc -type REAL {
+            default { 25.0 }
+            info { kinetic energy cutoff }
+        }
+    }
+}

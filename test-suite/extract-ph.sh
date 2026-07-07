@@ -87,8 +87,15 @@ qpt=`grep "q= " $fname | awk '{print $2; print $3; print $4}'`
 
 # MATDYN
 born_diff=`grep "Norm of the difference between" $fname | awk '{print $NF}'`
-# DYNMAT 
+# DYNMAT
 dynmat_freqs=`awk -e '/# mode/ {found++}; found && NF {print $0}' $fname | grep ^[[:space:]]*[1-9] | awk -e '{print $2}'`
+# RAMAN (from ph.x output)
+raman_au=$(awk '/Raman tensor \(au\^-1\)/{found=1; next} /Raman tensor \(A/{found=0} found && /\(/{gsub(/[()]/,""); print $1; print $2; print $3}' $fname)
+raman_A2=$(awk '/Raman tensor \(A\^2\)/{found=1; next} found && /Representation/{found=0} found && /atom #/{next} found && NF==3 && $1 ~ /^[+-]?[0-9]/{print $1; print $2; print $3}' $fname)
+# RAMAN (from dynmat.x output)
+polariz=$(awk '/Polarizability \(A\^3/{found=1; next} found && /multiply/{next} found && NF==3 && $1 ~ /^[+-]?[0-9]/{print $1; print $2; print $3}' $fname)
+raman_act=$(awk '/# mode/{found=1; next} found && NF>=6 && $1 ~ /^[0-9]+$/ && $2+0!=0{print $5}' $fname)
+depol=$(awk '/# mode/{found=1; next} found && NF>=6 && $1 ~ /^[0-9]+$/ && $2+0!=0{print $6}' $fname)
 # LAMBDA
 lambda2=`grep "lambda =" $fname | awk '{print $3; print $5; print $9 ;print $12; print $15}'`
 
@@ -231,4 +238,24 @@ fi
 if test "$postahc_selfen" != ""; then
         echo postahc_selfen
         for x in $postahc_selfen; do echo $x; done
+fi
+if test "$raman_au" != ""; then
+        echo raman_au
+        for x in $raman_au; do echo $x; done
+fi
+if test "$raman_A2" != ""; then
+        echo raman_A2
+        for x in $raman_A2; do echo $x; done
+fi
+if test "$polariz" != ""; then
+        echo polariz
+        for x in $polariz; do echo $x; done
+fi
+if test "$raman_act" != ""; then
+        echo raman_act
+        for x in $raman_act; do echo $x; done
+fi
+if test "$depol" != ""; then
+        echo depol
+        for x in $depol; do echo $x; done
 fi

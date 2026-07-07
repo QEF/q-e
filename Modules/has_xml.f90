@@ -6,32 +6,32 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 LOGICAL FUNCTION has_xml(inp_string)
-!
-!! This function returns TRUE if the last four characters of inp_string
-!! are .xml or .XML. On output the string .xml or .XML is removed from 
-!! \(\text{inp_string}\).
-!
-IMPLICIT NONE
+  !
+  !! This function returns TRUE if the last four characters of inp_string
+  !! are .xml or .XML. On output the string .xml or .XML is removed from 
+  !! \(\text{inp_string}\).
+  !
+  USE upf_utils, ONLY : imatches
+  IMPLICIT NONE
 
-CHARACTER(LEN=*), INTENT(INOUT) :: inp_string
+  CHARACTER(LEN=*), INTENT(INOUT) :: inp_string
 
-INTEGER :: leng, start 
-CHARACTER(LEN=4) :: aux
-LOGICAL, EXTERNAL :: matches
+  INTEGER :: leng, start 
+  CHARACTER(LEN=4) :: aux
 
-has_xml=.FALSE.
-leng=LEN_TRIM(inp_string)
+  has_xml=.FALSE.
+  leng=LEN_TRIM(inp_string)
 
-!cannot match xml if it is only 1 or 2 chars long
-IF(leng<3) RETURN
-
-start=MAX(leng-3,1)
-aux=inp_string(start:leng)
-
-IF (matches(aux,'.xml').OR.matches(aux,'.XML')) THEN
-   has_xml=.TRUE.
-   inp_string(leng-3:leng)=' '
-ENDIF
-
-RETURN
+  !cannot match xml if it is only 1 or 2 chars long
+  IF(leng<3) RETURN
+  
+  start=MAX(leng-3,1)
+  aux=inp_string(start:leng)
+  
+  IF ( imatches(aux,'.xml') ) THEN
+     has_xml=.TRUE.
+     inp_string(leng-3:leng)=' '
+  ENDIF
+  
+  RETURN
 END FUNCTION has_xml

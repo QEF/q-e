@@ -78,10 +78,13 @@ contains
   !!
   !! \param input  Input parameters for the calculator.
   !!
-  subroutine dftd3_init(this, input)
+  subroutine dftd3_init(this, input, comm)
+    use mp, only : mp_rank, mp_size
+    implicit none
 ! changed attribute out of "this" structure with inout (QE 2016)
     type(dftd3_calc), intent(inout) :: this
     type(dftd3_input), intent(in) :: input
+    integer :: comm
 
     logical, allocatable :: minc6list(:), maxc6list(:)
     logical :: minc6, maxc6
@@ -116,6 +119,10 @@ contains
     this%cn_thr = input%cutoff_cn**2
     allocate(this%r0ab(max_elem, max_elem))
     call setr0ab(max_elem, autoang, this%r0ab)
+    ! set up communicator details
+    comm_dftd3 = comm
+    me_dftd3 = mp_rank(comm_dftd3);
+    nproc_dftd3 = mp_size(comm_dftd3);
 
   end subroutine dftd3_init
     
@@ -126,6 +133,7 @@ contains
   !! \param tz  Whether special TZ-parameters should be used.
   !!
   subroutine dftd3_set_functional(this, func, version, tz)
+    implicit none
     type(dftd3_calc), intent(inout) :: this
     character(*), intent(in) :: func
     integer, intent(in) :: version
@@ -148,6 +156,7 @@ contains
   !!     five parameters may have different (or no) meaning.
   !!
   subroutine dftd3_set_params(this, pars, version)
+    implicit none
     type(dftd3_calc), intent(inout) :: this
     real(wp), intent(in) :: pars(:)
     integer, intent(in) :: version
@@ -179,6 +188,7 @@ contains
   !!
   subroutine dftd3_pbc_dispersion(this, coords, izp, latvecs, disp, grads, &
       & stress)
+    implicit none
     type(dftd3_calc), intent(in) :: this
     real(wp), intent(in) :: coords(:,:)
     integer, intent(in) :: izp(:)
@@ -241,6 +251,7 @@ contains
   !! \return  Atomic number.
   !!
   elemental function get_atomic_number(species) result(izp)
+    implicit none
     character(*), intent(in) :: species
     integer :: izp
 

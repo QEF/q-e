@@ -23,7 +23,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
   USE lsda_mod,             ONLY : current_spin
   USE wvfct,                ONLY : nbnd, npwx, et, current_k
   USE uspp,                 ONLY : vkb
-  USE io_files,             ONLY : iunwfc, nwordwfc
+  USE io_files,             ONLY : nwordwfc
   USE wavefunctions,        ONLY : evc, psic, psic_nc
   USE noncollin_module,     ONLY : noncolin, domag, npol, nspin_mag
   USE uspp,                 ONLY : okvan
@@ -32,6 +32,7 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
   USE qpoint,               ONLY : ikks, ikqs, nksq
   USE eqv,                  ONLY : evq, dpsi, dvpsi
   USE control_lr,           ONLY : nbnd_occ, nbnd_occx
+  USE units_lr,             ONLY : lrwfc, iuwfc
   USE dv_of_drho_lr
   USE fft_helper_subroutines
   USE fft_interfaces,       ONLY : fft_interpolate
@@ -158,9 +159,9 @@ SUBROUTINE lr_apply_liouvillian_magnons( evc1, evc1_new, L_dag )
      ! Read unperturbed wavefuctions evc (wfct at k) 
      ! and evq (wfct at k+q)
      !
-     CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
+     CALL get_buffer (evc, lrwfc, iuwfc, ikk)
      !$acc update device(evc)
-     CALL get_buffer (evq, nwordwfc, iunwfc, ikq)
+     CALL get_buffer (evq, lrwfc, iuwfc, ikq)
      !$acc update device(evq)
      !
      dpsi(:,:)  = (0.d0,0.d0)

@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   !
@@ -428,7 +429,7 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE compute_dos(itemp, ef0, dos)
+    SUBROUTINE compute_dos(itemp, ef0, dos, wkf, etf, nbndsub)
     !-----------------------------------------------------------------------
     !!
     !! This routine computes the density of states at a given fermi level.
@@ -436,13 +437,19 @@
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
     USE ep_constants,  ONLY : two, eps16, ryd2mev
-    USE input,         ONLY : ngaussw, nstemp, nbndsub, degaussw
-    USE global_var,    ONLY : etf, nkqf, wkf
+    USE input,         ONLY : ngaussw, nstemp, degaussw, lsda
+    USE global_var,    ONLY : nkqf
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: itemp
     !! Temperature index
+    INTEGER, INTENT(in) :: nbndsub
+    !! number of bands
+    REAL(KIND = DP), INTENT(in) :: wkf(nkqf)
+    !! Weights on the fine mesh
+    REAL(KIND = DP), INTENT(in) :: etf(nbndsub, nkqf)
+    !! Eigen values
     REAL(KIND = DP), INTENT(in) :: ef0(nstemp)
     !! Fermi level for the temperature itemp
     REAL(KIND = DP), INTENT(inout) :: dos(nstemp)
@@ -451,10 +458,9 @@
     ! Local variables
     REAL(KIND = DP), EXTERNAL :: dos_ef
     !! DOS at the Fermi level
-    !
     ! divide by two to have DOS/spin
     IF (ABS(degaussw) < eps16) THEN
-      ! use 1 meV instead
+      ! use 1 meV instead (equivalent to 11 Kelvin)
       dos(itemp) = dos_ef(ngaussw, 1.0d0 / ryd2mev, ef0(itemp), etf, wkf, nkqf, nbndsub) / two
     ELSE
       dos(itemp) = dos_ef(ngaussw, degaussw, ef0(itemp), etf, wkf, nkqf, nbndsub) / two
@@ -725,7 +731,7 @@
     !--------------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE fast_fermi(nrr_k, irvec_k, efcb)
+    SUBROUTINE fast_fermi(nrr_k, irvec_k, efcb, nbndsub_aux, nbndskip_aux, etf_aux, dos)
     !-----------------------------------------------------------------------
     !!
     !!  This routine computes the Fermi energy as a function of temperature
@@ -734,22 +740,22 @@
     !!
     !-----------------------------------------------------------------------
     USE input,            ONLY : nstemp, lindabs, nbndsub, isk_dummy, mp_mesh_k, &
-                                 ii_partion
+                                 ii_partion, lsda, assume_metal, scissor
     USE global_var,       ONLY : gtemp, ctype, xkf, etf, chw, nkqf, nbndskip,   &
                                  wkf, xkf_irr, wkf_irr, bztoibz, s_bztoibz,     &
-                                 fermi_energies_t, partion
+                                 fermi_energies_t, partion, spin_fac
     USE wannier2bloch,    ONLY : hamwan2bloch
     USE cell_base,        ONLY : at, bg
-    USE ep_constants,     ONLY : twopi, ci, zero, czero, two, one
+    USE ep_constants,     ONLY : twopi, ci, zero, czero, two, one, eps6
     USE pwcom,            ONLY : nelec
     USE mp_global,        ONLY : my_pool_id
     USE mp_world,         ONLY : mpime
     USE io_global,        ONLY : ionode_id
     USE bzgrid,           ONLY : loadkmesh_para
     USE kinds,            ONLY : DP
-    USE noncollin_module, ONLY : noncolin
     USE indabs,           ONLY : fermi_carrier_indabs
     USE symmetry,         ONLY : kpoints_time_reversal_init
+    USE pwcom,            ONLY : ef
     !
     IMPLICIT NONE
     !
@@ -757,9 +763,16 @@
     !! number of electronic WS points
     INTEGER, INTENT(in) :: irvec_k(3, nrr_k)
     !! Coordinates of real space vector for electrons
+    INTEGER, INTENT(in), OPTIONAL :: nbndsub_aux
+    !! Number of bands on the second spin channel if LSDA case
+    INTEGER, INTENT(in), OPTIONAL :: nbndskip_aux
+    !! Number of skipped bands on the second spin chanel if LSDA case
+    REAL(KIND = DP), INTENT(in), OPTIONAL :: etf_aux(:, :)
+    !! Eigenvalues of the second spin channel if LSDA case
     REAL(KIND = DP), INTENT(inout) :: efcb(nstemp)
     !! Second fermi level for the temperature itemp
-    !
+    REAL(KIND = DP), INTENT(inout), OPTIONAL :: dos(:)
+    !! Density of states in case of a metallic system 
     ! Local variables
     INTEGER :: ik
     !! Counter on coarse k-point grid
@@ -767,6 +780,14 @@
     !! Temperature index
     INTEGER :: ierr
     !! Error status
+    INTEGER :: nbndsub_tot
+    !! Total number of bands
+    INTEGER :: nbndskip_tot
+    !! Totla number of skipped bands
+    INTEGER :: icbm
+    !! Conduction band maximum index
+    INTEGER :: ibnd
+    !! Band index
     REAL(KIND = DP) :: etemp
     !! Temperature in Ry (this includes division by kb)
     REAL(KIND = DP) :: xxq(3)
@@ -779,10 +800,24 @@
     !! Wigner-Size supercell vectors, store in real instead of integer
     REAL(KIND = DP), ALLOCATABLE :: rdotk(:)
     !! $r\cdot k$
+    REAL(KIND = DP), ALLOCATABLE :: etf_tot(:, :)
+    !! Totla eigenvalues on the fine mesh
     COMPLEX(KIND = DP), ALLOCATABLE :: cfac(:)
     !! Used to store $e^{2\pi r \cdot k}$ exponential
     COMPLEX(KIND = DP), ALLOCATABLE :: cufkk(:, :)
     !! Rotation matrix, fine mesh, points k
+
+    nbndsub_tot = nbndsub
+    nbndskip_tot = nbndskip
+
+    IF (TRIM(lsda) /= 'none') THEN
+      IF(.NOT. PRESENT(nbndsub_aux)) CALL errore('fast_fermi', 'Error LSDA case needs nbndsub_aux as a parameter', 1)
+      IF(.NOT. PRESENT(nbndskip_aux)) CALL errore('fast_fermi', 'Error LSDA case needs nbndskip_aux as a parameter', 1)
+      IF (.NOT. PRESENT(etf_aux)) CALL errore('fast_fermi', 'Error LSDA case needs etf_aux as a parameter', 1)
+      IF (.NOT. PRESENT(dos)) CALL errore('fast_fermi', 'Error LSDA case needs dos as a parameter', 1)
+      nbndsub_tot = nbndsub + nbndsub_aux
+      nbndskip_tot = nbndskip + nbndskip_aux
+    ENDIF
     !
     ! Load nsym_k and k k mesh
     CALL kpoints_time_reversal_init()
@@ -806,6 +841,8 @@
     IF (ierr /= 0) CALL errore('fast_fermi', 'Error allocating fermi_energies_t',1)
     ALLOCATE(partion(nstemp), STAT = ierr)
     IF (ierr /= 0) CALL errore('fast_fermi', 'Error allocating partion', 1)
+    ALLOCATE(etf_tot(nbndsub_tot, nkqf), STAT = ierr)
+    IF (ierr /= 0) CALL errore('fast_fermi', 'Error allocating etf_tot', 1)
     !
     irvec_r = REAL(irvec_k, KIND = DP)
     etf(:, :)   = zero
@@ -814,51 +851,68 @@
     rdotk(:)    = zero
     fermi_energies_t (:) = 0.d0
     partion(:) = 1
+    etf_tot(:, :) = zero
     !
     xxq = 0.d0
     !
     ! nkqf is the number of kpoints in the pool
     DO ik = 1, nkqf
-     !
-     xxk = xkf(:, ik)
-     !
-     IF (2 * (ik / 2) == ik) THEN
-       !
-       !  this is a k+q point : redefine as xkf (:, ik-1) + xxq
-       !
-       CALL cryst_to_cart(1, xxq, at, -1)
-       xxk = xkf(:, ik - 1) + xxq
-       CALL cryst_to_cart(1, xxq, bg, 1)
-       !
-     ENDIF
-     !
-     ! SP: Compute the cfac only once here since the same are use in both hamwan2bloch and dmewan2bloch
-     ! + optimize the 2\pi r\cdot k with Blas
-     CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xxk, 1, 0.0_DP, rdotk, 1)
-     cfac(:) = EXP(ci * rdotk(:))
-     !
-     CALL hamwan2bloch(nbndsub, nrr_k, cufkk, etf(:, ik), chw, cfac)
+      !
+      xxk = xkf(:, ik)
+      !
+      IF (2 * (ik / 2) == ik) THEN
+        !
+        !  this is a k+q point : redefine as xkf (:, ik-1) + xxq
+        !
+        CALL cryst_to_cart(1, xxq, at, -1)
+        xxk = xkf(:, ik - 1) + xxq
+        CALL cryst_to_cart(1, xxq, bg, 1)
+        !
+      ENDIF
+      !
+      ! SP: Compute the cfac only once here since the same are use in both hamwan2bloch and dmewan2bloch
+      ! + optimize the 2\pi r\cdot k with Blas
+      CALL DGEMV('t', 3, nrr_k, twopi, irvec_r, 3, xxk, 1, 0.0_DP, rdotk, 1)
+      cfac(:) = EXP(ci * rdotk(:))
+      !
+      CALL hamwan2bloch(nbndsub, nrr_k, cufkk, etf(:, ik), chw, cfac)
     ENDDO
-
-    IF (noncolin) THEN
-      nelec = nelec - one * nbndskip
-    ELSE
-      nelec = nelec - two * nbndskip
+    !
+    nelec = nelec - spin_fac * nbndskip_tot
+    !
+    etf_tot(1:nbndsub, :) = etf(:, :)
+    IF (TRIM(lsda) /= 'none')  etf_tot(nbndsub + 1:nbndsub_tot, :) = etf_aux(:, :)
+    icbm = 1
+    IF (ABS(scissor) > eps6) THEN
+      IF (assume_metal) THEN
+        CALL errore("fast_fermi", "A scissor shift is applied but the material is a metal...", 1)
+      ENDIF
+      IF(TRIM(lsda) /= 'none') THEN
+        DO ibnd = 1, nbndsub_tot
+          IF (MAXVAL(etf_tot(ibnd, :)) > ef) etf_tot(ibnd, :) = etf_tot(ibnd, :) + scissor
+        ENDDO
+      ELSE
+        icbm = FLOOR(nelec / spin_fac) + 1
+        etf(icbm:nbndsub, :) = etf(icbm:nbndsub, :) + scissor
+        etf_tot(icbm:nbndsub, :) = etf_tot(icbm:nbndsub, :) + scissor
+      ENDIF
     ENDIF
-
-
+    !
     DO itemp = 1, nstemp
       etemp = gtemp(itemp)
-      IF (ii_partion) CALL calcpartion(itemp, etemp, ctype)
+      IF (ii_partion) CALL calcpartion(itemp, etemp, ctype, wkf, etf_tot, nbndsub_tot)
       IF (lindabs) THEN
-        CALL fermi_carrier_indabs(itemp, etemp, fermi_energies_t, ctype)
+        CALL fermi_carrier_indabs(itemp, etemp, fermi_energies_t, ctype, wkf, etf_tot, nbndsub_tot)
       ELSE
-        CALL fermicarrier(itemp, etemp, fermi_energies_t, efcb, ctype)
+        CALL fermicarrier(itemp, etemp, fermi_energies_t, efcb, ctype, wkf, etf_tot, nbndsub_tot)
+      ENDIF
+      IF (assume_metal .AND. TRIM(lsda) /= 'none') THEN
+        CALL compute_dos(itemp, fermi_energies_t, dos, wkf, etf_tot, nbndsub_tot)
       ENDIF
     ENDDO
-
+    !
     nelec = nelec_aux
-
+    !
     DEALLOCATE(irvec_r, STAT = ierr)
     IF (ierr /= 0) CALL errore('fast_fermi', 'Error deallocating irvec_r', 1)
     DEALLOCATE(rdotk, STAT = ierr)
@@ -877,6 +931,8 @@
     IF (ierr /= 0) CALL errore('fast_fermi', 'Error deallocating partion', 1)
     DEALLOCATE(isk_dummy, STAT = ierr)
     IF (ierr /= 0) CALL errore('fast_fermi', 'Error deallocating isk_dummy', 1)
+    DEALLOCATE(etf_tot, STAT = ierr)
+    IF (ierr /= 0) CALL errore('fast_fermi', 'Error deallocating etf_tot', 1)
     IF (mpime == ionode_id .AND. mp_mesh_k) THEN
       DEALLOCATE(xkf_irr, STAT = ierr)
       IF (ierr /= 0) CALL errore('fast_fermi', 'Error deallocating xkf_irr', 1)
@@ -894,7 +950,7 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE fermicarrier(itemp, etemp, ef0, efcb, ctype)
+    SUBROUTINE fermicarrier(itemp, etemp, ef0, efcb, ctype, wkf, etf, nbndsub)
     !-----------------------------------------------------------------------
     !!
     !!  This routine computes the Fermi energy associated with a given
@@ -905,15 +961,13 @@
     USE kinds,     ONLY : DP
     USE cell_base, ONLY : omega, alat, at
     USE io_global, ONLY : stdout
-    USE global_var,ONLY : etf, nkf, wkf, efnew, nkqf, partion, evbm, ecbm
+    USE global_var,ONLY : nkf, efnew, nkqf, partion, evbm, ecbm, spin_fac
     USE ep_constants,  ONLY : ryd2ev, bohr2ang, ang2cm, eps5, kelvin2eV, &
                               zero, eps80
-    USE noncollin_module, ONLY : noncolin
     USE pwcom,     ONLY : nelec
-    USE input,     ONLY : int_mob, nbndsub, ncarrier, nstemp, fermi_energy, &
+    USE input,     ONLY : int_mob, ncarrier, nstemp, fermi_energy, &
                           system_2d, carrier, efermi_read, assume_metal, ngaussw, &
-                          lfast_kmesh
-    USE input,     ONLY : isk_dummy
+                          lfast_kmesh, lsda, isk_dummy, gap_energy
     USE transport, ONLY : nelec_to_ncarrier
     USE mp,        ONLY : mp_barrier, mp_sum, mp_max, mp_min
     USE mp_global, ONLY : inter_pool_comm
@@ -922,10 +976,16 @@
     !
     INTEGER, INTENT(in) :: itemp
     !! Temperature index
+    INTEGER, INTENT(in) :: nbndsub
+    !! Number of bands
     INTEGER, INTENT(out) :: ctype
     !! Calculation type: -1 = hole, +1 = electron and 0 = both.
     REAL(KIND = DP), INTENT(in) :: etemp
     !! Temperature in kBT [Ry] unit.
+    REAL(KIND = DP), INTENT(in) :: wkf(nkqf)
+    !! Integration weights
+    REAL(KIND = DP), INTENT(in) :: etf(nbndsub, nkqf)
+    !! Eigen values
     REAL(KIND = DP), INTENT(inout) :: ef0(nstemp)
     !! Fermi level for the temperature itemp
     REAL(KIND = DP), INTENT(inout) :: efcb(nstemp)
@@ -1001,11 +1061,7 @@
       inv_cell = ( 1.0d0 / omega ) * at(3, 3) * alat
     ENDIF
     ! vbm index
-    IF (noncolin) THEN
-      ivbm = FLOOR(nelec / 1.0d0)
-    ELSE
-      ivbm = FLOOR(nelec / 2.0d0)
-    ENDIF
+    ivbm = FLOOR(nelec / spin_fac)
     icbm = ivbm + 1 ! Nb of bands
     !
     ! If we only Wannierze valence bands.
@@ -1017,18 +1073,26 @@
     !
     ! We Wannerize both the CB and VB
     IF (ivbm > 0 .AND. icbm > 0) THEN
+      IF (gap_energy > 1.0d10 .AND. TRIM(lsda) /= 'none') CALl errore('fermicarrier', 'Error gap_energy input missing', 1)
       DO ik = 1, nkf
         ikk = 2 * ik - 1
         DO ibnd = 1, nbndsub
-          IF (ibnd < ivbm + 1) THEN
-            IF (etf(ibnd, ikk) > evbm) THEN
-              evbm = etf(ibnd, ikk)
+          IF (TRIM(lsda) /= 'none') THEN
+            ! Valence band in LSDA case must be below gap_energy
+            IF (etf(ibnd, ikk) > evbm .AND. etf(ibnd, ikk) < gap_energy) evbm = etf(ibnd, ikk)
+            ! Conduction band in the LSDA case
+            IF (etf(ibnd, ikk) < ecbm .AND. etf(ibnd, ikk) > gap_energy) ecbm = etf(ibnd, ikk)
+          ELSE
+            IF (ibnd < ivbm + 1) THEN
+              IF (etf(ibnd, ikk) > evbm) THEN
+                evbm = etf(ibnd, ikk)
+              ENDIF
             ENDIF
-          ENDIF
-          ! Find cbm index
-          IF (ibnd > ivbm) THEN
-            IF (etf(ibnd, ikk) < ecbm) THEN
-              ecbm = etf(ibnd, ikk)
+            ! Find cbm index
+            IF (ibnd > ivbm) THEN
+              IF (etf(ibnd, ikk) < ecbm) THEN
+                ecbm = etf(ibnd, ikk)
+              ENDIF
             ENDIF
           ENDIF
         ENDDO
@@ -1040,6 +1104,7 @@
         WRITE(stdout, '(5x, "Valence band maximum    = ", f10.6, " eV")') evbm * ryd2ev
         WRITE(stdout, '(5x, "Conduction band minimum = ", f10.6, " eV")') ecbm * ryd2ev
       ENDIF
+    
     ENDIF ! ivbm > 0 .AND. icbm > 0
     !
     ! We only Wannierze the valence bands
@@ -1086,6 +1151,9 @@
           IF (ABS(etemp) < eps80) THEN
             CALL errore('fermicarrier', 'etemp cannot be 0', 1)
           ELSE
+            IF (TRIM(lsda) /= 'none' .AND. gap_energy < etf(ibnd, ikk)) THEN
+              CYCLE
+            ENDIF
             arg = (etf(ibnd, ikk) - evbm) / etemp
           ENDIF
           !
@@ -1105,6 +1173,9 @@
           ikk = 2 * ik - 1
           ! Because the number are so large. It does lead to instabilities
           ! Therefore we rescale everything to the CBM
+          IF (TRIM(lsda) /= 'none' .AND. gap_energy > etf(ibnd, ikk)) THEN
+            CYCLE
+          ENDIF
           arg = (etf(ibnd, ikk) - ecbm) / etemp
           !
           IF (arg > maxarg) THEN
@@ -1134,8 +1205,12 @@
         DO ik = 1, nkf
           ikk = 2 * ik - 1
           ! Compute hole carrier concentration
+          IF (TRIM(lsda) /= 'none') ivbm = nbndsub
           DO ibnd = 1, ivbm
             ! Discard very large numbers
+            IF (TRIM(lsda) /= 'none' .AND. gap_energy < etf(ibnd, ikk)) THEN
+              CYCLE
+            ENDIF
             IF (ks_exp(ibnd, ik) * ef_tmp > 1d60) THEN
               fnk = zero
             ELSE
@@ -1145,8 +1220,12 @@
             hole_density = hole_density + wkf(ikk) * (1.0d0 - fnk)
           ENDDO
           ! Compute electron carrier concentration
+          IF (TRIM(lsda) /= 'none') icbm = 1
           DO ibnd = icbm, nbndsub
             ! Discard very large numbers
+            IF (TRIM(lsda) /= 'none' .AND. gap_energy > etf(ibnd, ikk)) THEN
+              CYCLE
+            ENDIF
             IF (ks_exp(ibnd, ik) * ef_tmp > 1d60) THEN
               fnk = zero
             ELSE
@@ -1198,8 +1277,12 @@
         DO ik = 1, nkf
           ikk = 2 * ik - 1
           ! Compute hole carrier concentration
+          IF (TRIM(lsda) /= 'none') ivbm = nbndsub
           DO ibnd = 1, ivbm
             ! Discard very large numbers
+            IF (TRIM(lsda) /= 'none' .AND. gap_energy < etf(ibnd, ikk)) THEN
+              CYCLE
+            ENDIF
             IF (ks_exp(ibnd, ik) * ef_tmp > 1d60) THEN
               fnk = 0.0d0
             ELSE
@@ -1248,8 +1331,12 @@
         DO ik = 1, nkf
           ikk = 2 * ik - 1
           ! Compute electron carrier concentration
+          IF (TRIM(lsda) /= 'none') icbm = 1
           DO ibnd = icbm, nbndsub
             ! Discard very large numbers
+            IF (TRIM(lsda) /= 'none' .AND. gap_energy > etf(ibnd, ikk)) THEN
+              CYCLE
+            ENDIF
             IF (ks_expcb(ibnd, ik) * ef_tmp > 1d60) THEN
               fnk = zero
             ELSE
@@ -1356,7 +1443,7 @@
     !-----------------------------------------------------------------------
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE calcpartion(itemp, etemp, ctype)
+    SUBROUTINE calcpartion(itemp, etemp, ctype, wkf, etf, nbndsub)
     !-----------------------------------------------------------------------
     !!
     !!  This routine computes the Fermi energy associated with a given
@@ -1367,12 +1454,11 @@
     USE kinds,     ONLY : DP
     USE cell_base, ONLY : omega, alat, at
     USE io_global, ONLY : stdout
-    USE global_var,ONLY : etf, nkf, wkf, partion, evbm, ecbm
+    USE global_var,ONLY : nkf, partion, evbm, ecbm, nkqf, spin_fac
     USE ep_constants,     ONLY : ryd2ev, bohr2ang, ang2cm, eps5, kelvin2eV, &
                               zero, eps80, cc2cb
-    USE noncollin_module, ONLY : noncolin
     USE pwcom,     ONLY : nelec
-    USE input,     ONLY : int_mob, nbndsub, ncarrier, system_2d, assume_metal, ii_eda, ii_n
+    USE input,     ONLY : int_mob, ncarrier, system_2d, assume_metal, ii_eda, ii_n, lsda
     USE mp,        ONLY : mp_barrier, mp_sum, mp_max, mp_min
     USE mp_global, ONLY : inter_pool_comm
     !
@@ -1380,10 +1466,16 @@
     !
     INTEGER, INTENT(in) :: itemp
     !! Temperature index
+    INTEGER, INTENT(in) :: nbndsub
+    !! Number of bands
     INTEGER, INTENT(out) :: ctype
     !! Calculation type: -1 = hole, +1 = electron and 0 = both.
     REAL(KIND = DP), INTENT(in) :: etemp
     !! Temperature in kBT [Ry] unit.
+    REAL(KIND = DP), INTENT(in) :: wkf(nkqf)
+    !! Integration weights on the fine mesh
+    REAL(KIND = DP), INTENT(in) :: etf(nbndsub, nkqf)
+    !! Eigenvalues on the fine mesh
     !
     ! Local variables
     INTEGER :: ik
@@ -1439,11 +1531,7 @@
       inv_cell = ( 1.0d0 / omega ) * at(3, 3) * alat
     ENDIF
     ! vbm index
-    IF (noncolin) THEN
-      ivbm = FLOOR(nelec / 1.0d0)
-    ELSE
-      ivbm = FLOOR(nelec / 2.0d0)
-    ENDIF
+    ivbm = FLOOR(nelec / spin_fac)
     icbm = ivbm + 1 ! Nb of bands
     !
     ! If we only Wannierze valence bands.
@@ -1951,56 +2039,6 @@
     RETURN
     !-----------------------------------------------------------------------
     END FUNCTION fermi_dirac
-    !-----------------------------------------------------------------------
-    !
-    !-----------------------------------------------------------------------
-    SUBROUTINE epmatwp_redistribution(nrr_k, nrr_q, nrr_g)
-    !--------------------------------------------------------------------------
-    !! Distribute epmatwp to MPI processes
-    !! 07/2024 Zhe Liu
-    !--------------------------------------------------------------------------
-    !
-    USE global_var,     ONLY : epmatwp, epmatwp_dist
-    USE modes,          ONLY : nmodes
-    USE input,          ONLY : nbndsub
-    USE parallelism,    ONLY : para_bounds
-    !
-    IMPLICIT NONE
-    !
-    INTEGER, INTENT(in) :: nrr_k
-    !! Number of WS vectors for the electrons
-    INTEGER, INTENT(in) :: nrr_q
-    !! Number of WS vectors for the phonons
-    INTEGER, INTENT(in) :: nrr_g
-    !! Number of WS vectors for the electron-phonons
-    INTEGER :: irn
-    !! Combined WS and atom index
-    INTEGER :: irn_loc
-    !! Combined WS and atom index in the local
-    INTEGER :: ir_start, ir_stop
-    !! locally start and end points of irn
-    INTEGER :: nirn_loc
-    !! Number of irn in the local
-    INTEGER :: imode
-    !! Mode index
-    INTEGER :: irg
-    !! WS-vector index
-    !
-    CALL para_bounds(ir_start, ir_stop, nrr_g * nmodes)
-    nirn_loc = ir_stop - ir_start + 1
-    ! 
-    ALLOCATE(epmatwp_dist(nbndsub, nbndsub, nrr_k, nirn_loc))
-    DO irn_loc = 1, nirn_loc
-      irn = irn_loc + ir_start - 1
-      irg = (irn - 1)/nmodes + 1
-      imode = MOD(irn - 1, nmodes) + 1
-      epmatwp_dist(:, :, :, irn_loc) = epmatwp(:, :, :, imode, irg)
-    ENDDO
-    !
-    DEALLOCATE(epmatwp)
-    !
-    !-----------------------------------------------------------------------
-    END SUBROUTINE
     !-----------------------------------------------------------------------
   !-----------------------------------------------------------------------------
   END MODULE utilities

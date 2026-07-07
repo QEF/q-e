@@ -121,7 +121,7 @@ ENDIF
 !
 DEALLOCATE(k, e, k0, e0, w0, spctrlfn)
 !
-CALL environment_end('SPFN_BROAD')
+CALL environment_end( )
 !
 CALL mp_global_end()
 !

@@ -37,6 +37,7 @@ PROGRAM images_interpolator
   USE cell_base,              ONLY : at, alat
   USE int_global_variables
   USE splinelib
+  USE upf_utils,              ONLY : matches
   !
   IMPLICIT NONE
   !
@@ -45,7 +46,6 @@ PROGRAM images_interpolator
   INTEGER             :: ierr
   REAL (DP)      :: R, delta_R, x
   LOGICAL             :: no_interpolation
-  LOGICAL, EXTERNAL   :: matches 
   CHARACTER (LEN=20)  :: cell_parameters
   CHARACTER (LEN=256) :: input_line
   !

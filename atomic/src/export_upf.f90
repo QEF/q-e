@@ -221,7 +221,13 @@ SUBROUTINE export_upf(filename, unit_loc)
         allocate(upf%qfunc(upf%mesh, upf%nbeta*(upf%nbeta+1)/2))
      endif
      !
-     if(lpaw) qvanl(1:grid%mesh,:,:,:) = pawsetup%augfun(1:grid%mesh,:,:,:)
+     if(lpaw) then
+        l1 = size(pawsetup%augfun,4)
+        l2 = size(qvanl,4)
+        if ( l1 > l2 ) CALL infomsg ( "export_upf", &
+                    "Warning: size of PAW augfun larger than size of qvanl")
+        qvanl(1:grid%mesh,:,:,0:l2-1) = pawsetup%augfun(1:grid%mesh,:,:,0:l2-1)
+     end if
      do ibeta=1,nbeta
         do jbeta=ibeta,nbeta
            kbeta = jbeta * (jbeta-1) / 2 + ibeta

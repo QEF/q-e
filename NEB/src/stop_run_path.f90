@@ -34,7 +34,7 @@ SUBROUTINE stop_run_path( lflag )
   !
   stdout=iunpath
   !
-  CALL environment_end( 'NEB' )
+  CALL environment_end( )
   !
   CALL clean_pw( .TRUE. )
   !

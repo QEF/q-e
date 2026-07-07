@@ -1,11 +1,11 @@
 # Makefile for library coupling interface
 include ../../make.inc
 
+VPATH = @srcdir@
+
 # location of required modules and include files
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../CPV/src
-
-TLDEPS=pw cp
 
 COUPLEOBJS= \
 libpwscf.o \
@@ -14,15 +14,15 @@ libqemod.o
 
 ########################################################################
 
-all : tldeps libqecouple.a
+# see comments in file tldeps for explanations
+TLDEPS=pw cp
+include ../../install/tldeps
+
+all : libqecouple.a
 
 libqecouple.a : $(COUPLEOBJS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
-
-tldeps :
-	if test -n "$(TLDEPS)" ; then \
-	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 clean :
 	- /bin/rm -f *.x *.o *.a *~ *_tmp.f90 *.d *.mod *.i *.L
@@ -40,4 +40,3 @@ libcpv.o: libcpv.f90 ../../Modules/environment.o ../../Modules/mp_global.o \
 
 libqemod.o: libqemod.f90 ../../Modules/qmmm.o
 
-# DO NOT DELETE

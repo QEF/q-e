@@ -1,0 +1,11 @@
+TaS2
+&INPUTPH
+    prefix    = 'TaS2'
+    reduce_io = .true.
+    nmix_ph   = 16
+    niter_ph  = 150
+    fildyn    = 'TaS2.G.dyn'
+    fildvscf  = 'dvscf'
+    tr2_ph    = 1e-20
+/
+0.0  0.0  0.0

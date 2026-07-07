@@ -21,7 +21,7 @@ else
 fi
 
 inputs=`find $1* -type f -name "*.in" -not -name "test.*" -not -name "benchmark.*"`
-pp_files=`for x in ${inputs}; do grep UPF ${x} | awk '{print $3}'; done`
+pp_files=`for x in ${inputs}; do grep ".*\.UPF" ${x} | awk '{print $3}'; done`
 
 for pp_file in ${pp_files} ; do
 if ! test -f ${ESPRESSO_PSEUDO}/${pp_file} ; then 

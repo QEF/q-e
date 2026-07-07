@@ -80,22 +80,61 @@ if { ! $vargroup && ! $dimensiongroup && ! $colgroup && ! $rowgroup && ! [::tclu
 	}    
 
 	opt {
+	    set _val [arr val]
+	    if { [arr alias] ne {} } {
+		append _val "  (synonyms: [arr alias])"
+	    }
 	    if { [string trim $content] ne {} } {
 		if { ! $options_first } {
 		    printf " "
 		}
-		printf [labelMsg [format "%-${var_chars}s" {}] "[arr val] :"]
+		printf [labelMsg [format "%-${var_chars}s" {}] "$_val :"]
 		printf [labelMsg [format "%-${var_chars_indent}s" {}] $content]
 	    } else {
-		printf [labelMsg [format "%-${var_chars_indent}s" {}] "[arr val]"]
+		printf [labelMsg [format "%-${var_chars_indent}s" {}] "$_val"]
 	    }
 	    set options_first 0
 	}
 	
 	"default" {
-	    printf [labelMsg [format "%-${var_chars}s" Default:] $content]
+	    # plain literal value, or empty text body with "case" children
+	    if { [string trim $content] ne {} } {
+		printf [labelMsg [format "%-${var_chars}s" Default:] $content]
+	    } else {
+		printf [format "%-${var_chars}s" Default:]
+	    }
 	}
     
+	case {
+	    # multi-line block: "if <test>:"/"otherwise:" header, value indented
+	    set _test [txt_ref_link [arr test]]
+	    set _val [computedSentinel_ $content]
+	    if { $_test ne {} } {
+		set _head "if $_test:"
+	    } else {
+		set _head "otherwise:"
+	    }
+	    printf [labelMsg [format "%-${var_chars}s" {}] "$_head\n   $_val"]
+	}
+
+	dimensionality {
+	    # plain value, or empty text body with "case" children
+	    if { [string trim $content] ne {} } {
+		printf [labelMsg [format "%-${var_chars}s" Dimensionality:] [unitsGlossClist $content]]
+	    } else {
+		printf [format "%-${var_chars}s" Dimensionality:]
+	    }
+	}
+
+	units {
+	    # plain value, or empty text body with "case" children
+	    if { [string trim $content] ne {} } {
+		printf [labelMsg [format "%-${var_chars}s" Units:] [unitsGlossClist $content units]]
+	    } else {
+		printf [format "%-${var_chars}s" Units:]
+	    }
+	}
+
 	status  {
 	    printf [labelMsg [format "%-${var_chars}s" Status:] $content]
 	}
@@ -184,6 +223,33 @@ switch -exact -- $tag {
 		    status - "default" - info - see {
 			set Data($_tag) [formatString $_text]
 		    }
+		    dimensionality - units {
+			# plain text body (keyed comma-list), or conditional
+			# form with <case> children rendered as branches
+			set _kind [expr {$_tag eq "units" ? "units" : "dim"}]
+			if { [string trim $_text] ne {} } {
+			    set Data($_tag) [formatString [unitsGlossClist $_text $_kind]]
+			} else {
+			    set _cases {}
+			    foreach _c [$tree children $child] {
+				if { [getFromTree $tree $_c tag] ne "case" } { continue }
+				set _ctext [string trim [txt_atTags [txt_ref_link \
+				    [getFromTree $tree $_c text]]]]
+				set _cval [unitsGloss $_ctext $_kind]
+				set _cattr [getFromTree $tree $_c attributes]
+				attr2array_ _ca $_cattr
+				if { [info exists _ca(test)] && [string trim $_ca(test)] ne {} } {
+				    set _ctest [txt_ref_link [string trim $_ca(test)]]
+				    lappend _cases "if $_ctest:\n   $_cval"
+				} else {
+				    lappend _cases "otherwise:\n   $_cval"
+				}
+			    }
+			    if { [llength $_cases] > 0 } {
+				set Data($_tag) [join $_cases "\n"]
+			    }
+			}
+		    }
 		}
 	    }
 	    
@@ -195,7 +261,7 @@ switch -exact -- $tag {
 		    printf [labelMsg [format "%-${var_chars}s" Variables:] "${Data(dims)}i=[arr start],[arr end]"]\n	    
 		}
 		printf [labelMsg [format "%-${var_chars}s" Type:] [arr type]]
-		foreach field {default status see info} {	    
+		foreach field {default dimensionality units status see info} {
 		    if { [info exists Data($field)] } {
 			if { $field != "info" } {
 			    set label [string totitle $field]:

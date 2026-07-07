@@ -40,7 +40,7 @@ MODULE io_dyn_mat
 
     INTEGER, INTENT(IN) :: ntyp, nat, ibrav, nspin_mag, nqs
     CHARACTER(LEN=256), INTENT(IN) :: fildyn
-    CHARACTER(LEN=3), INTENT(IN) :: atm(ntyp)
+    CHARACTER(LEN=6), INTENT(IN) :: atm(ntyp)
     REAL(DP), INTENT(IN) :: celldm(6)
     REAL(DP), INTENT(IN) :: at(3,3)
     REAL(DP), INTENT(IN) :: bg(3,3)
@@ -111,7 +111,7 @@ MODULE io_dyn_mat
        zstareu_=.false.
        IF (present(zstareu)) zstareu_=.true.
        raman_=.false.
-       IF (PRESENT(lraman)) raman_=.true.
+       IF (PRESENT(lraman)) raman_=lraman
        !
        CALL add_attr ( "epsil", epsil_)
        CALL add_attr ( "zstar", zstareu_)
@@ -305,7 +305,7 @@ MODULE io_dyn_mat
     !
     IMPLICIT NONE
     !
-    CHARACTER(LEN = 3), INTENT(out) :: atm(ntyp)
+    CHARACTER(LEN = 6), INTENT(out) :: atm(ntyp)
     !! Atom
     LOGICAL, INTENT(out), OPTIONAL :: lrigid
     !!
@@ -418,13 +418,13 @@ MODULE io_dyn_mat
               DO na = 1, nat
                 DO kc = 1, 3
                   CALL xmlr_readtag("RAMAN_S_ALPHA."//i2c(na)//'.'//i2c(kc), aux)
-                  IF (PRESENT(ramtns)) ramtns(:, :, kc, na) = aux(:, :)
+                  ramtns(:, :, kc, na) = aux(:, :)
                 ENDDO
               ENDDO
-            ELSE
-              IF (PRESENT(ramtns)) ramtns = 0.0_DP
             ENDIF
             CALL xmlr_closetag() ! RAMAN_TENSOR_A2
+          ELSE
+            IF (PRESENT(ramtns)) ramtns = 0.0_DP
           ENDIF
         ELSE
            IF (PRESENT(epsil)) epsil = 0.0_DP

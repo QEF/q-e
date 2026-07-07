@@ -28,10 +28,10 @@ MODULE exx_module
   USE command_line_options, ONLY : ndiag_          !-ndiag indicator; =0 -ndiag not specified; = N if -ndiag N specified  
   USE constants,          ONLY: pi                 !pi in double-precision
   USE constants,          ONLY: fpi                !4.0*pi in double-precision
-  USE control_flags,      ONLY: lwfnscf            !
-  USE control_flags,      ONLY: lwfpbe0nscf        !non selfconsitent pbe0 calculation for empty bands .. 
-  USE control_flags,      ONLY: nbeg               !nbeg<0 in from_scratch calculations ...
-  USE control_flags,      ONLY: thdyn              !if .TRUE. then variable cell calculation is turned on ..   
+  USE cp_control,         ONLY: lwfnscf            !
+  USE cp_control,         ONLY: lwfpbe0nscf        !non selfconsitent pbe0 calculation for empty bands .. 
+  USE cp_control,         ONLY: nbeg               !nbeg<0 in from_scratch calculations ...
+  USE cp_control,         ONLY: thdyn              !if .TRUE. then variable cell calculation is turned on ..   
   USE cp_main_variables,  ONLY: idesc              !descriptor type
   USE electrons_base,     ONLY: nbsp               !number of electronic bands/states ...
   USE electrons_base,     ONLY: nspin              !spin unpolarized (npsin=1) vs. spin polarized (nspin=2) specification

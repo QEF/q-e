@@ -31,11 +31,12 @@ $^{3}$ \emph{High Performance Computing Department, CINECA Consorzio Interuniver
 Epsilon.x is a post processing code of $PW_{SCF}$. Starting from DFT eigenvalues and eigenvectors,
 epsilon.x provides the real and imaginary parts of the dielectric tensor or the joint density of states, it works both in serial and
 parallel mode, also pool parallelization is supported.
-Epsilon.x doesn't support the reduction of the k-points grid into the irreducible Brillouin zone, so the previous PW runs must be
+Epsilon.x only supports the reduction of the k-points grid into the irreducible Brillouin zone for \emph{eps} 
+calculations. When computing other quantities the previous PW runs must be
 performed with a uniform k-points grid and all k-points weights must be equal to each other, i.e. in the k-points card the k-points
-coordinates must be given manually in \emph{crystal} or \emph{alat} or \emph{bohr}, but not with the \emph{automatic} option. Also the
+coordinates must be given manually in \emph{crystal} or \emph{alat} or \emph{bohr}, but not with the \emph{automatic} option. Since the
 auto-symmetrization of k-points grid can produce a non uniform distribution of k-points weights, in order to avoid this
-PW's behavior the variable NOSYM must be set .TRUE. disabling auto-symmetrization.
+PW's behavior the variable NOSYM must be set .TRUE. disabling auto-symmetrization for anything other than \emph{eps} calculations.
 \section{Input file}
 When executed, epsilon.x reads an input file from standard input, this file contains two Fortran namelists
 (value associated to each variable is the default one):
@@ -231,10 +232,9 @@ u_{\textbf{k},n}^{\star}(\textbf{r})\frac{d}{d x_{\beta}}u_{\textbf{k},n'}(\text
 \end{equation}
 the double index reveals the tensorial nature of $\epsilon_{2}(\omega)$, while $\vert u_{\textbf{k},n}\rangle$ is a
 factor of the single particle Bloch function obtained by the PW's DFT calculation.
-In all the cases illustrated above the non-local contribution due to the pseudopotential is neglected, actually the
-correction to the matrix element that take into account the non-local part of the Hamiltonian it's not implemented.
-From the previous definition of the imaginary part of the dielectric function it is easy to see that even the local-field
-contributions are not implemented.\\
+In all the cases illustrated above the non-local contribution $V_{nl}$ due to the pseudopotential is neglected. In particular,
+a contribution $\propto [\hat V_{nl},\hat r]$ should be present since we are working in the velocity gauge. This has been
+been implemented for \texttt{eps\_calc}. The off-diagonal \texttt{offdiag\_calc} however does not have this feature yet.\\
 PW works on a plane wave set so the Bloch functions of the matrix element (\ref{nos}) are decomposed as follow:
 \begin{equation}
 \vert \psi_{\textbf{k},n}\rangle=e^{i\textbf{G}\cdot\textbf{r}}u_{\textbf{k},n}=\frac{1}{\sqrt{V}}\sum_{\textbf{G}}a_{n,\textbf{k},\textbf{G}}
@@ -270,3 +270,8 @@ is numerically evaluated using the following sum rule:
 The result of this calculation is printed in the standard output file.
 \end{document}
 
+
+%%% Local Variables:
+%%% mode: LaTeX
+%%% TeX-master: t
+%%% End:

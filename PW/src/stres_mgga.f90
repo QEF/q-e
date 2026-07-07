@@ -35,7 +35,10 @@ SUBROUTINE stres_mgga( sigmaxc )
   !
   ! ... local variables
   !
-  INTEGER :: ix, iy, K, ir, ipol, iss, incr, ibnd, ik, npw, dffts_nnr
+  INTEGER :: ix, iy, ir, ipol, iss, incr, ibnd, ik, npw, dffts_nnr
+  !
+  INTEGER, PARAMETER :: ipol_ix(6) = [1, 2, 3, 2, 3, 3]
+  INTEGER, PARAMETER :: ipol_iy(6) = [1, 1, 1, 2, 2, 3]
   !
   REAL(DP), PARAMETER :: epsr = 1.E-6_DP, epsg = 1.E-10_DP, e2 = 2._DP
   !
@@ -102,20 +105,15 @@ SUBROUTINE stres_mgga( sigmaxc )
        !
        CALL wfc_gradient( ibnd, ik, npw, gradwfc )
        !
-       ! ... Cross terms of kinetic energy density
+       ! ... Cross terms of kinetic energy density: only the 6 upper-diagonal
+       ! ... components ipol=1..6 are stored; the mapping ipol -> (ix,iy) is
+       ! ... held in the PARAMETER arrays ipol_ix, ipol_iy defined above.
        !
        !$acc parallel loop collapse(2)
        DO ir = 1, dffts_nnr
          DO ipol = 1, 6
-            !
-            ! ... explanation here: https://stackoverflow.com/a/244550
-            !
-            !      M*(M+1)/ 2
-            K = (3.0*4.0)/2.0 - 1 - (ipol - 1)
-            K = FLOOR((SQRT(FLOAT(8*K+1))-1)/2)
-            ix = (ipol-1) - (3.0*4.0)/2.0 + (K+1)*(K+2)/2.0 + 1 + (2-K)
-            iy = 3 - K
-            !
+            ix = ipol_ix(ipol)
+            iy = ipol_iy(ipol)
             crosstaus(ir,ipol,current_spin) = crosstaus(ir,ipol,current_spin) + &
                           2.0_DP*w1*DBLE(gradwfc(ir,ix))*DBLE(gradwfc(ir,iy)) + &
                           2.0_DP*w2*AIMAG(gradwfc(ir,ix))*AIMAG(gradwfc(ir,iy))

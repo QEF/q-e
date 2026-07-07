@@ -174,9 +174,14 @@ subroutine cutoff_dv_of_drho (dvaux, is, dvscf)
   ! input : spin counter
   !
   !local variables
-  INTEGER :: ig
+  INTEGER :: ig, tpnnr
   REAL(DP) :: qg2
   !
+  tpnnr= dfftp%nnr
+  !
+  !$acc data present_or_copy(dvaux( 1:tpnnr,1:nspin_mag)) present_or_copyin(dvscf( 1:tpnnr,1:nspin_mag))
+  !
+  !$acc parallel loop
   do ig = 1, ngm
      qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
      if (qg2 > 1.d-8) then
@@ -184,6 +189,8 @@ subroutine cutoff_dv_of_drho (dvaux, is, dvscf)
                            e2 * fpi * dvscf(dfftp%nl(ig),1) / (tpiba2 * qg2)
      endif
   enddo
+  !
+  !$acc end data
   return
 end subroutine cutoff_dv_of_drho
 !

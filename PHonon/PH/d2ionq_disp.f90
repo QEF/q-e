@@ -173,7 +173,7 @@ SUBROUTINE d2ionq_dispd3( alat, nat, at, q, der2disp )
     else
       write(string,'(A)' ) 'false'
     end if 
-    CALL print_dftd3_hessian( mmat, n, string )
+    CALL print_dftd3_hessian( stdout, mmat, n, string )
     !
     DEALLOCATE( d3hess, mmat ) 
     !

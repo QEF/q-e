@@ -23,7 +23,7 @@ SUBROUTINE stop_cp_run()
   !
   IMPLICIT NONE
   !
-  CALL environment_end( 'CP' )
+  CALL environment_end( )
   !
   CALL deallocate_modules_var()
   !

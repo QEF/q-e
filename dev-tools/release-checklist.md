@@ -8,7 +8,7 @@
 6. update Doc/release-notes with the release number and with updated information on what is new, changed, removed, etc.
 7. Re-generate new documentation with "make doc"
 8. verify that install/configure is updated and aligned with install/configure.ac
-9. update version number in Modules/version.f90
+9. update the version number in `include/qe_version.h`, dropping the `-dev` suffix (e.g. `7.6-dev` -> `7.6`)
 10. set a git tag "qe-x.y[.z]" for version x.y[.z]
 11. align master to develop, github to gitlab
 12. make packages on gitlab and github
@@ -16,3 +16,4 @@
 quantumespresso@qe.safevps.it:/storage/vhosts/quantum-espresso.org/ns/qes
 14. update the web site: add a piece of news, update pages Downloads, Roadmap, and any other page that needs to be updated, copy the new documentation to where it should be
 15. send a message to the mailing list, post to twitter, facebook, and whatnot
+16. immediately reopen development: on `develop`, bump `include/qe_version.h` to the next version with a `-dev` suffix (e.g. `7.6` -> `7.7-dev`), so non-release builds are clearly identified and never claim to be a tagged release

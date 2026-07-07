@@ -29,6 +29,7 @@ PROGRAM compute_self_hartree
   USE mp,                    ONLY : mp_bcast
   USE control_lr,            ONLY : lrpa
   USE input_parameters,      ONLY : assume_isolated
+  USE upf_utils,             ONLY : imatches
   !
   !
   IMPLICIT NONE
@@ -37,7 +38,6 @@ PROGRAM compute_self_hartree
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   INTEGER :: ios, nkstot_
   CHARACTER (LEN=256) :: outdir
-  LOGICAL, EXTERNAL  :: imatches
   ! 
   NAMELIST / KCW_PP /    outdir, prefix, mp1, mp2, mp3, num_wann, seedname, kcw_iverbosity, &
                         l_vcut, assume_isolated, io_sp, io_real_space
@@ -141,6 +141,6 @@ PROGRAM compute_self_hartree
   !
   ! Clean and Close 
   CALL mp_global_end()
-  CALL environment_end( code )
+  CALL environment_end( )
   !
 END PROGRAM compute_self_hartree

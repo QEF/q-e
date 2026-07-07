@@ -20,7 +20,7 @@ PROGRAM lr_dav_main
   USE lr_variables,          ONLY : restart, restart_step,&
        evc1,n_ipol, d0psi, &
        no_hxc, nbnd_total, &
-       lr_io_level, code1,davidson
+       lr_io_level, davidson
   USE ions_base,             ONLY : tau,nat,atm,ityp
   USE environment,           ONLY : environment_start
   USE mp_global,             ONLY : nimage, mp_startup, inter_bgrp_comm, &
@@ -54,7 +54,7 @@ PROGRAM lr_dav_main
   !
   davidson = .true.
   !
-  CALL environment_start ( code1 )
+  CALL environment_start ( 'turboTDDFT' )
   CALL start_clock('lr_dav_main')
 
   !   Reading input file and PWSCF xml, some initialisation
@@ -108,11 +108,18 @@ PROGRAM lr_dav_main
       ! Check to see if the wall time limit has been exceeded.
       if ( check_stop_now() ) then
          call lr_write_restart_dav() 
-!!         goto 100
          exit
       endif
       !
   enddo
+  if ( .not. dav_conv .and. dav_iter == max_iter) then
+     call lr_write_restart_dav()
+     write(stdout,'(/7x,"================================================================")')
+     write(stdout,'(/7x,"Davidson diagonalization has NOT converged in",I5," steps.")') dav_iter
+     write(stdout,'(/7x,"================================================================")')
+     goto 100
+  endif        
+
   ! Extract physical meaning from the solution
   if ( check_stop_now() ) goto 100
   call interpret_eign('END')

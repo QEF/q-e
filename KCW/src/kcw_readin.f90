@@ -39,6 +39,7 @@ SUBROUTINE kcw_readin()
   USE exx_base,           ONLY : x_gamma_extrapolation
   USE mp_pools,           ONLY : npool
   USE xc_lib,             ONLY : xclib_dft_is
+  USE upf_utils,          ONLY : imatches
   !
   IMPLICIT NONE
   !
@@ -48,7 +49,6 @@ SUBROUTINE kcw_readin()
   !
   INTEGER, EXTERNAL   :: atomic_number
   REAL(DP), EXTERNAL  :: atom_weight
-  LOGICAL, EXTERNAL   :: imatches
   LOGICAL, EXTERNAL   :: has_xml
   LOGICAL             :: exst, parallelfs
   LOGICAL             :: do_comp_mt_kcw

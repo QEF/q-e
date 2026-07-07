@@ -65,7 +65,8 @@ SUBROUTINE setup()
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : tr2, ethr, lscf, lbfgs, lmd, david, lecrpa,  &
                                  isolve, niter, noinv, ts_vdw, tstress, &
-                                 lbands, gamma_only, restart, use_spinflip, symm_by_label 
+                                 lbands, gamma_only, restart, use_spinflip, symm_by_label
+  USE diag_direct,        ONLY : diag_direct_check_compat
   USE cellmd,             ONLY : calc
   USE upf_ions,           ONLY : n_atom_wfc
   USE uspp_param,         ONLY : upf
@@ -161,6 +162,8 @@ SUBROUTINE setup()
                                'Non-collinear Meta-GGA not implemented', 1 )
      IF ( ANY (upf(1:ntyp)%nlcc) ) CALL infomsg( 'setup ', 'BEWARE:' // &
                & ' nonlinear core correction is not consistent with meta-GGA')
+     IF ( ANY (upf(1:ntyp)%with_metagga_info) ) CALL infomsg( 'setup ', 'BEWARE:' // &
+               & ' meta-GGA information is present')
   END IF
   !
   ! ... Compute the ionic charge for each atom type and the total ionic charge
@@ -235,26 +238,22 @@ SUBROUTINE setup()
   ELSE IF (symm_by_label) THEN 
      colin_mag = 0
   END IF
-  IF ( xclib_dft_is('hybrid') ) THEN
-     IF ( colin_mag == 2 ) THEN
+  IF ( colin_mag == 2 ) THEN
+     IF ( xclib_dft_is('hybrid') ) THEN
         CALL infomsg( 'setup', 'colin_mag=2 not implemented for hybrid' )
         colin_mag = 1
      ENDIF
-  ENDIF
-  IF (lda_plus_u .AND. lda_plus_u_kind == 2) THEN
-     IF ( colin_mag == 2 ) THEN
+     IF (lda_plus_u .AND. lda_plus_u_kind == 2) THEN
         CALL infomsg( 'setup', 'colin_mag=2 not implemented for lda+U+V' )
         colin_mag = 1
      ENDIF
-  ENDIF
 #if defined (__OSCDFT)
-  IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==1)) THEN
-     IF ( colin_mag == 2 ) THEN
+     IF (use_oscdft .AND. (oscdft_ctx%inp%oscdft_type==1)) THEN
         CALL infomsg( 'setup', 'colin_mag=2 not implemented for OSCDFT' )
         colin_mag = 1
      ENDIF
-  ENDIF
 #endif
+  ENDIF
   !
   ! time reversal operation is set up to 0 by default
   t_rev = 0
@@ -465,8 +464,12 @@ SUBROUTINE setup()
   ! ... set the max number of bands used in iterative diagonalization
   !
   nbndx = nbnd
-  IF ( isolve == 0  ) nbndx = david * nbnd 
-  IF (isolve == 4 ) nbndx = 2 *nbnd 
+  IF ( isolve == 0  ) nbndx = david * nbnd
+  IF (isolve == 4 ) nbndx = 2 *nbnd
+  !
+  ! ... Check compatibility for dense H direct diagonalization
+  !
+  IF ( isolve == 5 ) CALL diag_direct_check_compat()
   !
   ! ... Set the units in real and reciprocal space
   !

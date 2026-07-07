@@ -133,7 +133,7 @@ ENDIF
 !
 !
 DEALLOCATE(structure_fact, structure_fact_out, kgridx, kgridy)
-CALL environment_end('DISCA_BROADENING')
+CALL environment_end( )
 !
 CALL mp_global_end()
 !

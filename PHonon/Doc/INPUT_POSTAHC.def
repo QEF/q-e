@@ -29,9 +29,9 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program post
         }
     }
     var outdir -type CHARACTER {
-        default {
-            value of the @tt ESPRESSO_TMPDIR environment variable if set;
-            @br current directory ('./') otherwise
+        default -kind conditional {
+            case -test {ESPRESSO_TMPDIR is set} { from_environment }
+            case { ./ }
         }
         info {
             Directory containing input, output, and scratch files;
@@ -76,39 +76,51 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program post
     }
     var eta_eV  -type REAL {
         status { REQUIRED }
+        dimensionality { energy }
+        units { eV }
         info {
             Magnitude of the small imaginary component included to smooth the energy
-            denominators, in eV.
+            denominators.
         }
     }
     var temp_kelvin  -type REAL {
         status { REQUIRED }
+        dimensionality { temperature }
+        units { K }
         info {
-            Temperature in Kelvins at which the electron self-energy is calculated.
+            Temperature at which the electron self-energy is calculated.
         }
     }
     var efermi_eV  -type REAL {
         status { REQUIRED }
+        dimensionality { energy }
+        units { eV }
         info {
-            Fermi energy of the electrons in eV.
+            Fermi energy of the electrons.
         }
     }
     dimension amass_amu -start 1 -end ntyp -type REAL {
         status { REQUIRED }
+        dimensionality { mass }
+        units { amu }
         info {
-            Mass for each atom type in atomic mass unit.
+            Mass for each atom type.
         }
     }
     var ahc_win_min_eV -type REAL {
+        dimensionality { energy }
+        units { eV }
         default { -1.d8 }
         info {
-            Lower bound of active AHC window for the lower Fan term in eV.
+            Lower bound of active AHC window for the lower Fan term.
         }
     }
     var ahc_win_max_eV -type REAL {
+        dimensionality { energy }
+        units { eV }
         default { 1.d8 }
         info {
-            Upper bound of active AHC window for the lower Fan term in eV.
+            Upper bound of active AHC window for the lower Fan term.
         }
     }
     var skip_upper -type LOGICAL {

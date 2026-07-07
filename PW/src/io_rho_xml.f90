@@ -25,7 +25,7 @@ MODULE io_rho_xml
     SUBROUTINE write_scf ( rho, nspin )
       !
       USE paw_variables,    ONLY : okpaw
-      USE ldaU,             ONLY : lda_plus_u, hub_back, lda_plus_u_kind, nsg, apply_U, order_um
+      USE ldaU,             ONLY : lda_plus_u, hub_back, lda_plus_u_kind, apply_U, order_um
       USE two_chem,         ONLY : twochem
       USE xc_lib,           ONLY : xclib_dft_is
       USE noncollin_module, ONLY : noncolin, domag
@@ -95,7 +95,7 @@ MODULE io_rho_xml
                   WRITE( iunocc, * , iostat = ierr) rho%ns
                ENDIF
             ELSEIF (lda_plus_u_kind.EQ.2) THEN
-               WRITE( iunocc, * , iostat = ierr) nsg
+               WRITE( iunocc, * , iostat = ierr) rho%nsg
             ENDIF
          ENDIF
          CALL mp_bcast( ierr, ionode_id, intra_image_comm )
@@ -142,7 +142,7 @@ MODULE io_rho_xml
       USE control_flags,    ONLY : lscf
       USE paw_variables,    ONLY : okpaw
       USE ldaU,             ONLY : lda_plus_u, starting_ns, hub_back, &
-                                   lda_plus_u_kind, nsg, apply_U, order_um
+                                   lda_plus_u_kind, apply_U, order_um
       use lsda_mod,         ONLY : magtot
       USE noncollin_module, ONLY : noncolin, domag
       USE cell_base,        ONLY : omega
@@ -221,7 +221,7 @@ MODULE io_rho_xml
                   READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns
                ENDIF
             ELSEIF (lda_plus_u_kind.EQ.2) THEN
-               READ( UNIT = iunocc, FMT = * , iostat = ierr) nsg 
+               READ( UNIT = iunocc, FMT = * , iostat = ierr) rho%nsg 
             ENDIF
          ENDIF
          !
@@ -245,7 +245,7 @@ MODULE io_rho_xml
                   rho%ns(:,:,:,:) = 0.D0
                ENDIF 
             ELSEIF (lda_plus_u_kind.EQ.2) THEN
-               nsg(:,:,:,:,:) = (0.d0, 0.d0) 
+               rho%nsg(:,:,:,:,:) = (0.d0, 0.d0) 
             ENDIF
          ENDIF
          !
@@ -263,7 +263,7 @@ MODULE io_rho_xml
                CALL mp_sum(rho%ns, intra_image_comm)
             ENDIF
          ELSEIF (lda_plus_u_kind.EQ.2) THEN
-            CALL mp_sum(nsg, intra_image_comm)
+            CALL mp_sum(rho%nsg, intra_image_comm)
          ENDIF
          !
          ! If projections on Hubbard manifold are read from file, there is no

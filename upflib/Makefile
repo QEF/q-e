@@ -2,6 +2,8 @@
 
 include ../make.inc
 
+VPATH = @srcdir@
+
 MODFLAGS= $(MOD_FLAG)../UtilXlib $(MOD_FLAG).
 
 # list of modules:
@@ -91,5 +93,8 @@ upfconv.x : upfconv.o casino_pp.o $(OBJS_NODEP)
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L
 
+
+
 include make.depend
+
 

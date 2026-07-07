@@ -1,4 +1,5 @@
   !
+  ! Copyright (C) 2023-2026 EPW-Collaboration
   ! Copyright (C) 2016-2023 EPW-Collaboration
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
   !
@@ -33,10 +34,11 @@
     USE ep_constants,  ONLY : bohr2ang, twopi, ci, czero, zero, ryd2ev
     USE io_global, ONLY : ionode_id
     USE io_var,    ONLY : iudecayH
-    USE mp_global, ONLY : inter_pool_comm
+    USE mp_global, ONLY : inter_pool_comm, my_pool_id
     USE mp,        ONLY : mp_barrier, mp_sum
     USE mp_world,  ONLY : mpime
     USE global_var,ONLY : nbndep
+    USE input,     ONLY : lsda
     !
     IMPLICIT NONE
     !
@@ -103,6 +105,7 @@
     !! Temporary variable to store the Hamiltonian
     COMPLEX(KIND = DP), ALLOCATABLE :: chs(:, :, :)
     !! Hamiltonian in Bloch basis, coarse k-mesh
+    CHARACTER(LEN = 256) :: fnm
     !
     !----------------------------------------------------------
     !    STEP 1: rotation to optimally smooth Bloch states
@@ -212,9 +215,11 @@
     ! [mind when comparing with wannier code (eV and angstrom units) with
     ! write_hr=.TRUE.]
     !
-    IF (mpime == ionode_id) THEN
+    IF (my_pool_id == ionode_id) THEN
       !
-      OPEN(UNIT = iudecayH,FILE = 'decay.H')
+      fnm = 'decay.H'
+      IF (TRIM(lsda) == 'down') fnm = 'decay.down.H'
+      OPEN(UNIT = iudecayH, FILE = TRIM(fnm))
       WRITE(iudecayH, '(a)') '# Spatial decay of Hamiltonian in Wannier basis'
       WRITE(iudecayH, '(a)') '# R_e [Ang]      max_{n,m} |H(n,m)| [Ry] '
       DO ir = 1, nrr
@@ -262,9 +267,10 @@
     USE io_var,        ONLY : iudecayP
     USE ep_constants,  ONLY : bohr2ang, twopi, ci, czero, cone
     USE io_global,     ONLY : ionode_id
-    USE mp_global,     ONLY : inter_pool_comm
+    USE mp_global,     ONLY : inter_pool_comm, my_pool_id
     USE mp_world,      ONLY : mpime
     USE mp,            ONLY : mp_barrier, mp_sum
+    USE input,         ONLY : lsda
     !
     IMPLICIT NONE
     !
@@ -337,6 +343,8 @@
     !! Dipole in smooth Bloch basis, coarse mesh
     COMPLEX(KIND = DP), ALLOCATABLE :: dmec_opt(:, :, :, :)
     !! dmec computed in pmn, rescaled down if skipping lwin.
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer file name
     !
     CALL start_clock ('Dipole: step 1')
     !
@@ -457,8 +465,10 @@
     ! Check spatial decay of Dipole in Wannier basis
     ! the unit in r-space is angstrom
     !
-    IF (mpime == ionode_id) THEN
-      OPEN(UNIT = iudecayP, FILE = 'decay.P')
+    IF (my_pool_id == ionode_id) THEN
+      fnm = 'decay.P'
+      IF (TRIM(lsda) == 'down') fnm = 'decay.down.P'
+      OPEN(UNIT = iudecayP, FILE = TRIM(fnm))
       WRITE(iudecayP, '(a)') '# Spatial decay of dipole in Wannier basis'
       DO ir = 1, nrr
         !
@@ -502,13 +512,13 @@
     USE cell_base,     ONLY : at, bg, alat
     USE ions_base,     ONLY : nat, tau
     USE global_var,    ONLY : rdw, epsi, zstar, qrpl, L
-    USE input,         ONLY : lpolar, nqc1, nqc2, nqc3, system_2d
+    USE input,         ONLY : lpolar, nqc1, nqc2, nqc3, system_2d, lsda
     USE io_var,        ONLY : iudecaydyn
     USE ep_constants,  ONLY : bohr2ang, twopi, ci, czero, fpi, eps6
     USE io_global,     ONLY : ionode_id, stdout
     USE mp_world,      ONLY : mpime
     USE mp,            ONLY : mp_barrier
-    USE mp_global,     ONLY : inter_pool_comm
+    USE mp_global,     ONLY : inter_pool_comm, my_pool_id, my_image_id, inter_image_comm
     USE longrange,     ONLY : rgd_blk
     !
     IMPLICIT NONE
@@ -547,6 +557,7 @@
     !! vacuum size (supercell length along the z direction) in case of 2D
     COMPLEX(KIND = DP) :: cfac
     !! $$ e^{-i\mathbf{r}\cdot\mathbf{k}} $$
+    CHARACTER(LEN = 256) :: fnm
     !
     ! In the case of 2D, one need to compute the optimal range separation length L [Eq. 63 of PRB 107, 155424 (2023)]
     IF (system_2d == 'dipole_sp' .OR. system_2d == 'quadrupole') THEN
@@ -626,18 +637,23 @@
     ! check spatial decay of dynamical matrix in Wannier basis
     ! the unit in r-space is angstrom, and I am plotting the matrix for the first mode only
     !
-    IF (mpime == ionode_id) THEN
-      OPEN(UNIT = iudecaydyn, FILE = 'decay.dynmat')
-      WRITE(iudecaydyn, '(a)') '# Spatial decay of Dynamical matrix in Wannier basis'
-      WRITE(iudecaydyn, '(a)') '# R_p [Ang]      max_{mu,nu} |D(mu,nu)| [Ry] '
-      DO ir = 1, nrr
-        !
-        tmp =  MAXVAL(ABS(rdw(:, :, ir)))
-        WRITE(iudecaydyn, *) wslen(ir) * alat * bohr2ang, tmp
-        !
-      ENDDO
-      CLOSE(iudecaydyn)
+    IF (my_image_id == 0) THEN
+      IF (my_pool_id == ionode_id) THEN
+        fnm = 'decay.dynmat'
+        IF (TRIM(lsda) == 'down') fnm = 'decay.down.dynmat'
+        OPEN(UNIT = iudecaydyn, FILE = TRIM(fnm))
+        WRITE(iudecaydyn, '(a)') '# Spatial decay of Dynamical matrix in Wannier basis'
+        WRITE(iudecaydyn, '(a)') '# R_p [Ang]      max_{mu,nu} |D(mu,nu)| [Ry] '
+        DO ir = 1, nrr
+          !
+          tmp =  MAXVAL(ABS(rdw(:, :, ir)))
+          WRITE(iudecaydyn, *) wslen(ir) * alat * bohr2ang, tmp
+          !
+        ENDDO
+        CLOSE(iudecaydyn)
+      ENDIF
     ENDIF
+    CALL mp_barrier(inter_image_comm)
     CALL mp_barrier(inter_pool_comm)
     !
     !--------------------------------------------------------------------------
@@ -765,15 +781,17 @@
     USE cell_base,     ONLY : at, bg, alat
     USE global_var,    ONLY : cvmew, nbndep, crrw, qrpl
     USE ep_constants,  ONLY : twopi, one, zero, ci, czero, cone, bohr2ang
-    USE input,         ONLY : use_ws
+    USE input,         ONLY : use_ws, lsda
     USE io_var,        ONLY : iummn, iubvec, iudecayv
     USE io_files,      ONLY : prefix
     USE io_global,     ONLY : ionode_id, stdout
-    USE mp_global,     ONLY : inter_pool_comm, world_comm
+    USE mp_global,     ONLY : inter_pool_comm, world_comm, my_pool_id
     USE mp,            ONLY : mp_barrier, mp_sum, mp_bcast
     USE mp_world,      ONLY : mpime
     USE parallelism,   ONLY : fkbounds
     USE kfold,         ONLY : ktokpmq
+    USE lsda_mod,      ONLY : current_spin
+    USE global_var,    ONLY : nkpts
     !
     IMPLICIT NONE
     !
@@ -810,8 +828,10 @@
     !! Berry connection in Wannier representation
     !
     ! Local variables
-    CHARACTER(LEN = 256) :: tempfile
+    CHARACTER(LEN = 256) :: fnm
     !! Temporary file
+    CHARACTER(LEN = 256) :: file_reader
+    !! File name to read
     INTEGER :: ipol
     !! Counter on polarization
     INTEGER :: ik
@@ -917,6 +937,11 @@
     cu_big(:, :, ikstart:ikstop) = cu(:, :, :)
     CALL mp_sum(cu_big, inter_pool_comm)
     !
+    current_spin = 1
+    IF (TRIM(lsda) == 'down') current_spin = 2
+    !
+    fnm = ''
+    IF (TRIM(lsda) == 'down') fnm = '.down'
     !--------------------------------------------------------------
     !  STEP 0: Read in b-vectors bvec and their weights wb, and
     !          M_mn matrix
@@ -925,14 +950,14 @@
     ! RM - bvec are writen on file if write_bvec = .true. is specified
     !      in the wannier input
     !
-    IF (mpime == ionode_id) THEN
-      tempfile = TRIM(prefix) // '.bvec'
-      OPEN(iubvec, FILE = tempfile, ACTION = 'read', IOSTAT = ios)
+    IF (my_pool_id == ionode_id) THEN
+      OPEN(iubvec, FILE = TRIM(prefix) // TRIM(fnm) // '.bvec', ACTION = 'read', IOSTAT = ios)
       IF (ios /= 0) THEN
         !
-        CALL errore ('vmebloch2wan','You selected vme =.true. but error opening' // tempfile, 1)
+        CALL errore ('vmebloch2wan','You selected vme =.true. but error opening' //  TRIM(prefix) // TRIM(fnm) // '.bvec', 1)
       ELSE
-        READ(iubvec,*) tempfile
+        file_reader = TRIM(prefix)//TRIM(fnm)//'.bvec'
+        READ(iubvec,*)  file_reader
         READ(iubvec,*) nkstot_tmp, nnb
         IF (nkstot_tmp /= nkstot) CALL errore('vmebloch2wan', 'Unexpected number of k-points in .bvec file', 1)
         ALLOCATE(bvec(3, nnb, nkstot), STAT = ierr)
@@ -948,18 +973,18 @@
       ENDIF
     ENDIF
     !
-    CALL mp_bcast(nnb, ionode_id, world_comm)
+    CALL mp_bcast(nnb, ionode_id, inter_pool_comm)
     !
     ! All other cpu than master
-    IF (mpime /= ionode_id) THEN
+    IF (my_pool_id /= ionode_id) THEN
       ALLOCATE(bvec(3, nnb, nkstot), STAT = ierr)
       IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error allocating bvec', 1)
       ALLOCATE(wb(nnb), STAT = ierr)
       IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error allocating wb', 1)
     ENDIF
     !
-    CALL mp_bcast(bvec, ionode_id, world_comm)
-    CALL mp_bcast(wb, ionode_id, world_comm)
+    CALL mp_bcast(bvec, ionode_id, inter_pool_comm)
+    CALL mp_bcast(wb, ionode_id, inter_pool_comm)
     !
     ! b-vectors in units of Ang^-1 and wb-weights in units of Ang^2
     ! when read from file
@@ -972,13 +997,12 @@
     IF (ierr /= 0) CALL errore('vmebloch2wan', 'Error allocating M_mn', 1)
     M_mn = czero
     !
-    IF (mpime == ionode_id) THEN
-      tempfile = TRIM(prefix)//'.mmn'
-      OPEN(iummn, FILE = tempfile, STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
+    IF (my_pool_id == ionode_id) THEN
+      OPEN(iummn, FILE = TRIM(prefix) // TRIM(fnm) // '.mmn', STATUS = 'old', FORM = 'formatted', IOSTAT = ios)
       !
       IF (ios /= 0) THEN
         ! if it doesn't exist, then we just set the mmn to zero
-        CALL errore ('vmebloch2wan','error opening' // tempfile, 1)
+        CALL errore ('vmebloch2wan','error opening' // TRIM(prefix) // TRIM(fnm) // '.mmn', 1)
       ELSE
         !
         DO ik = 1, nkstot
@@ -994,7 +1018,7 @@
         !
       ENDIF
     ENDIF
-    CALL mp_bcast(M_mn, ionode_id, world_comm)
+    CALL mp_bcast(M_mn, ionode_id, inter_pool_comm)
     !
     CALL start_clock('Velocity: step 1')
     !
@@ -1030,7 +1054,7 @@
               ibnd1 = ibnd1 + 1
               IF (lwin(ibnd1,ik)) THEN
                 ibnd = ibnd + 1
-                m_mat_opt(ibnd, jbnd, :, ik) = M_mn(ibnd1, jbnd1, :, nkk_abs)
+                m_mat_opt(ibnd, jbnd, :, ik) = M_mn(ibnd1, jbnd1, :, nkk_abs - (current_spin - 1) * nkpts)
               ENDIF
             ENDDO
           ENDIF
@@ -1048,7 +1072,7 @@
             DO i = 1, nbndep
               IF (lwin(i, ik)) THEN
                 ibnd = ibnd + 1
-                m_mat_opt(ibnd, jbnd, :, ik) = M_mn(i, j, :, nkk_abs)
+                m_mat_opt(ibnd, jbnd, :, ik) = M_mn(i, j, :, nkk_abs - (current_spin - 1) * nkpts)
               ENDIF
             ENDDO
           ENDIF
@@ -1081,14 +1105,14 @@
       DO ib = 1, nnb
         !
         ! bring bvec to units of 2piba since xk is cartesian units of 2piba
-        b_tmp(:) = alat / (twopi) * bvec(:, ib, nkk_abs)
+        b_tmp(:) = alat / (twopi) * bvec(:, ib, nkk_abs - (current_spin - 1) * nkpts)
         CALL ktokpmq(xk_cart(:, ik), b_tmp(:), +1, ipool, nkb, nkb_abs)
         !
         ! M_mn_utmp(:, :) = MATMUL( m_mat_opt(:,:,ib,ik), cu_big(:,:,nkb_abs) )
         ! cvs(:,:,ib,ik) = MATMUL( CONJG(transpose(cu(:,:,ik))), M_mn_utmp(:, :) )
         !
         CALL ZGEMM('n', 'n', nbndep, nbndsub, nbndep, cone, m_mat_opt(:, :, ib, ik), &
-                   nbndep, cu_big(:, :, nkb_abs), nbndep, czero, M_mn_utmp(:, :), nbndep)
+                   nbndep, cu_big(:, :, nkb_abs - (current_spin - 1) * nkpts), nbndep, czero, M_mn_utmp(:, :), nbndep)
         CALL ZGEMM('c', 'n', nbndsub, nbndsub, nbndep, cone, cu(:, :, ik), &
                    nbndep, M_mn_utmp(:, :), nbndep, czero, cvs(:, :, ib, ik), nbndsub)
       ENDDO
@@ -1115,7 +1139,7 @@
             IF (jbnd == ibnd) delta = one
             DO ipol = 1, 3
               Apos(ipol, ibnd, jbnd, ik) = Apos(ipol, ibnd, jbnd, ik) + &
-                 ci * wb(ib) * bvec(ipol, ib, nkk_abs) * (cvs(ibnd, jbnd, ib, ik) - delta)
+                 ci * wb(ib) * bvec(ipol, ib, nkk_abs - (current_spin - 1) * nkpts) * (cvs(ibnd, jbnd, ib, ik) - delta)
             ENDDO
             !
           ENDDO
@@ -1174,7 +1198,7 @@
           rdotk = twopi * DOT_PRODUCT(xk_crys(:, ik), DBLE(irvec(:, ir)))
           cfac = EXP(-ci * rdotk) / DBLE(nkstot)
           DO ib = 1, nnb
-            bvec_crys(:) = bvec(:, ib, nkk_abs) * alat / (twopi)
+            bvec_crys(:) = bvec(:, ib, nkk_abs - (current_spin - 1) * nkpts) * alat / (twopi)
             CALL cryst_to_cart(1, bvec_crys, at, -1)
 
             DO jbnd = 1, nbndsub
@@ -1182,8 +1206,9 @@
                 DO ipol = 1, 3
                   cfac2 = EXP(twopi * ci * DOT_PRODUCT(bvec_crys(:), &
                              (w_centers_crys(:, ibnd) + w_centers_crys(:, jbnd) - DBLE(irvec(:, ir)))/2.0d0))
-                  crrw(ipol, ibnd, jbnd, ir) = crrw(ipol, ibnd, jbnd, ir) + ci * cfac * wb(ib) * bvec(ipol, ib, nkk_abs) &
-                                           * cfac2 * cvs(ibnd, jbnd, ib, ik)
+                  crrw(ipol, ibnd, jbnd, ir) = crrw(ipol, ibnd, jbnd, ir) + ci * cfac * wb(ib) * &
+                                               bvec(ipol, ib, nkk_abs - (current_spin - 1) * nkpts) &
+                                               * cfac2 * cvs(ibnd, jbnd, ib, ik)
                 ENDDO ! ipol
               ENDDO ! ibnd
             ENDDO ! jbnd
@@ -1218,9 +1243,9 @@
           DO iw = 1, dims
             DO iw2 = 1, dims
               DO ir = 1, nrr
-                IF (ndegen_k(ir, iw2, iw) > 0) THEN
+                IF (ndegen_k(ir, iw, iw2) > 0) THEN
                   rdotk = twopi * DOT_PRODUCT(xk_crys(:, ik), DBLE(irvec(:, ir)))
-                  cfac = EXP(ci * rdotk) / ndegen_k(ir, iw2, iw)
+                  cfac = EXP(ci * rdotk) / ndegen_k(ir, iw, iw2)
                   A(:, iw, iw2, ik) = A(:, iw, iw2, ik) + cfac * crrw(:, iw, iw2, ir)
                 ENDIF
               ENDDO ! ir
@@ -1247,8 +1272,8 @@
     ! position matrix cvmew and spatial dimensions are in units of bohr
     ! [mind when comparing with wannier code (angstrom units) with write_rmn=.TRUE.]
     !
-    IF (mpime == ionode_id) then
-      OPEN(UNIT = iudecayv, FILE = 'decay.v')
+    IF (my_pool_id == ionode_id) THEN
+      OPEN(UNIT = iudecayv, FILE = 'decay' // TRIM(fnm) // '.v', FORM = 'formatted')
       WRITE(iudecayv, '(a)') '# Spatial decay of Velocity matrix element in Wannier basis'
       WRITE(iudecayv, '(a)') '# R_e [Ang]       max_{a,m,n} |v(a,m,n)| [Bohr/2.418E-17s]    '
       DO ir = 1, nrr
@@ -1260,8 +1285,8 @@
       !
       CLOSE(iudecayv)
     ENDIF
-    IF (mpime == ionode_id) then
-      OPEN(UNIT = iudecayv, FILE = 'decay.r')
+    IF (my_pool_id == ionode_id) THEN
+      OPEN(UNIT = iudecayv, FILE = 'decay' // TRIM(fnm) // '.r', FORM = 'formatted')
       WRITE(iudecayv, '(a)') '# Spatial decay of Position matrix element in Wannier basis'
       WRITE(iudecayv, '(a)') '# R_e [Ang]       max_{a,m,n} |v(a,m,n)| [Bohr/2.418E-17s]    '
       DO ir = 1, nrr
@@ -1304,13 +1329,13 @@
     USE ep_constants,  ONLY : bohr2ang, twopi, ci, czero, cone, eps8, one
     USE io_global,     ONLY : ionode_id
     USE io_var,        ONLY : iundwdecay
-    USE mp_global,     ONLY : inter_pool_comm
+    USE mp_global,     ONLY : inter_pool_comm, my_pool_id
     USE mp,            ONLY : mp_sum
     USE mp_world,      ONLY : mpime
     USE global_var,    ONLY : zstar, epsi, qrpl
     USE input,         ONLY : lpolar
     USE longrange,     ONLY : rgd_blk_epw
-    USE input,         ONLY : nqc1, nqc2, nqc3
+    USE input,         ONLY : nqc1, nqc2, nqc3, lsda
     !
     IMPLICIT NONE
     !
@@ -1380,6 +1405,8 @@
     !!  e-p matrix, temporary
     COMPLEX(KIND = DP), ALLOCATABLE :: epmats(:, :, :, :)
     !!  e-p matrix  in smooth Bloch basis, coarse mesh
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer file name
     !
     ALLOCATE(epmats(nbndsub, nbndsub, nks, nmodes), STAT = ierr)
     IF (ierr /= 0) CALL errore('ephbloch2wane', 'Error allocating epmats', 1)
@@ -1455,7 +1482,9 @@
       ENDDO
     ENDDO
     !
-    CALL mp_sum(epmatw, inter_pool_comm)
+    DO imode = 1, nmodes
+      CALL mp_sum(epmatw(:, :, :, imode), inter_pool_comm)
+    ENDDO
     !
     ! bring xk back into cart coord
     !
@@ -1466,8 +1495,10 @@
     !  the unit in r-space is angstrom, and I am plotting
     !  the matrix for the first mode only
     !
-    IF ((mpime == ionode_id) .AND. is_dw_) THEN
-      OPEN(UNIT = iundwdecay, FILE = 'decay.dwwane')
+    IF ((my_pool_id == ionode_id) .AND. is_dw_) THEN
+      fnm = 'decay.dwwane'
+      IF (TRIM(lsda) == 'down') fnm = 'decay.down.dwwane'
+      OPEN(UNIT = iundwdecay, FILE = TRIM(fnm))
       WRITE(iundwdecay, '(a)') '# Spatial decay of Debye-Waller matrix elements in electron Wannier basis'
       DO ir = 1, nrr
         !
@@ -1499,10 +1530,13 @@
     !
     USE kinds,         ONLY : DP
     USE cell_base,     ONLY : at, bg, alat
-    USE global_var,    ONLY : epmatwp
+    USE global_var,    ONLY : epmatwp, irg_start, irg_stop, irn_start, irn_stop
     USE ep_constants,  ONLY : bohr2ang, twopi, ci, czero
     USE io_var,        ONLY : iuwanep, iuwane
-    USE mp,            ONLY : mp_barrier
+    USE mp,            ONLY : mp_max
+    USE mp_pools,      ONLY : inter_pool_comm
+    USE parallelism,   ONLY : para_bounds
+    USE input,         ONLY : lsda
     !
     IMPLICIT NONE
     !
@@ -1534,8 +1568,10 @@
     !
     INTEGER :: iq
     !! Counter on q-point
-    INTEGER :: ir
-    !! Counter on WS points
+    INTEGER :: irg
+    !! Global counter on WS points
+    INTEGER :: irg_loc
+    !! Local counter on WS points in this pool
     INTEGER :: ire
     !! Counter on WS points
     !
@@ -1553,6 +1589,13 @@
     !! Phonon distance when printing the decay files
     COMPLEX(KIND = DP) :: cfac
     !! $$ e^{-i\mathbf{r}\cdot\mathbf{k}} $$
+    INTEGER :: irn
+    !! Global counter on the combined WS*mode index
+
+    INTEGER :: imode
+    !! Phonon mode index
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer file name
     !
     !----------------------------------------------------------
     !  Fourier transform to go into Wannier basis
@@ -1567,26 +1610,47 @@
     !
     epmatwp = czero
     !
-    DO ir = 1, nrr_g
+    DO irn = irn_start, irn_stop
+      !
+      irg = (irn - 1) / nmodes + 1
+      imode = MOD(irn - 1, nmodes) + 1
+      !
+      irg_loc = irg - irg_start + 1
       !
       DO iq = 1, nq
         !
-        rdotk = twopi * DOT_PRODUCT(xk(:, iq), DBLE(irvec_g(:, ir)))
+        rdotk = twopi * DOT_PRODUCT(xk(:, iq), DBLE(irvec_g(:, irg)))
         cfac = EXP(-ci * rdotk) / DBLE(nq)
-        epmatwp(:, :, :, :, ir) = epmatwp(:, :, :, :, ir) + cfac * epmatwe(:, :, :, :, iq)
+        epmatwp(:, :, :, imode, irg_loc) = epmatwp(:, :, :, imode, irg_loc) + cfac * epmatwe(:, :, :, imode, iq)
         !
       ENDDO
+    ENDDO
+    !
+    tmp = 0.0_DP
+    !
+    DO irg = irg_start, irg_stop
       !
       ! Check spatial decay of EP matrix elements in wannier basis - electrons + phonons
       !
-      rvec2 = DBLE(irvec_g(1, ir)) * at(:, 1) + DBLE(irvec_g(2, ir)) * at(:, 2) + DBLE(irvec_g(3, ir)) * at(:, 3)
-      ! phonon - electron0 distance
-      len2(ir) = DSQRT(rvec2(1)**2.d0 + rvec2(2)**2.d0 + rvec2(3)**2.d0)
+      irg_loc = irg - irg_start + 1
+      !
       DO ire = 1, nrr_k
-        tmp(ire, ir)  = MAXVAL(ABS(epmatwp(:, :, ire, :, ir)))
+        tmp(ire, irg)  = MAXVAL(ABS(epmatwp(:, :, ire, :, irg_loc)))
       ENDDO
       !
-    ENDDO ! ir
+    ENDDO ! irg
+    !
+    DO irg = 1, nrr_g
+      CALL mp_max(tmp(:, irg), inter_pool_comm)
+    ENDDO ! irg
+    !
+    DO irg = 1, nrr_g
+      !
+      rvec2 = DBLE(irvec_g(1, irg)) * at(:, 1) + DBLE(irvec_g(2, irg)) * at(:, 2) + DBLE(irvec_g(3, irg)) * at(:, 3)
+      ! phonon - electron0 distance
+      len2(irg) = DSQRT(rvec2(1)**2.d0 + rvec2(2)**2.d0 + rvec2(3)**2.d0)
+      !
+    ENDDO ! irg
     !
     !  Check spatial decay of EP matrix elements in wannier basis - electrons + phonons
     !  We plot: R_e, R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)|
@@ -1597,17 +1661,21 @@
       len1(ire) = DSQRT(rvec1(1)**2.d0 + rvec1(2)**2.d0 + rvec1(3)**2.d0)
     ENDDO
     !
-    OPEN(UNIT = iuwane, FILE = 'decay.epmate', STATUS = 'unknown')
+    fnm = 'decay.epmate'
+    IF (TRIM(lsda) == 'down') fnm = 'decay.down.epmate'
+    OPEN(UNIT = iuwane, FILE = TRIM(fnm), STATUS = 'unknown')
     WRITE(iuwane, '(a)') '#   R_e [Ang]    max_{m,n,nu} |g(m, n, nu, R_e, :)| [Ry] '
     DO ire = 1, nrr_k
       WRITE(iuwane, '(2f15.10, 1E20.10)') len1(ire) * alat * bohr2ang, MAXVAL(tmp(ire, :))
     ENDDO
     CLOSE(iuwane)
     !
-    OPEN(UNIT = iuwanep, FILE = 'decay.epmatp', STATUS = 'unknown')
+    fnm = 'decay.epmatp'
+    IF (TRIM(lsda) == 'down') fnm = 'decay.down.epmatp'
+    OPEN(UNIT = iuwanep, FILE = TRIM(fnm), STATUS = 'unknown')
     WRITE(iuwanep, '(a)') '#   R_p [Ang]    max_{m,n,nu} |g(m, n, nu, :, R_p)| [Ry] '
-    DO ir = 1, nrr_g
-      WRITE(iuwanep, '(2f15.10, 1E20.10)') len2(ir) * alat * bohr2ang, MAXVAL(tmp(:, ir))
+    DO irg = 1, nrr_g
+      WRITE(iuwanep, '(2f15.10, 1E20.10)') len2(irg) * alat * bohr2ang, MAXVAL(tmp(:, irg))
     ENDDO
     CLOSE(iuwanep)
     !
@@ -1635,7 +1703,7 @@
     USE ep_constants,     ONLY : bohr2ang, twopi, ci, czero, zero
     USE io_var,           ONLY : iunepmatwe, iunepmatwp, iuwanep, iuwane
     USE io_global,        ONLY : ionode_id, stdout
-    USE mp_global,        ONLY : world_comm
+    USE mp_global,        ONLY : world_comm, inter_pool_comm, my_pool_id
     USE mp,               ONLY : mp_barrier, mp_bcast, mp_sum
     USE mp_world,         ONLY : mpime
     USE io,               ONLY : rwepmatw
@@ -1647,6 +1715,7 @@
                                  MPI_MODE_WRONLY, MPI_MODE_CREATE, MPI_INFO_NULL, &
                                  MPI_MODE_DELETE_ON_CLOSE
 #endif
+    USE input,            ONLY : lsda 
     !
     IMPLICIT NONE
     !
@@ -1720,6 +1789,10 @@
     !!  e-p matrix in Wannier basis
     LOGICAL :: exst
     !! Check if backup files exist
+    CHARACTER(LEN= 256) :: fnm1
+    !! Buffer file name
+    CHARACTER(LEN= 256) :: fnm2
+    !! Buffer file name
     !
     ALLOCATE(epmatwe(nbnd, nbnd, nrr_k, nmodes), STAT = ierr)
     IF (ierr /= 0) CALL errore('ephbloch2wanp_mem', 'Error allocating epmatwe', 1)
@@ -1729,6 +1802,10 @@
     len1(:) = zero
     len2(:) = zero
     tmp(:, :) = zero
+    fnm1 = ''
+    IF (TRIM(lsda) == 'down') fnm1 = 'down.'
+    fnm2 = ''
+    IF (TRIM(lsda) == 'down') fnm2 = '.down'
     !----------------------------------------------------------
     !  Fourier transform to go into Wannier basis
     !----------------------------------------------------------
@@ -1743,10 +1820,10 @@
     ! Distribute the cpu
     CALL para_bounds(ir_start, ir_stop, nrr_g)
     !
-    IF (mpime == ionode_id) THEN
+    IF (my_pool_id == ionode_id) THEN
       diff = ir_stop - ir_start
     ENDIF
-    CALL mp_bcast(diff, ionode_id, world_comm)
+    CALL mp_bcast(diff, ionode_id, inter_pool_comm)
     !
     ! If you are the last cpu with less element
     IF (ir_stop - ir_start /= diff) THEN
@@ -1763,23 +1840,23 @@
                                 INT(nmodes, KIND = MPI_OFFSET_KIND)
     !
     ! Open the epmatwe file
-    filint = TRIM(tmp_dir) // TRIM(prefix)//'.epmatwe1'
+    filint = TRIM(tmp_dir) // TRIM(prefix) // TRIM(fnm2) //'.epmatwe1'
     CALL MPI_FILE_OPEN(world_comm, filint, MPI_MODE_RDONLY + MPI_MODE_DELETE_ON_CLOSE, MPI_INFO_NULL, iunepmatwe, ierr)
     !CALL MPI_FILE_OPEN(world_comm, filint, MPI_MODE_RDONLY, MPI_INFO_NULL, iunepmatwe, ierr)
     IF (ierr /= 0) CALL errore('ephbloch2wanp_mem', 'error in MPI_FILE_OPEN epmatwe', 1)
     !
     ! Open the epmatwp file
-    filint = TRIM(tmp_dir) // TRIM(prefix)//'.epmatwp'
+    filint = TRIM(tmp_dir) // TRIM(prefix)// TRIM(fnm2)//'.epmatwp'
     CALL MPI_FILE_OPEN(world_comm, filint, MPI_MODE_WRONLY + MPI_MODE_CREATE, MPI_INFO_NULL, iunepmatwp, ierr)
     IF (ierr /= 0) CALL errore('ephbloch2wanp_mem', 'error in MPI_FILE_OPEN epmatwp', 1)
 #else
     ! Size of the read array
     lsize = INT(2 * nbnd * nbnd * nrr_k * nmodes, KIND = 4)
-    filint   = TRIM(tmp_dir) // TRIM(prefix)//'.epmatwe'
-    CALL diropn(iunepmatwe, 'epmatwe', lsize, exst)
+    filint   = TRIM(tmp_dir) // TRIM(prefix)// TRIM(fnm2)//'.epmatwe'
+    CALL diropn(iunepmatwe, TRIM(fnm1)//'epmatwe', lsize, exst)
     IF (.NOT. exst) CALL errore('ephbloch2wanp_mem', 'file ' // TRIM(filint) // ' not found', 1)
     !
-    CALL diropn(iunepmatwp, 'epmatwp', lsize, exst)
+    CALL diropn(iunepmatwp, TRIM(fnm1)//'epmatwp', lsize, exst)
 #endif
     !
     DO ir = ir_start, ir_stop + add
@@ -1803,7 +1880,7 @@
         !
         ! Parallel read using MPI-IO of epmatwe for this iq
         epmatwe = czero
-        CALL MPI_FILE_READ_AT(iunepmatwe, lrepmatw, epmatwe, lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+        CALL MPI_FILE_READ_AT_ALL(iunepmatwe, lrepmatw, epmatwe, lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
         IF (ierr /= 0) CALL errore('ephbloch2wanp_mem', 'error in MPI_FILE_READ_AT', 1)
         IF (add == 1 .AND. ir == ir_stop + add) CYCLE
 #else
@@ -1819,7 +1896,6 @@
       ENDDO
       !
 #if defined(__MPI)
-      IF (add == 1 .AND. ir == ir_stop + add) CYCLE
       lrepmatw = 2_MPI_OFFSET_KIND * 8_MPI_OFFSET_KIND * &
                                    INT(nbnd , KIND = MPI_OFFSET_KIND) * &
                                    INT(nbnd , KIND = MPI_OFFSET_KIND) * &
@@ -1827,8 +1903,11 @@
                                    INT(nmodes, KIND = MPI_OFFSET_KIND) * &
                                   (INT(ir, KIND = MPI_OFFSET_KIND) - 1_MPI_OFFSET_KIND)
 
-      CALL MPI_FILE_WRITE_AT(iunepmatwp, lrepmatw, epmatwp_mem, lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
-      IF (ierr /= 0) CALL errore('ephbloch2wanp_mem', 'error in MPI_FILE_WRITE_AT', 1)
+      CALL MPI_FILE_WRITE_AT_ALL(iunepmatwp, lrepmatw, epmatwp_mem, lsize, &
+        MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+      IF (ierr /= 0) CALL errore('ephbloch2wanp_mem', 'error in MPI_FILE_WRITE_AT_ALL', 1)
+      !
+      IF (add == 1 .AND. ir == ir_stop + add) CYCLE
 #else
       ! direct write of epmatwp_mem for this ir
       CALL rwepmatw(epmatwp_mem, nbnd, nrr_k, nmodes, ir, iunepmatwp, +1)
@@ -1848,23 +1927,27 @@
     !  Check spatial decay of EP matrix elements in wannier basis - electrons + phonons
     !  We plot: R_e, R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)|
     !
-    CALL mp_sum(len2, world_comm)
-    CALL mp_sum(tmp, world_comm)
-    IF (mpime == ionode_id) THEN
+    CALL mp_sum(len2, inter_pool_comm)
+    CALL mp_sum(tmp, inter_pool_comm)
+    IF (my_pool_id == ionode_id) THEN
       ! electron-electron0 distance
       DO ire = 1, nrr_k
         rvec1 = DBLE(irvec_k(1, ire)) * at(:, 1) + DBLE(irvec_k(2, ire)) * at(:, 2) + DBLE(irvec_k(3, ire)) * at(:, 3)
         len1(ire) = DSQRT(rvec1(1)**2.d0 + rvec1(2)**2.d0 + rvec1(3)**2.d0)
       ENDDO
       !
-      OPEN(UNIT = iuwane, FILE = 'decay.epmate', STATUS = 'unknown')
+      fnm2 = 'decay.epmate'
+      IF (TRIM(lsda) == 'down')  fnm2 = 'decay.down.epmate'
+      OPEN(UNIT = iuwane, FILE = TRIM(fnm2), STATUS = 'unknown')
       WRITE(iuwane, '(a)') '#   R_e [Ang]    max_{m,n,nu} |g(m, n, nu, R_e, :)| [Ry] '
       DO ire = 1, nrr_k
         WRITE(iuwane, '(2f15.10, 1E20.10)') len1(ire) * alat * bohr2ang, MAXVAL(tmp(ire, :))
       ENDDO
       CLOSE(iuwane)
       !
-      OPEN(UNIT = iuwanep, FILE = 'decay.epmatp', STATUS = 'unknown')
+      fnm2 = 'decay.epmatp'
+      IF (TRIM(lsda) == 'down')  fnm2 = 'decay.down.epmatp'
+      OPEN(UNIT = iuwanep, FILE = TRIM(fnm2), STATUS = 'unknown')
       WRITE(iuwanep, '(a)') '#   R_p [Ang]    max_{m,n,nu} |g(m, n, nu, :, R_p)| [Ry] '
       DO ir = 1, nrr_g
         WRITE(iuwanep, '(2f15.10, 1E20.10)') len2(ir) * alat * bohr2ang, MAXVAL(tmp(:, ir))
@@ -1922,10 +2005,11 @@
     USE ep_constants,  ONLY : bohr2ang, twopi, ci, czero, cone, rytoev
     USE mp,            ONLY : mp_sum
     USE mp_world,      ONLY : mpime
-    USE mp_global,     ONLY : inter_pool_comm
+    USE mp_global,     ONLY : inter_pool_comm, my_pool_id
     USE io_global,     ONLY : ionode_id
     USE io_var,        ONLY : iuwane
     USE cell_base,     ONLY : at, alat
+    USE input,         ONLY : lsda
     !
     IMPLICIT NONE
     !
@@ -2008,6 +2092,8 @@
     !!  e-p matrix, temporary
     COMPLEX(KIND = DP), ALLOCATABLE :: dgmats(:, :, :)
     !!  delta g matrix in smooth Bloch basis, coarse mesh
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer file name
     !
     !----------------------------------------------------------
     !  STEP 1: rotation to optimally smooth Bloch states
@@ -2127,7 +2213,9 @@
     !  the unit in r-space is angstrom, and I am plotting
     !  the matrix for the first mode only
     !
-    IF (mpime == ionode_id) THEN
+    IF (my_pool_id == ionode_id) THEN
+      fnm = 'decay.dgwane'
+      IF (TRIM(lsda) == 'down') fnm = 'decay.down.dgwane'
       OPEN(UNIT = iuwane, FILE = 'decay.dgwane')
       WRITE(iuwane, '(a)') '# Spatial decay of delta g matrix elements in Wannier basis'
       WRITE(iuwane, '(a)') '# Contains only the Sternheimer contribution, not the epmat part.'
@@ -2187,10 +2275,11 @@
     USE ep_constants,  ONLY : bohr2ang, twopi, ci, czero, cone, rytoev
     USE mp,            ONLY : mp_sum
     USE mp_world,      ONLY : mpime
-    USE mp_global,     ONLY : inter_pool_comm
+    USE mp_global,     ONLY : inter_pool_comm, my_pool_id
     USE io_var,        ONLY : iuwane
     USE io_global,     ONLY : ionode_id
     USE cell_base,     ONLY : at, alat
+    USE input,         ONLY : lsda
     !
     IMPLICIT NONE
     !
@@ -2273,6 +2362,8 @@
     !! e-p matrix, temporary
     COMPLEX(KIND = DP), ALLOCATABLE :: sthmats(:, :, :)
     !! Sternheimer matrix in smooth Bloch basis, coarse mesh
+    CHARACTER(LEN = 256) :: fnm
+    !! Buffer file name
     !
     !----------------------------------------------------------
     !  STEP 1: rotation to optimally smooth Bloch states
@@ -2388,8 +2479,10 @@
     !  the unit in r-space is angstrom, and I am plotting
     !  the matrix for the first mode only
     !
-    IF (mpime == ionode_id) THEN
-      OPEN(UNIT = iuwane, FILE = 'decay.sthwane')
+    IF (my_pool_id == ionode_id) THEN
+      fnm = 'decay.sthwane'
+      IF (TRIM(lsda) == 'down') fnm = 'decay.down.sthwane'
+      OPEN(UNIT = iuwane, FILE = TRIM(fnm))
       WRITE(iuwane, '(a)') '# Spatial decay of Sternheimer matrix elements in Wannier basis'
       DO ir = 1, nrr
         !

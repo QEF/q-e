@@ -1089,7 +1089,7 @@ SUBROUTINE exx_gs(nfi, c)
       coeke(:,2,2) = (Jim(1,2)**2+Jim(2,2)**2+Jim(3,2)**2)*coeke(:,2,2)
       coeke(:,1,1) = (Jim(1,1)**2+Jim(2,1)**2+Jim(3,1)**2)*coeke(:,1,1)
       !
-      ! cross derivatives (needed for non-othogonal grids in the second derivatives)
+      ! cross derivatives (needed for non-orthogonal grids in the second derivatives)
       !
       coeke(:,2,3) = 2.0_DP*(Jim(1,2)*Jim(1,3)+Jim(2,2)*Jim(2,3)+Jim(3,2)*Jim(3,3))*coeke(:,2,3)
       coeke(:,1,3) = 2.0_DP*(Jim(1,1)*Jim(1,3)+Jim(2,1)*Jim(2,3)+Jim(3,1)*Jim(3,3))*coeke(:,1,3)
@@ -1490,7 +1490,7 @@ SUBROUTINE exx_gs(nfi, c)
       CALL start_clock('getvofr')
       CALL getvofr_sphere( np_in_sp_me_s,np_in_sp_s,&
         hcub, rho_in_sp, vl, selfv(1,1,iobtl), selfv(1,2,iobtl),&
-        selfv(1,3,iobtl), .TRUE., 0.0, 0.0, 0.0, 0.0,cgstep)
+        selfv(1,3,iobtl), .TRUE., 0d0, 0d0, 0d0, 0d0,cgstep)
       !
       CALL stop_clock('getvofr')
       !

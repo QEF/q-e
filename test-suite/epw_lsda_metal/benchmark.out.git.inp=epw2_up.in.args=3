@@ -1,0 +1,1066 @@
+                                                                                      
+                                       ``:oss/                                        
+                           `.+s+.     .+ys--yh+     `./ss+.                           
+                          -sh//yy+`   +yy   +yy    -+h+-oyy                           
+                          -yh- .oyy/.-sh.   .syo-.:sy-  /yh                           
+                 `.-.`    `yh+   -oyyyo.     `/syys:    oys      `.`                  
+               `/+ssys+-` `sh+      `                   oys`   .:osyo`                
+               -yh- ./syyooyo`                          .sys+/oyo--yh/                
+               `yy+    .-:-.                             `-/+/:`  -sh-                
+                /yh.                                              oys                 
+          ``..---hho---------`   .---------..`      `.-----.`    -hd+---.             
+       `./osmNMMMMMMMMMMMMMMMs. +NNMMMMMMMMNNmh+.   yNMMMMMNm-  oNMMMMMNmo++:`        
+       +sy--/sdMMMhyyyyyyyNMMh- .oyNMMmyyyyyhNMMm+` -yMMMdyyo:` .oyyNMMNhs+syy`       
+       -yy/   /MMM+.`-+/``mMMy-   `mMMh:`````.dMMN:` `MMMy-`-dhhy```mMMy:``+hs        
+        -yy+` /MMMo:-mMM+`-oo/.    mMMh:     `dMMN/`  dMMm:`dMMMMy..MMMo-.+yo`        
+         .sys`/MMMMNNMMMs-         mMMmyooooymMMNo:   oMMM/sMMMMMM++MMN//oh:          
+          `sh+/MMMhyyMMMs- `-`     mMMMMMMMMMNmy+-`   -MMMhMMMsmMMmdMMd/yy+           
+    `-/+++oyy-/MMM+.`/hh/.`mNm:`   mMMd+/////:-.`      NMMMMMd/:NMMMMMy:/yyo/:.`      
+   +os+//:-..-oMMMo:--:::-/MMMo. .-mMMd+---`           hMMMMN+. oMMMMMo. `-+osyso:`   
+   syo     `mNMMMMMNNNNNNNNMMMo.oNNMMMMMNNNN:`         +MMMMs:`  dMMMN/`     ``:syo   
+   /yh`     :syyyyyyyyyyyyyyyy+.`+syyyyyyyyo:`         .oyys:`   .oyys:`        +yh   
+   -yh-        ````````````````    `````````              ``        ``          oys   
+   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
+   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
+                                                                                      
+ Lee, H., Poncé, S., Bushick, K., Hajinazar, S., Lafuente-Bartolome, J.,Leveillee, J.,
+    Lian, C., Lihm, J., Macheda, F., Mori, H., Paudyal, H., Sio, W., Tiwari, S.,      
+ Zacharias, M., Zhang, X., Bonini, N., Kioupakis, E., Margine, E.R., and Giustino F., 
+                                                     npj Comput Mater 9, 156 (2023)   
+                                                                                      
+
+     Program EPW v.6.0 starts on 23Oct2025 at  1: 1:51 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+         "P. Giannozzi et al., J. Chem. Phys. 152 154105 (2020);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
+     1256 MiB available memory on the printing compute node when the environment starts
+
+     Reading input from epw2_up.in
+      Title line not specified: using 'default'.
+
+     Reading supplied temperature list.
+                      
+     ------------------------------------------------------------------------ 
+                   RESTART - RESTART - RESTART - RESTART                         
+     Restart is done without reading PWSCF save file.                  
+     Be aware that some consistency checks are therefore not done.                  
+     ------------------------------------------------------------------------ 
+                      
+
+     default                                                                    
+
+     bravais-lattice index     =            0
+     lattice parameter (a_0)   =       0.0000  a.u.
+     unit-cell volume          =       0.0000 (a.u.)^3
+     number of atoms/cell      =            0
+     number of atomic types    =            0
+     kinetic-energy cut-off    =       0.0000  Ry
+     charge density cut-off    =       0.0000  Ry
+     Exchange-correlation= not set
+                           (  -1  -1  -1  -1  -1  -1  -1)
+     Collinear magnetic calculation without spin-orbit
+
+     SPIN CHANNEL: up                                                                              
+     celldm(1)=    0.00000  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = (  0.0000  0.0000  0.0000 )  
+               a(2) = (  0.0000  0.0000  0.0000 )  
+               a(3) = (  0.0000  0.0000  0.0000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = (  0.0000  0.0000  0.0000 )  
+               b(2) = (  0.0000  0.0000  0.0000 )  
+               b(3) = (  0.0000  0.0000  0.0000 )  
+
+
+     Atoms inside the unit cell: 
+
+   Cartesian axes
+
+     site n.  atom      mass           positions (a_0 units)
+
+
+     No symmetry!
+
+     G cutoff =    0.0000  (      0 G-vectors)     FFT grid: (  0,  0,  0)
+     number of k points=    0
+                       cart. coord. in units 2pi/a_0
+     EPW          :      0.00s CPU      0.00s WALL
+
+     EPW          :      0.00s CPU      0.00s WALL
+
+
+     -------------------------------------------------------------------
+     Using fe.ukk from disk
+     -------------------------------------------------------------------
+
+     HDF5 is NOT used in the current build. Exciton-phonon coupling calculations are disabled.
+     Symmetries of Bravais lattice:  48
+     Symmetries of crystal:          48
+
+     Do not need to read .epb files; read .fmt files
+
+
+     Band disentanglement is used: nbndsub =    0
+     Use zone-centred Wigner-Seitz cells 
+     Number of WS vectors for electrons       27
+     Number of WS vectors for phonons       27
+     Number of WS vectors for electron-phonon       27
+     Maximum number of cores for efficient parallelization       81
+     Results may improve by using use_ws == .TRUE. 
+
+     Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file
+
+
+     EP vertexes are distributed into MPI processes
+
+
+     Finished reading Wann rep data from file
+
+     ===================================================================
+     Memory usage:  VmHWM =        25Mb
+                   VmPeak =      1721Mb
+     ===================================================================
+     
+     Add time reversal symmetry into k grid.
+     Using uniform MP k-mesh:    21   21   21
+     Size of k point mesh for interpolation:        286
+     Max number of k points per pool:              286
+     Using uniform q-mesh:    21   21   21
+     Size of q point mesh for interpolation:       9261
+     Using uniform MP k-mesh:    21   21   21
+     Size of k point mesh for interpolation:        286
+     Max number of k points per pool:              286
+
+     Fermi energy coarse grid =  20.128815 eV
+
+     Skipping    4 occupied bands:
+
+     The Fermi level will be determined with   8.00000 electrons
+
+     Fermi energy is calculated from the fine k-mesh: Ef =  20.417444 eV
+
+     Warning: check if difference with Fermi level fine grid makes sense
+
+     ===================================================================
+
+              ibndmin =     3  ebndmin =    20.127 eV
+              ibndmax =     6  ebndmax =    20.714 eV
+
+
+     Number of ep-matrix elements per pool :        13728 ~=  107.25 Kb (@ 8 bytes/ DP)
+
+     File ./Fepmatkq1_0/fe.epmatkq1_0 deleted, as requested
+
+     File ./Fsparse_0/sparse_0 deleted, as requested
+      
+     A selecq.fmt file was found but re-created because selecqread == .FALSE.  
+     Number selected, total            100            100
+     Number selected, total            200            201
+     Number selected, total            300            320
+     Number selected, total            400            420
+     Number selected, total            500            520
+     Number selected, total            600            620
+     Number selected, total            700            736
+     Number selected, total            800            836
+     Number selected, total            900            936
+     Number selected, total           1000           1036
+     Number selected, total           1100           1139
+     Number selected, total           1200           1247
+     Number selected, total           1300           1347
+     Number selected, total           1400           1447
+     Number selected, total           1500           1547
+     Number selected, total           1600           1653
+     Number selected, total           1700           1753
+     Number selected, total           1800           1853
+     Number selected, total           1900           1953
+     Number selected, total           2000           2054
+     Number selected, total           2100           2154
+     Number selected, total           2200           2254
+     Number selected, total           2300           2354
+     Number selected, total           2400           2454
+     Number selected, total           2500           2554
+     Number selected, total           2600           2654
+     Number selected, total           2700           2754
+     Number selected, total           2800           2854
+     Number selected, total           2900           2954
+     Number selected, total           3000           3054
+     Number selected, total           3100           3154
+     Number selected, total           3200           3254
+     Number selected, total           3300           3354
+     Number selected, total           3400           3454
+     Number selected, total           3500           3554
+     Number selected, total           3600           3654
+     Number selected, total           3700           3754
+     Number selected, total           3800           3854
+     Number selected, total           3900           3954
+     Number selected, total           4000           4054
+     Number selected, total           4100           4154
+     Number selected, total           4200           4254
+     Number selected, total           4300           4354
+     Number selected, total           4400           4454
+     Number selected, total           4500           4554
+     Number selected, total           4600           4654
+     Number selected, total           4700           4754
+     Number selected, total           4800           4854
+     Number selected, total           4900           4954
+     Number selected, total           5000           5054
+     Number selected, total           5100           5154
+     Number selected, total           5200           5254
+     Number selected, total           5300           5354
+     Number selected, total           5400           5454
+     Number selected, total           5500           5554
+     Number selected, total           5600           5654
+     Number selected, total           5700           5754
+     Number selected, total           5800           5854
+     Number selected, total           5900           5954
+     Number selected, total           6000           6054
+     Number selected, total           6100           6154
+     Number selected, total           6200           6254
+     Number selected, total           6300           6354
+     Number selected, total           6400           6454
+     Number selected, total           6500           6554
+     Number selected, total           6600           6657
+     Number selected, total           6700           6757
+     Number selected, total           6800           6857
+     Number selected, total           6900           6959
+     Number selected, total           7000           7067
+     Number selected, total           7100           7167
+     Number selected, total           7200           7267
+     Number selected, total           7300           7367
+     Number selected, total           7400           7478
+     Number selected, total           7500           7578
+     Number selected, total           7600           7678
+     Number selected, total           7700           7778
+     Number selected, total           7800           7887
+     Number selected, total           7900           7989
+     Number selected, total           8000           8089
+     Number selected, total           8100           8189
+     Number selected, total           8200           8293
+     Number selected, total           8300           8397
+     Number selected, total           8400           8497
+     Number selected, total           8500           8597
+     Number selected, total           8600           8697
+     Number selected, total           8700           8797
+     Number selected, total           8800           8897
+     Number selected, total           8900           8997
+     Number selected, total           9000           9108
+     Number selected, total           9100           9210
+     We only need to compute     9151 q-points
+      
+     nrr_g_3 =      5
+
+     ===================================================================
+     Scattering rate for IBTE
+     ===================================================================
+
+     No intermediate mobility will be shown.
+
+     Fermi Surface thickness =   0.300000 eV
+     This is computed with respect to the fine Fermi level  20.417444 eV
+     Only states between  20.117444 eV and  20.717444 eV will be included
+
+     Save matrix elements larger than threshold:   0.728725973278E-25
+      
+     Progression iq (fine) =        100/      9151
+     Progression iq (fine) =        200/      9151
+     Progression iq (fine) =        300/      9151
+     Progression iq (fine) =        400/      9151
+     Progression iq (fine) =        500/      9151
+     Progression iq (fine) =        600/      9151
+     Progression iq (fine) =        700/      9151
+     Progression iq (fine) =        800/      9151
+     Progression iq (fine) =        900/      9151
+     Progression iq (fine) =       1000/      9151
+     Progression iq (fine) =       1100/      9151
+     Progression iq (fine) =       1200/      9151
+     Progression iq (fine) =       1300/      9151
+     Progression iq (fine) =       1400/      9151
+     Progression iq (fine) =       1500/      9151
+     Progression iq (fine) =       1600/      9151
+     Progression iq (fine) =       1700/      9151
+     Progression iq (fine) =       1800/      9151
+     Progression iq (fine) =       1900/      9151
+     Progression iq (fine) =       2000/      9151
+     Progression iq (fine) =       2100/      9151
+     Progression iq (fine) =       2200/      9151
+     Progression iq (fine) =       2300/      9151
+     Progression iq (fine) =       2400/      9151
+     Progression iq (fine) =       2500/      9151
+     Progression iq (fine) =       2600/      9151
+     Progression iq (fine) =       2700/      9151
+     Progression iq (fine) =       2800/      9151
+     Progression iq (fine) =       2900/      9151
+     Progression iq (fine) =       3000/      9151
+     Progression iq (fine) =       3100/      9151
+     Progression iq (fine) =       3200/      9151
+     Progression iq (fine) =       3300/      9151
+     Progression iq (fine) =       3400/      9151
+     Progression iq (fine) =       3500/      9151
+     Progression iq (fine) =       3600/      9151
+     Progression iq (fine) =       3700/      9151
+     Progression iq (fine) =       3800/      9151
+     Progression iq (fine) =       3900/      9151
+     Progression iq (fine) =       4000/      9151
+     Progression iq (fine) =       4100/      9151
+     Progression iq (fine) =       4200/      9151
+     Progression iq (fine) =       4300/      9151
+     Progression iq (fine) =       4400/      9151
+     Progression iq (fine) =       4500/      9151
+     Progression iq (fine) =       4600/      9151
+     Progression iq (fine) =       4700/      9151
+     Progression iq (fine) =       4800/      9151
+     Progression iq (fine) =       4900/      9151
+     Progression iq (fine) =       5000/      9151
+     Progression iq (fine) =       5100/      9151
+     Progression iq (fine) =       5200/      9151
+     Progression iq (fine) =       5300/      9151
+     Progression iq (fine) =       5400/      9151
+     Progression iq (fine) =       5500/      9151
+     Progression iq (fine) =       5600/      9151
+     Progression iq (fine) =       5700/      9151
+     Progression iq (fine) =       5800/      9151
+     Progression iq (fine) =       5900/      9151
+     Progression iq (fine) =       6000/      9151
+     Progression iq (fine) =       6100/      9151
+     Progression iq (fine) =       6200/      9151
+     Progression iq (fine) =       6300/      9151
+     Progression iq (fine) =       6400/      9151
+     Progression iq (fine) =       6500/      9151
+     Progression iq (fine) =       6600/      9151
+     Progression iq (fine) =       6700/      9151
+     Progression iq (fine) =       6800/      9151
+     Progression iq (fine) =       6900/      9151
+     Progression iq (fine) =       7000/      9151
+     Progression iq (fine) =       7100/      9151
+     Progression iq (fine) =       7200/      9151
+     Progression iq (fine) =       7300/      9151
+     Progression iq (fine) =       7400/      9151
+     Progression iq (fine) =       7500/      9151
+     Progression iq (fine) =       7600/      9151
+     Progression iq (fine) =       7700/      9151
+     Progression iq (fine) =       7800/      9151
+     Progression iq (fine) =       7900/      9151
+     Progression iq (fine) =       8000/      9151
+     Progression iq (fine) =       8100/      9151
+     Progression iq (fine) =       8200/      9151
+     Progression iq (fine) =       8300/      9151
+     Progression iq (fine) =       8400/      9151
+     Progression iq (fine) =       8500/      9151
+     Progression iq (fine) =       8600/      9151
+     Progression iq (fine) =       8700/      9151
+     Progression iq (fine) =       8800/      9151
+     Progression iq (fine) =       8900/      9151
+     Progression iq (fine) =       9000/      9151
+     Progression iq (fine) =       9100/      9151
+      
+     epmatkqread automatically changed to .TRUE. as all scattering have been computed.
+      
+     ===================================================================
+     Memory usage:  VmHWM =        39Mb
+                   VmPeak =      1917Mb
+     ===================================================================
+
+     Number of elements per core     199242
+     Symmetry mapping finished
+      
+     =============================================================================================
+     BTE in the self-energy relaxation time approximation (SERTA)
+     =============================================================================================
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01  -0.11102E-14    0.123597E+07    0.253963E-12    0.271015E-10
+                                       0.71720E-13   -0.199543E-11    0.123597E+07   -0.235460E-10
+                                      -0.68834E-13    0.266299E-10   -0.266299E-10    0.123597E+07
+      300.000  20.4098   0.41888E+01  -0.71054E-14    0.548245E+06    0.166891E-11   -0.348293E-11
+                                      -0.23093E-13    0.253963E-11    0.548245E+06   -0.319268E-11
+                                      -0.71054E-14   -0.573232E-11   -0.217685E-12    0.548245E+06
+      
+     =============================================================================================
+     Start solving iterative Boltzmann Transport Equation
+     =============================================================================================
+
+     Iteration number:         1
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01   0.30753E-13    0.115205E+07    0.146936E-10    0.373689E-11
+                                       0.13367E-12    0.115009E-10    0.115205E+07    0.101223E-10
+                                       0.17319E-13    0.834451E-11   -0.370061E-11    0.115205E+07
+      300.000  20.4098   0.41888E+01   0.19540E-13    0.509472E+06    0.261219E-11   -0.500670E-11
+                                       0.19540E-13    0.145122E-11    0.509472E+06   -0.181403E-11
+                                       0.79936E-14   -0.268476E-11   -0.181402E-11    0.509472E+06
+
+                                                      0.115205E+07    Max error
+     Iteration number:         2
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01  -0.71054E-14    0.120518E+07    0.341036E-11    0.100860E-10
+                                       0.30642E-13   -0.653049E-12    0.120518E+07    0.950548E-11
+                                       0.73275E-13   -0.256140E-10   -0.674817E-11    0.120518E+07
+      300.000  20.4098   0.41888E+01   0.39968E-14    0.529594E+06    0.725565E-13   -0.580489E-12
+                                       0.23537E-13   -0.580488E-11    0.529594E+06    0.536951E-11
+                                       0.00000E+00   -0.108842E-11    0.464390E-11    0.529594E+06
+
+                                                      0.531318E+05    Max error
+     Iteration number:         3
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01   0.41522E-13    0.121511E+07    0.218771E-10    0.653049E-11
+                                       0.30198E-13   -0.743750E-11    0.121511E+07   -0.137866E-11
+                                       0.10880E-13   -0.134238E-11    0.135689E-10    0.121511E+07
+      300.000  20.4098   0.41888E+01   0.39080E-13    0.533127E+06   -0.486159E-11   -0.493414E-11
+                                       0.16431E-13   -0.239451E-11    0.533127E+06   -0.798168E-12
+                                       0.66613E-14    0.348293E-11   -0.239451E-11    0.533127E+06
+
+                                                      0.992717E+04    Max error
+     Iteration number:         4
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01  -0.68834E-14    0.121918E+07    0.126619E-10    0.188658E-11
+                                      -0.40634E-13    0.975945E-11    0.121918E+07   -0.391829E-11
+                                      -0.97700E-14    0.129521E-10   -0.160360E-10    0.121918E+07
+      300.000  20.4098   0.41888E+01   0.11546E-13    0.534407E+06   -0.312012E-11    0.116098E-11
+                                       0.17764E-14   -0.282988E-11    0.534407E+06    0.290244E-11
+                                       0.88818E-14    0.123354E-11    0.725610E-13    0.534407E+06
+
+                                                      0.407521E+04    Max error
+     Iteration number:         5
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01   0.42855E-13    0.122119E+07   -0.870731E-12   -0.119000E-10
+                                       0.12546E-12    0.838079E-11    0.122119E+07   -0.464390E-11
+                                       0.48850E-13   -0.377317E-11    0.957805E-11    0.122119E+07
+      300.000  20.4098   0.41888E+01  -0.55067E-13    0.534990E+06   -0.130610E-11   -0.391828E-11
+                                      -0.84377E-14   -0.119726E-10    0.534990E+06    0.536952E-11
+                                       0.22204E-14   -0.391829E-11    0.115372E-10    0.534990E+06
+
+                                                      0.200156E+04    Max error
+     Iteration number:         6
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01  -0.18208E-13    0.122221E+07    0.136052E-10    0.170518E-11
+                                      -0.35971E-13   -0.189021E-10    0.122221E+07   -0.319268E-11
+                                       0.15543E-13   -0.841707E-11   -0.870731E-12    0.122221E+07
+      300.000  20.4098   0.41888E+01  -0.27089E-13    0.535271E+06    0.217683E-11   -0.580481E-12
+                                      -0.16431E-13    0.130610E-11    0.535271E+06   -0.928780E-11
+                                       0.35527E-14   -0.435366E-11   -0.121902E-10    0.535271E+06
+
+                                                      0.102378E+04    Max error
+     Iteration number:         7
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01  -0.27756E-13    0.122274E+07   -0.751006E-11    0.242354E-10
+                                      -0.33085E-13    0.351921E-11    0.122274E+07    0.223488E-10
+                                       0.12346E-12    0.248521E-10    0.250335E-10    0.122274E+07
+      300.000  20.4098   0.41888E+01   0.79936E-14    0.535409E+06   -0.870740E-12    0.754633E-11
+                                       0.36859E-13   -0.210426E-11    0.535409E+06    0.972316E-11
+                                       0.23537E-13    0.203170E-11    0.106665E-10    0.535409E+06
+
+                                                      0.531909E+03    Max error
+     Iteration number:         8
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01   0.28644E-13    0.122302E+07   -0.286616E-11   -0.136052E-10
+                                       0.73275E-14    0.119363E-10    0.122302E+07    0.104488E-10
+                                      -0.63949E-13   -0.689329E-11    0.305482E-10    0.122302E+07
+      300.000  20.4098   0.41888E+01  -0.24425E-13    0.535478E+06    0.333780E-11    0.224939E-11
+                                      -0.58176E-13   -0.420854E-11    0.535478E+06    0.370061E-11
+                                       0.19540E-13    0.217683E-12    0.135689E-10    0.535478E+06
+
+                                                      0.278949E+03    Max error
+     Iteration number:         9
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01  -0.21760E-13    0.122317E+07    0.238000E-10   -0.174146E-11
+                                      -0.30642E-13    0.153829E-10    0.122317E+07    0.179951E-10
+                                       0.31086E-14    0.169793E-10   -0.116098E-11    0.122317E+07
+      300.000  20.4098   0.41888E+01  -0.22204E-14    0.535512E+06   -0.246707E-11    0.689329E-11
+                                       0.13767E-13   -0.653048E-11    0.535512E+06    0.573232E-11
+                                       0.15099E-13   -0.725598E-13    0.109567E-10    0.535512E+06
+
+                                                      0.147312E+03    Max error
+     Iteration number:        10
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01   0.22649E-13    0.122325E+07    0.366433E-11    0.772774E-11
+                                       0.11102E-13    0.221311E-11    0.122325E+07   -0.156006E-10
+                                       0.39968E-14    0.471646E-11    0.108116E-10    0.122325E+07
+      300.000  20.4098   0.41888E+01  -0.49294E-13    0.535529E+06   -0.536951E-11   -0.130610E-11
+                                       0.27089E-13   -0.282987E-11    0.535529E+06   -0.725610E-12
+                                       0.12434E-13   -0.769146E-11   -0.558720E-11    0.535529E+06
+
+                                                      0.782427E+02    Max error
+     Iteration number:        11
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01   0.28977E-13    0.122329E+07   -0.215143E-10    0.275369E-10
+                                       0.11324E-13   -0.729238E-11    0.122329E+07   -0.160360E-10
+                                       0.79936E-14    0.536951E-11    0.322171E-10    0.122329E+07
+      300.000  20.4098   0.41888E+01  -0.13323E-14    0.535538E+06   -0.203171E-11   -0.181402E-11
+                                      -0.31530E-13   -0.406341E-11    0.535538E+06    0.660305E-11
+                                      -0.11546E-13   -0.725598E-13   -0.268476E-11    0.535538E+06
+
+                                                      0.417625E+02    Max error
+     Iteration number:        12
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01  -0.34861E-13    0.122331E+07    0.776402E-11    0.776402E-11
+                                       0.20428E-12    0.141131E-10    0.122331E+07    0.660305E-11
+                                      -0.86597E-14    0.195915E-11    0.391829E-11    0.122331E+07
+      300.000  20.4098   0.41888E+01  -0.97700E-14    0.535542E+06    0.130609E-11   -0.195915E-11
+                                      -0.13323E-13   -0.333780E-11    0.535542E+06   -0.515183E-11
+                                      -0.79936E-14   -0.326525E-11    0.428109E-11    0.535542E+06
+
+                                                      0.223872E+02    Max error
+     Iteration number:        13
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01  -0.21760E-13    0.122332E+07    0.103399E-10    0.569603E-11
+                                       0.23537E-13   -0.154918E-10    0.122332E+07    0.131335E-10
+                                      -0.17319E-13    0.362805E-12    0.183579E-10    0.122332E+07
+      300.000  20.4098   0.41888E+01   0.11990E-13    0.535544E+06    0.580475E-12   -0.112470E-10
+                                      -0.28422E-13   -0.137867E-11    0.535544E+06   -0.126982E-10
+                                      -0.10214E-13   -0.105213E-10   -0.783659E-11    0.535544E+06
+
+                                                      0.120469E+02    Max error
+     Iteration number:        14
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01   0.77827E-13    0.122333E+07    0.725610E-13   -0.634908E-11
+                                      -0.17986E-13   -0.587744E-11    0.122333E+07    0.587744E-11
+                                       0.10436E-12   -0.380945E-11    0.142945E-10    0.122333E+07
+      300.000  20.4098   0.41888E+01  -0.26645E-14    0.535545E+06   -0.486159E-11   -0.515182E-11
+                                      -0.35083E-13   -0.682073E-11    0.535545E+06    0.297500E-11
+                                      -0.46629E-13   -0.420854E-11   -0.500671E-11    0.535545E+06
+
+                                                      0.650489E+01    Max error
+     Iteration number:        15
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01  -0.33307E-13    0.122333E+07    0.171969E-10   -0.179226E-10
+                                       0.12257E-12    0.362805E-12    0.122333E+07   -0.653049E-12
+                                      -0.62172E-13   -0.285165E-10    0.173421E-10    0.122333E+07
+      300.000  20.4098   0.41888E+01   0.15543E-13    0.535546E+06    0.145122E-11    0.718354E-11
+                                      -0.57732E-14    0.261220E-11    0.535546E+06    0.798168E-12
+                                       0.30198E-13    0.616768E-11    0.653046E-12    0.535546E+06
+
+                                                      0.352327E+01    Max error
+     Iteration number:        16
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01  -0.27534E-13    0.122333E+07   -0.115009E-10    0.103037E-10
+                                       0.91482E-13    0.189747E-10    0.122333E+07    0.827195E-11
+                                       0.22204E-13   -0.616768E-12    0.296774E-10    0.122333E+07
+      300.000  20.4098   0.41888E+01   0.20428E-13    0.535546E+06   -0.471646E-11   -0.362805E-11
+                                       0.47073E-13    0.108842E-11    0.535546E+06   -0.391829E-11
+                                      -0.29310E-13   -0.529695E-11   -0.355549E-11    0.535546E+06
+
+                                                      0.191368E+01    Max error
+     Iteration number:        17
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01   0.88818E-15    0.122334E+07   -0.208976E-10   -0.195915E-10
+                                       0.82379E-13   -0.143671E-10    0.122334E+07   -0.103037E-10
+                                      -0.24203E-13    0.449878E-11   -0.239451E-10    0.122334E+07
+      300.000  20.4098   0.41888E+01  -0.75939E-13    0.535546E+06   -0.420854E-11   -0.674817E-11
+                                       0.35527E-13   -0.123353E-11    0.535546E+06    0.674817E-11
+                                       0.66613E-14   -0.195914E-11    0.812683E-11    0.535546E+06
+
+                                                      0.104208E+01    Max error
+     Iteration number:        18
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01   0.59952E-14    0.122334E+07    0.366433E-11   -0.129884E-10
+                                      -0.65947E-13    0.308384E-11    0.122334E+07    0.653049E-12
+                                       0.99476E-13    0.482530E-11    0.703841E-11    0.122334E+07
+      300.000  20.4098   0.41888E+01   0.26645E-14    0.535547E+06   -0.166890E-11   -0.863476E-11
+                                       0.88818E-15   -0.631281E-11    0.535547E+06    0.500670E-11
+                                      -0.27534E-13   -0.769145E-11   -0.145115E-12    0.535547E+06
+
+                                                      0.568796E+00    Max error
+     Iteration number:        19
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01   0.20650E-13    0.122334E+07    0.420854E-11   -0.103399E-10
+                                       0.25979E-13    0.166890E-10    0.122334E+07   -0.122628E-10
+                                       0.44409E-14   -0.380945E-11    0.921524E-11    0.122334E+07
+      300.000  20.4098   0.41888E+01  -0.24425E-13    0.535547E+06    0.515182E-11    0.275731E-11
+                                      -0.31086E-14   -0.152378E-11    0.535547E+06   -0.595000E-11
+                                       0.14211E-13    0.544207E-11   -0.210427E-11    0.535547E+06
+
+                                                      0.311135E+00    Max error
+     Iteration number:        20
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01   0.91482E-13    0.122334E+07   -0.399085E-11    0.384573E-11
+                                       0.93259E-14   -0.129884E-10    0.122334E+07   -0.253963E-11
+                                       0.27978E-13   -0.106665E-10   -0.214055E-10    0.122334E+07
+      300.000  20.4098   0.41888E+01  -0.93259E-14    0.535547E+06    0.870731E-11    0.660304E-11
+                                      -0.10658E-13   -0.435365E-11    0.535547E+06    0.123354E-11
+                                       0.22204E-14    0.645792E-11    0.108842E-11    0.535547E+06
+
+                                                      0.170533E+00    Max error
+     Iteration number:        21
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01   0.63838E-13    0.122334E+07   -0.124805E-10   -0.119000E-10
+                                       0.29310E-13   -0.168341E-10    0.122334E+07    0.435366E-11
+                                       0.57732E-13    0.142219E-10   -0.232195E-11    0.122334E+07
+      300.000  20.4098   0.41888E+01  -0.28866E-13    0.535547E+06    0.166891E-11    0.145122E-11
+                                      -0.53735E-13    0.108841E-11    0.535547E+06    0.290244E-11
+                                      -0.20428E-13   -0.653049E-12   -0.653051E-12    0.535547E+06
+
+                                                      0.936429E-01    Max error
+     Iteration number:        22
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01  -0.54512E-13    0.122334E+07    0.166165E-10    0.131698E-10
+                                       0.72831E-13    0.186844E-10    0.122334E+07   -0.174146E-10
+                                       0.97033E-13    0.910640E-11   -0.134963E-10    0.122334E+07
+      300.000  20.4098   0.41888E+01   0.45741E-13    0.535547E+06   -0.181402E-11   -0.478902E-11
+                                      -0.84377E-14    0.312011E-11    0.535547E+06   -0.885244E-11
+                                       0.62172E-13   -0.442621E-11   -0.297501E-11    0.535547E+06
+
+                                                      0.515098E-01    Max error
+     Iteration number:        23
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01   0.35305E-13    0.122334E+07    0.729238E-11   -0.979573E-12
+                                       0.14366E-12   -0.156006E-11    0.122334E+07   -0.103037E-10
+                                       0.12434E-13   -0.150927E-10   -0.653049E-11    0.122334E+07
+      300.000  20.4098   0.41888E+01  -0.16875E-13    0.535547E+06    0.268475E-11    0.166890E-11
+                                       0.29310E-13    0.943296E-12    0.535547E+06   -0.326524E-11
+                                      -0.13323E-13    0.217683E-11   -0.333781E-11    0.535547E+06
+
+                                                      0.283794E-01    Max error
+     Iteration number:        24
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01  -0.13323E-13    0.122334E+07   -0.351921E-11    0.518811E-11
+                                      -0.40856E-13   -0.497043E-11    0.122334E+07    0.203171E-11
+                                      -0.58176E-13    0.507927E-12   -0.157457E-10    0.122334E+07
+      300.000  20.4098   0.41888E+01   0.15099E-13    0.535547E+06    0.515183E-11   -0.304756E-11
+                                       0.11546E-13    0.863476E-11    0.535547E+06    0.101585E-11
+                                       0.38192E-13    0.399085E-11   -0.326525E-11    0.535547E+06
+
+                                                      0.156593E-01    Max error
+     Iteration number:        25
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01  -0.19984E-14    0.122334E+07   -0.283351E-10    0.122628E-10
+                                      -0.66835E-13   -0.293872E-11    0.122334E+07    0.119726E-10
+                                      -0.21316E-13    0.460762E-11    0.214780E-10    0.122334E+07
+      300.000  20.4098   0.41888E+01   0.73275E-13    0.535547E+06   -0.478902E-11   -0.457134E-11
+                                       0.55955E-13   -0.370061E-11    0.535547E+06   -0.500671E-11
+                                      -0.48850E-14   -0.210427E-11   -0.725614E-12    0.535547E+06
+
+                                                      0.865273E-02    Max error
+     Iteration number:        26
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01  -0.29754E-13    0.122334E+07   -0.489786E-11   -0.125893E-10
+                                       0.21760E-13   -0.576860E-11    0.122334E+07    0.137140E-10
+                                       0.36859E-13   -0.187207E-10    0.667561E-11    0.122334E+07
+      300.000  20.4098   0.41888E+01  -0.84377E-14    0.535547E+06   -0.304756E-11   -0.616768E-11
+                                       0.13767E-13   -0.246707E-11    0.535547E+06   -0.123354E-11
+                                       0.53291E-14   -0.486159E-11    0.848963E-11    0.535547E+06
+
+                                                      0.478752E-02    Max error
+     Iteration number:        27
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01   0.21538E-13    0.122334E+07   -0.754634E-11   -0.316366E-10
+                                      -0.11546E-13   -0.129158E-10    0.122334E+07    0.130610E-10
+                                      -0.72164E-13   -0.238000E-10    0.914268E-11    0.122334E+07
+      300.000  20.4098   0.41888E+01  -0.14211E-13    0.535547E+06    0.217683E-12   -0.217683E-11
+                                      -0.32419E-13    0.653049E-11    0.535547E+06   -0.435363E-12
+                                      -0.13323E-14    0.181403E-11   -0.595000E-11    0.535547E+06
+
+                                                      0.265222E-02    Max error
+     Iteration number:        28
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01   0.14022E-12    0.122334E+07    0.117186E-10   -0.133875E-10
+                                       0.53291E-13   -0.222399E-10    0.122334E+07    0.134963E-10
+                                       0.16342E-12   -0.856219E-11    0.146573E-10    0.122334E+07
+      300.000  20.4098   0.41888E+01   0.22204E-14    0.535547E+06   -0.341037E-11    0.108841E-11
+                                      -0.43077E-13    0.152378E-11    0.535547E+06    0.428109E-11
+                                      -0.10658E-13   -0.725606E-12    0.333781E-11    0.535547E+06
+
+                                                      0.147101E-02    Max error
+     Iteration number:        29
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01   0.18541E-13    0.122334E+07    0.783658E-11    0.834451E-12
+                                       0.52180E-13    0.137866E-11    0.122334E+07    0.384573E-11
+                                      -0.15543E-14   -0.108841E-12   -0.449878E-11    0.122334E+07
+      300.000  20.4098   0.41888E+01  -0.18208E-13    0.535547E+06    0.471646E-11    0.246707E-11
+                                       0.10214E-13    0.384574E-11    0.535547E+06   -0.914268E-11
+                                      -0.71054E-14    0.239451E-11    0.413597E-11    0.535547E+06
+
+                                                      0.816784E-03    Max error
+     Iteration number:        30
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01   0.62061E-13    0.122334E+07    0.446250E-11   -0.103399E-10
+                                      -0.39968E-14   -0.772774E-11    0.122334E+07   -0.399085E-11
+                                       0.10969E-12   -0.158183E-10    0.798170E-11    0.122334E+07
+      300.000  20.4098   0.41888E+01  -0.26645E-14    0.535547E+06   -0.507928E-11    0.507930E-12
+                                       0.15099E-13    0.435371E-12    0.535547E+06    0.282987E-11
+                                       0.38192E-13    0.224940E-11   -0.500671E-11    0.535547E+06
+
+                                                      0.454005E-03    Max error
+     Iteration number:        31
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01   0.57732E-13    0.122334E+07   -0.185030E-11    0.928780E-11
+                                       0.70388E-13   -0.100497E-10    0.122334E+07    0.117549E-10
+                                      -0.54845E-13   -0.896128E-11    0.297500E-11    0.122334E+07
+      300.000  20.4098   0.41888E+01   0.93259E-14    0.535547E+06   -0.152378E-11    0.145119E-12
+                                       0.22204E-14    0.507921E-12    0.535547E+06    0.333781E-11
+                                       0.26645E-14   -0.362811E-12   -0.210427E-11    0.535547E+06
+
+                                                      0.252586E-03    Max error
+     Iteration number:        32
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01  -0.28533E-13    0.122334E+07   -0.141131E-10    0.714725E-11
+                                       0.42188E-14   -0.373689E-11    0.122334E+07   -0.667561E-11
+                                      -0.22427E-13   -0.165439E-10    0.142945E-10    0.122334E+07
+      300.000  20.4098   0.41888E+01  -0.17319E-13    0.535547E+06   -0.101585E-11   -0.304756E-11
+                                       0.36859E-13   -0.275732E-11    0.535547E+06    0.682073E-11
+                                       0.19540E-13   -0.304757E-11    0.126256E-10    0.535547E+06
+
+                                                      0.140680E-03    Max error
+     Iteration number:        33
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01  -0.40523E-13    0.122334E+07    0.191561E-10    0.130610E-10
+                                      -0.19096E-13    0.214780E-10    0.122334E+07    0.464390E-11
+                                       0.16431E-13   -0.725610E-11   -0.238000E-10    0.122334E+07
+      300.000  20.4098   0.41888E+01  -0.68390E-13    0.535547E+06    0.587744E-11    0.449878E-11
+                                      -0.49294E-13   -0.624024E-11    0.535547E+06   -0.203170E-11
+                                      -0.24425E-13   -0.507928E-12    0.725610E-12    0.535547E+06
+
+                                                      0.784143E-04    Max error
+     Iteration number:        34
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01   0.42299E-13    0.122334E+07    0.388201E-11    0.653049E-11
+                                       0.24425E-14    0.351921E-11    0.122334E+07    0.420854E-11
+                                      -0.20206E-13    0.446250E-11    0.176323E-10    0.122334E+07
+      300.000  20.4098   0.41888E+01  -0.93259E-14    0.535547E+06    0.399085E-11   -0.362805E-11
+                                      -0.19540E-13   -0.565975E-11    0.535547E+06    0.348293E-11
+                                      -0.10214E-13   -0.725598E-13    0.333780E-11    0.535547E+06
+
+                                                      0.437347E-04    Max error
+     Iteration number:        35
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01  -0.13323E-14    0.122334E+07    0.152378E-11   -0.979573E-12
+                                       0.37748E-13   -0.111018E-10    0.122334E+07   -0.160360E-10
+                                       0.11102E-13   -0.424482E-11   -0.163262E-10    0.122334E+07
+      300.000  20.4098   0.41888E+01  -0.21316E-13    0.535547E+06    0.486158E-11    0.507933E-12
+                                      -0.55067E-13   -0.210427E-11    0.535547E+06    0.798177E-12
+                                      -0.88818E-15    0.232195E-11    0.145122E-11    0.535547E+06
+
+                                                      0.244421E-04    Max error
+     Iteration number:        36
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01  -0.37859E-13    0.122334E+07   -0.170155E-10    0.994085E-11
+                                      -0.39968E-14    0.881616E-11    0.122334E+07   -0.124079E-10
+                                      -0.40412E-13    0.968689E-11    0.529695E-11    0.122334E+07
+      300.000  20.4098   0.41888E+01   0.13767E-13    0.535547E+06    0.145121E-11   -0.246708E-11
+                                       0.47962E-13    0.326525E-11    0.535547E+06   -0.870729E-12
+                                       0.22204E-14   -0.217683E-11   -0.217685E-12    0.535547E+06
+
+                                                      0.136408E-04    Max error
+     Iteration number:        37
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01   0.20761E-13    0.122334E+07   -0.870731E-12   -0.754634E-11
+                                       0.13678E-12   -0.119000E-10    0.122334E+07    0.243805E-10
+                                       0.24869E-13   -0.107390E-10    0.156732E-10    0.122334E+07
+      300.000  20.4098   0.41888E+01   0.38192E-13    0.535547E+06   -0.435365E-12    0.478902E-11
+                                       0.17319E-13    0.224939E-11    0.535547E+06    0.145122E-11
+                                       0.33307E-13    0.696585E-11    0.224939E-11    0.535547E+06
+
+                                                      0.761636E-05    Max error
+     Iteration number:        38
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01  -0.75717E-13    0.122334E+07    0.153466E-10    0.128070E-10
+                                      -0.34195E-13    0.177774E-11    0.122334E+07    0.116098E-11
+                                       0.11324E-13    0.160360E-10    0.333780E-11    0.122334E+07
+      300.000  20.4098   0.41888E+01  -0.51514E-13    0.535547E+06   -0.413597E-11   -0.333780E-11
+                                      -0.10658E-13    0.486158E-11    0.535547E+06    0.188659E-11
+                                      -0.20428E-13    0.224939E-11    0.507931E-12    0.535547E+06
+
+                                                      0.427477E-05    Max error
+     Iteration number:        39
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01   0.64393E-14    0.122334E+07   -0.227116E-10   -0.384573E-11
+                                       0.33307E-14   -0.877988E-11    0.122334E+07   -0.355549E-11
+                                      -0.17764E-13   -0.210427E-11   -0.183579E-10    0.122334E+07
+      300.000  20.4098   0.41888E+01   0.30198E-13    0.535547E+06    0.246707E-11    0.319268E-11
+                                      -0.39968E-13   -0.217683E-11    0.535547E+06   -0.232195E-11
+                                       0.79936E-14    0.580488E-12    0.870731E-11    0.535547E+06
+
+                                                      0.238791E-05    Max error
+     Iteration number:        40
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01  -0.12879E-13    0.122334E+07   -0.111744E-10   -0.830823E-11
+                                       0.84821E-13   -0.595000E-11    0.122334E+07   -0.224939E-10
+                                      -0.10347E-12   -0.150564E-10    0.580488E-11    0.122334E+07
+      300.000  20.4098   0.41888E+01  -0.13767E-13    0.535547E+06   -0.515183E-11   -0.602256E-11
+                                      -0.11990E-13   -0.631280E-11    0.535547E+06   -0.224939E-11
+                                      -0.17764E-13   -0.493414E-11    0.464390E-11    0.535547E+06
+
+                                                      0.134530E-05    Max error
+     Iteration number:        41
+
+     =============================================================================================
+       Temp     Fermi        DOS        Population SR                 Conductivity 
+        [K]      [eV]    [states/Ry] [carriers per cell]               [Ohm.cm]^-1 
+     =============================================================================================
+
+      200.000  20.4119   0.46668E+01  -0.36082E-13    0.122334E+07    0.123354E-11   -0.210064E-10
+                                       0.75051E-13    0.187933E-10    0.122334E+07    0.950548E-11
+                                       0.10014E-12    0.336320E-10    0.217683E-12    0.122334E+07
+      300.000  20.4098   0.41888E+01   0.97700E-14    0.535547E+06   -0.725608E-12   -0.486159E-11
+                                       0.26201E-13   -0.544207E-11    0.535547E+06   -0.653044E-12
+                                       0.22649E-13   -0.457134E-11   -0.464391E-11    0.535547E+06
+
+                                                      0.739703E-06    Max error
+
+     Unfolding on the coarse grid
+     elphon_wrap  :      0.00s CPU      0.00s WALL (       1 calls)
+
+     INITIALIZATION: 
+
+
+
+
+     Electron-Phonon interpolation
+     ep-interp    :    906.61s CPU    202.50s WALL (    9151 calls)
+
+     wigner_seitz :      0.00s CPU      0.00s WALL (       1 calls)
+     DynW2B       :      0.46s CPU      0.10s WALL (    9151 calls)
+     HamW2B       :    636.41s CPU    141.49s WALL ( 5235802 calls)
+     ephW2Bp_opt  :      2.53s CPU      0.56s WALL (    9151 calls)
+     ephW2Bp_s23  :      0.05s CPU      0.01s WALL (      21 calls)
+     ephW2Bp_s3   :      0.56s CPU      0.12s WALL (     441 calls)
+     ephW2Bp_g3   :      1.81s CPU      0.40s WALL (    9151 calls)
+     ephW2B       :     15.21s CPU      3.32s WALL (  300236 calls)
+     vmeW2B       :    123.29s CPU     28.29s WALL (  600472 calls)
+     print_ibte   :     33.53s CPU      7.53s WALL (    9151 calls)
+
+
+
+     Total program execution
+     EPW          :  15m 8.38s CPU   3m24.10s WALL
+
+     % Copyright (C) 2016-2023 EPW-Collaboration                                    
+                                                                                    
+     ===============================================================================
+     Please consider citing the following papers.                                   
+                                                                                                 
+     % Paper describing the method on which EPW relies                                           
+       F. Giustino and M. L. Cohen and S. G. Louie, Phys. Rev. B 76, 165108 (2007)               
+                                                                                                 
+     % Papers describing the EPW software                                                        
+       H. Lee et al., npj Comput. Mater. 9, 156 (2023)                                           
+       S. Ponc\'e, E.R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
+       J. Noffsinger et al., Comput. Phys. Commun. 181, 2140 (2010)                              
+                                                                                                 
+                                                                                             
+     % Since you used the [scattering/iterative_bte] input,     please consider also citing      
+       S. Ponc\'e, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)             
+       F. Macheda and N. Bonini, Phys. Rev. B 98, 201201 (2018)                              
+                                                                                             
+     % Since you used the [lsda] input,     please consider also citing                      
+       \'A. A. Carrasco \'Alvarez et al, arXiv:2510.11350 (2025)                             
+                                                                                    
+     For your convenience, this information is also reported in the                 
+     functionality-dependent EPW.bib file.                                          
+     ===============================================================================
+                                                                                    

@@ -33,18 +33,20 @@ SUBROUTINE lr_apply_time_reversal(first_iter, ind, dvscfins)
    !! If ind == 1, revert to the original state. Called during finalization.
    !---------------------------------------------------------------------------
    USE kinds,             ONLY : DP
+   USE fft_base,          ONLY : dffts
    USE scf,               ONLY : vrs
    USE uspp,              ONLY : okvan, deeq_nc
-   USE noncollin_module,  ONLY : noncolin, domag
+   USE noncollin_module,  ONLY : noncolin, domag, nspin_mag
    USE lrus,              ONLY : int3_nc
+   USE lr_symm_base,      ONLY : lr_npert
    !
    IMPLICIT NONE
    !
    LOGICAL, INTENT(IN) :: first_iter
    !! True if first iteration. Skip some calculation if true.
    INTEGER, INTENT(IN) :: ind
-   !! If 1, flip to the time-reversed state. If 1, revert back to the original state.
-   COMPLEX(DP), POINTER, INTENT(INOUT) :: dvscfins(:, :, :)
+   !! If 2, flip to the time-reversed state. If 1, revert back to the original state.
+   COMPLEX(DP), INTENT(INOUT) :: dvscfins(dffts%nnr, nspin_mag, lr_npert)
    !! change of the scf potential (smooth part only, dffts)
    !
    IF (.NOT. (ind == 1 .OR. ind == 2)) CALL errore('lr_apply_time_reversal', &

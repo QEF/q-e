@@ -267,21 +267,13 @@ SUBROUTINE fwfft_wave (npwx, npw, igk, evc_g, evc_r)
   !
   INTEGER :: ig, ik
 
-#if defined(__CUDA) && defined(_OPENACC)
-  INTEGER, POINTER, DEVICE :: nl(:)
-  nl => dffts%nl_d
-#else
-  INTEGER, ALLOCATABLE :: nl(:)
-  ALLOCATE( nl(dffts%ngm) )
-  nl = dffts%nl
-#endif
-
   !$acc host_data use_device(evc_r)
   CALL fwfft ('Wave', evc_r(:,1), dffts)
   !$acc end host_data
+  !$acc data present(dffts,dffts%nl,igk)
   !$acc parallel loop private(ik)
   DO ig = 1, npw
-     ik = nl(igk(ig))
+     ik = dffts%nl(igk(ig))
      evc_g (ig) = evc_g (ig) + evc_r (ik,1)
   ENDDO
   IF (noncolin) THEN
@@ -290,14 +282,11 @@ SUBROUTINE fwfft_wave (npwx, npw, igk, evc_g, evc_r)
      !$acc end host_data
      !$acc parallel loop private(ik) 
      DO ig = 1, npw
-        ik = nl(igk(ig))
+        ik = dffts%nl(igk(ig))
         evc_g (ig+npwx) = evc_g (ig+npwx) + evc_r (ik,2)
      ENDDO
   ENDIF
-
-#if !defined(__CUDA) || !defined(_OPENACC)
-  DEALLOCATE(nl)
-#endif
+  !$acc end data
 END SUBROUTINE fwfft_wave
   !
 SUBROUTINE invfft_wave (npwx, npw, igk, evc_g, evc_r)
@@ -316,21 +305,13 @@ SUBROUTINE invfft_wave (npwx, npw, igk, evc_g, evc_r)
   !
   INTEGER :: ig, ik
 
-#if defined(__CUDA) && defined(_OPENACC)
-  INTEGER, POINTER, DEVICE :: nl(:)
-  nl => dffts%nl_d
-#else
-  INTEGER, ALLOCATABLE :: nl(:)
-  ALLOCATE( nl(dffts%ngm) )
-  nl = dffts%nl
-#endif
-
   !$acc kernels
   evc_r(:,:) = (0.0_dp, 0.0_dp)
   !$acc end kernels
+  !$acc data present(dffts,dffts%nl,igk)
   !$acc parallel loop private(ik)
   DO ig = 1, npw
-     ik = nl(igk(ig))
+     ik = dffts%nl(igk(ig))
      evc_r (ik, 1) = evc_g (ig)
   ENDDO
   !$acc host_data use_device(evc_r)
@@ -339,17 +320,15 @@ SUBROUTINE invfft_wave (npwx, npw, igk, evc_g, evc_r)
   IF (noncolin) THEN
      !$acc parallel loop private(ik)
      DO ig = 1, npw
-        ik = nl(igk(ig))
+        ik = dffts%nl(igk(ig))
         evc_r (ik, 2) = evc_g (ig+npwx)
      ENDDO
      !$acc host_data use_device(evc_r)
      CALL invfft ('Wave', evc_r(:,2), dffts)
      !$acc end host_data
   ENDIF
+  !$acc end data
 
-#if !defined(__CUDA) || !defined(_OPENACC)
-  DEALLOCATE(nl)
-#endif
 END SUBROUTINE invfft_wave
   !
 END MODULE fft_wave

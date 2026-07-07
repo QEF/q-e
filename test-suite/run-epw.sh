@@ -22,7 +22,7 @@ echo $1
 if [[ "$1" == "0" ]]
 then
   echo "Running PW ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x -input $2 > $3 2> $4"
+  #echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x -input $2 > $3 2> $4"
   ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x -input $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
@@ -31,7 +31,7 @@ then
 elif [[ "$1" == "1" ]]
 then
   echo "Running PW ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
+  #echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
   ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/pw.x ${PARA_SUFFIX} -input $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
@@ -40,7 +40,7 @@ then
 elif [[ "$1" == "2" ]]
 then
   echo "Running PH ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/ph.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
+ #echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/ph.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
   ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/ph.x ${PARA_SUFFIX} -input $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
@@ -51,7 +51,7 @@ then
 elif [[ "$1" == "3" ]]
 then
   echo "Running EPW ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
+ #echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
   ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
@@ -60,7 +60,7 @@ then
 elif [[ "$1" == "4" ]]
 then
   echo "Running Q2R ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/q2r.x -input $2 > $3 2> $4"
+ #echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/q2r.x -input $2 > $3 2> $4"
   ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/q2r.x -input $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
@@ -74,7 +74,7 @@ then
   echo "Running EPW ..."
 ######  rm *.Fin_restart1 *.Fin_restartcb1 restart.fmt
   rm -rf restart* F* sparse*
-  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
+ #echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
   ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
@@ -95,7 +95,7 @@ then
   # ph.x, electron_phonon = 'ahc'
   rm -rf save/ahc_dir/
   echo "Running PH ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/ph.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
+ #echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/ph.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
   ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/ph.x ${PARA_SUFFIX} -input $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
@@ -104,7 +104,7 @@ then
 elif [[ "$1" == "8" ]]
 then
   echo "Running POSTAHC ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/postahc.x < $2 > $3 2> $4"
+ #echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/postahc.x < $2 > $3 2> $4"
   ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/postahc.x < $2 > $3 2> $4
   if [[ -e CRASH ]]
   then
@@ -114,7 +114,7 @@ elif [[ "$1" == "9" ]]
 then
   # nscf2supercond.x
   echo "Running NSCF2SUPERCOND ..."
-  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/nscf2supercond.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
+ #echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/nscf2supercond.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
   ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/nscf2supercond.x ${PARA_SUFFIX} -input $2 > $3 2> $4
   cat *.bands.*.dat >> $3
   if [[ -e CRASH ]]
@@ -134,7 +134,7 @@ then
       export PARA_SUFFIX="-nk 1 -ni $QE_USE_MPI"
     fi  
   fi
-  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
+ #echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
   ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4
   export PARA_SUFFIX=${PARA_SUFFIX_OLD}
   unset PARA_SUFFIX_OLD
@@ -153,7 +153,7 @@ then
       export PARA_SUFFIX="-nk 1 -ni $QE_USE_MPI"
     fi  
   fi
-  echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
+ #echo "${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4"
   ${PARA_PREFIX} ${ESPRESSO_BUILD}/bin/epw.x ${PARA_SUFFIX} -input $2 > $3 2> $4
   export PARA_SUFFIX=${PARA_SUFFIX_OLD}
   unset PARA_SUFFIX_OLD
@@ -164,3 +164,4 @@ then
 fi
 
 #rm -f input_tmp.in
+

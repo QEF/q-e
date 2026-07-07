@@ -506,6 +506,25 @@ MODULE qes_types_module
     !
   END TYPE cpnumstep_type
   !
+  TYPE :: pseudoPath_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    REAL(DP) :: Zval
+    LOGICAL :: Zval_ispresent = .FALSE.
+    INTEGER :: mesh
+    LOGICAL :: mesh_ispresent = .FALSE.
+    INTEGER :: nbeta
+    LOGICAL :: nbeta_ispresent = .FALSE.
+    INTEGER, DIMENSION(:), ALLOCATABLE :: l
+    LOGICAL :: l_ispresent = .FALSE.
+    !
+    CHARACTER(len=256) :: pseudoPath
+    !
+  END TYPE pseudoPath_type
+  !
   TYPE :: integerMatrix_type
     !
     CHARACTER(len=100) :: tagname
@@ -615,7 +634,7 @@ MODULE qes_types_module
     LOGICAL :: name_ispresent = .FALSE.
     LOGICAL  :: mass_ispresent = .FALSE.
     REAL(DP) :: mass
-    CHARACTER(len=256) :: pseudo_file
+    TYPE(pseudoPath_type) :: pseudo_file
     LOGICAL  :: starting_magnetization_ispresent = .FALSE.
     REAL(DP) :: starting_magnetization
     LOGICAL  :: spin_teta_ispresent = .FALSE.
@@ -685,6 +704,10 @@ MODULE qes_types_module
     REAL(DP) :: ecutvcut
     LOGICAL  :: localization_threshold_ispresent = .FALSE.
     REAL(DP) :: localization_threshold
+    LOGICAL  :: use_ace_ispresent = .FALSE.
+    LOGICAL :: use_ace
+    LOGICAL  :: nbndproj_ispresent = .FALSE.
+    INTEGER :: nbndproj
     !
   END TYPE hybrid_type
   !

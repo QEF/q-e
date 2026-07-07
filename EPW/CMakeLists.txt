@@ -62,7 +62,12 @@ set(sources
     src/tdbe_mod.f90
     src/tdbe_common.f90
     src/phph.f90
+    src/global_setups.f90
+    src/qe_wrappers.f90
+    src/dvqhub.f90
+    src/onemkl_wrappers.f90
     )
+qe_enable_cuda_fortran("${sources}")
 
 qe_add_library(qe_epw ${sources})
 target_link_libraries(
@@ -73,10 +78,17 @@ target_link_libraries(
             qe_phonon_ph
             qe_pw
             qe_mpi_fortran
+            qe_openmp_fortran
             qe_upflib
             qe_fftx
             qe_elpa
-            qe_xclib)
+            qe_xclib
+    PUBLIC
+            qe_openacc_fortran)
+
+if(QE_ENABLE_ONEAPI)
+    target_link_libraries(qe_epw PRIVATE MKL::sycl)
+endif()
 
 ###########################################################
 # epw.x
@@ -121,7 +133,7 @@ target_link_libraries(qe_zg_pp_disca_exe PRIVATE qe_modules qe_lr_modules qe_lap
 ###########################################################
 # bands_unfold.x
 ###########################################################
-set(src_bands_unfold_x ZG/src/bands_unfold.f90)
+set(sources ZG/src/bands_unfold.f90)
 qe_add_executable(qe_zg_bands_unfold_exe ${sources})
 set_target_properties(qe_zg_bands_unfold_exe PROPERTIES OUTPUT_NAME bands_unfold.x)
 target_link_libraries(qe_zg_bands_unfold_exe PRIVATE qe_pw qe_modules qe_pp qe_upflib)
@@ -137,7 +149,7 @@ target_link_libraries(qe_zg_pp_spctrlfn_exe PRIVATE qe_modules qe_lr_modules qe_
 ###########################################################
 # epsilon_Gaus.x
 ###########################################################
-set(src_epsilon_Gaus_x ZG/src/epsilon_Gaus.f90)
+set(sources ZG/src/epsilon_Gaus.f90)
 qe_add_executable(qe_zg_epsilon_Gaus_exe ${sources})
 set_target_properties(qe_zg_epsilon_Gaus_exe PROPERTIES OUTPUT_NAME epsilon_Gaus.x)
 target_link_libraries(qe_zg_epsilon_Gaus_exe PRIVATE qe_pw qe_modules qe_pp qe_upflib)

@@ -14,12 +14,11 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE run_info,  ONLY: title    ! title of the run
    USE constants, ONLY: tpi, e2, eps6
    USE ener, ONLY: ewld, ehart, etxc, vtxc, etot, etxcc, demet, ef
-   USE fft_base,  ONLY: dfftp
    USE fft_rho, ONLY: rho_r2g
    USE gvect, ONLY: ngm, gstart, g, gg, gcutm, igtongl
    USE klist , ONLY: nks, nelec, xk, wk, degauss, ngauss, igk_k, ngk
-   USE lsda_mod, ONLY: lsda, nspin
-   USE scf, ONLY: rho, rho_core, rhog_core, v
+   USE lsda_mod, ONLY: lsda, nspin, isk
+   USE scf, ONLY: rho, rho_core, rhog_core, tau_core, v
    USE ldaU, ONLY : eth
    USE vlocal, ONLY: vloc, strf
    USE wvfct, ONLY: npwx, nbnd, wg, et
@@ -46,7 +45,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    REAL(dp), PARAMETER :: eps = 1.d-10
    INTEGER, PARAMETER :: io = 77, iob = 78
    INTEGER :: npw, ig, ibnd, ik, ispin, nbndup, nbnddown, &
-              nk, ig7, ikk, id, ip, iorb, iorb_node, inode, ierr, norb
+              nk, ikk, id, ip, iorb, iorb_node, inode, norb
    INTEGER :: jk(nproc_pool), jspin(nproc_pool), jbnd(nproc_pool)
    INTEGER :: jk2(nproc_pool), jspin2(nproc_pool), jbnd2(nproc_pool)
    INTEGER, ALLOCATABLE :: idx(:), igtog(:), gtoig(:)
@@ -327,12 +326,12 @@ CONTAINS
       !
       IMPLICIT NONE
 
-      COMPLEX(DP), ALLOCATABLE :: aux(:,:)
       INTEGER :: npw, ibnd, j, ig, ik,ikk, ispin, na, nt, ijkb0, ikb,jkb, ih,jh
-      REAL(dp), ALLOCATABLE :: g2kin(:)
+      REAL(DP), ALLOCATABLE :: g2kin(:)
       REAL(DP) :: charge, etotefield, elocg
+      !
+      REAL(DP), EXTERNAL :: efermig
 
-      ALLOCATE (aux(dfftp%nnr,1))
       CALL allocate_bec_type ( nkb, nbnd, becp )
 
       ek  = 0.d0
@@ -340,23 +339,26 @@ CONTAINS
       enl = 0.d0
       demet=0.d0
       fock2=0.d0
+
+      !
+      ! Calculate the Fermi energy ef
+      !
+      if ( degauss > 0.0_DP ) &
+         ef=efermig( et, nbnd, nks, nelec, wk, degauss, ngauss, 0, isk )
+
+      !
+      !     calculate the local contribution to the total energy
+      !
+      DO nt = 1, ntyp
+         DO ig = 1, ngm
+            elocg = vloc(igtongl(ig),nt) * dble( strf(ig,nt) * conjg(rho%of_g(ig,1)) )
+            eloc = eloc + elocg
+            IF( gamma_only .and. ig>=gstart) eloc = eloc + elocg
+         ENDDO
+      ENDDO
       !
       ALLOCATE ( g2kin(npwx) )
       DO ispin = 1, nspin
-         !
-         !     calculate the local contribution to the total energy
-         !
-         !      bring rho to G-space
-         !
-         CALL rho_r2g( dfftp, rho%of_r(:,ispin), aux )
-         !
-         DO nt = 1, ntyp
-            DO ig = 1, ngm
-               elocg = vloc(igtongl(ig),nt) * dble( strf(ig,nt) * conjg(aux(ig,1)) )
-               eloc = eloc + elocg
-               IF( gamma_only .and. ig>=gstart) eloc = eloc + elocg
-            ENDDO
-         ENDDO
 
          DO ik = 1, nk
             ikk = ik + nk*(ispin-1)
@@ -368,10 +370,10 @@ CONTAINS
             !
             ! -TS term for metals (if any)
             !
-            IF( degauss > 0.0_dp)THEN
+            IF( degauss > 0.0_DP )THEN
                DO ibnd = 1, nbnd
-                  demet = demet + wk (ik) * &
-                     degauss * w1gauss ( (ef-et(ibnd,ik)) / degauss, ngauss)
+                  demet = demet + wk(ikk) * &
+                     degauss * w1gauss ( (ef-et(ibnd,ikk)) / degauss, ngauss)
                ENDDO
             ENDIF
             !
@@ -383,10 +385,10 @@ CONTAINS
             DO ibnd = 1, nbnd
                DO j = 1, npw
                   IF(gamma_only)THEN !.and.j>1)then
-                     ek = ek +  2*conjg(evc(j,ibnd)) * evc(j,ibnd) * &
+                     ek = ek + 2*dble( conjg(evc(j,ibnd)) * evc(j,ibnd) ) * &
                                     g2kin(j) * wg(ibnd,ikk)
                   ELSE
-                     ek = ek +  conjg(evc(j,ibnd)) * evc(j,ibnd) * &
+                     ek = ek + dble( conjg(evc(j,ibnd)) * evc(j,ibnd) ) * &
                                     g2kin(j) * wg(ibnd,ikk)
                   ENDIF
                ENDDO
@@ -404,7 +406,7 @@ CONTAINS
                               enl=enl+becp%r(ikb,ibnd)*becp%r(ikb,ibnd) &
                                  *wg(ibnd,ikk)* dvan(ih,ih,nt)
                            ELSE
-                              enl=enl+conjg(becp%k(ikb,ibnd))*becp%k(ikb,ibnd) &
+                              enl=enl+dble(conjg(becp%k(ikb,ibnd))*becp%k(ikb,ibnd)) &
                                  *wg(ibnd,ikk)* dvan(ih,ih,nt)
                            ENDIF
                            DO jh = ( ih + 1 ), nh(nt)
@@ -416,7 +418,7 @@ CONTAINS
                                     * wg(ibnd,ikk) * dvan(ih,jh,nt)
                               ELSE
                                  enl=enl + &
-                                    (conjg(becp%k(ikb,ibnd))*becp%k(jkb,ibnd)+&
+                                    dble(conjg(becp%k(ikb,ibnd))*becp%k(jkb,ibnd)+&
                                        conjg(becp%k(jkb,ibnd))*becp%k(ikb,ibnd))&
                                     * wg(ibnd,ikk) * dvan(ih,jh,nt)
                               ENDIF
@@ -449,7 +451,7 @@ CONTAINS
       !
       ! compute hartree and xc contribution
       !
-      CALL v_of_rho( rho, rho_core, rhog_core, &
+      CALL v_of_rho( rho, rho_core, rhog_core, tau_core, &
                      ehart, etxc, vtxc, eth, etotefield, charge, v )
       !
       ! compute exact exchange contribution (if present)
@@ -458,16 +460,7 @@ CONTAINS
       !
       etot_=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)+demet+fock2
       !
-      IF ( ABS(etot-etot_) > ABS(eps6*etot) ) THEN
-         WRITE (stdout,'(5X,"Etot: ",f15.8," Ry from PWscf vs ", &
-                & f15.8," Ry from pw2casino!")') etot, etot_
-         CALL errore("pw2casino","Mismatch in computed energy",1)
-      ELSE
-         etot = etot_
-      END IF
-      !
       CALL deallocate_bec_type (becp)
-      DEALLOCATE (aux)
 
       WRITE (stdout,*)
       WRITE (stdout,*) 'Energies determined by pw2casino tool'
@@ -480,10 +473,17 @@ CONTAINS
       WRITE (stdout,*) 'hartree energy   ', ehart/e2, ' au  =  ', ehart, ' Ry'
       IF(xclib_dft_is('hybrid')) & 
            WRITE (stdout,*) 'EXX energy       ', fock2/e2, ' au  =  ', fock2, ' Ry' 
-      IF( degauss > 0.0_dp ) &
+      IF( degauss > 0.0_DP ) &
          WRITE (stdout,*) 'Smearing (-TS)   ', demet/e2, ' au  =  ', demet, ' Ry'
-      WRITE (stdout,*) 'Total energy     ', etot/e2, ' au  =  ', etot, ' Ry'
+      WRITE (stdout,*) 'Total energy     ', etot_/e2, ' au  =  ', etot_, ' Ry'
       WRITE (stdout,*)
+
+      IF ( ABS(etot-etot_) > ABS(eps6*etot) ) THEN
+         WRITE (stdout,'(5X,"Etot: ",f15.8," Ry from PWscf vs ", &
+                & f15.8," Ry from pw2casino!")') etot, etot_
+         CALL errore("pw2casino","Mismatch in computed energy",1)
+      END IF
+      etot = etot_
 
    END SUBROUTINE calc_energies
 

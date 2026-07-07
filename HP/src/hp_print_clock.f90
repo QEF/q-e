@@ -78,7 +78,7 @@ SUBROUTINE hp_print_clock
      CALL print_clock ('adddvscf')
      CALL print_clock ('addusdbec')
      CALL print_clock ('addusldos')
-     CALL print_clock ('hp_addusddens')
+     CALL print_clock ('lr_addusddens')
   ENDIF
   !
   RETURN

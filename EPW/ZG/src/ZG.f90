@@ -24,7 +24,7 @@ Module ifconstants
   INTEGER, ALLOCATABLE  :: ityp_blk(:)
   !! atomic types for each atom of the original cell
   !
-  CHARACTER(LEN=3), ALLOCATABLE :: atm(:)
+  CHARACTER(LEN=6), ALLOCATABLE :: atm(:)
   !
 end Module ifconstants
 !
@@ -99,6 +99,8 @@ PROGRAM ZG
   !                Phys. Rev. B 85, 224303 (2012)) 
   !     loto_2d  set to .true. to activate two-dimensional treatment of LO-TO
   !              siplitting for q= 0.  (default: .false.)
+  !     remove_interaction_blocks set to .true. to remove interactions in the dyn matrix between fixed atoms
+  !                               (default: .false.)
   !
   !  IF (q_in_band_form) THEN
   !     nq     ! number of q points
@@ -283,7 +285,7 @@ PROGRAM ZG
   INTEGER             :: nr1, nr2, nr3, nsc, ibrav
   CHARACTER(LEN=256)  :: flfrc, flscf, flfrq, flweights, fildyn, fildyn_prefix
   CHARACTER(LEN= 10)  :: asr
-  LOGICAL             :: has_zstar, q_in_cryst_coord, loto_disable
+  LOGICAL             :: has_zstar, q_in_cryst_coord, loto_disable, remove_interaction_blocks
   COMPLEX(DP), ALLOCATABLE :: dyn(:, :, :, :), dyn_blk(:, :, :, :), frc_ifc(:, :, :, :)
   COMPLEX(DP), ALLOCATABLE :: z(:, :) 
   REAL(DP), ALLOCATABLE    :: tau(:, :), q(:, :), w2(:, :), wq(:)
@@ -328,7 +330,7 @@ PROGRAM ZG
   CHARACTER(LEN= 10) :: point_label_type
   CHARACTER(len=80) :: k_points = 'tpiba'
   ! 
-  CHARACTER(LEN=3)         :: atm_zg(ntypx)
+  CHARACTER(LEN=6)         :: atm_zg(ntypx)
   LOGICAL                  :: ZG_conf, synch, incl_qA, q_external, multi_ZG
   LOGICAL                  :: ZG_strf, compute_error, single_ph_displ
   INTEGER                  :: dim1, dim2, dim3, niters, qpts_strf, nconfs
@@ -357,7 +359,7 @@ PROGRAM ZG
        &           ZG_conf, dim1, dim2, dim3, niters, error_thresh, q_external, & 
        &           compute_error, synch, atm_zg, T, incl_qA, single_ph_displ, & 
        &           ZG_strf, flscf, ph_unfold, qhat_in, ASDM, &
-       &           T_array, nconfs
+       &           T_array, nconfs, remove_interaction_blocks
 !
   NAMELIST / A_ZG / apply_fd, read_fd_forces, incl_epsil, iter_idx, iter_idx0, & 
                     fd_displ, poly, poly_fd_forces, mixing, update_equil
@@ -396,6 +398,7 @@ PROGRAM ZG
      fd               = .FALSE.
      loto_2d          = .FALSE.
      loto_disable     = .FALSE.
+     remove_interaction_blocks = .FALSE.
      read_lr          = .FALSE.
      huang            = .TRUE.
      ! 
@@ -479,6 +482,7 @@ PROGRAM ZG
      CALL mp_bcast(point_label_type, ionode_id, world_comm)
      CALL mp_bcast(loto_2d, ionode_id, world_comm) 
      CALL mp_bcast(loto_disable,ionode_id, world_comm)
+     CALL mp_bcast(remove_interaction_blocks, ionode_id, world_comm)
      CALL mp_bcast(read_lr,ionode_id, world_comm)
      CALL mp_bcast(huang,ionode_id, world_comm)
      ! 
@@ -605,12 +609,21 @@ PROGRAM ZG
      !
      ! read force constants
      !
-      IF ( trim( fildyn ) /= ' ' ) THEN
+!      IF ( trim( fildyn ) /= ' ' ) THEN
+!        IF (ionode) THEN
+!           WRITE(stdout, *)
+!           WRITE(stdout, '(4x,a)') ' fildyn has been provided, running q2r...'
+!        END IF
+!        CALL do_q2r(fildyn, flfrc, fildyn_prefix, asr, .false., loto_2d, read_lr)
+!     END IF
+!
+     IF ( trim( fildyn ) /= ' ' ) THEN
         IF (ionode) THEN
            WRITE(stdout, *)
            WRITE(stdout, '(4x,a)') ' fildyn has been provided, running q2r...'
         END IF
-        CALL do_q2r(fildyn, flfrc, fildyn_prefix, asr, .false., loto_2d, read_lr)
+        CALL do_q2r(fildyn, flfrc, fildyn_prefix, asr, .false., loto_2d, read_lr, &
+                    remove_interaction_blocks)
      END IF
      !
      ntyp_blk = ntypx ! avoids fake out-of-bound error
@@ -2792,7 +2805,7 @@ SUBROUTINE ZG_configuration(nq, nat, ntyp, amass, ityp, q, w2, z_nq, &
   !
   IMPLICIT NONE
   ! input
-  CHARACTER(LEN=3),   INTENT(in) :: atm(ntypx)
+  CHARACTER(LEN=6),   INTENT(in) :: atm(ntypx)
   CHARACTER(LEN=256), INTENT(in) :: flscf
   LOGICAL, INTENT(in)          :: synch, q_in_cryst_coord, q_external, ZG_strf, multi_ZG
   LOGICAL, INTENT(in)          :: incl_qA, compute_error, single_ph_displ, ASDM, mixing
@@ -4119,7 +4132,7 @@ SUBROUTINE create_supercell(at, tau, alat, dim1, dim2, dim3, nat, equil_p, cryst
   IMPLICIT NONE
  !
  !
-  CHARACTER(LEN=3), INTENT(in) :: atm(ntypx)
+  CHARACTER(LEN=6), INTENT(in) :: atm(ntypx)
   INTEGER,  INTENT(in)         :: nq_tot, nat, ctrB, ctrA, nat3, ntyp, ntypx
   INTEGER,  INTENT(in)         :: Rlist(nq_tot, 3) 
   INTEGER,  INTENT(in)         :: ityp(nat)
@@ -4461,7 +4474,7 @@ END SUBROUTINE
   
   IMPLICIT NONE
   ! 
-  CHARACTER(LEN=3), INTENT(in) :: atm(ntypx)
+  CHARACTER(LEN=6), INTENT(in) :: atm(ntypx)
   CHARACTER(LEN=256), INTENT(in) :: flscf, pt_T
   LOGICAL, INTENT(in)          :: read_fd_forces, incl_epsil, poly, poly_fd_forces
   LOGICAL, INTENT(in)          :: mixing, update_equil
@@ -4585,14 +4598,21 @@ END SUBROUTINE
     WRITE(*, *) 
     OPEN (unit = iu, file = filename2, status = 'old', form = 'formatted')
     DO
-      READ (iu, *, iostat = iosf) text ! iosf to check if we reach the
+      READ (iu, '(A)', iostat = iosf) text ! iosf to check if we reach the
                                       ! end of file without finding forces
-      READ (text, *) word 
+      IF (iosf /= 0) CALL errore('A-ZG', & 
+                          'Final coords in file are missing ...', 1)
+      !
+      IF (LEN_TRIM(text) == 0) CYCLE  ! 
+      word = ADJUSTL(text)
+      word = word(1:SCAN(word//' ', ' ') - 1)
+      !
       IF (word == search_str2) THEN
         WRITE(*, *) "  ", search_str2, " found in ", filename2
         WRITE(*, *) "  ======================================"
-        READ (iu, *) ! skip empty lines
-        READ (iu, *) ! skip empty lines
+        READ (iu, '(A)', iostat=iosf) text ! skip empty lines
+        READ (iu, '(A)', iostat=iosf) text ! skip empty lines
+        IF (iosf /= 0) CALL errore('ZG', 'coords block truncated ...', 1)
         DO kk = 1, nat
           DO qp = 1, nq_tot
             READ(iu,'(A6,3X,3F20.10)') A1, D_tau(qp, kk, :)
@@ -4601,9 +4621,6 @@ END SUBROUTINE
           ENDDO ! qp
         ENDDO ! kk
         EXIT ! exit do loop                
-      ELSE
-      IF (iosf /= 0) CALL errore('A-ZG',& 
-                               'Final coords in file are missing ...', 1)
       ENDIF ! word
       ! 
     ENDDO ! do loop
@@ -4763,21 +4780,24 @@ END SUBROUTINE
             IF (.NOT. file_exists) CALL errore('ZG', 'Missing poly file in fd_forces/ ...', ctr )
             OPEN (unit = iu, file = filename, status = 'old', form = 'formatted')
             DO
-              READ (iu, *, iostat = iosf) text ! iosf to check if we reach the
+              READ (iu, '(A)', iostat=iosf) text ! iosf to check if we reach the
                                               ! end of file without finding forces
-              READ (text, *) word 
+              IF (iosf /= 0) CALL errore('ZG', 'forces in file are missing ...', ctr)
+              !
+              IF (LEN_TRIM(text) == 0) CYCLE  ! 
+              word = ADJUSTL(text)
+              word = word(1:SCAN(word//' ', ' ') - 1)
+              ! 
               IF (word == search_str) THEN
                 !WRITE(*,*) search_str, " found in ", filename
-                READ (iu, *) ! skip empty line
+                READ (iu, '(A)', iostat=iosf) text ! skip empty line
+                IF (iosf /= 0) CALL errore('ZG', 'forces block truncated ...', ctr)
                 DO ii = 1, nat * nq_tot
                   READ(iu,'(A34, 3F14.8)') A1, fd_forces(ii, :, ctr)
                   ! Format should be the same with forces.f90 in PW/src
                   !WRITE(*, '(A34, 3F14.8)') A1, fd_forces(ii, :, ctr)
                 ENDDO ! ii
                 EXIT ! exit do loop                
-              ELSE 
-                IF (iosf /= 0) CALL errore('ZG',& 
-                                      'forces in file are missing ...', ctr)
               ENDIF ! word
               ! 
             ENDDO ! do loop
@@ -5081,22 +5101,24 @@ END SUBROUTINE
             IF (.NOT. file_exists) CALL errore('ZG', 'Missing file in fd_forces/ ...', ctr )
             OPEN (unit = iu, file = filename, status = 'old', form = 'formatted')
             DO
-              READ (iu, *, iostat = iosf) text ! iosf to check if we reach the
+              READ (iu, '(A)', iostat=iosf) text ! iosf to check if we reach the
                                               ! end of file without finding forces
-              READ (text, *) word 
+              IF (iosf /= 0) CALL errore('ZG', 'forces in file are missing ...', ctr)
+              !
+              IF (LEN_TRIM(text) == 0) CYCLE  ! 
+              word = ADJUSTL(text)
+              word = word(1:SCAN(word//' ', ' ') - 1)
+              !
               IF (word == search_str) THEN
                 !WRITE(*,*) search_str, " found in ", filename
-                READ (iu, *) ! skip empty line
+                READ (iu, '(A)', iostat=iosf) text ! skip empty line
+                IF (iosf /= 0) CALL errore('ZG', 'forces block truncated ...', ctr)
                 DO ii = 1, nat * nq_tot
                   READ(iu,'(A34, 3F14.8)') A1, fd_forces(ii, :, ctr)
                   ! Format should be the same with forces.f90 in PW/src
                   !WRITE(*, '(A34, 3F14.8)') A1, fd_forces(ii, :, ctr)
                 ENDDO ! ii
                 EXIT ! exit do loop                
-              ! 
-              ELSE 
-                IF (iosf /= 0) CALL errore('ZG',& 
-                                      'forces in file are missing ...', ctr)
               ENDIF ! word
             ENDDO ! do loop
             CLOSE(unit = iu)
@@ -5376,21 +5398,24 @@ END SUBROUTINE
       IF (.NOT. file_exists) CALL errore('ZG', 'Missing ZG-scf file in fd_forces/ ...', 1 )
       OPEN (unit = iu, file = filename, status = 'old', form = 'formatted')
       DO
-        READ (iu, *, iostat = iosf) text ! iosf to check if we reach the
+        READ (iu, '(A)', iostat=iosf) text ! iosf to check if we reach the
                                         ! end of file without finding forces
-        READ (text, *) word 
+        IF (iosf /= 0) CALL errore('ZG', 'forces in file are missing ...', ctr)
+        !
+        IF (LEN_TRIM(text) == 0) CYCLE  ! 
+        word = ADJUSTL(text)
+        word = word(1:SCAN(word//' ', ' ') - 1)
+        ! 
         IF (word == search_str) THEN
           !WRITE(*,*) search_str, " found in ", filename
-          READ (iu, *) ! skip empty line
+          READ (iu, '(A)', iostat=iosf) text ! skip empty line
+          IF (iosf /= 0) CALL errore('ZG', 'forces block truncated ...', ctr)
           DO ii = 1, nat * nq_tot
             READ(iu,'(A34, 3F14.8)') A1, eqf(ii, :)
             ! Format should be the same with forces.f90 in PW/src
             !WRITE(*, '(A34, 3F14.8)') A1, eqf(ii, :)
           ENDDO ! ii
           EXIT ! exit do loop                
-        ELSE 
-          IF (iosf /= 0) CALL errore('ASDM',& 
-                                'forces in ZG-scf file are missing ...', 1)
         ENDIF ! word
         ! 
       ENDDO ! do loop
@@ -5414,21 +5439,24 @@ END SUBROUTINE
             IF (.NOT. file_exists) CALL errore('ASDM', 'Missing iteration file with forces', i )
             OPEN (unit = iu, file = filename, status = 'old', form = 'formatted')
             DO
-              READ (iu, *, iostat = iosf) text ! iosf to check if we reach the
+              READ (iu, '(A)', iostat=iosf) text ! iosf to check if we reach the
                                               ! end of file without finding forces
-              READ (text, *) word 
+              IF (iosf /= 0) CALL errore('ZG', 'forces in file are missing ...', ctr)
+              !
+              IF (LEN_TRIM(text) == 0) CYCLE  ! 
+              word = ADJUSTL(text)
+              word = word(1:SCAN(word//' ', ' ') - 1)
+              !
               IF (word == search_str) THEN
                 !WRITE(*,*) search_str, " found in ", filename
-                READ (iu, *) ! skip empty line
+                READ (iu, '(A)', iostat=iosf) text ! skip empty line
+                IF (iosf /= 0) CALL errore('ZG', 'forces block truncated ...', ctr)
                 DO ii = 1, nat * nq_tot
                   READ(iu,'(A34, 3F14.8)') A1, eqf_iters(ii, :, ctr)
                   ! Format should be the same with forces.f90 in PW/src
                   !WRITE(*, '(A34, 3F14.8)') A1, eqf(ii, :)
                 ENDDO ! ii
                 EXIT ! exit do loop                
-              ELSE 
-                IF (iosf /= 0) CALL errore('ASDM',& 
-                                      'forces in ZG-scf file are missing ...', 1)
               ENDIF ! word
               ! 
             ENDDO ! do loop
@@ -5440,21 +5468,24 @@ END SUBROUTINE
             IF (.NOT. file_exists) CALL errore('ASDM', 'Missing iteration file with forces', i )
             OPEN (unit = iu, file = filename, status = 'old', form = 'formatted')
             DO
-              READ (iu, *, iostat = iosf) text ! iosf to check if we reach the
+              READ (iu, '(A)', iostat = iosf) text ! iosf to check if we reach the
                                               ! end of file without finding forces
-              READ (text, *) word 
+              IF (iosf /= 0) CALL errore('ZG', 'forces in file are missing ...', ctr)
+              !
+              IF (LEN_TRIM(text) == 0) CYCLE  ! 
+              word = ADJUSTL(text)
+              word = word(1:SCAN(word//' ', ' ') - 1)
+              !
               IF (word == search_str) THEN
                 !WRITE(*,*) search_str, " found in ", filename
-                READ (iu, *) ! skip empty line
+                READ (iu, '(A)', iostat=iosf) text ! skip empty line
+                IF (iosf /= 0) CALL errore('ZG', 'forces block truncated ...', ctr)
                 DO ii = 1, nat * nq_tot
                   READ(iu,'(A34, 3F14.8)') A1, eqf_iters(ii, :, ctr)
                   ! Format should be the same with forces.f90 in PW/src
                   !WRITE(*, '(A34, 3F14.8)') A1, eqf(ii, :)
                 ENDDO ! ii
                 EXIT ! exit do loop                
-              ELSE 
-                IF (iosf /= 0) CALL errore('ASDM',& 
-                                      'forces in ZG-scf file are missing ...', 1)
               ENDIF ! word
               ! 
             ENDDO ! do loop

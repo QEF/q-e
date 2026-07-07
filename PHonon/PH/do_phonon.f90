@@ -31,7 +31,7 @@ SUBROUTINE do_phonon(auxdyn)
   USE disp,            ONLY : nqs
   USE control_flags,   ONLY : use_gpu
   USE control_lr,      ONLY : rec_code, where_rec, reduce_io
-  USE control_ph,      ONLY : epsil, trans, qplot, only_init, only_wfc
+  USE control_ph,      ONLY : epsil, trans, qplot, only_init, only_wfc, lmultipole
   USE el_phon,         ONLY : elph, elph_mat, elph_simple, elph_epa, elph_print
   !
   ! YAMBO >
@@ -48,7 +48,6 @@ SUBROUTINE do_phonon(auxdyn)
   USE buffers,        ONLY : close_buffer
   USE control_flags,  ONLY : use_gpu
   USE environment,   ONLY : print_cuda_info
-  USE control_lr,     ONLY : lmultipole
   
   IMPLICIT NONE
   !
@@ -136,6 +135,7 @@ SUBROUTINE do_phonon(auxdyn)
               CALL ep_matrix_element_wannier()
            ELSE
               CALL elphon()
+              IF (.NOT. elph_ahc) CALL rediagonalize_dyn () 
            END IF
            !
         END IF

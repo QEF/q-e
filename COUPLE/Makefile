@@ -2,7 +2,9 @@
 
 sinclude ../make.inc
 
-default: all
+# see comments in file tldeps for explanations
+TLDEPS=pw cp
+include ../install/tldeps
 
 all: libcouple
 

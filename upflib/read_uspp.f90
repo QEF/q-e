@@ -128,6 +128,7 @@ CONTAINS
     character(len=20) :: title
     character(len=60) :: fmt
     !
+    CALL reset_upf (upf)
     ierr = 1
     read(iunps, *, err=100, iostat=ios ) &
          (iver(i),i=1,3), (idmy(i),i=1,3)
@@ -143,16 +144,6 @@ CONTAINS
     !
     read( iunps, '(a20,3f15.9)', err=100, iostat=ios ) &
          title, upf%zmesh, upf%zp, exfact 
-    ! compatibility
-    upf%is_gth = .false.
-    upf%has_so=.false.
-    upf%tpawp = .false.
-    upf%tcoulombp = .false.
-    upf%q_with_l = .false.
-    upf%has_wfc = .false.
-    upf%has_gipaw = .false.
-! NC-PP in this format are assumed not to be multi-projector
-    upf%is_multiproj = .false.
     !
     upf%psd = title(1:2)
     !
@@ -652,7 +643,7 @@ CONTAINS
     !     info on DFT level in module "dft"
     !
     USE upf_const, ONLY : fpi
-    USE pseudo_types
+    USE pseudo_types, ONLY : pseudo_upf, reset_upf
     !
     implicit none
     !
@@ -708,6 +699,7 @@ CONTAINS
     upf%q_with_l = .false.
     upf%has_wfc = .false.
     upf%has_gipaw = .false.
+    upf%with_metagga_info = .false.
     !
     if ( upf%tvanp ) then
        upf%generated = &

@@ -132,7 +132,7 @@ SUBROUTINE ham_koopmans_k (ik)
   ! Retrive the ks function at k (in the Wannier Gauge)
   IF (kcw_iverbosity .gt. 0 ) WRITE(stdout,'(8X, "INFO: u_k(g) RETRIEVED"/)') 
   !
-  CALL compute_map_ikq_single (ik)
+  CALL compute_map_ikq_single (ik, .false. )
   ! find tha map k+q --> k'+G and store the res 
   !
   WRITE(stdout,'(/)')

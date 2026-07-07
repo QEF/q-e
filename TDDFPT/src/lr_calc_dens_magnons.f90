@@ -36,12 +36,13 @@ SUBROUTINE lr_calc_dens_magnons (drhoscf, dpsi, L_dag)
   USE lsda_mod,              ONLY : nspin
   USE mp_global,             ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,                    ONLY : mp_sum
-  USE io_files,              ONLY : iunwfc, nwordwfc
+  USE io_files,              ONLY : nwordwfc
   USE buffers,               ONLY : get_buffer
   USE fft_interfaces,        ONLY : fft_interpolate
   USE lr_variables,          ONLY : iunTwfc
   USE cell_base,             ONLY : omega
   USE control_lr,            ONLY : nbnd_occ, nbnd_occx
+  USE units_lr,              ONLY : lrwfc, iuwfc
   USE fft_interfaces,        ONLY : invfft
   !
   IMPLICIT NONE
@@ -88,7 +89,7 @@ SUBROUTINE lr_calc_dens_magnons (drhoscf, dpsi, L_dag)
   ALLOCATE (psi  (dffts%nnr, npol))
   ALLOCATE (dpsic(dffts%nnr, npol))
   !
-  CALL start_clock_gpu ('lr_calc_dens')
+  CALL start_clock ('lr_calc_dens')
   !
   ALLOCATE (drhoscfh(dffts%nnr,nspin_mag))
   !
@@ -117,7 +118,7 @@ SUBROUTINE lr_calc_dens_magnons (drhoscf, dpsi, L_dag)
      ! Read the unperturbed wavefuctions evc(k)
      !
      !IF (nksq > 1) 
-     CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
+     CALL get_buffer (evc, lrwfc, iuwfc, ikk)
      !
      !$acc update device(evc)
      ! Calculation of the response charge density
@@ -292,7 +293,7 @@ SUBROUTINE lr_calc_dens_magnons (drhoscf, dpsi, L_dag)
   !
   DEALLOCATE (psi, dpsic )
   !
-  CALL stop_clock_gpu ('lr_calc_dens')
+  CALL stop_clock ('lr_calc_dens')
   !
   RETURN
   !

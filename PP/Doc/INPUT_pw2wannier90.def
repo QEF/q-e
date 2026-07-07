@@ -11,7 +11,7 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw2wa
            (wannier90.x -pp seedname). Then, it computes and writes initial projection,
            overlap matrices, energy eigenvalues, and several other quantities that are used by
            the wannier90 code.
-          
+
         @b {Structure of the input data:}
         ============================
 
@@ -23,18 +23,19 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw2wa
     namelist INPUTPP {
 
         var prefix -type CHARACTER {
-            info { 
+            info {
                 prefix of files saved by program pw.x
             }
+            default { ' ' }
         }
 
         var outdir -type CHARACTER {
             info {
                 directory containing the input data, i.e. the same as in pw.x
             }
-            default {
-                value of the @tt ESPRESSO_TMPDIR environment variable if set;
-                current directory ('./') otherwise
+            default -kind conditional {
+                case -test {ESPRESSO_TMPDIR is set} { from_environment }
+                case { ./ }
             }
         }
 
@@ -86,7 +87,10 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw2wa
                 of 2x2x2 = 8 of the total number of grid points.
                 Only relevant if @ref write_unk = .true.
             }
-            default { 1 if @ref reduce_unk = .FALSE., 2 if @ref reduce_unk = .TRUE. }
+            default -kind conditional {
+                case -test {@ref reduce_unk == .TRUE.} { 2 }
+                case { 1 }
+            }
         }
 
         var wvfn_formatted -type LOGICAL {
@@ -125,6 +129,9 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw2wa
                 Set to the chemical potential for the SCDM occupation.
                 Only relevant if @ref scdm_entanglement = 'erfc' or 'gaussian'.
             }
+            dimensionality { energy }
+            units { eV }
+            default { 0.0 }
         }
 
         var scdm_sigma -type REAL {
@@ -132,6 +139,9 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw2wa
                 Set to the smearing for the SCDM occupation.
                 Only relevant if @ref scdm_entanglement = 'erfc' or 'gaussian'.
             }
+            dimensionality { energy }
+            units { eV }
+            default { 1.0 }
         }
 
         var atom_proj -type LOGICAL {
@@ -149,7 +159,7 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw2wa
                 semicore states from the initial projection.
                 Only relevant if @ref atom_proj = .true.
             }
-            default { empty }
+            default { -1 }
         }
 
         var atom_proj_ext -type LOGICAL {
@@ -169,6 +179,7 @@ input_description -distribution {Quantum ESPRESSO} -package PWscf -program pw2wa
                 For more details, see the wannier90 user guide and examples.
                 Only relevant if @ref atom_proj_ext = .true.
             }
+            default { './' }
         }
 
         var atom_proj_ortho -type LOGICAL {

@@ -3,6 +3,8 @@
 
 include ../../../make.inc
 
+VPATH = @srcdir@
+
 # location of needed modules and included files (if any)
 # MODFLAGS= $(MOD_FLAG)../../../Modules
 
@@ -22,3 +24,4 @@ fermi_int_0: fermi_int_0.o
 
 fermi_int_1:  fermi_int_1.o reducegrid.o
 	$(LD) $(LDFLAGS) cryst_to_car.o reducegrid.o lint.o vband_ibz.o fermi_int_1.o -o fermi_int_1.x
+

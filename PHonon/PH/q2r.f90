@@ -115,7 +115,7 @@ PROGRAM q2r
   CALL do_q2r(fildyn, flfrc, prefix, zasr, la2F, loto_2d, write_lr, &
               remove_interaction_blocks)
   !
-  CALL environment_end('Q2R')
+  CALL environment_end( )
 
   CALL mp_global_end()
   !

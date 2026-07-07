@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2025 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -248,8 +248,10 @@ SUBROUTINE protate_wfc_k( h_psi_ptr, s_psi_ptr, overlap, &
   ALLOCATE( sc( nx, nx) )    
   ALLOCATE( vc( nx, nx) )    
   ALLOCATE( en( nstart ) )
-
-  aux=(0.0_DP,0.0_DP)
+  !$acc enter data create(aux, hc, sc, vc, en)
+  !$acc kernels
+  aux(:,:) = (0.0_dp, 0.0_dp)
+  !$acc end kernels
   !
   ! ... Set up the Hamiltonian and Overlap matrix on the subspace :
   !
@@ -274,7 +276,7 @@ SUBROUTINE protate_wfc_k( h_psi_ptr, s_psi_ptr, overlap, &
   END IF
   call stop_clock('protwfck:hc')
   !
-  ! ... Diagonalize
+  ! ... Diagonalize (ACC: hc, sc are on host after call to compute_distmat) 
   !
   call start_clock('protwfck:diag')
   IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of pdiaghg en and vc are the same across ortho_parent_comm
@@ -294,11 +296,14 @@ SUBROUTINE protate_wfc_k( h_psi_ptr, s_psi_ptr, overlap, &
   ! ...  update the basis set
   !  
   call start_clock('protwfck:evc')
+  !$acc update device(hc, sc, vc, en)
   CALL refresh_evc()
-  !     
+  !$acc kernels
   evc(:,:) = aux(:,1:nbnd)
+  !$acc end kernels
   call stop_clock('protwfck:evc')
   !
+  !$acc exit data delete(aux, en, vc, sc, hc)
   DEALLOCATE( en )
   DEALLOCATE( vc )
   DEALLOCATE( sc )
@@ -331,8 +336,10 @@ CONTAINS
      COMPLEX(DP), ALLOCATABLE :: work( :, : )
      !
      ALLOCATE( work( nx, nx ) )
-     !
+     !$acc data present(v,w,dm) create(work)
+     !$acc kernels
      work = ( 0.0_DP, 0.0_DP )
+     !$acc end kernels
      !
      DO ipc = 1, idesc(LAX_DESC_NPC) !  loop on column procs 
         !
@@ -349,19 +356,25 @@ CONTAINS
            root = rank_ip( ipr, ipc )
 
            ! use blas subs. on the matrix block
-
-           CALL ZGEMM( 'C', 'N', nr, nc, kdim, ( 1.D0, 0.D0 ),  v(1,ir), kdmx, w(1,ic), kdmx, ( 0.D0, 0.D0 ), work, nx )
+           !$acc host_data use_device(v,w,work,dm)
+           CALL MYZGEMM( 'C', 'N', nr, nc, kdim, ( 1.D0, 0.D0 ),  v(1,ir), kdmx, w(1,ic), kdmx, ( 0.D0, 0.D0 ), work, nx )
 
            ! accumulate result on dm of root proc.
            CALL mp_root_sum( work, dm, root, ortho_parent_comm )
-
+           !$acc end host_data
         END DO
         !
      END DO
-     if (ortho_parent_comm.ne.intra_bgrp_comm .and. nbgrp > 1) dm = dm/nbgrp
+     if (ortho_parent_comm.ne.intra_bgrp_comm .and. nbgrp > 1) then
+        !$acc kernels
+        dm = dm/nbgrp
+        !$acc end kernels
+     end if
      !
+     !$acc update host(dm)
      CALL laxlib_zsqmher( nstart, dm, nx, idesc )
      !
+     !$acc end data
      DEALLOCATE( work )
      !
      RETURN
@@ -376,6 +389,7 @@ CONTAINS
      COMPLEX(DP) :: beta
 
      ALLOCATE( vtmp( nx, nx ) )
+     !$acc data create(vtmp) present(psi,aux,vc)
      !
      DO ipc = 1, idesc(LAX_DESC_NPC)
         !
@@ -399,14 +413,18 @@ CONTAINS
                  !
                  !  this proc sends his block
                  ! 
+                 !$acc host_data use_device(psi,aux,vc)
                  CALL mp_bcast( vc(:,1:nc), root, ortho_parent_comm )
-                 CALL ZGEMM( 'N', 'N', kdim, nc, nr, ( 1.D0, 0.D0 ), psi(1,ir), kdmx, vc, nx, beta, aux(1,ic), kdmx )
+                 CALL MYZGEMM( 'N', 'N', kdim, nc, nr, ( 1.D0, 0.D0 ), psi(1,ir), kdmx, vc, nx, beta, aux(1,ic), kdmx )
+                 !$acc end host_data
               ELSE
                  !
                  !  all other procs receive
                  ! 
+                 !$acc host_data use_device(psi,aux,vtmp)
                  CALL mp_bcast( vtmp(:,1:nc), root, ortho_parent_comm )
-                 CALL ZGEMM( 'N', 'N', kdim, nc, nr, ( 1.D0, 0.D0 ), psi(1,ir), kdmx, vtmp, nx, beta, aux(1,ic), kdmx )
+                 CALL MYZGEMM( 'N', 'N', kdim, nc, nr, ( 1.D0, 0.D0 ), psi(1,ir), kdmx, vtmp, nx, beta, aux(1,ic), kdmx )
+                 !$acc end host_data
               END IF
               ! 
 
@@ -418,6 +436,7 @@ CONTAINS
         !
      END DO
      !
+     !$acc end data
      DEALLOCATE( vtmp )
 
      RETURN

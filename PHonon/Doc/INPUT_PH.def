@@ -29,23 +29,25 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 	    info {
 		Title of the job, i.e., a line that is reprinted on output.
 	    }
-	}    
+	}
     }
 
     namelist INPUTPH {
 
 	dimension amass -start 1 -end ntyp -type REAL {
-	    default { 0.0 }
+	    default -kind computed { from_pseudopotential }
+	    dimensionality { mass }
+	    units { amu }
 	    info {
-		Atomic mass [amu] of each atomic type.
+		Atomic mass of each atomic type.
 		If not specified, masses are read from data file.
 	    }
 	}    
 
         var outdir -type CHARACTER {
-            default {
-                value of the @tt ESPRESSO_TMPDIR environment variable if set;
-                @br current directory ('./') otherwise
+            default -kind conditional {
+                case -test {ESPRESSO_TMPDIR is set} { from_environment }
+                case { './' }
             }
             info {
                 Directory containing input, output, and scratch files; 
@@ -54,7 +56,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
             }
         }
     
-        var prefix -type CHARACTER { 
+        var prefix -type CHARACTER {
             default { 'pwscf' }
             info {
                 Prepended to input/output filenames; must be the same 
@@ -62,22 +64,24 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
             }
         }
 
-        var niter_ph -type INTEGER { 
-            default { maxter=100 }
+        var niter_ph -type INTEGER {
+            default -kind ref { maxter }
             info {
                 Maximum number of iterations in a scf step. If you want
                 more than 100, edit variable "maxter" in PH/phcom.f90
             }
         }
 
-        var tr2_ph   -type REAL { 
+        var tr2_ph   -type REAL {
             default { 1e-12 }
+            dimensionality { dimensionless }
             info     { Threshold for self-consistency. }
         }
 
-        var alpha_mix(niter)  -type REAL { 
-            default { alpha_mix(1)=0.7 }
-            info { 
+        var alpha_mix(niter)  -type REAL {
+            default { 0.7 }
+            dimensionality { dimensionless }
+            info {
                 Mixing factor (for each iteration) for updating 
                 the scf potential:
 
@@ -85,7 +89,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
             }
         }
 
-        var nmix_ph   -type INTEGER { 
+        var nmix_ph   -type INTEGER {
             default { 4 }
             info {
                 Number of iterations used in potential mixing. Using a larger value (8~20)
@@ -93,16 +97,16 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
             }
         }
 
-        var verbosity -type CHARACTER { 
+        var verbosity -type CHARACTER {
             default { 'default' }
             options {
                 info { Options are: }
-                opt -val {'debug', 'high', 'medium'} { verbose output }
-                opt -val {'low', 'default', 'minimal'} { short output }
+                opt -val 'high' -alias {'debug', 'medium'} { verbose output }
+                opt -val 'low' -alias {'default', 'minimal'} { short output }
             }
         }
 
-        var reduce_io -type LOGICAL { 
+        var reduce_io -type LOGICAL {
             default { .false. }
             info {
                 Reduce I/O to the strict minimum.
@@ -113,13 +117,15 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
             }
         }
 
-        var max_seconds  -type REAL { 
+        var max_seconds  -type REAL {
             default { 1.d7 }
+            dimensionality { time }
+            units { s }
             info { Maximum allowed run time before the job stops smoothly. }
         }
 
-        var dftd3_hess -type CHARACTER { 
-            default { 'prefix.hess' }
+        var dftd3_hess -type CHARACTER {
+            default -kind expr { @ref prefix // '.hess' }
             info {
                 File where the D3 dispersion hessian matrix is read. Set to
                 'automatic.hess' to enable automatic mode (experimental). In
@@ -128,13 +134,16 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
             }
         }
 
-        var fildyn -type CHARACTER { 
+        var fildyn -type CHARACTER {
             default { 'matdyn' }
             info { File where the dynamical matrix is written. }
         }
 
-        var fildrho -type CHARACTER { 
-            default { ' ' }
+        var fildrho -type CHARACTER {
+            default -kind conditional {
+                case -test {@ref lraman .or. @ref elop .or. @ref drho_star%open .or. @ref lmultipole} { 'drho' }
+                case { ' ' }
+            }
             info {
                 File where the charge density responses are written. Note that the file
                 will actually be saved as @b {${outdir}/_ph0/${prefix}.${fildrho}1}
@@ -143,8 +152,11 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
             }
         }
 
-        var fildvscf  -type CHARACTER { 
-            default { ' ' }
+        var fildvscf  -type CHARACTER {
+            default -kind conditional {
+                case -test {elph_mat .or. @ref dvscf_star%open .or. @ref lmultipole} { 'dvscf' }
+                case { ' ' }
+            }
             info {
                 File where the the potential variation is written 
                 (for later use in electron-phonon calculation, see also fildrho).
@@ -152,7 +164,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
         }
 
 
-        var epsil  -type LOGICAL { 
+        var epsil  -type LOGICAL {
             default { .false. }
             info {
                 If .true. in a q=0 calculation for a non metal the      
@@ -166,7 +178,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
             }
         }
 
-        var lrpa  -type LOGICAL { 
+        var lrpa  -type LOGICAL {
             default { .false. }
             info {
                 If .true. the dielectric constant is calculated at the
@@ -174,7 +186,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
             }
         }
 
-        var lnoloc  -type LOGICAL { 
+        var lnoloc  -type LOGICAL {
             default { .false. }
             info {
                 If .true. the dielectric constant is calculated without
@@ -182,7 +194,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
             }
         }
 
-        var trans  -type LOGICAL { 
+        var trans  -type LOGICAL {
             default { .true. }
             info {
                 If .false. the phonons are not computed.
@@ -193,56 +205,70 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
             }      
         }
         
-        var lraman -type  LOGICAL { 
+        var lraman -type  LOGICAL {
             default { .false. }
-            info { 
+            info {
                 If .true. calculate non-resonant Raman coefficients      
                 using second-order response as in:
                 M. Lazzeri and F. Mauri, PRL 90, 036401 (2003).
             }
         }
 
+        var lmultipole -type LOGICAL {
+            default { .false. }
+            info {
+                  If .true. prints the induced density and potentials in fildrho and fildvscf. 
+                  To extract multipoles and the finite-q dielectric function, multiple finite-q 
+                  calculations need to be performed (see test-suite/ph_multipole, 
+                  where multipole.py manages the flow of the calculations as described in test-suite/run-ph.sh). 
+                  N.B.:  works only for 3d systems.
+            }
+	}
+
         group {
             label { Optional variables for Raman: }
             
             var eth_rps -type REAL {
                 default { 1.0d-9 }
+                dimensionality { dimensionless }
                 info { Threshold for calculation of  Pc R |psi>. }
             }
-            var eth_ns  -type REAL { 
+            var eth_ns  -type REAL {
                 default { 1.0e-12 }
-                info { Threshold for non-scf wavefunction calculation. } 
+                dimensionality { dimensionless }
+                info { Threshold for non-scf wavefunction calculation. }
             }
-            var dek     -type REAL { 
+            var dek     -type REAL {
                 default { 1.0e-3 }
+                dimensionality { dimensionless }
                 info { Delta_xk used for wavefunction derivation wrt k.}
             }
         }
 
-        var recover  -type LOGICAL { 
+        var recover  -type LOGICAL {
             default { .false. }
             info { If .true. restart from an interrupted run.}
         }
 
-        var low_directory_check  -type LOGICAL { 
+        var low_directory_check  -type LOGICAL {
             default { .false. }
             info { If .true. search in the phsave directory only the
                   quantities requested in input.}
         }
 
-        var only_init  -type LOGICAL { 
+        var only_init  -type LOGICAL {
             default { .false. }
             info {
                 If .true. only the bands and other initialization quantities are calculated.
                 (used for GRID parallelization)}
         }
 
-        var qplot  -type LOGICAL { 
+        var qplot  -type LOGICAL {
             default { .false. }
             info { If .true. a list of q points is read from input.}
         }
 
-        var q2d  -type LOGICAL { 
+        var q2d  -type LOGICAL {
             default { .false. }
             info {
                 If .true. three q points and relative weights are
@@ -253,7 +279,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
             }
 	}
 
-	var q_in_band_form  -type LOGICAL { 
+	var q_in_band_form  -type LOGICAL {
 	    default { .false. }
 	    info {
 		This flag is used only when qplot is .true. and q2d is
@@ -265,7 +291,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 	    }
 	}
 
-	var electron_phonon  -type CHARACTER { 
+	var electron_phonon  -type CHARACTER {
 	    default { ' ' }
 	    options {
 		info {
@@ -306,6 +332,11 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
                     Available for both metals and insulators.
                     @ref trans=.false. is required.
                 }
+                opt -val 'prt' {
+                    Print to output the |g(n,m,nu,s)| vertex (meV) for all n,m 
+                    (bands), nu (modes), s (spin) indices;
+                    do the average over degenerate states.
+                }
 		info {
 		    For metals only, requires gaussian smearing (except for 'ahc').
 		
@@ -329,6 +360,8 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 
     var el_ph_sigma -type REAL {
         default { 0.02 }
+        dimensionality { energy }
+        units { Ry }
         info {
             The spacing between double-delta smearing values used in
             an electron-phonon coupling calculation.
@@ -339,7 +372,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
         label { Variables for @ref electron_phonon = 'ahc': }
 
         var ahc_dir  -type CHARACTER {
-            default { outdir // 'ahc_dir/' }
+            default -kind expr { @ref outdir // 'ahc_dir/' }
             info {
                 Directory where the output binary files are written.
             }
@@ -368,17 +401,17 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
         }
     }
 
-	var lshift_q  -type LOGICAL { 
+	var lshift_q  -type LOGICAL {
 	    default { .false. }
-	    info { 
+	    info {
 	    Use a wave-vector grid displaced by half a grid step
             in each direction - meaningful only when ldisp is .true.
             When this option is set, the q2r.x code cannot be used.
 	    }
 	}
 
-	var zeu  -type LOGICAL { 
-	    default { zeu=@ref epsil }
+	var zeu  -type LOGICAL {
+	    default -kind ref { epsil }
 	    info {
 		If .true. in a q=0 calculation for a non metal the 
 		effective charges are computed from the dielectric
@@ -387,7 +420,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 	    }
 	}
 
-	var zue  -type LOGICAL { 
+	var zue  -type LOGICAL {
 	    default { .false. }
 	    info {
 		If .true. in a q=0 calculation for a non metal the 
@@ -405,16 +438,16 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 	    }
 	}
 
-	var fpol  -type LOGICAL { 
+	var fpol  -type LOGICAL {
 	    default { .false. }
-	    info {        
+	    info {
                  If .true. calculate dynamic polarizabilities            
                  Requires @ref epsil=.true. ( experimental stage:
                  see example09 for calculation of methane ).
 	    }
 	}
 
-	var ldisp  -type LOGICAL { 
+	var ldisp  -type LOGICAL {
 	    default { .false. }
 	    info {
 		If .true. the run calculates phonons for a grid of      
@@ -423,7 +456,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 	    }
 	}
 
-	var nogg  -type LOGICAL { 
+	var nogg  -type LOGICAL {
 	    default { .false. }
 	    info {
 		If .true. disable the "gamma_gamma" trick used to speed
@@ -435,7 +468,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 	    }
 	}
 
-	var asr  -type LOGICAL { 
+	var asr  -type LOGICAL {
 	    default { .false. }
 	    info {
 		Apply Acoustic Sum Rule to dynamical matrix, effective charges
@@ -443,7 +476,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 	    }
 	}
 
-	var ldiag  -type LOGICAL { 
+	var ldiag  -type LOGICAL {
 	    default { .false. }
 	    info {
 		If .true. forces the diagonalization of the dynamical
@@ -456,7 +489,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 	    }
 	}
 
-	var lqdir  -type LOGICAL { 
+	var lqdir  -type LOGICAL {
 	    default { .false. }
 	    info {
 		If .true. ph.x creates inside outdir a separate subdirectory 
@@ -467,7 +500,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 	    }
 	}
 
-	var search_sym  -type LOGICAL { 
+	var search_sym  -type LOGICAL {
 	    default { .true. }
 	    info {
                 Set it to .false. if you want to disable the mode 
@@ -478,8 +511,8 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 	vargroup -type INTEGER {
 	    var nq1
 	    var nq2
-	    var nq3 
-	    default { 0,0,0 }
+	    var nq3
+	    default { 0 }
 	    info {
 		Parameters of the Monkhorst-Pack grid (no offset) used
 		when @ref ldisp=.true. Same meaning as for nk1, nk2, nk3
@@ -495,7 +528,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
             var k1
             var k2
             var k3
-            default { 0,0,0,0,0,0 }
+            default { 0 }
             info {
                 When these parameters are specified the phonon program
                 runs a pw non-self consistent calculation with a different
@@ -513,14 +546,19 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
                   Diagonalization method for the non-SCF calculations.
  	        }
                 opt -val 'david' {
-                    Davidson iterative diagonalization with overlap matrix
-                    (default). Fast, may in some rare cases fail.
+                    Davidson iterative diagonalization with overlap matrix.
+                    Fast, may in some rare cases fail.
                 }
 
                 opt -val 'cg' {
                     Conjugate-gradient-like band-by-band diagonalization.
                     Slower than 'david' but uses less memory and is 
                     (a little bit) more robust.
+                }
+
+                opt -val 'direct' {
+                    Direct diagonalization of the dense Hamiltonian in the plane-wave
+                    basis. Use ONLY when a large number of unoccupied states are needed.
                 }
             }
         }
@@ -554,7 +592,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
             label { Optional variables for dvscf interpolation: }
 
             var wpot_dir -type CHARACTER {
-                default { outdir // 'w_pot/' }
+                default -kind expr { @ref outdir // 'w_pot/' }
                 info {
                     Directory where the w_pot binary files are written.
                     Must be the same with @ref wpot_dir used in dvscf_q2r.x.
@@ -587,10 +625,10 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 	group {
 	    label { Specification of irreducible representation }
 
-	    var start_irr  -type INTEGER { 
+	    var start_irr  -type INTEGER {
 		default { 1 }
 		see { last_irr }
-		info {      
+		info {
 		    Perform calculations only from @ref start_irr to @ref last_irr 
 		    irreducible representations.
 		    
@@ -601,10 +639,13 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 		}
 	    }
 
-	    var last_irr  -type INTEGER { 
-		default { 3*nat }
+	    var last_irr  -type INTEGER {
+		default -kind conditional {
+		    case -test {not specified} { 3*nat }
+		    case { -1000 }
+		}
 		see { start_irr }
-		info {      
+		info {
 		    Perform calculations only from @ref start_irr to @ref last_irr 
 		    irreducible representations.
 		
@@ -615,10 +656,11 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 		}
 	    }
 
-	    var nat_todo  -type INTEGER { 
-		default { 0, i.e. displace all atoms }
-		info {    
-		    Choose the subset of atoms to be used in the linear response 
+	    var nat_todo  -type INTEGER {
+		default { 0 }
+		info {
+		    The default value 0 means that all atoms are displaced.
+		    Choose the subset of atoms to be used in the linear response
 		    calculation: @ref nat_todo atoms, specified in input (see below)
 		    are displaced. Can be used to estimate modes for a molecule
 		    adsorbed over a surface without performing a full fledged
@@ -632,8 +674,8 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 		}
 	    }
 
-	    var modenum -type INTEGER { 
-		default { 0 }            
+	    var modenum -type INTEGER {
+		default { 0 }
 		info {
 		    For single-mode phonon calculation : modenum is the index of the
 		    irreducible representation (irrep) into which the reducible
@@ -650,10 +692,10 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 	group {
 	    label { q-point specification } 
 
-	    var start_q  -type INTEGER { 
+	    var start_q  -type INTEGER {
 		default { 1 }
 		see { last_q }
-		info {      
+		info {
 		    Used only when ldisp=.true..
 		    Computes only the q points from @ref start_q to @ref last_q.
 		    
@@ -664,10 +706,13 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 		}
 	    }
 
-	    var last_q  -type INTEGER { 
-		default { number of q points }
+	    var last_q  -type INTEGER {
+		default -kind conditional {
+		    case -test {not specified} { number of q points (nqs) }
+		    case { -1000 }
+		}
 		see { start_q }
-		info {      
+		info {
 		    Used only when @ref ldisp=.true..
 		    Computes only the q points from @ref start_q to @ref last_q.
 		
@@ -678,9 +723,9 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 		}
 	    }	
 
-	    var dvscf_star  -type STRUCTURE { 
-		default { disabled }
-		info {      
+	    var dvscf_star  -type STRUCTURE {
+		default -kind computed { internal }
+		info {
         It contains the following components:
 
         @b dvscf_star%open  (logical, default: .false.)
@@ -715,10 +760,10 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
     }
 	    }
 
-	    var drho_star  -type STRUCTURE { 
+	    var drho_star  -type STRUCTURE {
 		see {dvscf_star }
-		default { disabled }
-		info {      
+		default -kind computed { internal }
+		info {
         It contains the following components:
 
         @b drho_star%open  (logical, default: .false.)
@@ -745,6 +790,7 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 	    linecard {
 		list xq_list -type REAL {
 		    format { xq(1)  xq(2)  xq(3) }
+		    dimensionality { dimensionless }
 		    info {
 			The phonon wavevector, in units of 2pi/a0
 			(a0 = lattice parameter).
@@ -775,13 +821,19 @@ input_description -distribution {Quantum ESPRESSO} -package PHonon -program ph.x
 				    The meaning of these q points and their weights nq depend on the 
 				    flags q2d and q_in_band_form. (NB: nq is integer)
 				}
-				col xq1
-				col xq2
-				col xq3
+				col xq1 {
+				    dimensionality { dimensionless }
+				}
+				col xq2 {
+				    dimensionality { dimensionless }
+				}
+				col xq3 {
+				    dimensionality { dimensionless }
+				}
 			    }
 			    col nq -type INTEGER {
-				info { 
-				    The weight of the q-point; the meaning of nq depends 
+				info {
+				    The weight of the q-point; the meaning of nq depends
 				    on the flags q2d and q_in_band_form. }
 			    }
 			}

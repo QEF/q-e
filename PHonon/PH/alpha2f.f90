@@ -414,7 +414,7 @@ PROGRAM alpha2f
      !
   END IF
   !
-  CALL environment_end('ALPHA2F')
+  CALL environment_end( )
   CALL mp_global_end()
   !
 END PROGRAM alpha2f

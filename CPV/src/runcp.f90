@@ -34,7 +34,7 @@
       !  cm_bgrp  wave functions at time t - dt 
       !
       !  on output:
-      !  cm_bgrp  wave functions at time t + dt, not yet othogonalized 
+      !  cm_bgrp  wave functions at time t + dt, not yet orthogonalized 
       !
       ! if compute_only_gradient is true, this routine only puts the gradient
       ! in the array cm_*
@@ -45,7 +45,8 @@
       USE mp,                  ONLY : mp_sum
       USE fft_base,            ONLY : dffts
       use wave_base,           only : wave_steepest, wave_verlet
-      use control_flags,       only : lwf, tsde, many_fft
+      use control_flags,       only : many_fft
+      use cp_control,          only : lwf, tsde
       use uspp,                only : deeq, vkb
       use gvect,               only : gstart
       use electrons_base,      only : nbsp_bgrp, ispin_bgrp, f_bgrp , nspin, nupdwn_bgrp, iupdwn_bgrp
@@ -376,7 +377,7 @@
 
       USE kinds,               ONLY : DP
       USE wave_base,           ONLY : wave_steepest, wave_verlet
-      USE control_flags,       ONLY : lwf, tsde
+      USE cp_control,          ONLY : lwf, tsde
       USE uspp,                ONLY : deeq, vkb
       USE gvect,  ONLY : gstart
       USE wannier_subroutines, ONLY : ef_potential

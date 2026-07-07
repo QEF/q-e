@@ -1,0 +1,12 @@
+# BAD: a <units> product-of-powers expression whose base token is not in
+# the closed vocabulary vocab(units_base) (units check violation).
+input_description -distribution {Quantum ESPRESSO} -package TEST -program test.x {
+    namelist TEST {
+        var pressure -type REAL {
+            default { 0.0 }
+            dimensionality { energy }
+            units { frobnocks bohr^-3 }
+            info { bogus base unit token }
+        }
+    }
+}

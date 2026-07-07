@@ -1,17 +1,19 @@
 # Makefile for KCW
 sinclude ../make.inc
 
-default: all
+# see comments in file tldeps for explanations
+TLDEPS=pwlibs lrmods
+include ../install/tldeps
 
 all: kcw pp
 
-kcw: kcw-lib
+kcw: kcwlib
 	( cd src ; $(MAKE) all || exit 1 )
 
-kcw-lib:
-	( cd src ; $(MAKE) libs-kcw || exit 1 )
+kcwlib:
+	( cd src ; $(MAKE) kcwlib || exit 1 )
 
-pp: kcw-lib
+pp: kcwlib
 	( cd PP ; $(MAKE) all || exit 1 )
 
 clean: kcw_clean pp_clean

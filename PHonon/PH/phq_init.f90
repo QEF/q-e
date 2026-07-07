@@ -47,7 +47,7 @@ SUBROUTINE phq_init()
   USE uspp,                 ONLY : okvan, vkb, nlcc_any, nkb
   USE phus,                 ONLY : alphap
   USE nlcc_ph,              ONLY : drc
-  USE control_ph,           ONLY : trans, zue, epsil, all_done
+  USE control_ph,           ONLY : trans, zue, epsil, all_done, lmultipole
   USE units_lr,             ONLY : lrwfc, iuwfc
   USE mp,                   ONLY : mp_sum
   USE acfdtest,             ONLY : acfdt_is_active, acfdt_num_der
@@ -58,7 +58,7 @@ SUBROUTINE phq_init()
   USE qpoint,               ONLY : xq, nksq, eigqts, ikks, ikqs
   USE qpoint_aux,           ONLY : becpt, alphapt, ikmks
   USE eqv,                  ONLY : evq
-  USE control_lr,           ONLY : nbnd_occ, lgamma, lmultipole
+  USE control_lr,           ONLY : nbnd_occ, lgamma
   USE ldaU,                 ONLY : lda_plus_u
   USE uspp_init,            ONLY : init_us_2
   !
@@ -285,10 +285,12 @@ SUBROUTINE phq_init()
            IF ( .NOT. lgamma ) &
                 CALL get_buffer( evq, lrwfc, iuwfc, ikq )
         ENDIF
+!!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
      ELSE
         ! this is the standard treatment
         IF ( .NOT. lgamma .and..not. elph_mat )then 
            CALL get_buffer( evq, lrwfc, iuwfc, ikq )
+           !$acc update device(evq)
         ELSEIF(.NOT. lgamma .and. elph_mat) then
            !
            ! I read the wavefunction in real space and fwfft it
@@ -301,7 +303,6 @@ SUBROUTINE phq_init()
                 npwq_refolded, g_kpq, xk_gamma, evq, .false.)
         ENDIF
      ENDIF
-!!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
      !
 
   END DO

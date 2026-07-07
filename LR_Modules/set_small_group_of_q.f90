@@ -26,8 +26,9 @@ SUBROUTINE set_small_group_of_q(nsymq, invsymq, minus_q)
   
   IMPLICIT NONE
   !
-  INTEGER, INTENT(INOUT) :: nsymq
-  LOGICAL, INTENT(INOUT) :: minus_q, invsymq
+  INTEGER, INTENT(OUT)   :: nsymq
+  LOGICAL, INTENT(INOUT) :: minus_q
+  LOGICAL, INTENT(OUT)   :: invsymq
   !
   REAL(DP), ALLOCATABLE :: rtau(:,:,:)
   INTEGER :: isym

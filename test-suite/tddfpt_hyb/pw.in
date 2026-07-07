@@ -1,0 +1,32 @@
+&control
+calculation  = 'scf'
+restart_mode = 'from_scratch'
+pseudo_dir   = '/home/ivan/pseudo'
+outdir       = './out'
+wf_collect   = .true.
+/
+&system
+ibrav           = 1
+celldm(1)       = 20
+nat             = 4
+ntyp            = 3
+ecutwfc         = 40
+input_dft       = 'pbe0'
+nbnd            = 12
+/
+&electrons
+diago_full_acc = .true.
+/
+&ions
+/
+ATOMIC_SPECIES
+C 12.0107  C_ONCV_PBE-1.0.upf
+H 1.0079  H_ONCV_PBE-1.0.upf
+O 16.00  O_ONCV_PBE-1.0.upf
+ATOMIC_POSITIONS (angstrom)
+H                0.2288660529        0.5000000000       -0.2867111061
+C                1.1944070224        0.5000000000        0.2747140214
+O                2.2628464985        0.5000000000       -0.2872804335
+H                1.1138804261        0.5000000000        1.3882775182
+K_POINTS gamma
+

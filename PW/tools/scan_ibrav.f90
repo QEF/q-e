@@ -11,7 +11,7 @@ PROGRAM scan_ibrav
   !
   USE kinds, ONLY : DP
   USE constants, ONLY : pi, ANGSTROM_AU
-  !USE powell, ONLY : POWELL_MIN
+  USE upf_utils, ONLY : matches
   USE lmdif_module, ONLY : lmdif0
   !
   IMPLICIT NONE
@@ -29,7 +29,6 @@ PROGRAM scan_ibrav
   INTEGER :: lwa, iwa(npar)
   REAL(DP),ALLOCATABLE :: wa(:)  
   !
-  LOGICAL,EXTERNAL :: matches
 
   WRITE(*,*) "Enter the unit of measur (angstrom, bohr) or alat in bohr units, or alat in Angstrom units, followed by ' A'"
   READ(*,"(a1024)") line

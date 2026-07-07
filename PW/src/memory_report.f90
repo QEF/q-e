@@ -50,7 +50,7 @@ SUBROUTINE memory_report()
   USE uspp_param,ONLY : lmaxkb, upf, nh, nbetam
   USE noncollin_module, ONLY : npol, nspin_mag
   USE control_flags,    ONLY: isolve, nmix, imix, gamma_only, lscf, io_level, &
-       lxdm, smallmem, tqr, iverbosity, rmm_ndim, lforce=>tprnfor, tstress
+       lxdm, smallmem, tqr, iverbosity, rmm_ndim, lforce, tstress
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
   USE rism3d_facade, ONLY : lrism3d, rism3t, rism3d_is_laue
   USE mp_bands,  ONLY : nproc_bgrp, nbgrp
@@ -349,6 +349,29 @@ SUBROUTINE memory_report()
         ram1 = ram1 + add  ! skpsi
         IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'skpsi', add/MB
      END IF
+  ELSE IF ( isolve == 5 ) THEN
+     ! Direct diagonalization of dense Hamiltonian matrix
+     !
+     ! Memory per k-point (not distributed across processors):
+     ! - hmat_global(ngk_g, ngk_g): Hamiltonian
+     ! - smat_global(ngk_g, ngk_g): Overlap matrix
+     ! - evc_global(ngk_g, nbnd): Eigenvectors (inside diag routine)
+     ! - diagonalization workspace: ~2*ngk_g^2
+     !
+     ! ngk_g is not known yet, use npwx_g as estimate
+     ! (actual value varies by k-point)
+     !
+     add = complex_size * npwx_g**2 * 4  ! H, S, 2x workspace
+     add = add + complex_size * npwx_g * nbnd  ! eigenvectors
+     !
+     IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'direct diagonalization (est)', add/MB
+     ram1 = ram1 + add
+     !
+     ! Warning for large memory usage
+     WRITE( stdout, '(/5X,"WARNING: Direct diagonalization allocates full H(G,G'') matrix")' )
+     WRITE( stdout, '(5X,"         Estimated memory: ",F8.2," GB per process")' ) add/GB
+     WRITE( stdout, '(5X,"         This memory is NOT distributed across MPI ranks")' )
+     !
   END IF
   !
   ram_ = ram1

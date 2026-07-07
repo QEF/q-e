@@ -19,11 +19,11 @@
         A. Marrazzo and N. Colonna, Phys. Rev. Research 6, 033085 (2024)  
      =--------------------------------------------------------------------------------=
 
-     Program KCW v.7.3.1 starts on 25Sep2024 at 16:27:35 
-        Git branch: GGA_fix
-        Last git commit: bc84a66767fa2e0f269e16a9cd83133cd95fc71d-dirty
-        Last git commit date: Wed Sep 25 15:51:47 2024 +0200
-        Last git commit subject: Update exmaple03. Use LDA pseudos and functional
+     Program KCW v.7.5 starts on 17Sep2025 at 13:44:27 
+        Git branch: develop
+        Last git commit: 7e86c4d7f8b367fcfbff0156d653f13ca55b1b03-dirty
+        Last git commit date: Tue Sep 16 17:33:36 2025 +0000
+        Last git commit subject: Merge branch 'vhpsi' into 'develop'
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -34,12 +34,11 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     8 processors
+     Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     R & G space division:  proc/nbgrp/npool/nimage =       8
-     203766 MiB available memory on the printing compute node when the environment starts
- 
+     722 MiB available memory on the printing compute node when the environment starts
+
 
      KCW INPUT SUMMARY 
      ============================================
@@ -60,6 +59,8 @@
        # assume_isolated     =              none
        # io_sp               =                 F
        # io_real_space       =                 F
+       # irr_bz              =                 F
+           # use_wct         =                 F
      ============================================
 
      INFO: Reading pwscf data
@@ -76,20 +77,20 @@
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
- 
-     Parallelization info
+
+     G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
-     Min         289     289     72                10201    10201    1272
-     Max         290     290     73                10203    10203    1275
      Sum        2313    2313    579                81617    81617   10189
- 
+
      Using Slab Decomposition
- 
+
      Reading collected, re-writing distributed wavefunctions
 
      WARNING: assume_isolated from input differs from value read from file
      WARNING: Going to overwrite value from file
+
+     INFO: total number of primitive cell    1
 
      REPORT # of electrons
      nelec=      8.00000000
@@ -148,44 +149,44 @@
      orb     2     SH   0.449496
      orb     3     SH   0.498185
      orb     4     SH   0.501956
-     orb     5     SH   0.019391
+     orb     5     SH   0.019389
 
      INFO: PREPARING THE KCW CALCULATION ... DONE
 
 
- 
-     KCW          :      0.17s CPU      0.23s WALL
+
+     KCW          :      0.56s CPU      0.62s WALL
 
      INITIALIZATION: 
      map          :      0.00s CPU      0.00s WALL (       1 calls)
      rho_of_q     :      0.01s CPU      0.01s WALL (       1 calls)
- 
-     init_vloc    :      0.01s CPU      0.02s WALL (       1 calls)
+
+     init_vloc    :      0.00s CPU      0.01s WALL (       1 calls)
      init_us_1    :      0.00s CPU      0.00s WALL (       1 calls)
- 
- 
- 
- 
- 
-     h_psi        :      0.00s CPU      0.00s WALL (       1 calls)
- 
-     h_psi        :      0.00s CPU      0.00s WALL (       1 calls)
+
+
+
+
+
+     h_psi        :      0.15s CPU      0.16s WALL (       1 calls)
+
+     h_psi        :      0.15s CPU      0.16s WALL (       1 calls)
      add_vuspsi   :      0.00s CPU      0.00s WALL (       1 calls)
- 
- 
- 
+
+
+
       General routines
      calbec       :      0.00s CPU      0.00s WALL (       1 calls)
-     fft          :      0.01s CPU      0.02s WALL (      19 calls)
-     ffts         :      0.01s CPU      0.01s WALL (      35 calls)
-     fftw         :      0.00s CPU      0.00s WALL (      20 calls)
+     fft          :      0.23s CPU      0.23s WALL (      19 calls)
+     ffts         :      0.03s CPU      0.03s WALL (      35 calls)
+     fftw         :      0.16s CPU      0.16s WALL (      20 calls)
      davcio       :      0.00s CPU      0.00s WALL (       9 calls)
- 
- 
-     KCW          :      0.17s CPU      0.23s WALL
 
- 
-   This run was terminated on:  16:27:35  25Sep2024            
+
+     KCW          :      0.56s CPU      0.66s WALL
+
+
+   This run was terminated on:  13:44:28  17Sep2025            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

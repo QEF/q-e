@@ -149,9 +149,10 @@ contains
     if (this% n_errors == 0) then
        write(*,*) 'fortran_tester: all tests succeeded'
     else
-       write(*,*) 'fortran_tester: tests failed'
        if (do_errorstop) then
           stop 1
+       else
+          write(*,*) 'fortran_tester: tests failed'
        end if
     end if
 
@@ -724,8 +725,7 @@ contains
     logical,          intent(in), optional :: fail !< Fail flag.
 
     this% n_tests = this% n_tests + 1
-
-    if ( abs(r1-r2) > this% tolerance64 * abs(r2) ) then
+    if ( abs(r1-r2) > this% tolerance64 ) then
        if (.not. present(fail) .or. (present(fail) .and. fail .eqv. .false.)) then
           this% n_errors = this% n_errors + 1
        end if
@@ -747,7 +747,7 @@ contains
           this% n_errors = this% n_errors + 1
        end if
     else
-       if ( maxval(abs(r1-r2)) > this% tolerance64 ) then
+       if ( maxval(abs(r1-r2)) > this% tolerance32 ) then
           if (.not. present(fail) .or. (present(fail) .and. fail .eqv. .false.)) then
              this% n_errors = this% n_errors + 1
           end if
@@ -797,15 +797,15 @@ contains
   end subroutine assert_close_c32
 
   !> Check if two complex numbers (64 bits) are close with respect a tolerance.
-  subroutine assert_close_c64(this, c1, c2, fail)
+  subroutine assert_close_c64(this, r1, c2, fail)
     class(tester_t),  intent(inout)        :: this !< The tester.
-    complex(real64),  intent(in)           :: c1   !< Value to compare.
+    complex(real64),  intent(in)           :: r1   !< Value to compare.
     complex(real64),  intent(in)           :: c2   !< Value to compare.
     logical,          intent(in), optional :: fail !< Fail flag.
 
     this% n_tests = this% n_tests + 1
 
-    if ( abs(c1-c2) >  this% tolerance64 * abs(real(c2)) ) then
+    if ( abs(r1-c2) > this% tolerance64 ) then
        if (.not. present(fail) .or. (present(fail) .and. fail .eqv. .false.)) then
           this% n_errors = this% n_errors + 1
        end if
@@ -853,7 +853,7 @@ contains
        if ( maxval(abs(c1-c2)) > this% tolerance64 ) then
           if (.not. present(fail) .or. (present(fail) .and. fail .eqv. .false.)) then
              this% n_errors = this% n_errors + 1
-          end if    
+          end if
        end if
     end if
 

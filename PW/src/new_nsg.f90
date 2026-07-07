@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE new_nsg()
+SUBROUTINE new_nsg( nsgnew )
   !-----------------------------------------------------------------------
   !! This routine computes the new value for nsgnew (the occupation matrices)
   !! of the DFT+U+V approach.
@@ -20,10 +20,11 @@ SUBROUTINE new_nsg()
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
   USE klist,                ONLY : nks, ngk
-  USE ldaU,                 ONLY : Hubbard_l, q_ae, Hubbard_projectors, wfcU, nwfcU,     &
-                                   ldim_u, ll, neighood, at_sc, nsgnew, phase_fac, &
+  USE ldaU,                 ONLY : Hubbard_l, Hubbard_projectors, wfcU, nwfcU, &
+                                   ldim_u, ll, neighood, at_sc, phase_fac, &
                                    max_num_neighbors, Hubbard_l2, backall,     &
-                                   offsetU, offsetU_back, offsetU_back1, is_hubbard_back
+                                   offsetU, offsetU_back, offsetU_back1,  &
+                                   is_hubbard_back, ldmx_tot
   USE symm_base,            ONLY : d1, d2, d3, t_rev
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
   USE symm_base,            ONLY : nsym, irt
@@ -44,6 +45,8 @@ SUBROUTINE new_nsg()
 #endif 
   !
   IMPLICIT NONE
+  !
+  COMPLEX(DP), INTENT(OUT) :: nsgnew(ldmx_tot,ldmx_tot,max_num_neighbors,nat,nspin)
   !
   TYPE (bec_type) :: proj     
   ! proj(nwfcU,nbnd)
@@ -485,7 +488,7 @@ SUBROUTINE new_nsg()
   !
 END SUBROUTINE new_nsg 
 !
-SUBROUTINE new_nsg_nc()
+SUBROUTINE new_nsg_nc( nsgnew )
    !-----------------------------------------------------------------------
    !! This routine computes the new value for nsgnew (the occupation matrices)
    !! of the noncollinear DFT+U+V approach.
@@ -498,11 +501,11 @@ SUBROUTINE new_nsg_nc()
    USE kinds,                ONLY : DP
    USE ions_base,            ONLY : nat, ityp, ntyp => nsp
    USE klist,                ONLY : nks, ngk
-   USE ldaU,                 ONLY : Hubbard_l, q_ae, Hubbard_projectors, wfcU, nwfcU,     &
-                                    ldim_u, ll, neighood, at_sc, nsgnew, phase_fac, &
-                                    max_num_neighbors, Hubbard_l2, backall,     &
-                                    offsetU, offsetU_back, offsetU_back1, is_hubbard_back, &
-                                    d_spin_ldau
+   USE ldaU,                 ONLY : Hubbard_l, Hubbard_projectors, wfcU, nwfcU,&
+                                    ldim_u, ll, neighood, at_sc, phase_fac, &
+                                    max_num_neighbors, Hubbard_l2, backall, &
+                                    offsetU, offsetU_back, offsetU_back1,  &
+                                    is_hubbard_back, d_spin_ldau, ldmx_tot
    USE symm_base,            ONLY : d1, d2, d3
    USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
    USE symm_base,            ONLY : nsym, irt, t_rev
@@ -520,6 +523,7 @@ SUBROUTINE new_nsg_nc()
    !
    IMPLICIT NONE
    !
+   COMPLEX(DP), INTENT(OUT) :: nsgnew(ldmx_tot,ldmx_tot,max_num_neighbors,nat,nspin)
    TYPE (bec_type) :: proj     
    ! proj(nwfcU,nbnd)
    INTEGER :: ik, ibnd, is, i, na, nb, nt, isym, m1, m2, m11, m22, m3, m4, ldim,i_type, &

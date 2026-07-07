@@ -337,7 +337,6 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       !
       ! ... initialization of the scf calculation
       !
-      CALL start_clock('PWSCF')
       CALL setup ()
       !
       ! ... initialization #electrons, for FCP

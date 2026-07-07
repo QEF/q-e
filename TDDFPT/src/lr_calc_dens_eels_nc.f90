@@ -36,10 +36,11 @@ SUBROUTINE lr_calc_dens_eels_nc (drhoscf, dpsi)
   USE lsda_mod,              ONLY : nspin
   USE mp_global,             ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,                    ONLY : mp_sum
-  USE io_files,              ONLY : iunwfc, nwordwfc
   USE buffers,               ONLY : get_buffer
   USE fft_interfaces,        ONLY : fft_interpolate
   USE uspp_init,             ONLY : init_us_2
+  USE units_lr,              ONLY : lrwfc, iuwfc
+  USE incdrhoscf_mod,        ONLY : incdrhoscf_nc
   !
   IMPLICIT NONE
   !
@@ -78,7 +79,7 @@ SUBROUTINE lr_calc_dens_eels_nc (drhoscf, dpsi)
      !
      ! Read the unperturbed wavefuctions evc(k)
      !
-     IF (nksq > 1) CALL get_buffer (evc, nwordwfc, iunwfc, ikk)
+     IF (nksq > 1) CALL get_buffer (evc, lrwfc, iuwfc, ikk)
      !
      ! The weight of the k point
      !
@@ -118,7 +119,7 @@ SUBROUTINE lr_calc_dens_eels_nc (drhoscf, dpsi)
      ! Calculate the total response charge-density
      ! (sum up the normal and ultrasoft terms)
      !
-     CALL lr_addusddens (drhoscf, dbecsum)
+     CALL lr_addusddens (1, dbecsum, drhoscf)
      !
   ENDIF
   !

@@ -17,8 +17,8 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !! of total energy to cell parameters h.
       !
       USE kinds,            ONLY: dp
-      USE control_flags,    ONLY: iprint, iverbosity, thdyn, tpre, tfor, &
-                                  tprnfor, iesr, textfor
+      USE control_flags,    ONLY: iprint, iverbosity, textfor
+      USE cp_control,       ONLY: tfor, thdyn, tpre, iesr
       USE io_global,        ONLY: stdout
       USE ions_base,        ONLY: nsp, na, nat, rcmax, compute_eextfor
       USE cell_base,        ONLY: omega, r_to_s
@@ -221,7 +221,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       !     forces on ions, ionic term in real space
       !
-      IF( tprnfor .OR. tfor .OR. tfirst .OR. tpre ) THEN
+      IF( tfor .OR. tfirst .OR. tpre ) THEN
          !
          ALLOCATE( stmp( 3, nat ) )
          !
@@ -405,7 +405,7 @@ DEV_OMP_NOACC end parallel
       !
       fion1 = 0.d0
       !
-      IF( tprnfor .OR. tfor .OR. tpre) THEN
+      IF( tfor .OR. tpre) THEN
 START_WSHARE
           vtemp( 1:p_ngm_ ) = rhog( 1:p_ngm_, 1 )
 END_WSHARE
@@ -576,7 +576,7 @@ DEV_OMP_NOACC end parallel
 !
 !     rhog contains now the total (local+Hartree+xc) potential in g-space
 !
-      IF( tprnfor .OR. tfor ) THEN
+      IF( tfor ) THEN
 
          IF ( nlcc_any ) CALL force_cc( irb, eigrb, rhor, fion1 )
 

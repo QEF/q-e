@@ -25,7 +25,7 @@ Module ifconstants
   INTEGER, ALLOCATABLE  :: ityp_blk(:)
   !! atomic types for each atom of the original cell
   !
-  CHARACTER(LEN=3), ALLOCATABLE :: atm(:)
+  CHARACTER(LEN=6), ALLOCATABLE :: atm(:)
   !
 end Module ifconstants
 !
@@ -218,7 +218,7 @@ PROGRAM diff_sca
   INTEGER                  :: lower_bnd, upper_bnd
   INTEGER                  :: T, plane_dir
   REAL(DP)                 :: plane_val, eps2
-  CHARACTER(LEN=3)         :: atm_zg(ntypx)
+  CHARACTER(LEN=6)         :: atm_zg(ntypx)
   ! inputs for pp_disca, rotate
   INTEGER                  :: nrots, kres1, kres2, col1, col2, Np
   REAL(DP)                 :: kmin, kmax
@@ -830,7 +830,7 @@ PROGRAM diff_sca
      DEALLOCATE(frc_lr)
   !
 
-  CALL environment_end('DISCA')
+  CALL environment_end( )
   !
   CALL mp_global_end()
   !
@@ -2223,7 +2223,7 @@ SUBROUTINE diffuse_scattering(nq, nq_super, nq_strft, nat, ntyp, amass, ityp, q,
   REAL(DP), intent(in)         :: atmsf_a(ntypx, 5), atmsf_b(ntypx, 5)
   REAL(DP), INTENT(in)         :: q(3, nq), w2(3 * nat, nq), amass(ntyp), tau(3, nat)
   ! nq is the number of qpoints in sets A and B
-  CHARACTER(LEN=3), INTENT(in) :: atm(ntypx)
+  CHARACTER(LEN=6), INTENT(in) :: atm(ntypx)
   INTEGER ityp(nat)
   COMPLEX(DP), INTENT(in)      :: z_nq_zg(3 * nat, 3 * nat, nq)
   !

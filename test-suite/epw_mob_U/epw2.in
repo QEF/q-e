@@ -1,0 +1,64 @@
+&inputepw
+  prefix      = 'cdo'
+  amass(1) = 112.411,
+  amass(2) = 15.9994,
+  outdir      = './'
+  dvscf_dir   = './save'
+
+  elph        = .true.
+  epwwrite    = .false.
+  epwread     = .true.
+  lpolar      = .true.
+  vme         = 'wannier'
+  use_ws      = .true.
+  mp_mesh_k   = .true.
+
+  wannierize  = .false.
+  nbndsub     =  1
+  bands_skipped = 'exclude_bands = 1-5'
+  num_iter    = 1000
+  proj(1)     = 'f=0.2,0.2,0.2:dz2:z=-1,1,1'
+  dis_froz_max = 19.0
+  dis_win_max = 19.0
+  dis_win_min = 12.0
+
+  scattering = .true.
+  scattering_serta = .true.
+  int_mob = .false.
+  carrier = .true.
+  ncarrier = 1E13
+  iterative_bte = .true.
+  epmatkqread = .false.
+  mob_maxiter = 10
+  broyden_beta = 1.0
+  etf_mem = 1
+  
+  
+  nstemp = 2
+  temps  = 200 300
+
+  restart = .true.
+  restart_step = 50
+
+  fsthick = 0.5
+  degaussw = 0.0
+
+  efermi_read = .true.
+  !fermi_energy = 11.5475
+  fermi_energy = 12.3731
+
+  nkf1  = 30 
+  nkf2  = 30
+  nkf3  = 30
+  nqf1  = 30
+  nqf2  = 30
+  nqf3  = 30
+
+  nk1   = 4 
+  nk2   = 4
+  nk3   = 4
+  nq1   = 2
+  nq2   = 2
+  nq3   = 2
+/
+

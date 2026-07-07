@@ -16,7 +16,7 @@
 
     SUBROUTINE potential_print_info( iunit )
 
-        USE control_flags, ONLY: iesr
+        USE cp_control, ONLY: iesr
 
         INTEGER, INTENT(IN) :: iunit
 
@@ -426,7 +426,7 @@ DEV_OMP_NOACC end parallel
 
       USE kinds,       ONLY : DP
       USE constants,   ONLY : sqrtpm1
-      USE cell_base,   ONLY : s_to_r, pbcs
+      USE cell_base,   ONLY : s_to_r
       USE mp_global,   ONLY : nproc_bgrp, me_bgrp, intra_bgrp_comm
       USE mp,          ONLY : mp_sum
       USE ions_base,   ONLY : rcmax, zv, nsp, na, nat, ityp
@@ -518,7 +518,10 @@ DEV_OMP_NOACC end parallel
             xlm0= taus(1,ia) - taus(1,ib)
             ylm0= taus(2,ia) - taus(2,ib)
             zlm0= taus(3,ia) - taus(3,ib)
-            CALL pbcs(xlm0,ylm0,zlm0,xlm,ylm,zlm,1)
+            ! ...    apply PBC, bring atoms in [0,1)
+            xlm = xlm0 - FLOOR(xlm0)
+            ylm = ylm0 - FLOOR(ylm0)
+            zlm = zlm0 - FLOOR(zlm0)
             TZERO=.FALSE.
           END IF
 

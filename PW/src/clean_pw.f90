@@ -28,7 +28,7 @@ SUBROUTINE clean_pw( lflag )
   USE vlocal,               ONLY : strf, vloc
   USE wvfct,                ONLY : g2kin, et, wg, btype
   USE force_mod,            ONLY : force
-  USE scf,                  ONLY : rho, v, vltot, rho_core, rhog_core, &
+  USE scf,                  ONLY : rho, v, vltot, rho_core, rhog_core, tau_core, taug_core, &
                                    vrs, kedtau, destroy_scf_type, vnew
   USE symm_base,            ONLY : irt
   USE symme,                ONLY : sym_rho_deallocate
@@ -56,7 +56,7 @@ SUBROUTINE clean_pw( lflag )
   USE pseudo_types,         ONLY : deallocate_pseudo_upf
   USE bp,                   ONLY : deallocate_bp_efield
   USE exx,                  ONLY : deallocate_exx
-  USE Coul_cut_2D,          ONLY : cutoff_2D, lr_Vloc 
+  USE Coul_cut_2D,          ONLY : deallocate_cutoff_2D
   !
   USE control_flags,        ONLY : ts_vdw, mbd_vdw, use_gpu
   USE tsvdw_module,         ONLY : tsvdw_finalize
@@ -137,8 +137,17 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( order_um))     DEALLOCATE (order_um) 
   IF ( ALLOCATED( kedtau ) )     DEALLOCATE( kedtau )
   IF ( ALLOCATED( vltot  ) )     DEALLOCATE( vltot  )
-  IF ( ALLOCATED( rho_core  ) )  DEALLOCATE( rho_core  )
+  IF ( ALLOCATED( rho_core  ) ) THEN
+     !$acc exit data delete(rho_core)
+     DEALLOCATE( rho_core  )
+  END IF
   IF ( ALLOCATED( rhog_core ) )  DEALLOCATE( rhog_core )
+  IF ( ALLOCATED( tau_core  ) ) THEN
+     !$acc exit data delete(tau_core)
+     DEALLOCATE( tau_core  )
+  END IF
+  IF ( ALLOCATED( taug_core ) )  DEALLOCATE( taug_core )
+  !
   IF ( ALLOCATED( psic    ) )    DEALLOCATE( psic    )
   IF ( ALLOCATED( psic_nc ) )    DEALLOCATE( psic_nc )
   !$acc exit data delete(vrs)
@@ -147,9 +156,8 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated in allocate_locpot.f90 ( and never deallocated )
   !
   IF ( ALLOCATED( vloc )      )  DEALLOCATE( vloc      )
-  IF ( ALLOCATED( cutoff_2D ) )  DEALLOCATE( cutoff_2D )
-  IF ( ALLOCATED( lr_Vloc )   )  DEALLOCATE( lr_Vloc   )
   IF ( ALLOCATED( strf )      )  DEALLOCATE( strf      )
+  CALL deallocate_cutoff_2D ()
   !
   CALL deallocate_tab_atwfc()
   CALL deallocate_uspp() 

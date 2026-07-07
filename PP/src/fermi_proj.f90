@@ -292,7 +292,7 @@ PROGRAM fermi_proj
   !
   DEALLOCATE(eig, equiv, wfc, wt)
   !
-  CALL environment_end ('FERMI_PROJ')
+  CALL environment_end( )
   CALL stop_pp
   !
 END PROGRAM fermi_proj

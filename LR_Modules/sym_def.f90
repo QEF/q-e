@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------------
-SUBROUTINE sym_def(def)
+SUBROUTINE sym_def(npert, def)
   !---------------------------------------------------------------------
   !! Symmetrizes the first order changes of the Fermi energies of an
   !! irreducible representation. These objects are defined complex because
@@ -20,7 +20,9 @@ SUBROUTINE sym_def(def)
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP), INTENT(inout) :: def(3)
+  INTEGER, INTENT(IN) :: npert
+  !! the number of perturbations
+  COMPLEX(DP), INTENT(inout) :: def(npert)
   !! inp/out: the fermi energy changes.
   !! NB: def(3) should be def(npertx), but it is used only at Gamma
   !!     where the dimension of irreps never exceeds 3.
@@ -32,12 +34,12 @@ SUBROUTINE sym_def(def)
   ! counter on perturbations
   ! counter on symmetries
   !
-  COMPLEX(DP) :: w_def(3)
+  COMPLEX(DP) :: w_def(npert)
   ! the fermi energy changes (work array)
   !
   IF (lgamma_gamma) RETURN
   if (nsymq == 1 .and. (.not.minus_q) ) return
-  if (lr_npert > 3) CALL errore("sym_def", "lr_npert cannot exceed 3 at q=0", 1)
+  if (npert /= lr_npert) CALL errore("sym_def", "npert and lr_npert are different", 1)
   !
   ! first the symmetrization   S(irotmq)*q = -q + Gi if necessary
   !

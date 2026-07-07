@@ -70,14 +70,17 @@ allDyn=`grep "Estimated Tc using Allen-Dynes modified McMillan expression =" $fn
 bcsgap=`grep "Estimated BCS superconducting gap using McMillan Tc =" $fname | awk '{print $10}'`
 max_eigenvalue=`grep -A 47 "Max. eigenvalue close to 1" $fname | grep 35.00 | awk '{print $2}'`
 pi=`grep "Re[Pi]=" $fname | awk '{print $4; print $7; print $10}'`
-mobvb=`grep "Mobility VB Fermi level" $fname | awk '{print $5}'`
-mobcb=`grep "Mobility CB Fermi level" $fname | awk '{print $5}'`
+mobvb=`grep "Mobility VB Fermi level" $fname | awk '{print $6}'`
+mobcb=`grep "Mobility CB Fermi level" $fname | awk '{print $6}'`
 density=`grep " x-axis" $fname | awk '{print $1; print $2; print $3}'`
 mobxZ=`grep " x-axis [Z]" $fname | awk '{print $1; print $2; print $3; print $4}'`
 indabs=`grep "  (cm-1)" $fname | awk '{print $1; print $2; print $3; print $4}'`
-mobnewx=`sed -n -e "/       Temp    / {n;n;n;n;p}" $fname | awk '{print $1; print $2; print $5}'`
-mobnewy=`sed -n -e "/       Temp    / {n;n;n;n;n;p}" $fname | awk '{print $3}'`
-mobnewz=`sed -n -e "/       Temp    / {n;n;n;n;n;n;p}" $fname | awk '{print $4}'`
+mobnewxx=`sed -n -e "/       Drift / {n;n;n;n;p}" $fname | awk '{print $1; print $2; print $5}'`
+mobnewyy=`sed -n -e "/       Drift / {n;n;n;n;n;p}" $fname | awk '{print $3}'`
+mobnewzz=`sed -n -e "/       Drift / {n;n;n;n;n;n;p}" $fname | awk '{print $4}'`
+condnewxx=`sed -n -e "/SR                 Conductivity/ {n;n;n;n;p}" $fname | awk '{print $1; print $2; print $5}'`
+condnewyy=`sed -n -e "/SR                 Conductivity/ {n;n;n;n;n;p}" $fname | awk '{print $3}'`
+condnewzz=`sed -n -e "/SR                 Conductivity/ {n;n;n;n;n;n;p}" $fname | awk '{print $4}'`
 ratmax=`grep "Maximum Im/Re Ratio =" $fname | awk '{print $9}'`
 hall=`sed -n -e "/     Hall factor/ {n;p}" $fname | awk '{print $2}'`
 eplrn=`grep 'Formation Energy (eV):' $fname | awk '{print $4}'`
@@ -127,19 +130,34 @@ if test "$mobcb" != ""; then
         for x in $mobcb; do echo $x; done
 fi
 
-if test "$mobnewx" != ""; then
-        echo mobnewx
-        for x in $mobnewx; do echo $x; done
+if test "$mobnewxx" != ""; then
+        echo mobnewxx
+        for x in $mobnewxx; do echo $x; done
 fi
 
-if test "$mobnewy" != ""; then
-        echo mobnewy
-        for x in $mobnewy; do echo $x; done
+if test "$mobnewyy" != ""; then
+        echo mobnewyy
+        for x in $mobnewyy; do echo $x; done
 fi
 
-if test "$mobnewz" != ""; then
-        echo mobnewz
-        for x in $mobnewz; do echo $x; done
+if test "$mobnewzz" != ""; then
+        echo mobnewzz
+        for x in $mobnewzz; do echo $x; done
+fi
+
+if test "$condnewxx" != ""; then
+        echo condnewxx
+        for x in $condnewxx; do echo $x; done
+fi
+
+if test "$condnewyy" != ""; then
+        echo condnewyy
+        for x in $condnewyy; do echo $x; done
+fi
+
+if test "$condnewzz" != ""; then
+        echo condnewzz
+        for x in $condnewzz; do echo $x; done
 fi
 
 if test "$hall" != ""; then

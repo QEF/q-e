@@ -93,7 +93,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
      npw = ngk (ik)
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb, use_gpu)
      CALL calbec (offload_type, npw, vkb, wfcatom, becp)
-     CALL s_psi_acc (npwx, npw, natomwfc, wfcatom, swfcatom)
+     CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
      !
      IF (orthogonalize_wfc) CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .FALSE. )
      !
@@ -110,7 +110,7 @@ SUBROUTINE orthoUwfc(save_wfcatom)
      !
      IF (save_wfcatom) THEN
         ! Calculate swfcatom = S * \phi
-        CALL s_psi_acc (npwx, npw, natomwfc, wfcatom, swfcatom)
+       CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
         IF (orthogonalize_wfc) CALL ortho_swfc ( npw, normalize_only, natomwfc, wfcatom, swfcatom, .TRUE. )
         ! If nks=1, wfcU is kept in memory, while we want to use wfcU as a 
         ! workspace. Hence we store it temporarily in the auxiliary array wfcUaux
@@ -219,7 +219,7 @@ SUBROUTINE orthoUwfc_k (ik, lflag)
      CALL allocate_bec_type_acc (nkb,natomwfc, becp)
      CALL calbec (offload_type, npw, vkb, wfcatom, becp)
      ! Calculate swfcatom = S * phi
-     CALL s_psi_acc (npwx, npw, natomwfc, wfcatom, swfcatom)
+     CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
      CALL deallocate_bec_type_acc (becp)
   ENDIF
   !

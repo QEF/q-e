@@ -1,21 +1,23 @@
 # Makefile for PW
 sinclude ../make.inc
 
-default: all
+# see comments in file tldeps for explanations
+TLDEPS=bindir mods libks_solvers dftd3
+include ../install/tldeps
 
 all: pw pwtools
 
-pw:	
+pw: pwlibs
 	( cd src ; $(MAKE) all || exit 1 )
 
-pw-lib:
-	( cd src ; $(MAKE) libpw.a || exit 1 )
-
-pwtools: pw
+pwtools: pwlibs
 	( cd tools ; $(MAKE) all || exit 1 )
 
+pwlibs:
+	( cd src ; $(MAKE) libpw.a || exit 1 )
+
 doc:
-	( cd Doc ; $(MAKE) all || exit 1 )
+	( cd Doc ; $(MAKE) all )
 
 doc_clean:
 	( cd Doc ; $(MAKE) clean )

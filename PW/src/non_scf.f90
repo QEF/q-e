@@ -26,7 +26,7 @@ SUBROUTINE non_scf( )
   USE add_dmft_occ,         ONLY : dmft
   !
   USE exx,                  ONLY : exxinit, aceinit, use_ace
-  USE scf,                  ONLY : rho, rho_core, rhog_core, v, vltot, vrs, kedtau
+  USE scf,                  ONLY : rho, rho_core, rhog_core, tau_core, v, vltot, vrs, kedtau
   USE ener,                 ONLY : ehart, etxc, vtxc, epaw
   USE ldaU,                 ONLY : eth
   USE extfield,             ONLY : etotefield
@@ -146,7 +146,7 @@ SUBROUTINE non_scf( )
      CALL stop_exx() 
      CALL exxinit(.false., nbnd)
      IF (use_ace) CALL aceinit ( .false. )
-     CALL v_of_rho( rho, rho_core, rhog_core, &
+     CALL v_of_rho( rho, rho_core, rhog_core, tau_core, &
          ehart, etxc, vtxc, eth, etotefield, charge, v)
      IF (okpaw) CALL PAW_potential(rho%bec, ddd_paw, epaw,etot_cmp_paw)
      CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &

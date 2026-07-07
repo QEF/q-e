@@ -11,8 +11,7 @@ target_link_libraries(qe_dftd3
     PUBLIC
         qe_openacc_fortran
     PRIVATE
-        qe_modules
-        qe_upflib)
+        qe_utilx)
 
 ###########################################################
 # test.x
@@ -26,8 +25,8 @@ if(QE_ENABLE_TEST)
             RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
     target_link_libraries(qe_atomic_test_exe
         PRIVATE
-            qe_modules
-            qe_dftd3)
+            qe_dftd3
+            qe_modules)
     # FIXME: Does it work?
     #add_test(NAME test_qe_dftd3_atomic COMMAND $<TARGET_FILE:qe_atomic_test_exe>)
 endif()
